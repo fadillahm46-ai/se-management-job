@@ -1,0 +1,26 @@
+{
+"name": "SE MANAGEMENT JOB - Mine Operations",
+"short_name": "SE Management",
+"description": "Sistem Manajemen Job & Operasional Tambang Terpadu (Lubetruck, Water Truck & Air Cleaner)",
+"start_url": "./index.html",
+"scope": "./",
+"display": "standalone",
+"orientation": "portrait-primary",
+"background_color": "#F1F5F9",
+"theme_color": "#10B981",
+"lang": "id",
+"icons": [
+{
+"src": "https://lh3.googleusercontent.com/d/1kTftX1-eoOfOYWaB8ZhjwyNLxG7-_uDY",
+"sizes": "192x192",
+"type": "image/png",
+"purpose": "any maskable"
+},
+{
+"src": "https://lh3.googleusercontent.com/d/1kTftX1-eoOfOYWaB8ZhjwyNLxG7-_uDY",
+"sizes": "512x512",
+"type": "image/png",
+"purpose": "any maskable"
+}
+]
+}
