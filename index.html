@@ -3064,12 +3064,12 @@
             </div>
 
             <!-- SUBTAB 8B: DATABASE ROSTER -->
-            <div id="master-subtab-database" class="hidden space-y-4">
+            <div id="master-subtab-database" class="hidden flex-1 flex flex-col space-y-4">
               <div
-                class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
+                class="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-4 shrink-0">
                 <div>
                   <h4 class="text-sm font-bold text-slate-900">Data Master Roster Aktif</h4>
-                  <p class="text-xs text-slate-400">Total data personil yang tersimpan di sistem</p>
+                  <p class="text-xs text-slate-500" id="db-roster-count-label">Total data personil yang tersimpan di sistem</p>
                 </div>
                 <div class="flex items-center space-x-2 text-xs">
                   <button type="button" id="btn-toggle-select-roster" onclick="toggleRosterSelectMode()"
@@ -3096,7 +3096,7 @@
 
               <!-- Bar Aksi Masal Roster (Muncul saat Mode Pilih Aktif) -->
               <div id="roster-bulk-actions-bar"
-                class="hidden p-3 rounded-2xl bg-amber-50 border border-amber-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+                class="hidden p-3 rounded-2xl bg-amber-50 border border-amber-200 flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
                 <div class="flex items-center space-x-2">
                   <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
                   <span class="font-extrabold text-amber-900" id="roster-selected-count">0 Data Terpilih</span>
@@ -3118,32 +3118,38 @@
                 </div>
               </div>
 
-              <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-                <div class="overflow-x-auto max-h-96">
+              <!-- Tabel Roster Full Height Kebawah (Tanpa Sisa Space Kosong) -->
+              <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden flex-1 flex flex-col min-h-[520px]">
+                <div class="overflow-x-auto overflow-y-auto flex-1 max-h-[calc(100vh-270px)] min-h-[480px]">
                   <table class="w-full text-left text-xs">
                     <thead
-                      class="bg-slate-50 text-slate-400 uppercase text-[10px] tracking-wider sticky top-0 border-b border-slate-100 font-bold">
+                      class="bg-slate-50 text-slate-400 uppercase text-[10px] tracking-wider sticky top-0 border-b border-slate-100 font-bold z-10 shadow-2xs">
                       <tr>
-                        <th id="th-roster-select" class="hidden py-3 px-3 text-center w-12">
+                        <th id="th-roster-select" class="hidden py-3 px-3 text-center w-12 bg-slate-50">
                           <input type="checkbox" id="roster-select-all" onchange="toggleSelectAllRoster(this.checked)"
                             class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 cursor-pointer"
                             title="Pilih Semua">
                         </th>
-                        <th class="py-3 px-4 text-center">No</th>
-                        <th class="py-3 px-4">Jenis</th>
-                        <th class="py-3 px-4">NRP</th>
-                        <th class="py-3 px-4">Nama Pegawai</th>
-                        <th class="py-3 px-4">Unit Batangan</th>
-                        <th class="py-3 px-4">Unit Efektif</th>
-                        <th class="py-3 px-4">Tanggal</th>
-                        <th class="py-3 px-4">Shift</th>
-                        <th class="py-3 px-4">Kode Shift</th>
+                        <th class="py-3 px-4 text-center bg-slate-50">No</th>
+                        <th class="py-3 px-4 bg-slate-50">Jenis</th>
+                        <th class="py-3 px-4 bg-slate-50">NRP</th>
+                        <th class="py-3 px-4 bg-slate-50">Nama Pegawai</th>
+                        <th class="py-3 px-4 bg-slate-50">Unit Batangan</th>
+                        <th class="py-3 px-4 bg-slate-50">Unit Efektif</th>
+                        <th class="py-3 px-4 bg-slate-50">Tanggal</th>
+                        <th class="py-3 px-4 bg-slate-50">Shift</th>
+                        <th class="py-3 px-4 bg-slate-50">Kode Shift</th>
                       </tr>
                     </thead>
                     <tbody id="db-roster-tbody" class="divide-y divide-slate-100 text-slate-700">
                       <!-- Populated dynamically via renderDatabaseRosterTable() -->
                     </tbody>
                   </table>
+                </div>
+                <!-- Bar Footer Status Jumlah Data & Keterangan Roster -->
+                <div class="p-3.5 bg-slate-50/90 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between shrink-0 font-medium">
+                  <span id="db-roster-footer-count">Memuat data roster...</span>
+                  <span class="text-[11px] text-slate-400 italic">Gunakan scroll mouse untuk melihat seluruh tanggal & personil tanpa batasan</span>
                 </div>
               </div>
             </div>
@@ -13440,9 +13446,19 @@
                   isOff = true;
                 }
 
-                if (/^[DN]\d{3}$/.test(rawCode)) {
+                // Sesuai Aturan PRD (Foto 1): Format kode D/N + nomor unit (cth: D515 = DWS LT2515, N168 = NWS LT2168)
+                const spareMatch = rawCode.match(/^([DN])(\d{3,4})$/i);
+                if (spareMatch) {
                   isSpare = true;
-                  unitEfektif = 'LT2' + rawCode.substring(1);
+                  shift = spareMatch[1].toUpperCase() === 'N' ? 2 : 1;
+                  const digits = spareMatch[2];
+                  if (digits.length === 4) {
+                    unitEfektif = 'LT' + digits;
+                  } else if (digits.startsWith('10')) {
+                    unitEfektif = 'WT' + digits;
+                  } else {
+                    unitEfektif = 'LT2' + digits;
+                  }
                 }
 
                 parsedData.push({
@@ -13527,7 +13543,7 @@
       if (!tbody) return;
 
       const list = state.parsedRosterData || [];
-      if (countEl) countEl.textContent = `Menampilkan ${list.length} data yang siap disimpan`;
+      if (countEl) countEl.textContent = `Menampilkan seluruh ${list.length} data yang siap disimpan`;
 
       tbody.innerHTML = '';
       if (list.length === 0) {
@@ -13535,19 +13551,30 @@
         return;
       }
 
-      list.slice(0, 100).forEach((r, idx) => {
+      // Render seluruh data yang diparsing tanpa pembatasan 100 baris
+      list.forEach((r, idx) => {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition font-medium';
+        const kode = String(r.kodeShift || '').trim().toUpperCase();
+        let statusBadge = '<span class="text-slate-600 font-medium">Batangan</span>';
+        if (r.isSpare) {
+          statusBadge = `<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">Spare ${r.unitEfektif}</span>`;
+        } else if (['OOFF', 'OFF', 'CCUTI', 'CUTI'].includes(kode)) {
+          statusBadge = `<span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 font-bold border border-rose-200">Off / Cuti</span>`;
+        } else if (['INDR', 'INDK', 'TR', 'HR'].includes(kode)) {
+          statusBadge = `<span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-bold border border-blue-200">Induksi/Training</span>`;
+        }
+
         tr.innerHTML = `
           <td class="py-2.5 px-3 text-center font-mono text-[11px] text-slate-400">${idx + 1}</td>
           <td class="py-2.5 px-3 font-bold"><span class="px-2 py-0.5 rounded text-[10px] ${r.jenis === 'OPT' ? 'bg-amber-100 text-amber-800' : (r.jenis === 'OM' ? 'bg-emerald-100 text-emerald-800' : 'bg-cyan-100 text-cyan-800')}">${r.jenis}</span></td>
-          <td class="py-2.5 px-3 font-mono text-[11px] font-bold text-slate-900">${r.nrp}</td>
+          <td class="py-2.5 px-3 font-mono text-[11px] font-bold text-slate-900">${r.nrp || r.nik}</td>
           <td class="py-2.5 px-3 text-slate-900 font-semibold">${r.nama}</td>
-          <td class="py-2.5 px-3 font-mono font-bold">${r.unit}</td>
+          <td class="py-2.5 px-3 font-mono font-bold">${r.unit || '-'}</td>
           <td class="py-2.5 px-3 font-mono text-[11px]">${r.tanggal}</td>
-          <td class="py-2.5 px-3 font-semibold">Shift ${r.shift}</td>
+          <td class="py-2.5 px-3 font-semibold ${r.shift === 2 ? 'text-purple-700' : 'text-blue-700'}">Shift ${r.shift}</td>
           <td class="py-2.5 px-3 font-mono font-bold text-slate-700">${r.kodeShift}</td>
-          <td class="py-2.5 px-3 text-[11px]">${r.isSpare ? `<span class="text-emerald-700 font-bold">Spare ${r.unitEfektif}</span>` : (r.kodeShift === 'OOFF' || r.kodeShift === 'CCUTI' ? '<span class="text-rose-600 font-bold">Off/Libur</span>' : '<span class="text-slate-600">Batangan</span>')}</td>
+          <td class="py-2.5 px-3">${statusBadge}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -13585,6 +13612,7 @@
         let query = state.supabaseClient
           .from('master_roster')
           .select('*')
+          .limit(10000)
           .order('tanggal', { ascending: true })
           .order('nrp', { ascending: true });
 
@@ -15597,12 +15625,12 @@
       const typeFilter = document.getElementById('db-roster-filter-type')?.value || 'ALL';
       const search = (document.getElementById('db-roster-search')?.value || '').toLowerCase().trim();
 
-      let list = state.masterRoster;
+      let list = state.masterRoster || [];
       if (typeFilter !== 'ALL') {
         list = list.filter(r => r.jenis === typeFilter);
       }
       if (search) {
-        list = list.filter(r => r.nama.toLowerCase().includes(search) || (r.nrp || r.nik).toLowerCase().includes(search) || r.unit.toLowerCase().includes(search));
+        list = list.filter(r => (r.nama || '').toLowerCase().includes(search) || (r.nrp || r.nik || '').toLowerCase().includes(search) || (r.unit || '').toLowerCase().includes(search) || (r.unitEfektif || '').toLowerCase().includes(search) || (r.kodeShift || '').toLowerCase().includes(search));
       }
 
       if (thSelect) {
@@ -15612,15 +15640,48 @@
 
       tbody.innerHTML = '';
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${state.isRosterSelectMode ? 10 : 9}" class="py-6 text-center text-slate-400 italic">Tidak ada data roster aktif</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${state.isRosterSelectMode ? 10 : 9}" class="py-12 text-center text-slate-400 italic"><div class="flex flex-col items-center justify-center space-y-2"><svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><span>Tidak ada data roster aktif yang sesuai kriteria</span></div></td></tr>`;
+        const countLabel = document.getElementById('db-roster-count-label');
+        if (countLabel) countLabel.innerHTML = `Total data tersimpan: <strong class="text-slate-800">${(state.masterRoster || []).length}</strong> data`;
+        const footerCount = document.getElementById('db-roster-footer-count');
+        if (footerCount) footerCount.textContent = `Menampilkan 0 dari ${(state.masterRoster || []).length} data`;
         return;
       }
 
       let allChecked = true;
-      list.slice(0, 100).forEach((r, idx) => {
+      // Menampilkan SELURUH data roster tersimpan tanpa batasan 100 baris
+      list.forEach((r, idx) => {
         const rowId = r.id || `${r.nik || r.nrp}_${r.tanggal}_${r.shift}_${idx}`;
         const isChecked = state.selectedRosterIds.has(rowId);
         if (!isChecked) allChecked = false;
+
+        // Aturan Kode Shift sesuai PRD (Foto 1)
+        const isSpare = Boolean(r.isSpare);
+        const kode = String(r.kodeShift || '').trim().toUpperCase();
+        const isOff = ['OOFF', 'OFF', 'CCUTI', 'CUTI'].includes(kode);
+        const isTraining = ['INDR', 'INDK', 'TR', 'HR'].includes(kode);
+
+        let unitEfektifBadge = `<span class="font-mono text-slate-700">${r.unitEfektif || r.unit || '-'}</span>`;
+        if (isSpare) {
+          unitEfektifBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">${r.unitEfektif || r.unit} (Spare)</span>`;
+        } else if (isOff) {
+          unitEfektifBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-50 text-rose-600 border border-rose-200">Off / Cuti</span>`;
+        } else if (isTraining) {
+          unitEfektifBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">Induksi/Training</span>`;
+        }
+
+        let kodeShiftBadge = `<span class="font-mono font-bold text-slate-700">${kode}</span>`;
+        if (kode === 'DWS') {
+          kodeShiftBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">DWS (Siang)</span>`;
+        } else if (kode === 'NWS') {
+          kodeShiftBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200">NWS (Malam)</span>`;
+        } else if (isSpare) {
+          kodeShiftBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">${kode} (Spare)</span>`;
+        } else if (isOff) {
+          kodeShiftBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">${kode} (Libur)</span>`;
+        } else if (isTraining) {
+          kodeShiftBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-blue-50 text-blue-800 border border-blue-200">${kode} (Induksi)</span>`;
+        }
 
         const tr = document.createElement('tr');
         tr.className = `hover:bg-slate-50 transition font-medium ${isChecked ? 'bg-amber-50/60' : ''}`;
@@ -15637,14 +15698,14 @@
             </td>
           ` : ''}
           <td class="py-2.5 px-4 text-center font-mono text-[11px] text-slate-400">${idx + 1}</td>
-          <td class="py-2.5 px-4 font-bold">${r.jenis}</td>
+          <td class="py-2.5 px-4 font-bold"><span class="px-2 py-0.5 rounded text-[10px] ${r.jenis === 'OPT' ? 'bg-amber-100 text-amber-800' : (r.jenis === 'OM' ? 'bg-emerald-100 text-emerald-800' : 'bg-cyan-100 text-cyan-800')}">${r.jenis}</span></td>
           <td class="py-2.5 px-4 font-mono text-[11px] font-bold text-slate-900">${r.nrp || r.nik}</td>
-          <td class="py-2.5 px-4 text-slate-900">${r.nama}</td>
-          <td class="py-2.5 px-4 font-mono font-bold">${r.unit}</td>
-          <td class="py-2.5 px-4 font-mono text-emerald-800 font-bold">${r.unitEfektif || r.unit}</td>
-          <td class="py-2.5 px-4 font-mono text-[11px]">${r.tanggal}</td>
-          <td class="py-2.5 px-4">Shift ${r.shift}</td>
-          <td class="py-2.5 px-4 font-mono font-bold text-slate-700">${r.kodeShift}</td>
+          <td class="py-2.5 px-4 text-slate-900 font-semibold">${r.nama}</td>
+          <td class="py-2.5 px-4 font-mono font-bold text-slate-700">${r.unit || '-'}</td>
+          <td class="py-2.5 px-4">${unitEfektifBadge}</td>
+          <td class="py-2.5 px-4 font-mono text-[11px] text-slate-600">${r.tanggal}</td>
+          <td class="py-2.5 px-4 font-semibold ${r.shift === 2 ? 'text-purple-700' : 'text-blue-700'}">Shift ${r.shift}</td>
+          <td class="py-2.5 px-4">${kodeShiftBadge}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -15653,6 +15714,15 @@
         selectAllCheckbox.checked = (list.length > 0 && allChecked);
       }
       updateRosterBulkActionBar();
+
+      const countLabel = document.getElementById('db-roster-count-label');
+      if (countLabel) {
+        countLabel.innerHTML = `Menampilkan <strong class="text-emerald-700 font-bold">${list.length} data</strong> dari total <strong>${(state.masterRoster || []).length} data personil</strong>`;
+      }
+      const footerCount = document.getElementById('db-roster-footer-count');
+      if (footerCount) {
+        footerCount.innerHTML = `Menampilkan seluruh <strong class="text-slate-800">${list.length} data</strong> yang tersimpan di sistem`;
+      }
     }
 
     function toggleRosterSelectMode() {
@@ -15696,11 +15766,12 @@
       const typeFilter = document.getElementById('db-roster-filter-type')?.value || 'ALL';
       const search = (document.getElementById('db-roster-search')?.value || '').toLowerCase().trim();
 
-      let list = state.masterRoster;
+      let list = state.masterRoster || [];
       if (typeFilter !== 'ALL') list = list.filter(r => r.jenis === typeFilter);
-      if (search) list = list.filter(r => r.nama.toLowerCase().includes(search) || (r.nrp || r.nik).toLowerCase().includes(search) || r.unit.toLowerCase().includes(search));
+      if (search) list = list.filter(r => (r.nama || '').toLowerCase().includes(search) || (r.nrp || r.nik || '').toLowerCase().includes(search) || (r.unit || '').toLowerCase().includes(search));
 
-      list.slice(0, 100).forEach((r, idx) => {
+      // Memilih semua data tanpa slice 100
+      list.forEach((r, idx) => {
         const rowId = r.id || `${r.nik || r.nrp}_${r.tanggal}_${r.shift}_${idx}`;
         if (checked) state.selectedRosterIds.add(rowId);
         else state.selectedRosterIds.delete(rowId);
