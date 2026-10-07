@@ -13601,22 +13601,23 @@
         if (Array.isArray(data)) {
           state.masterRoster = data.map((r, idx) => {
             const opInfo = opMap[r.nrp] || {};
-            const baseUnit = opInfo.unit || '-';
-            let unitEfektif = baseUnit;
+            const baseUnit = r.unit || opInfo.unit || '-';
+            let unitEfektif = r.unit_efektif || baseUnit;
 
-            // Cek kode spare: D515 / N168
-            const matchSpare = (r.shift_code || '').match(/^[DN](\d{3,4})$/i);
-            if (matchSpare) {
+            // Kode shift didukung dari kode_shift (standar schema) dan shift_code (fallback legacy)
+            const shiftCode = String(r.kode_shift || r.shift_code || 'DWS').trim();
+            const matchSpare = shiftCode.match(/^[DN](\d{3,4})$/i);
+            if (matchSpare && (!r.unit_efektif || r.unit_efektif === baseUnit)) {
               unitEfektif = 'LT2' + matchSpare[1];
             }
 
-            const shiftNum = (r.shift_code && r.shift_code.toUpperCase().startsWith('N')) ? 2 : 1;
+            const shiftNum = r.shift || ((shiftCode.toUpperCase().startsWith('N')) ? 2 : 1);
 
             return {
-              id: r.id,
-              jenis: r.tipe_karyawan || 'OPT',
+              id: r.id || `ROSTER-${idx}`,
+              jenis: r.jenis || r.tipe_karyawan || 'OPT',
               nrp: r.nrp,
-              nik: r.nrp,
+              nik: r.nik || r.nrp,
               nama: r.nama || opInfo.nama || '-',
               unit: baseUnit,
               unitEfektif: unitEfektif,
@@ -13624,8 +13625,8 @@
               periode: r.periode,
               tanggal: r.tanggal,
               shift: shiftNum,
-              kodeShift: r.shift_code || 'DWS',
-              isSpare: !!matchSpare
+              kodeShift: shiftCode,
+              isSpare: r.is_spare !== undefined ? Boolean(r.is_spare) : !!matchSpare
             };
           });
 
@@ -13686,24 +13687,86 @@
           if (opErr) console.warn('[Supabase Sync Operators Warning]', opErr.message);
         }
 
-        // 2. Siapkan baris untuk master_roster
-        const allRows = state.parsedRosterData.map(r => ({
-          nrp: String(r.nik || r.nrp || '').trim(),
-          nama: String(r.nama || '').trim(),
-          periode: String(r.periode || periodVal).trim(),
-          tanggal: r.tanggal,
-          shift_code: String(r.kodeShift || 'DWS').trim(),
-          tipe_karyawan: String(r.jenis || 'OPT').trim()
-        }));
+        // 2. Jika mode replace (default), bersihkan data bulan/periode ini terlebih dahulu
+        if (!append && periodVal) {
+          try {
+            await state.supabaseClient
+              .from('master_roster')
+              .delete()
+              .eq('periode', periodVal);
+          } catch (delErr) {
+            console.warn('[Replace Month Warning]', delErr);
+          }
+        }
+
+        // 3. Siapkan baris untuk master_roster sesuai kolom resmi schema Supabase
+        const allRows = state.parsedRosterData.map((r, idx) => {
+          const nrpClean = String(r.nik || r.nrp || `OP-${idx}`).trim();
+          const tglClean = String(r.tanggal || '').trim();
+          const kodeShiftClean = String(r.kodeShift || 'DWS').trim();
+          const shiftNum = r.shift || (kodeShiftClean.toUpperCase().startsWith('N') ? 2 : 1);
+          const safeId = `ROSTER_${periodVal}_${nrpClean}_${tglClean}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+          return {
+            id: safeId,
+            jenis: String(r.jenis || 'OPT').trim(),
+            nrp: nrpClean,
+            nik: nrpClean,
+            nama: String(r.nama || '').trim(),
+            unit: String(r.unit || '-').trim(),
+            unit_efektif: String(r.unitEfektif || r.unit || '-').trim(),
+            periode: String(r.periode || periodVal).trim(),
+            tanggal: tglClean,
+            shift: shiftNum,
+            kode_shift: kodeShiftClean,
+            is_spare: Boolean(r.isSpare)
+          };
+        });
 
         // Simpan dalam batch 100 per request
         const BATCH_SIZE = 100;
         let savedCount = 0;
         for (let i = 0; i < allRows.length; i += BATCH_SIZE) {
-          const batch = allRows.slice(i, i + BATCH_SIZE);
-          const { error: batchErr } = await state.supabaseClient
+          let batch = allRows.slice(i, i + BATCH_SIZE);
+
+          // Coba upsert dengan onConflict: 'id' (Primary Key tabel)
+          let { error: batchErr } = await state.supabaseClient
             .from('master_roster')
-            .upsert(batch, { onConflict: 'nrp,tanggal' });
+            .upsert(batch, { onConflict: 'id' });
+
+          // Fallback jika database memiliki constraint spesifik nrp,tanggal
+          if (batchErr && (batchErr.message?.includes('ON CONFLICT') || batchErr.code === '42P10')) {
+            const retryRes = await state.supabaseClient
+              .from('master_roster')
+              .upsert(batch, { onConflict: 'nrp,tanggal' });
+            batchErr = retryRes.error;
+          }
+
+          // Fallback adaptif jika ada kolom opsional yang belum ada di schema database pengguna
+          let retryCount = 0;
+          while (batchErr && batchErr.message && batchErr.message.includes('in the schema cache') && retryCount < 5) {
+            retryCount++;
+            const colMatch = batchErr.message.match(/Could not find the '([^']+)' column/i);
+            const missingCol = colMatch ? colMatch[1] : null;
+            if (!missingCol) break;
+
+            console.warn(`[Supabase Roster] Kolom '${missingCol}' tidak ditemukan di tabel Supabase, mencoba batch tanpa kolom tersebut...`);
+            batch = batch.map(row => {
+              const copy = { ...row };
+              delete copy[missingCol];
+              return copy;
+            });
+
+            let retryRes = await state.supabaseClient
+              .from('master_roster')
+              .upsert(batch, { onConflict: 'id' });
+            if (retryRes.error && (retryRes.error.message?.includes('ON CONFLICT') || retryRes.error.code === '42P10')) {
+              retryRes = await state.supabaseClient
+                .from('master_roster')
+                .upsert(batch, { onConflict: 'nrp,tanggal' });
+            }
+            batchErr = retryRes.error;
+          }
 
           if (batchErr) {
             throw new Error('Gagal menyimpan batch: ' + batchErr.message);
@@ -13711,7 +13774,7 @@
           savedCount += batch.length;
         }
 
-        // 3. Ambil data segar langsung dari Supabase ke memori
+        // 4. Ambil data segar langsung dari Supabase ke memori
         await loadRosterFromSupabase();
 
         showToast('Sukses! ' + savedCount + ' data roster berhasil tersimpan & tersinkronisasi di Supabase!', 'success');
