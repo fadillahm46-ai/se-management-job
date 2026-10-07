@@ -2869,6 +2869,18 @@
                 </svg>
                 <span>Populasi Unit Lapangan</span>
               </button>
+
+              <button type="button" onclick="switchMasterSection('armada')" id="btn-master-sec-armada"
+                class="px-3.5 py-2 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center space-x-1.5 cursor-pointer">
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0">
+                  </path>
+                </svg>
+                <span>Data Master Armada</span>
+              </button>
               <button type="button" onclick="switchMasterSection('operators')" id="btn-master-sec-operators"
                 class="px-3.5 py-2 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center space-x-1.5">
                 <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3462,11 +3474,143 @@
             </div>
           </div>
 
-        </div>
 
-        <!-- ================================================================== -->
-        <!-- TAB 9: RIWAYAT PEKERJAAN SELESAI (ROLE-BASED & DYNAMIC CATEGORIES) -->
-        <!-- ================================================================== -->
+          <!-- ========================================== -->
+          <!-- SUB-MENU 4: DATA MASTER ARMADA & CLUSTER   -->
+          <!-- ========================================== -->
+          <div id="master-section-armada" class="hidden space-y-4">
+            <div
+              class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">Data Master — Armada & Cluster (Lubetruck & Water Truck)
+                </h3>
+                <p class="text-xs text-slate-500">Kelola data armada unit servis operasional lapangan beserta penetapan
+                  cluster kerja</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <button type="button" onclick="openImportArmadaModal()"
+                  class="px-3.5 py-2 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200 font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-2xs">
+                  <svg class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                  </svg>
+                  <span>Import Data Armada (.xlsx)</span>
+                </button>
+                <button type="button" onclick="downloadMasterArmadaTemplate()"
+                  class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-2xs">
+                  <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                  </svg>
+                  <span>Unduh Template (.xlsx)</span>
+                </button>
+                <button type="button" id="btn-toggle-select-armada" onclick="toggleArmadaSelectMode()"
+                  class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-2xs">
+                  <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                    </path>
+                  </svg>
+                  <span id="btn-toggle-select-armada-text">Akses Edit / Pilih Masal</span>
+                </button>
+                <button type="button" onclick="openAddArmadaModal()"
+                  class="px-4 py-2 rounded-xl bg-brand-200 hover:bg-brand-300 text-brand-800 font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-2xs">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                  <span>Tambah Armada Baru</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Bar Aksi Masal Armada (Muncul saat Mode Pilih Aktif) -->
+            <div id="armada-bulk-actions-bar"
+              class="hidden p-3 rounded-2xl bg-amber-50 border border-amber-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                <span class="font-extrabold text-amber-900" id="armada-selected-count">0 Armada Terpilih</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button type="button" onclick="promptBulkDeleteArmada()"
+                  class="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition shadow-2xs flex items-center space-x-1 cursor-pointer">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                    </path>
+                  </svg>
+                  <span>Hapus Armada Terpilih</span>
+                </button>
+                <button type="button" onclick="cancelArmadaSelectMode()"
+                  class="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition cursor-pointer">
+                  Batal
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter & Search Bar Armada -->
+            <div
+              class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div class="flex flex-wrap items-center gap-2">
+                <select id="filter-armada-type" onchange="renderMasterArmadaTable()"
+                  class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700">
+                  <option value="ALL">All Tipe Armada</option>
+                  <option value="Lubetruck">Lubetruck (LT)</option>
+                  <option value="Water Truck">Water Truck (WT)</option>
+                </select>
+                <select id="filter-armada-cluster" onchange="renderMasterArmadaTable()"
+                  class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700">
+                  <option value="ALL">All Cluster</option>
+                  <optgroup label="Cluster Utama">
+                    <option value="Selatan">KGU Selatan</option>
+                    <option value="Tengah">KGU Tengah</option>
+                    <option value="Utara">KGU Utara</option>
+                    <option value="ROM">ROM Area</option>
+                  </optgroup>
+                  <optgroup label="Cluster Tambahan">
+                    <option value="Outpit Selatan">Outpit Selatan</option>
+                    <option value="Outpit Tengah">Outpit Tengah</option>
+                    <option value="Outpit Utara">Outpit Utara</option>
+                    <option value="HRM Selatan">HRM Selatan</option>
+                    <option value="HRM Utara">HRM Utara</option>
+                    <option value="Workshop">Workshop</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div class="w-full sm:w-64">
+                <input type="text" id="search-armada-input" oninput="renderMasterArmadaTable()"
+                  placeholder="Cari nomor unit armada..."
+                  class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs">
+              </div>
+            </div>
+
+            <!-- Armada Table -->
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead
+                    class="bg-slate-50 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-100 font-bold">
+                    <tr>
+                      <th class="py-3 px-3 text-center hidden" id="th-armada-select">
+                        <input type="checkbox" id="armada-select-all" onchange="toggleSelectAllArmada(this.checked)"
+                          class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 cursor-pointer">
+                      </th>
+                      <th class="py-3 px-4 text-center w-12">No</th>
+                      <th class="py-3 px-4">No Unit / Lambung</th>
+                      <th class="py-3 px-4">Tipe Unit</th>
+                      <th class="py-3 px-4">Cluster Penugasan</th>
+                      <th class="py-3 px-4 text-center">Status Operasional</th>
+                      <th class="py-3 px-4 text-center w-36">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="master-armada-tbody" class="divide-y divide-slate-100 text-slate-700">
+                    <!-- Populated via renderMasterArmadaTable() -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
         <div id="tab-completed" class="tab-pane hidden space-y-3.5">
           <!-- Header Banner Riwayat -->
           <div
@@ -5007,6 +5151,176 @@
   </div>
 
   <!-- MODAL 3E: POPULASI UNIT FORM (Tambah & Edit Unit) -->
+
+  <!-- MODAL: ARMADA FORM (Tambah & Edit Data Master Armada) -->
+  <div id="modal-armada-form"
+    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-sm font-bold text-slate-900" id="armada-modal-title">Tambah Armada Baru</h3>
+        <button onclick="toggleModal('modal-armada-form', false)"
+          class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <form onsubmit="handleSaveArmada(event)" class="space-y-3.5 text-xs font-semibold">
+        <input type="hidden" id="armada-form-id">
+        <div>
+          <label class="block text-slate-700 mb-1">Nomor Unit / Lambung Armada <span
+              class="text-rose-500">*</span></label>
+          <input type="text" id="armada-form-unit" placeholder="Contoh: LT2510 / WT101 / LT2535" required
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-mono uppercase focus:outline-none focus:border-brand-500 text-slate-800">
+          <p class="text-[10px] text-slate-400 mt-1">Masukkan kode lambung unit servis (contoh: LT2510 untuk Lubetruck,
+            WT101 untuk Water Truck)</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-700 mb-1">Tipe Unit <span class="text-rose-500">*</span></label>
+            <select id="armada-form-type" required
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 bg-white text-slate-800">
+              <option value="Lubetruck">Lubetruck (LT)</option>
+              <option value="Water Truck">Water Truck (WT)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-700 mb-1">Cluster Penugasan <span class="text-rose-500">*</span></label>
+            <select id="armada-form-cluster" required
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 bg-white font-medium text-slate-800">
+              <optgroup label="Cluster Utama">
+                <option value="Selatan">KGU Selatan</option>
+                <option value="Tengah">KGU Tengah</option>
+                <option value="Utara">KGU Utara</option>
+                <option value="ROM">ROM Area</option>
+              </optgroup>
+              <optgroup label="Cluster Tambahan">
+                <option value="Outpit Selatan">Outpit Selatan</option>
+                <option value="Outpit Tengah">Outpit Tengah</option>
+                <option value="Outpit Utara">Outpit Utara</option>
+                <option value="HRM Selatan">HRM Selatan</option>
+                <option value="HRM Utara">HRM Utara</option>
+                <option value="Workshop">Workshop</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-slate-700 mb-1">Status Operasional</label>
+          <select id="armada-form-status"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 bg-white text-slate-800">
+            <option value="Aktif">Aktif (Operasi Normal)</option>
+            <option value="Standby">Standby (Siap Kerja)</option>
+            <option value="Breakdown">Breakdown (Dalam Perbaikan)</option>
+          </select>
+        </div>
+        <div class="pt-2 flex items-center space-x-2">
+          <button type="submit"
+            class="flex-1 py-3 rounded-2xl bg-brand-200 hover:bg-brand-300 text-brand-800 font-extrabold uppercase tracking-wider transition cursor-pointer">
+            Simpan Data Armada
+          </button>
+          <button type="button" onclick="toggleModal('modal-armada-form', false)"
+            class="px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold transition cursor-pointer">
+            Batal
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: IMPORT DATA MASTER ARMADA -->
+  <div id="modal-import-armada"
+    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-sm font-bold text-slate-900">Import Data Master Armada</h3>
+        <button onclick="toggleModal('modal-import-armada', false)"
+          class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div
+        class="p-3.5 rounded-2xl bg-cyan-50 border border-cyan-100 flex items-start space-x-2.5 text-xs text-cyan-900">
+        <svg class="w-4 h-4 text-cyan-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div>
+          <span class="font-bold block">Format File Excel:</span>
+          Kolom wajib: <span class="font-bold">UNIT, TYPE UNIT, CLUSTER</span> (Status operasional opsional).
+        </div>
+      </div>
+
+      <div id="armada-import-drop-zone"
+        class="border-2 border-dashed border-slate-200 hover:border-cyan-400 rounded-2xl p-6 text-center transition cursor-pointer bg-slate-50/50"
+        onclick="document.getElementById('armada-import-file-input').click()">
+        <input type="file" id="armada-import-file-input" accept=".xlsx,.xls,.csv"
+          onchange="handleArmadaImportFile(event)" class="hidden">
+        <svg class="w-10 h-10 mx-auto text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+        </svg>
+        <p class="text-xs font-bold text-slate-700 mt-2">Pilih File Excel / Drag ke sini</p>
+        <p class="text-[10px] text-slate-400 mt-1" id="armada-import-file-label">Mendukung .xlsx atau .csv</p>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <button type="button" onclick="downloadMasterArmadaTemplate()"
+          class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
+          Unduh Template Excel
+        </button>
+        <button type="button" onclick="toggleModal('modal-import-armada', false)"
+          class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition cursor-pointer">
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: KELOLA ARMADA DI CLUSTER TERTENTU (Quick Menu dari Cluster Bar) -->
+  <div id="modal-cluster-armada-detail"
+    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900" id="cluster-armada-detail-title">Armada Bertugas di Cluster</h3>
+          <p class="text-xs text-slate-400" id="cluster-armada-detail-subtitle">KGU Selatan • Lubetruck</p>
+        </div>
+        <button onclick="toggleModal('modal-cluster-armada-detail', false)"
+          class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-2">
+        <span class="text-xs font-bold text-slate-700 block">Daftar Armada Aktif di Cluster Ini:</span>
+        <div id="cluster-armada-chips-container"
+          class="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 min-h-16 items-center">
+          <!-- Populated dynamically via openClusterArmadaModal() -->
+        </div>
+      </div>
+
+      <div class="pt-2 flex flex-col sm:flex-row items-center gap-2">
+        <button type="button" id="btn-cluster-armada-add-new"
+          class="w-full sm:flex-1 py-2.5 rounded-xl bg-brand-200 hover:bg-brand-300 text-brand-800 font-extrabold text-xs transition shadow-2xs flex items-center justify-center space-x-1 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          <span>Tambah Armada ke Cluster Ini</span>
+        </button>
+        <button type="button" onclick="goToMasterArmadaFromCluster()"
+          class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
+          Buka Master Armada
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="modal-unit-form"
     class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
@@ -5424,7 +5738,14 @@
               class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 uppercase">
           </div>
           <div>
-            <label class="block text-slate-700 mb-1" id="add-job-armada-label">No LT Bertugas</label>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-slate-700" id="add-job-armada-label">No LT Bertugas</label>
+              <button type="button"
+                onclick="openAddArmadaModal(document.getElementById('add-job-cluster')?.value, document.getElementById('add-job-target-type')?.value === 'WT' ? 'Water Truck' : 'Lubetruck')"
+                class="text-[10px] text-brand-700 hover:text-brand-900 font-bold hover:underline cursor-pointer flex items-center space-x-0.5">
+                <span>+ Armada Baru</span>
+              </button>
+            </div>
             <select id="add-job-lt" onchange="handleArmadaSelectChange(this.value)"
               class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 font-mono font-bold text-xs bg-white text-slate-800">
               <!-- Dynamically populated via populateAddJobArmadaOptions() -->
@@ -6671,6 +6992,23 @@
           safeStorage.setItem('SE_CLUSTER_WT', JSON.stringify(state.clusterWtAssigned));
         }
         if (state.masterUnits !== undefined) {
+          safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
+          // Sinkronisasi ke Supabase jika online
+          if (state.supabaseClient) {
+            try {
+              state.supabaseClient.from('master_armada').upsert({
+                id: id || ('ARM-' + Date.now()),
+                unit: unit,
+                type_unit: typeUnit,
+                cluster: cluster,
+                status: status,
+                updated_at: new Date().toISOString()
+              }).then(res => {
+                if (res.error) console.warn('[Supabase Sync Armada Error]', res.error.message);
+                else console.log('[Supabase Sync Armada OK]', unit);
+              });
+            } catch (e) { }
+          }
           safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
         }
         if (state.masterOperators !== undefined) {
@@ -6678,6 +7016,28 @@
         }
         if (state.masterRoster !== undefined) {
           safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster));
+          // Sinkronisasi ke Supabase jika online
+          if (state.supabaseClient && state.parsedRosterData && state.parsedRosterData.length > 0) {
+            try {
+              const supaRows = state.parsedRosterData.map(r => ({
+                id: r.id,
+                jenis: r.jenis,
+                nrp: r.nrp,
+                nik: r.nik,
+                nama: r.nama,
+                unit: r.unit,
+                unit_efektif: r.unitEfektif,
+                tanggal: r.tanggal,
+                shift: r.shift,
+                kode_shift: r.kodeShift,
+                is_spare: r.isSpare || false
+              }));
+              state.supabaseClient.from('master_roster').upsert(supaRows).then(res => {
+                if (res.error) console.warn('[Supabase Sync Roster Error]', res.error.message);
+                else console.log('[Supabase Sync Roster OK]', supaRows.length, 'baris');
+              });
+            } catch (e) { }
+          }
         }
         if (state.masterUsers !== undefined) {
           safeStorage.setItem('SE_MASTER_USERS', JSON.stringify(state.masterUsers));
@@ -6737,6 +7097,18 @@
         if (savedClusterWt !== null) {
           const parsed = JSON.parse(savedClusterWt);
           if (parsed && typeof parsed === 'object') state.clusterWtAssigned = parsed;
+        }
+        const savedArmada = safeStorage.getItem('SE_MASTER_ARMADA');
+        if (savedArmada !== null) {
+          try {
+            const parsedArm = JSON.parse(savedArmada);
+            if (Array.isArray(parsedArm) && parsedArm.length > 0) state.masterArmada = parsedArm;
+            else state.masterArmada = [...DEFAULT_MASTER_ARMADA];
+          } catch (e) {
+            state.masterArmada = [...DEFAULT_MASTER_ARMADA];
+          }
+        } else {
+          state.masterArmada = [...DEFAULT_MASTER_ARMADA];
         }
         const savedUnits = safeStorage.getItem('SE_MASTER_UNITS');
         if (savedUnits !== null) {
@@ -6829,6 +7201,27 @@
     ];
 
     // Global Reactive Application State (Siap Uji Coba Data Riil)
+
+    const DEFAULT_MASTER_ARMADA = [
+      { id: 'ARM-01', unit: 'LT2535', typeUnit: 'Lubetruck', cluster: 'Selatan', status: 'Aktif' },
+      { id: 'ARM-02', unit: 'LT2622', typeUnit: 'Lubetruck', cluster: 'Selatan', status: 'Aktif' },
+      { id: 'ARM-03', unit: 'LT2530', typeUnit: 'Lubetruck', cluster: 'Selatan', status: 'Aktif' },
+      { id: 'ARM-04', unit: 'LT2514', typeUnit: 'Lubetruck', cluster: 'Tengah', status: 'Aktif' },
+      { id: 'ARM-05', unit: 'LT2518', typeUnit: 'Lubetruck', cluster: 'Tengah', status: 'Aktif' },
+      { id: 'ARM-06', unit: 'LT2510', typeUnit: 'Lubetruck', cluster: 'Utara', status: 'Aktif' },
+      { id: 'ARM-07', unit: 'LT2525', typeUnit: 'Lubetruck', cluster: 'Utara', status: 'Aktif' },
+      { id: 'ARM-08', unit: 'LT2515', typeUnit: 'Lubetruck', cluster: 'Selatan', status: 'Aktif' },
+      { id: 'ARM-09', unit: 'LT2536', typeUnit: 'Lubetruck', cluster: 'Selatan', status: 'Aktif' },
+      { id: 'ARM-10', unit: 'WT101', typeUnit: 'Water Truck', cluster: 'Selatan', status: 'Aktif' },
+      { id: 'ARM-11', unit: 'WT102', typeUnit: 'Water Truck', cluster: 'Tengah', status: 'Aktif' },
+      { id: 'ARM-12', unit: 'WT103', typeUnit: 'Water Truck', cluster: 'Utara', status: 'Aktif' },
+      { id: 'ARM-13', unit: 'WT104', typeUnit: 'Water Truck', cluster: 'Selatan', status: 'Aktif' },
+      { id: 'ARM-14', unit: 'WT105', typeUnit: 'Water Truck', cluster: 'Tengah', status: 'Aktif' },
+      { id: 'ARM-15', unit: 'WT2520', typeUnit: 'Water Truck', cluster: 'Selatan', status: 'Aktif' },
+      { id: 'ARM-16', unit: 'WT2644', typeUnit: 'Water Truck', cluster: 'Utara', status: 'Aktif' },
+      { id: 'ARM-17', unit: 'WT2645', typeUnit: 'Water Truck', cluster: 'ROM', status: 'Aktif' }
+    ];
+
     const state = {
       currentUser: null,
       supabaseClient: null,
@@ -6855,6 +7248,10 @@
         'Utara': 'WT101',
         'ROM': 'WT101'
       },
+      masterArmada: [...DEFAULT_MASTER_ARMADA],
+      isArmadaSelectMode: false,
+      selectedArmadaIds: new Set(),
+      parsedArmadaImportData: [],
       masterUnits: [],
       masterUsers: [...MOCK_USERS],
       currentAchPhotos: ['', '', '', ''],
@@ -8637,7 +9034,7 @@
 
     function switchMasterSection(sectionKey) {
       state.masterActiveSection = sectionKey;
-      ['roster', 'units', 'operators', 'accounts'].forEach(sec => {
+      ['roster', 'units', 'armada', 'operators', 'accounts'].forEach(sec => {
         const secEl = document.getElementById(`master-section-${sec}`);
         const btnEl = document.getElementById(`btn-master-sec-${sec}`);
         if (secEl) {
@@ -8653,6 +9050,7 @@
         }
       });
       if (sectionKey === 'units') renderMasterUnitsTable();
+      else if (sectionKey === 'armada') renderMasterArmadaTable();
       else if (sectionKey === 'operators') renderMasterOperatorsTable();
       else if (sectionKey === 'accounts') renderMasterAccountsTable();
       else if (sectionKey === 'roster' && state.masterSubtab === 'database') renderDatabaseRosterTable();
@@ -9829,7 +10227,12 @@
             </div>
             <div class="flex items-center space-x-2">
               <span class="text-[10px] text-emerald-800 font-bold">${clusterJobs.length} Alat Berat</span>
-              ${isAdmin ? `<button type="button" onclick="openAddJobModal(1, '${clusterName}', 'LT')" class="px-2 py-0.5 rounded-lg bg-brand-200 hover:bg-brand-300 text-brand-900 text-[10px] font-extrabold transition shadow-2xs">+ Tambah Unit</button>` : ''}
+              ${isAdmin ? `
+                <button type="button" onclick="openClusterArmadaModal('${clusterName}', 'LT')" class="px-2 py-0.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 text-[10px] font-extrabold transition shadow-2xs flex items-center space-x-1 cursor-pointer">
+                  <span>🚚 Armada KGU ${clusterName}</span>
+                </button>
+                <button type="button" onclick="openAddJobModal(1, '${clusterName}', 'LT')" class="px-2 py-0.5 rounded-lg bg-brand-200 hover:bg-brand-300 text-brand-900 text-[10px] font-extrabold transition shadow-2xs">+ Tambah Unit</button>
+              ` : ''}
             </div>
           `;
           clusterSection.appendChild(clusterBar);
@@ -9966,7 +10369,12 @@
             </div>
             <div class="flex items-center space-x-2">
               <span class="text-[10px] text-emerald-800 font-bold">${clusterJobs.length} Alat Berat</span>
-              ${isAdmin ? `<button type="button" onclick="openAddJobModal(${shiftNum}, '${clusterName}', 'LT')" class="px-2 py-0.5 rounded-lg bg-brand-200 hover:bg-brand-300 text-brand-900 text-[10px] font-extrabold transition shadow-2xs">+ Tambah Unit</button>` : ''}
+              ${isAdmin ? `
+                <button type="button" onclick="openClusterArmadaModal('${clusterName}', 'LT')" class="px-2 py-0.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 text-[10px] font-extrabold transition shadow-2xs flex items-center space-x-1 cursor-pointer">
+                  <span>🚚 Armada KGU ${clusterName}</span>
+                </button>
+                <button type="button" onclick="openAddJobModal(${shiftNum}, '${clusterName}', 'LT')" class="px-2 py-0.5 rounded-lg bg-brand-200 hover:bg-brand-300 text-brand-900 text-[10px] font-extrabold transition shadow-2xs">+ Tambah Unit</button>
+              ` : ''}
             </div>
           `;
           clusterSection.appendChild(clusterBar);
@@ -10169,7 +10577,12 @@
             </div>
             <div class="flex items-center space-x-2">
               <span class="text-[10px] text-cyan-800 font-bold">${clusterJobs.length} Alat Berat</span>
-              ${isAdmin ? `<button type="button" onclick="openAddJobModal(1, '${clusterName}', 'WT')" class="px-2 py-0.5 rounded-lg bg-cyan-200 hover:bg-cyan-300 text-cyan-950 text-[10px] font-extrabold transition shadow-2xs">+ Tambah Unit</button>` : ''}
+              ${isAdmin ? `
+                <button type="button" onclick="openClusterArmadaModal('${clusterName}', 'WT')" class="px-2 py-0.5 rounded-lg bg-cyan-100 hover:bg-cyan-200 text-cyan-950 border border-cyan-300 text-[10px] font-extrabold transition shadow-2xs flex items-center space-x-1 cursor-pointer">
+                  <span>💧 Armada</span>
+                </button>
+                <button type="button" onclick="openAddJobModal(1, '${clusterName}', 'WT')" class="px-2 py-0.5 rounded-lg bg-cyan-200 hover:bg-cyan-300 text-cyan-950 text-[10px] font-extrabold transition shadow-2xs">+ Tambah Unit</button>
+              ` : ''}
             </div>
           `;
           clusterSection.appendChild(clusterBar);
@@ -10328,7 +10741,12 @@
               </div>
               <div class="flex items-center space-x-2">
                 <span class="text-[10px] text-cyan-800 font-bold">${clusterJobs.length} Alat Berat</span>
-                ${isAdmin ? `<button type="button" onclick="openAddJobModal(${shiftNum}, '${clusterName}', 'WT', ${round.num})" class="px-2 py-0.5 rounded-lg bg-cyan-200 hover:bg-cyan-300 text-cyan-950 text-[10px] font-extrabold transition shadow-2xs">+ Tambah Unit</button>` : ''}
+                ${isAdmin ? `
+                  <button type="button" onclick="openClusterArmadaModal('${clusterName}', 'WT')" class="px-2 py-0.5 rounded-lg bg-cyan-100 hover:bg-cyan-200 text-cyan-950 border border-cyan-300 text-[10px] font-extrabold transition shadow-2xs flex items-center space-x-1 cursor-pointer">
+                    <span>💧 Armada</span>
+                  </button>
+                  <button type="button" onclick="openAddJobModal(${shiftNum}, '${clusterName}', 'WT', ${round.num})" class="px-2 py-0.5 rounded-lg bg-cyan-200 hover:bg-cyan-300 text-cyan-950 text-[10px] font-extrabold transition shadow-2xs">+ Tambah Unit</button>
+                ` : ''}
               </div>
             `;
             clusterSection.appendChild(clusterBar);
@@ -12651,20 +13069,175 @@
     }
 
     function triggerParseRoster() {
-      showToast('Memproses file roster...', 'info');
-      setTimeout(() => {
-        showToast('File roster berhasil dimuat!', 'success');
-        renderDatabaseRosterTable();
-      }, 400);
+      const input = document.getElementById('input-roster-file');
+      const files = input?.files;
+      if (!files || files.length === 0) {
+        showToast('Silakan pilih atau seret berkas Excel/CSV roster terlebih dahulu!', 'warning');
+        return;
+      }
+      processRosterFile(files[0]);
+    }
+
+    function processRosterFile(file) {
+      if (typeof XLSX === 'undefined') {
+        showToast('Library SheetJS belum siap!', 'error');
+        return;
+      }
+
+      const fileLabel = document.getElementById('roster-file-label');
+      if (fileLabel) fileLabel.textContent = `File terpilih: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+      showToast('Membaca & mem-parsing berkas roster...', 'info');
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const data = e.target.result;
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const firstSheet = workbook.SheetNames[0];
+          const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], { header: 1, defval: '' });
+
+          if (!rawRows || rawRows.length < 2) {
+            showToast('Format Excel tidak sesuai atau baris data kosong!', 'warning');
+            return;
+          }
+
+          let headerRowIdx = -1;
+          let colJenis = -1, colNrp = -1, colNama = -1, colUnit = -1, colTgl = -1, colShift = -1, colKode = -1;
+
+          for (let r = 0; r < Math.min(rawRows.length, 5); r++) {
+            const rowUpper = rawRows[r].map(c => String(c).trim().toUpperCase());
+            const nrpIdx = rowUpper.findIndex(c => c.includes('NRP') || c.includes('NIK'));
+            const namaIdx = rowUpper.findIndex(c => c.includes('NAMA'));
+            if (nrpIdx !== -1 && namaIdx !== -1) {
+              headerRowIdx = r;
+              colNrp = nrpIdx;
+              colNama = namaIdx;
+              colJenis = rowUpper.findIndex(c => c.includes('JENIS') || c.includes('TIPE'));
+              colUnit = rowUpper.findIndex(c => c.includes('UNIT') || c.includes('BATANGAN') || c.includes('LAMBUNG'));
+              colTgl = rowUpper.findIndex(c => c.includes('TANGGAL') || c.includes('DATE') || c.includes('TGL'));
+              colShift = rowUpper.findIndex(c => c.includes('SHIFT'));
+              colKode = rowUpper.findIndex(c => c.includes('KODE'));
+              break;
+            }
+          }
+
+          if (headerRowIdx === -1) {
+            headerRowIdx = 0;
+            colJenis = 1; colNrp = 2; colNama = 3; colUnit = 4; colTgl = 5; colShift = 6; colKode = 7;
+          }
+
+          const defaultJenis = document.getElementById('roster-upload-type')?.value || 'OPT';
+          const periodVal = document.getElementById('roster-upload-period')?.value || '2026-10';
+          const parsedData = [];
+
+          for (let r = headerRowIdx + 1; r < rawRows.length; r++) {
+            const row = rawRows[r];
+            if (!row || row.length === 0) continue;
+            const nrp = String(row[colNrp] || '').trim();
+            const nama = String(row[colNama] || '').trim();
+            if (!nrp && !nama) continue;
+
+            let jenis = (colJenis !== -1 && row[colJenis]) ? String(row[colJenis]).trim().toUpperCase() : defaultJenis;
+            if (!['OPT', 'OM', 'WM'].includes(jenis)) jenis = defaultJenis;
+
+            let unit = (colUnit !== -1 && row[colUnit]) ? String(row[colUnit]).trim().toUpperCase() : '-';
+            let tgl = (colTgl !== -1 && row[colTgl]) ? String(row[colTgl]).trim() : `${periodVal}-01`;
+            let shift = (colShift !== -1 && row[colShift]) ? parseInt(row[colShift], 10) || 1 : 1;
+            let kodeShift = (colKode !== -1 && row[colKode]) ? String(row[colKode]).trim().toUpperCase() : 'DWS';
+
+            let isSpare = false;
+            let unitEfektif = unit;
+            if (/^[DN]\d{3}$/.test(kodeShift)) {
+              isSpare = true;
+              unitEfektif = 'LT2' + kodeShift.substring(1);
+            }
+
+            parsedData.push({
+              id: `ROSTER-${Date.now()}-${r}`,
+              jenis,
+              nrp: nrp || `NRP-${r}`,
+              nik: nrp || `NRP-${r}`,
+              nama: nama || `Pegawai ${r}`,
+              unit,
+              unitEfektif,
+              tanggal: tgl,
+              shift,
+              kodeShift,
+              isSpare
+            });
+          }
+
+          if (parsedData.length === 0) {
+            showToast('Tidak ada data roster valid yang dapat diparsing!', 'warning');
+            return;
+          }
+
+          state.parsedRosterData = parsedData;
+          renderRosterPreviewRows();
+          showToast(`Berhasil mem-parsing ${parsedData.length} baris roster!`, 'success');
+        } catch (err) {
+          console.error('[Process Roster File Error]', err);
+          showToast('Gagal memproses file: ' + err.message, 'error');
+        }
+      };
+      reader.readAsBinaryString(file);
+    }
+
+    function renderRosterPreviewRows() {
+      const tbody = document.getElementById('roster-preview-tbody');
+      const countEl = document.getElementById('preview-record-count');
+      if (!tbody) return;
+
+      const list = state.parsedRosterData || [];
+      if (countEl) countEl.textContent = `Menampilkan ${list.length} data yang siap disimpan`;
+
+      tbody.innerHTML = '';
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="py-6 text-center text-slate-400 italic">Belum ada file yang di-preview</td></tr>';
+        return;
+      }
+
+      list.slice(0, 100).forEach((r, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition font-medium';
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 text-center font-mono text-[11px] text-slate-400">${idx + 1}</td>
+          <td class="py-2.5 px-3 font-bold"><span class="px-2 py-0.5 rounded text-[10px] ${r.jenis === 'OPT' ? 'bg-amber-100 text-amber-800' : (r.jenis === 'OM' ? 'bg-emerald-100 text-emerald-800' : 'bg-cyan-100 text-cyan-800')}">${r.jenis}</span></td>
+          <td class="py-2.5 px-3 font-mono text-[11px] font-bold text-slate-900">${r.nrp}</td>
+          <td class="py-2.5 px-3 text-slate-900 font-semibold">${r.nama}</td>
+          <td class="py-2.5 px-3 font-mono font-bold">${r.unit}</td>
+          <td class="py-2.5 px-3 font-mono text-[11px]">${r.tanggal}</td>
+          <td class="py-2.5 px-3 font-semibold">Shift ${r.shift}</td>
+          <td class="py-2.5 px-3 font-mono font-bold text-slate-700">${r.kodeShift}</td>
+          <td class="py-2.5 px-3 text-[11px]">${r.isSpare ? `<span class="text-emerald-700 font-bold">Spare ${r.unitEfektif}</span>` : (r.kodeShift === 'OOFF' || r.kodeShift === 'CCUTI' ? '<span class="text-rose-600 font-bold">Off/Libur</span>' : '<span class="text-slate-600">Batangan</span>')}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function saveParsedRoster(append = false) {
+      if (!state.parsedRosterData || state.parsedRosterData.length === 0) {
+        showToast('Tidak ada data roster hasil parsing untuk disimpan!', 'warning');
+        return;
+      }
+
+      if (append) {
+        state.masterRoster = [...(state.masterRoster || []), ...state.parsedRosterData];
+      } else {
+        state.masterRoster = [...state.parsedRosterData];
+      }
+
+      safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster));
+      saveDatabaseSync();
+      renderDatabaseRosterTable();
+
+      showToast(`Database Roster berhasil disimpan (${state.parsedRosterData.length} data)!`, 'success');
+      switchMasterSubtab('database');
     }
 
     function loadSampleRosterTemplate() {
       showToast('Template sample roster berhasil dimuat!', 'success');
       renderDatabaseRosterTable();
-    }
-
-    function saveParsedRoster() {
-      showToast('Database Roster berhasil disimpan!', 'success');
     }
 
     function openJobDetailModal(jobId) {
@@ -12970,17 +13543,52 @@
       if (!selectEl) return;
 
       const isWt = (targetType === 'WT');
-      let armadas = [];
 
-      if (isWt) {
-        armadas = ['WT101', 'WT102', 'WT2520', 'WT2644', 'WT2645'];
-      } else {
-        armadas = ['LT2510', 'LT2514', 'LT2535', 'LT2536'];
+      // Ambil daftar armada langsung dari Data Master Armada
+      const allArmadas = (state.masterArmada && state.masterArmada.length > 0)
+        ? state.masterArmada
+        : (typeof DEFAULT_MASTER_ARMADA !== 'undefined' ? DEFAULT_MASTER_ARMADA : []);
+
+      const filtered = allArmadas.filter(a => {
+        const t = String(a.typeUnit || a.tipe || '').toLowerCase();
+        return isWt ? (t.includes('water') || t.includes('wt')) : (t.includes('lube') || t.includes('lt'));
+      });
+
+      const clusterClean = cluster ? cluster.replace(/^KGU\s+/i, '').trim().toLowerCase() : '';
+      const inCluster = filtered.filter(a => (a.cluster || '').toLowerCase() === clusterClean);
+      const otherCluster = filtered.filter(a => (a.cluster || '').toLowerCase() !== clusterClean);
+
+      let html = '';
+      if (inCluster.length > 0) {
+        html += `<optgroup label="Armada KGU ${cluster.toUpperCase()}">`;
+        inCluster.forEach(a => {
+          const statusText = (a.status && a.status !== 'Aktif') ? ` (${a.status})` : '';
+          html += `<option value="${a.unit}">${a.unit} (KGU ${a.cluster}${statusText})</option>`;
+        });
+        html += '</optgroup>';
       }
 
-      selectEl.innerHTML = armadas.map(a => `<option value="${a}">${a}</option>`).join('');
-      if (armadas.length > 0) {
-        handleArmadaSelectChange(armadas[0]);
+      if (otherCluster.length > 0) {
+        html += '<optgroup label="Armada Cluster Lainnya">';
+        otherCluster.forEach(a => {
+          const statusText = (a.status && a.status !== 'Aktif') ? ` (${a.status})` : '';
+          html += `<option value="${a.unit}">${a.unit} (${a.cluster ? 'KGU ' + a.cluster : 'Lain'}${statusText})</option>`;
+        });
+        html += '</optgroup>';
+      }
+
+      if (!html) {
+        const fallbacks = isWt ? ['WT101', 'WT102', 'WT103'] : ['LT2510', 'LT2514', 'LT2535', 'LT2536'];
+        html = fallbacks.map(a => `<option value="${a}">${a}</option>`).join('');
+      }
+
+      selectEl.innerHTML = html;
+
+      // Pilih unit pertama
+      const selectedUnit = (inCluster.length > 0 ? inCluster[0].unit : (otherCluster.length > 0 ? otherCluster[0].unit : (selectEl.options[0]?.value || '')));
+      if (selectedUnit) {
+        selectEl.value = selectedUnit;
+        handleArmadaSelectChange(selectedUnit);
       }
     }
     window.populateAddJobArmadaOptions = populateAddJobArmadaOptions;
@@ -13143,7 +13751,74 @@
     function handleUnitsDropFile(e) { if (e && e.preventDefault) e.preventDefault(); showToast('File unit diproses', 'info'); }
 
     function downloadOfficialRosterTemplate() {
-      showToast('Mengunduh template roster...', 'info');
+      if (typeof XLSX === 'undefined') {
+        showToast('Library SheetJS belum siap!', 'error');
+        return;
+      }
+      showToast('Membuat template Excel Roster Bulanan...', 'info');
+
+      try {
+        const periodVal = document.getElementById('roster-upload-period')?.value || '2026-10';
+        const prefixDate = periodVal ? `${periodVal}-01` : '2026-10-01';
+
+        // 1. Sheet Utama: DATA ROSTER
+        const headers = ['NO', 'JENIS', 'NRP', 'NAMA PEGAWAI', 'UNIT BATANGAN', 'TANGGAL', 'SHIFT', 'KODE SHIFT', 'KETERANGAN'];
+        const sampleData = [
+          // Operator Tetap (DWS = Day / Siang, NWS = Night / Malam)
+          ['1', 'OPT', '800101', 'Budi Santoso', 'LT2510', prefixDate, '1', 'DWS', 'Operator Tetap Siang'],
+          ['2', 'OPT', '800102', 'Joko Widodo', 'LT2510', prefixDate, '2', 'NWS', 'Operator Tetap Malam'],
+          // Operator Spare (D514 = Day Shift spare unit LT2514)
+          ['3', 'OPT', '800103', 'Slamet Riyadi', 'LT2514', prefixDate, '1', 'D514', 'Operator Spare LT2514'],
+          // Operator Sedang Libur / Off
+          ['4', 'OPT', '800104', 'Andi Saputra', 'LT2535', prefixDate, '1', 'OOFF', 'Operator Sedang Off Libur'],
+          ['5', 'OPT', '800105', 'Hadi Purnomo', 'LT2535', prefixDate, '1', 'D535', 'Operator Spare Gantikan Andi'],
+          // Oilman (OM) untuk Lube Truck
+          ['6', 'OM', '800201', 'Hendra Gunawan', 'LT2510', prefixDate, '1', 'DWS', 'Oilman Lube Truck MP 1'],
+          ['7', 'OM', '800202', 'Doni Pratama', 'LT2510', prefixDate, '1', 'DWS', 'Oilman Lube Truck MP 2'],
+          ['8', 'OM', '800203', 'Rahmat Hidayat', 'LT2535', prefixDate, '1', 'DWS', 'Oilman LT2535'],
+          // Washingman (WM) untuk Water Truck
+          ['9', 'WM', '800301', 'Agus Setiawan', 'WT101', prefixDate, '1', 'DWS', 'Washingman WT101'],
+          ['10', 'WM', '800302', 'Bambang Supeno', 'WT102', prefixDate, '1', 'DWS', 'Washingman WT102']
+        ];
+
+        const wb = XLSX.utils.book_new();
+        const wsData = [headers, ...sampleData];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        ws['!cols'] = [
+          { wch: 6 },
+          { wch: 10 },
+          { wch: 14 },
+          { wch: 22 },
+          { wch: 16 },
+          { wch: 14 },
+          { wch: 8 },
+          { wch: 14 },
+          { wch: 30 }
+        ];
+        XLSX.utils.book_append_sheet(wb, ws, 'DATA_ROSTER');
+
+        // 2. Sheet Petunjuk Kode Shift
+        const guideHeaders = ['KODE SHIFT', 'ARTI STATUS', 'KETERANGAN LOGIKA SISTEM'];
+        const guideData = [
+          ['DWS', 'Day Work Shift (Siang)', 'Operator batangan bertugas pada shift 1 di unit bawaannya'],
+          ['NWS', 'Night Work Shift (Malam)', 'Operator batangan bertugas pada shift 2 di unit bawaannya'],
+          ['D + 3 Digit Unit (cth: D510)', 'Spare Day Shift', 'Operator pengganti (spare) yang membawa unit LT2510 di shift siang'],
+          ['N + 3 Digit Unit (cth: N510)', 'Spare Night Shift', 'Operator pengganti (spare) yang membawa unit LT2510 di shift malam'],
+          ['OOFF', 'Off Kerja / Libur', 'Operator batangan libur, sistem otomatis mencari personil spare'],
+          ['CCUTI', 'Cuti Tahunan / Lapangan', 'Operator batangan cuti, sistem otomatis mencari personil spare'],
+          ['INDR', 'Induksi / Training / Izin', 'Personil tidak dijadwalkan pada unit servis atau unit operasional']
+        ];
+        const wsGuide = XLSX.utils.aoa_to_sheet([guideHeaders, ...guideData]);
+        wsGuide['!cols'] = [{ wch: 20 }, { wch: 25 }, { wch: 55 }];
+        XLSX.utils.book_append_sheet(wb, wsGuide, 'PANDUAN_KODE_SHIFT');
+
+        const fileName = `TEMPLATE_ROSTER_${periodVal.replace('-', '_')}_SE_MANAGEMENT.xlsx`;
+        XLSX.writeFile(wb, fileName);
+        showToast('Template Excel Roster Bulanan berhasil diunduh!', 'success');
+      } catch (err) {
+        console.error('[Download Roster Error]', err);
+        showToast('Gagal membuat file template roster: ' + err.message, 'error');
+      }
     }
 
     function formatWaClean(num) {
@@ -14436,6 +15111,533 @@
       renderDatabaseRosterTable();
     }
 
+
+    // ==============================================================================
+    // DATA MASTER ARMADA (LUBETRUCK & WATER TRUCK) & PENUGASAN CLUSTER
+    // ==============================================================================
+    let armadaIdToDelete = null;
+
+    function renderMasterArmadaTable() {
+      const tbody = document.getElementById('master-armada-tbody');
+      const thSelect = document.getElementById('th-armada-select');
+      const selectAllCheckbox = document.getElementById('armada-select-all');
+      if (!tbody) return;
+
+      const typeFilter = document.getElementById('filter-armada-type')?.value || 'ALL';
+      const clusterFilter = document.getElementById('filter-armada-cluster')?.value || 'ALL';
+      const search = (document.getElementById('search-armada-input')?.value || '').toLowerCase().trim();
+
+      let list = state.masterArmada || [];
+      if (typeFilter !== 'ALL') {
+        list = list.filter(a => (a.typeUnit || a.tipe || '').toLowerCase() === typeFilter.toLowerCase());
+      }
+      if (clusterFilter !== 'ALL') {
+        list = list.filter(a => isClusterMatchFilter(a.cluster, clusterFilter));
+      }
+      if (search) {
+        list = list.filter(a =>
+          (a.unit && a.unit.toLowerCase().includes(search)) ||
+          (a.typeUnit && a.typeUnit.toLowerCase().includes(search)) ||
+          (a.cluster && a.cluster.toLowerCase().includes(search))
+        );
+      }
+
+      if (thSelect) {
+        if (state.isArmadaSelectMode) thSelect.classList.remove('hidden');
+        else thSelect.classList.add('hidden');
+      }
+
+      tbody.innerHTML = '';
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${state.isArmadaSelectMode ? 7 : 6}" class="py-8 text-center text-slate-400 italic font-medium">Tidak ada data armada yang sesuai filter</td></tr>`;
+        return;
+      }
+
+      let allChecked = true;
+      list.forEach((a, idx) => {
+        const isChecked = state.selectedArmadaIds.has(a.id);
+        if (!isChecked) allChecked = false;
+
+        const isLt = (a.typeUnit === 'Lubetruck');
+        const tr = document.createElement('tr');
+        tr.className = `hover:bg-slate-50 transition font-medium ${isChecked ? 'bg-amber-50/60' : ''}`;
+        tr.innerHTML = `
+          ${state.isArmadaSelectMode ? `
+            <td class="py-2.5 px-3 text-center">
+              <input 
+                type="checkbox" 
+                value="${a.id}" 
+                ${isChecked ? 'checked' : ''} 
+                onchange="toggleSelectArmadaRow('${a.id}', this.checked)" 
+                class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 cursor-pointer"
+              >
+            </td>
+          ` : ''}
+          <td class="py-3 px-4 text-center font-mono text-[11px] text-slate-400">${idx + 1}</td>
+          <td class="py-3 px-4 font-mono font-bold text-slate-900 text-sm">
+            <span class="px-2 py-0.5 rounded-lg ${isLt ? 'bg-emerald-100 text-emerald-950 font-black' : 'bg-cyan-100 text-cyan-950 font-black'}">
+              ${a.unit}
+            </span>
+          </td>
+          <td class="py-3 px-4 font-bold text-slate-700">
+            <span class="inline-flex items-center space-x-1.5">
+              <span>${isLt ? '🛢️' : '💧'}</span>
+              <span>${a.typeUnit || 'Lubetruck'}</span>
+            </span>
+          </td>
+          <td class="py-3 px-4 font-semibold text-slate-800">
+            <span class="inline-block px-2.5 py-1 rounded-full text-xs font-bold ${getClusterBadgeClass(a.cluster)}">
+              KGU ${a.cluster}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-center">
+            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${a.status === 'Aktif' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : (a.status === 'Standby' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-rose-100 text-rose-800 border border-rose-200')}">
+              ${a.status || 'Aktif'}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-center">
+            <div class="flex items-center justify-center space-x-1.5">
+              <button type="button" onclick="openEditArmadaModal('${a.id}')"
+                class="p-1.5 rounded-lg text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 transition cursor-pointer" title="Edit Armada">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+              </button>
+              <button type="button" onclick="promptDeleteMasterArmada('${a.id}')"
+                class="p-1.5 rounded-lg text-slate-400 hover:text-rose-700 hover:bg-rose-50 transition cursor-pointer" title="Hapus Armada">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (selectAllCheckbox) {
+        selectAllCheckbox.checked = (list.length > 0 && allChecked);
+      }
+    }
+
+    function getClusterBadgeClass(clusterName) {
+      const c = (clusterName || '').toLowerCase();
+      if (c.includes('selatan')) return 'bg-emerald-50 text-emerald-800 border border-emerald-200';
+      if (c.includes('tengah')) return 'bg-blue-50 text-blue-800 border border-blue-200';
+      if (c.includes('utara')) return 'bg-purple-50 text-purple-800 border border-purple-200';
+      if (c.includes('rom')) return 'bg-amber-50 text-amber-800 border border-amber-200';
+      return 'bg-slate-100 text-slate-700 border border-slate-200';
+    }
+
+    function openAddArmadaModal(defaultCluster = 'Selatan', defaultType = 'Lubetruck') {
+      const modal = document.getElementById('modal-armada-form');
+      if (!modal) return;
+      document.getElementById('armada-form-id').value = '';
+      document.getElementById('armada-modal-title').textContent = 'Tambah Armada Baru';
+      document.getElementById('armada-form-unit').value = '';
+      document.getElementById('armada-form-type').value = defaultType;
+
+      const clusterSelect = document.getElementById('armada-form-cluster');
+      if (clusterSelect) {
+        const cleanClust = defaultCluster ? defaultCluster.replace(/^KGU\s+/i, '').trim() : 'Selatan';
+        clusterSelect.value = cleanClust;
+        if (!clusterSelect.value) clusterSelect.value = 'Selatan';
+      }
+
+      document.getElementById('armada-form-status').value = 'Aktif';
+      toggleModal('modal-armada-form', true);
+    }
+
+    function openEditArmadaModal(id) {
+      const a = (state.masterArmada || []).find(item => item.id === id);
+      if (!a) return;
+      document.getElementById('armada-form-id').value = a.id;
+      document.getElementById('armada-modal-title').textContent = 'Edit Data Armada';
+      document.getElementById('armada-form-unit').value = a.unit;
+      document.getElementById('armada-form-type').value = a.typeUnit || 'Lubetruck';
+      document.getElementById('armada-form-cluster').value = a.cluster || 'Selatan';
+      document.getElementById('armada-form-status').value = a.status || 'Aktif';
+      toggleModal('modal-armada-form', true);
+    }
+
+    function handleSaveArmada(e) {
+      if (e && e.preventDefault) e.preventDefault();
+
+      const id = document.getElementById('armada-form-id')?.value;
+      const unit = document.getElementById('armada-form-unit')?.value?.trim().toUpperCase();
+      const typeUnit = document.getElementById('armada-form-type')?.value || 'Lubetruck';
+      const cluster = document.getElementById('armada-form-cluster')?.value || 'Selatan';
+      const status = document.getElementById('armada-form-status')?.value || 'Aktif';
+
+      if (!unit) {
+        showToast('Nomor lambung / unit armada wajib diisi!', 'warning');
+        return;
+      }
+
+      if (!state.masterArmada) state.masterArmada = [];
+
+      if (id) {
+        const existing = state.masterArmada.find(item => item.id === id);
+        if (existing) {
+          existing.unit = unit;
+          existing.typeUnit = typeUnit;
+          existing.cluster = cluster;
+          existing.status = status;
+          showToast(`Armada ${unit} berhasil diperbarui!`, 'success');
+        }
+      } else {
+        // Cek apakah nomor unit sudah ada
+        const duplicate = state.masterArmada.some(item => item.unit.toUpperCase() === unit);
+        if (duplicate) {
+          showToast(`Armada ${unit} sudah terdaftar di Data Master!`, 'warning');
+          return;
+        }
+
+        const newArmada = {
+          id: 'ARM-' + Date.now(),
+          unit,
+          typeUnit,
+          cluster,
+          status
+        };
+        state.masterArmada.push(newArmada);
+        showToast(`Armada ${unit} (${typeUnit}) berhasil ditambahkan ke KGU ${cluster}!`, 'success');
+      }
+
+      // Simpan ke local storage
+      safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
+      syncClusterAssignedFromMasterArmada();
+      saveDatabaseSync();
+
+      toggleModal('modal-armada-form', false);
+      renderMasterArmadaTable();
+
+      // Refresh tabel jadwal jika aktif
+      if (typeof renderLtScheduleTable === 'function') renderLtScheduleTable();
+      if (typeof renderWtScheduleTable === 'function') renderWtScheduleTable();
+    }
+
+    function syncClusterAssignedFromMasterArmada() {
+      if (!state.masterArmada) return;
+      const clusters = ['Selatan', 'Tengah', 'Utara', 'ROM', 'Workshop', 'Outpit Selatan', 'Outpit Tengah', 'Outpit Utara'];
+
+      clusters.forEach(c => {
+        const ltUnits = state.masterArmada
+          .filter(a => a.typeUnit === 'Lubetruck' && (a.cluster || '').toLowerCase() === c.toLowerCase() && a.status === 'Aktif')
+          .map(a => a.unit);
+        if (ltUnits.length > 0) {
+          if (!state.clusterLtAssigned) state.clusterLtAssigned = {};
+          state.clusterLtAssigned[c] = ltUnits.join(', ');
+        }
+
+        const wtUnits = state.masterArmada
+          .filter(a => a.typeUnit === 'Water Truck' && (a.cluster || '').toLowerCase() === c.toLowerCase() && a.status === 'Aktif')
+          .map(a => a.unit);
+        if (wtUnits.length > 0) {
+          if (!state.clusterWtAssigned) state.clusterWtAssigned = {};
+          state.clusterWtAssigned[c] = wtUnits.join(', ');
+        }
+      });
+    }
+
+    function promptDeleteMasterArmada(id) {
+      armadaIdToDelete = id;
+      const a = (state.masterArmada || []).find(item => item.id === id);
+      if (!a) return;
+
+      if (confirm(`Apakah Anda yakin ingin menghapus armada ${a.unit} (${a.typeUnit}) dari Data Master?`)) {
+        executeDeleteMasterArmada();
+      }
+    }
+
+    function executeDeleteMasterArmada() {
+      if (!armadaIdToDelete) return;
+      const a = state.masterArmada.find(item => item.id === armadaIdToDelete);
+      const unitName = a ? a.unit : 'Armada';
+
+      state.masterArmada = state.masterArmada.filter(item => item.id !== armadaIdToDelete);
+      state.selectedArmadaIds.delete(armadaIdToDelete);
+      armadaIdToDelete = null;
+
+      safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
+      syncClusterAssignedFromMasterArmada();
+      saveDatabaseSync();
+
+      showToast(`Armada ${unitName} berhasil dihapus dari sistem!`, 'info');
+      renderMasterArmadaTable();
+    }
+
+    function toggleArmadaSelectMode() {
+      state.isArmadaSelectMode = !state.isArmadaSelectMode;
+      const btn = document.getElementById('btn-toggle-select-armada');
+      const text = document.getElementById('btn-toggle-select-armada-text');
+      const bar = document.getElementById('armada-bulk-actions-bar');
+
+      if (state.isArmadaSelectMode) {
+        if (btn) btn.className = 'px-3.5 py-2 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-2xs';
+        if (text) text.textContent = 'Keluar Mode Pilih';
+        if (bar) bar.classList.remove('hidden');
+      } else {
+        if (btn) btn.className = 'px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-2xs';
+        if (text) text.textContent = 'Akses Edit / Pilih Masal';
+        if (bar) bar.classList.add('hidden');
+        state.selectedArmadaIds.clear();
+      }
+      updateArmadaSelectedCount();
+      renderMasterArmadaTable();
+    }
+
+    function toggleSelectArmadaRow(id, isChecked) {
+      if (isChecked) state.selectedArmadaIds.add(id);
+      else state.selectedArmadaIds.delete(id);
+      updateArmadaSelectedCount();
+      renderMasterArmadaTable();
+    }
+
+    function toggleSelectAllArmada(isChecked) {
+      const typeFilter = document.getElementById('filter-armada-type')?.value || 'ALL';
+      const clusterFilter = document.getElementById('filter-armada-cluster')?.value || 'ALL';
+      const search = (document.getElementById('search-armada-input')?.value || '').toLowerCase().trim();
+
+      let list = state.masterArmada || [];
+      if (typeFilter !== 'ALL') list = list.filter(a => (a.typeUnit || a.tipe || '').toLowerCase() === typeFilter.toLowerCase());
+      if (clusterFilter !== 'ALL') list = list.filter(a => isClusterMatchFilter(a.cluster, clusterFilter));
+      if (search) list = list.filter(a => (a.unit && a.unit.toLowerCase().includes(search)) || (a.cluster && a.cluster.toLowerCase().includes(search)));
+
+      if (isChecked) {
+        list.forEach(a => state.selectedArmadaIds.add(a.id));
+      } else {
+        list.forEach(a => state.selectedArmadaIds.delete(a.id));
+      }
+      updateArmadaSelectedCount();
+      renderMasterArmadaTable();
+    }
+
+    function updateArmadaSelectedCount() {
+      const countEl = document.getElementById('armada-selected-count');
+      if (countEl) countEl.textContent = `${state.selectedArmadaIds.size} Armada Terpilih`;
+    }
+
+    function promptBulkDeleteArmada() {
+      if (state.selectedArmadaIds.size === 0) {
+        showToast('Pilih minimal 1 armada untuk dihapus!', 'warning');
+        return;
+      }
+      if (confirm(`Apakah Anda yakin ingin menghapus ${state.selectedArmadaIds.size} armada terpilih secara permanen?`)) {
+        executeBulkDeleteArmada();
+      }
+    }
+
+    function executeBulkDeleteArmada() {
+      const total = state.selectedArmadaIds.size;
+      state.masterArmada = state.masterArmada.filter(a => !state.selectedArmadaIds.has(a.id));
+      state.selectedArmadaIds.clear();
+
+      safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
+      syncClusterAssignedFromMasterArmada();
+      saveDatabaseSync();
+
+      showToast(`Berhasil menghapus ${total} data armada!`, 'success');
+      cancelArmadaSelectMode();
+      renderMasterArmadaTable();
+    }
+
+    function cancelArmadaSelectMode() {
+      state.isArmadaSelectMode = false;
+      state.selectedArmadaIds.clear();
+      const btn = document.getElementById('btn-toggle-select-armada');
+      const text = document.getElementById('btn-toggle-select-armada-text');
+      const bar = document.getElementById('armada-bulk-actions-bar');
+      if (btn) btn.className = 'px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-2xs';
+      if (text) text.textContent = 'Akses Edit / Pilih Masal';
+      if (bar) bar.classList.add('hidden');
+      updateArmadaSelectedCount();
+      renderMasterArmadaTable();
+    }
+
+    function openImportArmadaModal() {
+      toggleModal('modal-import-armada', true);
+    }
+
+    function downloadMasterArmadaTemplate() {
+      if (typeof XLSX === 'undefined') {
+        showToast('Library SheetJS belum siap!', 'error');
+        return;
+      }
+
+      const headers = ['NO', 'UNIT', 'TYPE UNIT', 'CLUSTER', 'STATUS OPERASIONAL'];
+      const sampleData = [
+        ['1', 'LT2510', 'Lubetruck', 'Utara', 'Aktif'],
+        ['2', 'LT2514', 'Lubetruck', 'Tengah', 'Aktif'],
+        ['3', 'LT2535', 'Lubetruck', 'Selatan', 'Aktif'],
+        ['4', 'WT101', 'Water Truck', 'Selatan', 'Aktif'],
+        ['5', 'WT102', 'Water Truck', 'Tengah', 'Aktif']
+      ];
+
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleData]);
+      ws['!cols'] = [{ wch: 6 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 20 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'MASTER_ARMADA');
+      XLSX.writeFile(wb, 'TEMPLATE_DATA_MASTER_ARMADA.xlsx');
+      showToast('Template Excel Data Master Armada berhasil diunduh!', 'success');
+    }
+
+    function handleArmadaImportFile(e) {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        processArmadaFile(files[0]);
+      }
+    }
+
+    function processArmadaFile(file) {
+      if (typeof XLSX === 'undefined') {
+        showToast('Library SheetJS belum siap!', 'error');
+        return;
+      }
+      const label = document.getElementById('armada-import-file-label');
+      if (label) label.textContent = `File: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const data = e.target.result;
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const firstSheet = workbook.SheetNames[0];
+          const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], { header: 1, defval: '' });
+
+          if (!rawRows || rawRows.length < 2) {
+            showToast('Format Excel tidak sesuai atau data kosong!', 'warning');
+            return;
+          }
+
+          let headerRowIdx = -1, colUnit = -1, colType = -1, colCluster = -1, colStatus = -1;
+          for (let r = 0; r < Math.min(rawRows.length, 5); r++) {
+            const rowUpper = rawRows[r].map(c => String(c).trim().toUpperCase());
+            const uIdx = rowUpper.findIndex(c => c.includes('UNIT') || c.includes('LAMBUNG'));
+            if (uIdx !== -1) {
+              headerRowIdx = r;
+              colUnit = uIdx;
+              colType = rowUpper.findIndex(c => c.includes('TYPE') || c.includes('TIPE') || c.includes('JENIS'));
+              colCluster = rowUpper.findIndex(c => c.includes('CLUSTER') || c.includes('AREA') || c.includes('KGU'));
+              colStatus = rowUpper.findIndex(c => c.includes('STATUS'));
+              break;
+            }
+          }
+
+          if (headerRowIdx === -1) {
+            headerRowIdx = 0;
+            colUnit = 1; colType = 2; colCluster = 3; colStatus = 4;
+          }
+
+          let importedCount = 0;
+          for (let r = headerRowIdx + 1; r < rawRows.length; r++) {
+            const row = rawRows[r];
+            if (!row || row.length === 0) continue;
+            const unit = String(row[colUnit] || '').trim().toUpperCase();
+            if (!unit) continue;
+
+            let typeUnit = (colType !== -1 && row[colType]) ? String(row[colType]).trim() : '';
+            if (unit.startsWith('WT') || typeUnit.toLowerCase().includes('water')) typeUnit = 'Water Truck';
+            else typeUnit = 'Lubetruck';
+
+            let cluster = (colCluster !== -1 && row[colCluster]) ? String(row[colCluster]).trim() : 'Selatan';
+            cluster = cluster.replace(/^KGU\s+/i, '').trim();
+
+            let status = (colStatus !== -1 && row[colStatus]) ? String(row[colStatus]).trim() : 'Aktif';
+
+            const existingIdx = state.masterArmada.findIndex(item => item.unit.toUpperCase() === unit);
+            if (existingIdx !== -1) {
+              state.masterArmada[existingIdx].typeUnit = typeUnit;
+              state.masterArmada[existingIdx].cluster = cluster;
+              state.masterArmada[existingIdx].status = status;
+            } else {
+              state.masterArmada.push({
+                id: 'ARM-' + Date.now() + '-' + r,
+                unit,
+                typeUnit,
+                cluster,
+                status
+              });
+            }
+            importedCount++;
+          }
+
+          safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
+          syncClusterAssignedFromMasterArmada();
+          saveDatabaseSync();
+
+          toggleModal('modal-import-armada', false);
+          renderMasterArmadaTable();
+          showToast(`Berhasil mengimpor ${importedCount} data armada!`, 'success');
+        } catch (err) {
+          console.error('[Import Armada Error]', err);
+          showToast('Gagal memproses file: ' + err.message, 'error');
+        }
+      };
+      reader.readAsBinaryString(file);
+    }
+
+    // Modal Kelola Armada langsung dari Header Cluster di Jadwal
+    function openClusterArmadaModal(clusterName, targetType = 'LT') {
+      const modal = document.getElementById('modal-cluster-armada-detail');
+      if (!modal) return;
+
+      const isWt = (targetType === 'WT');
+      const titleEl = document.getElementById('cluster-armada-detail-title');
+      const subEl = document.getElementById('cluster-armada-detail-subtitle');
+      const chipsCont = document.getElementById('cluster-armada-chips-container');
+      const btnAdd = document.getElementById('btn-cluster-armada-add-new');
+
+      if (titleEl) titleEl.textContent = `Armada Bertugas di KGU ${clusterName}`;
+      if (subEl) subEl.textContent = `KGU ${clusterName} • ${isWt ? 'Water Truck (WT)' : 'Lubetruck (LT)'}`;
+
+      if (btnAdd) {
+        btnAdd.onclick = () => {
+          toggleModal('modal-cluster-armada-detail', false);
+          openAddArmadaModal(clusterName, isWt ? 'Water Truck' : 'Lubetruck');
+        };
+      }
+
+      if (chipsCont) {
+        chipsCont.innerHTML = '';
+        const clusterClean = (clusterName || '').replace(/^KGU\s+/i, '').trim().toLowerCase();
+        const armadas = (state.masterArmada || []).filter(a => {
+          const matchCluster = (a.cluster || '').toLowerCase() === clusterClean;
+          const matchType = isWt
+            ? ((a.typeUnit || '').toLowerCase().includes('water') || a.unit.startsWith('WT'))
+            : ((a.typeUnit || '').toLowerCase().includes('lube') || a.unit.startsWith('LT'));
+          return matchCluster && matchType;
+        });
+
+        if (armadas.length === 0) {
+          chipsCont.innerHTML = `<span class="text-xs text-slate-400 italic">Belum ada armada ${isWt ? 'WT' : 'LT'} terdaftar di KGU ${clusterName}.</span>`;
+        } else {
+          armadas.forEach(a => {
+            const chip = document.createElement('div');
+            chip.className = `px-3 py-1.5 rounded-xl font-mono text-xs font-black flex items-center space-x-2 border shadow-2xs ${isWt ? 'bg-cyan-50 border-cyan-300 text-cyan-950' : 'bg-emerald-50 border-emerald-300 text-emerald-950'}`;
+            chip.innerHTML = `
+              <span>${isWt ? '💧' : '🛢️'} ${a.unit}</span>
+              <span class="text-[9px] font-sans px-1.5 py-0.5 rounded-full font-bold ${a.status === 'Aktif' ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900'}">${a.status || 'Aktif'}</span>
+              <button type="button" onclick="toggleModal('modal-cluster-armada-detail', false); openEditArmadaModal('${a.id}')" class="text-slate-400 hover:text-slate-700 ml-1 cursor-pointer" title="Edit">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+              </button>
+            `;
+            chipsCont.appendChild(chip);
+          });
+        }
+      }
+
+      toggleModal('modal-cluster-armada-detail', true);
+    }
+
+    function goToMasterArmadaFromCluster() {
+      toggleModal('modal-cluster-armada-detail', false);
+      navigateTab('master-data');
+      switchMasterSection('armada');
+    }
+
     function renderMasterUnitsTable() {
       const tbody = document.getElementById('master-units-tbody');
       const thSelect = document.getElementById('th-units-select');
@@ -14976,6 +16178,10 @@
           state.isOnlineSupabase = true;
           const statusEl = document.getElementById('header-db-status');
           if (statusEl) statusEl.textContent = 'Online';
+          // Picu sinkronisasi data master dari Supabase di latar belakang
+          if (typeof syncSupabaseMasterData === 'function') {
+            syncSupabaseMasterData();
+          }
         } catch (e) {
           console.warn('[Supabase] Init gagal, menggunakan local fallback:', e);
         }
@@ -15061,6 +16267,85 @@
       // - Peran 'admin' atau 'basecontrol': arahkan ke tab Job Request ('job-requests')
       // Arahkan ke tab Riwayat Order Saya / Job Request
       navigateTab('job-requests');
+    }
+
+
+    async function syncSupabaseMasterData() {
+      if (!state.supabaseClient) return;
+      try {
+        // A. Sinkronisasi Data Master Armada
+        const { data: supaArmada, error: armErr } = await state.supabaseClient
+          .from('master_armada')
+          .select('*')
+          .order('unit');
+        if (!armErr && Array.isArray(supaArmada) && supaArmada.length > 0) {
+          state.masterArmada = supaArmada.map(a => ({
+            id: a.id || ('ARM-' + a.unit),
+            unit: a.unit,
+            typeUnit: a.type_unit || a.typeUnit || 'Lubetruck',
+            cluster: a.cluster || 'Selatan',
+            status: a.status || 'Aktif',
+            keterangan: a.keterangan || ''
+          }));
+          safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
+          if (typeof syncClusterAssignedFromMasterArmada === 'function') {
+            syncClusterAssignedFromMasterArmada();
+          }
+          if (state.masterActiveSection === 'armada' && typeof renderMasterArmadaTable === 'function') {
+            renderMasterArmadaTable();
+          }
+          console.log('[Supabase Sync] Master Armada tersinkronisasi:', supaArmada.length, 'unit');
+        }
+
+        // B. Sinkronisasi Data Master Populasi Unit Lapangan
+        const { data: supaUnits, error: unitErr } = await state.supabaseClient
+          .from('master_units')
+          .select('*');
+        if (!unitErr && Array.isArray(supaUnits) && supaUnits.length > 0) {
+          state.masterUnits = supaUnits.map(u => ({
+            id: u.id,
+            lambung: u.no_lambung || u.lambung,
+            type: u.type_model || u.type,
+            kategori: u.kategori || 'coal',
+            cluster: u.cluster || 'Selatan',
+            lokasi: u.lokasi || 'Pit Area',
+            statusAktif: (u.status_aktif !== false && u.status !== 'Breakdown')
+          }));
+          safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+          if (state.masterActiveSection === 'units' && typeof renderMasterUnitsTable === 'function') {
+            renderMasterUnitsTable();
+          }
+          console.log('[Supabase Sync] Populasi Unit tersinkronisasi:', supaUnits.length, 'unit');
+        }
+
+        // C. Sinkronisasi Master Roster
+        const { data: supaRoster, error: rosErr } = await state.supabaseClient
+          .from('master_roster')
+          .select('*')
+          .limit(500);
+        if (!rosErr && Array.isArray(supaRoster) && supaRoster.length > 0) {
+          state.masterRoster = supaRoster.map(r => ({
+            id: r.id,
+            jenis: r.jenis || 'OPT',
+            nrp: r.nrp,
+            nik: r.nik || r.nrp,
+            nama: r.nama,
+            unit: r.unit || '-',
+            unitEfektif: r.unit_efektif || r.unit || '-',
+            tanggal: r.tanggal,
+            shift: r.shift || 1,
+            kodeShift: r.kode_shift || 'DWS',
+            isSpare: r.is_spare || false
+          }));
+          safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster));
+          if (state.masterActiveSection === 'roster' && state.masterSubtab === 'database' && typeof renderDatabaseRosterTable === 'function') {
+            renderDatabaseRosterTable();
+          }
+          console.log('[Supabase Sync] Master Roster tersinkronisasi:', supaRoster.length, 'baris');
+        }
+      } catch (err) {
+        console.warn('[Supabase Master Data Sync Exception]', err);
+      }
     }
 
     function saveSupabaseConfig() {
@@ -15616,6 +16901,24 @@
     window.confirmNonAchSubmission = confirmNonAchSubmission;
     window.handleOrderSubmit = handleOrderSubmit;
     window.saveSupabaseConfig = saveSupabaseConfig;
+    window.renderMasterArmadaTable = renderMasterArmadaTable;
+    window.openAddArmadaModal = openAddArmadaModal;
+    window.openEditArmadaModal = openEditArmadaModal;
+    window.handleSaveArmada = handleSaveArmada;
+    window.promptDeleteMasterArmada = promptDeleteMasterArmada;
+    window.executeDeleteMasterArmada = executeDeleteMasterArmada;
+    window.toggleArmadaSelectMode = toggleArmadaSelectMode;
+    window.toggleSelectArmadaRow = toggleSelectArmadaRow;
+    window.toggleSelectAllArmada = toggleSelectAllArmada;
+    window.promptBulkDeleteArmada = promptBulkDeleteArmada;
+    window.executeBulkDeleteArmada = executeBulkDeleteArmada;
+    window.cancelArmadaSelectMode = cancelArmadaSelectMode;
+    window.openImportArmadaModal = openImportArmadaModal;
+    window.downloadMasterArmadaTemplate = downloadMasterArmadaTemplate;
+    window.handleArmadaImportFile = handleArmadaImportFile;
+    window.processArmadaFile = processArmadaFile;
+    window.openClusterArmadaModal = openClusterArmadaModal;
+    window.goToMasterArmadaFromCluster = goToMasterArmadaFromCluster;
     window.renderMasterUnitsTable = renderMasterUnitsTable;
     window.openAddUnitModal = openAddUnitModal;
     window.openEditUnitModal = openEditUnitModal;
