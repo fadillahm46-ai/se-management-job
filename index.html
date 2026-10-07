@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -19,6 +19,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="SE Mining Job">
+
+
+
+
 
   <!-- Inter Google Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -174,7 +178,12 @@
 
   <!-- External Libraries: Chart.js, SheetJS, and Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="./xlsx.full.min.js"></script>
+  <script>
+    if (typeof XLSX === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>');
+    }
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -2884,7 +2893,7 @@
                     d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
                   </path>
                 </svg>
-                <span>No OPT Produksi</span>
+                <span>Kontak Produksi</span>
               </button>
               <button type="button" onclick="switchMasterSection('accounts')" id="btn-master-sec-accounts"
                 class="px-3.5 py-2 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center space-x-1.5">
@@ -2917,8 +2926,8 @@
                 </button>
               </div>
 
-              <button onclick="downloadOfficialRosterTemplate()"
-                class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center space-x-1.5 transition">
+              <button type="button" id="btn-download-roster-template" onclick="downloadOfficialRosterTemplate()"
+                class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-semibold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-2xs">
                 <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
@@ -2965,8 +2974,7 @@
                       </path>
                     </svg>
                     <p class="text-xs font-bold text-slate-700 mt-2">Pilih File Excel / Drag ke sini</p>
-                    <p class="text-[10px] text-slate-400 mt-1" id="roster-file-label">Format .xlsx atau .csv (Maksimal
-                      10MB)</p>
+                    <p class="text-[10px] text-slate-400 mt-1" id="roster-file-label">Format .xlsx atau .csv (Maksimal 10MB)</p>
                   </div>
 
                   <div class="pt-2">
@@ -3299,13 +3307,13 @@
           </div>
 
           <!-- ========================================== -->
-          <!-- SUB-MENU 2B: NO OPT PRODUKSI               -->
+          <!-- SUB-MENU 2B: KONTAK PRODUKSI               -->
           <!-- ========================================== -->
           <div id="master-section-operators" class="hidden space-y-4">
             <div
               class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h3 class="text-sm font-bold text-slate-900">Data Master — No OPT Produksi</h3>
+                <h3 class="text-sm font-bold text-slate-900">Data Master — Kontak Produksi</h3>
                 <p class="text-xs text-slate-500">Kelola daftar kontak dan nomor WhatsApp operator alat berat produksi
                   di lapangan</p>
               </div>
@@ -3316,7 +3324,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
                   </svg>
-                  <span>Import Data OPT (.xlsx)</span>
+                  <span>Import Kontak (.xlsx)</span>
                 </button>
                 <button type="button" id="btn-toggle-select-operators" onclick="toggleOperatorsSelectMode()"
                   class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-2xs">
@@ -3332,17 +3340,17 @@
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                   </svg>
-                  <span>Tambah OPT Baru</span>
+                  <span>Tambah Kontak Baru</span>
                 </button>
               </div>
             </div>
 
-            <!-- Bar Aksi Masal No OPT Produksi (Muncul saat Mode Pilih Aktif) -->
+            <!-- Bar Aksi Masal Kontak Produksi (Muncul saat Mode Pilih Aktif) -->
             <div id="operators-bulk-actions-bar"
               class="hidden p-3 rounded-2xl bg-amber-50 border border-amber-200 flex flex-wrap items-center justify-between gap-3 text-xs">
               <div class="flex items-center space-x-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-                <span class="font-extrabold text-amber-900" id="operators-selected-count">0 OPT Terpilih</span>
+                <span class="font-extrabold text-amber-900" id="operators-selected-count">0 Kontak Terpilih</span>
               </div>
               <div class="flex items-center space-x-2">
                 <button type="button" onclick="promptBulkDeleteOperators()"
@@ -3377,7 +3385,7 @@
               </div>
             </div>
 
-            <!-- Tabel Data No OPT Produksi -->
+            <!-- Tabel Data Kontak Produksi -->
             <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
               <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
@@ -3818,7 +3826,6 @@
           </div>
 
         </div>
-      </div>
 
       <!-- ================================================================== -->
 
@@ -4492,7 +4499,7 @@
             </svg>
           </div>
           <span class="font-extrabold text-slate-900 text-xs">Kontak Pro</span>
-          <span class="text-[9.5px] text-slate-400 mt-0.5">No OPT & WhatsApp</span>
+          <span class="text-[9.5px] text-slate-400 mt-0.5">Kontak Produksi & WhatsApp</span>
         </button>
 
         <!-- Monitoring Clean Air Cleaner MP (Oilman Only) -->
@@ -6727,7 +6734,7 @@
     class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 class="text-sm font-bold text-slate-900" id="operator-modal-title">Tambah OPT Baru</h3>
+        <h3 class="text-sm font-bold text-slate-900" id="operator-modal-title">Tambah Kontak Produksi Baru</h3>
         <button onclick="toggleModal('modal-operator-form', false)" class="text-slate-400 hover:text-slate-600 p-1">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -6737,12 +6744,12 @@
       <form onsubmit="handleSaveOperator(event)" class="space-y-3.5 text-xs font-semibold">
         <input type="hidden" id="operator-form-id">
         <div>
-          <label class="block text-slate-700 mb-1">NRP Operator</label>
+          <label class="block text-slate-700 mb-1">NRP Personil / Operator</label>
           <input type="text" id="operator-form-nrp" placeholder="Contoh: OPT3011" required
             class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-mono uppercase focus:outline-none focus:border-brand-500">
         </div>
         <div>
-          <label class="block text-slate-700 mb-1">Nama Operator</label>
+          <label class="block text-slate-700 mb-1">Nama Personil / Operator</label>
           <input type="text" id="operator-form-nama" placeholder="Nama lengkap operator" required
             class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500">
         </div>
@@ -6826,13 +6833,13 @@
     </div>
   </div>
 
-  <!-- MODAL: IMPORT DATA NO OPT PRODUKSI -->
+  <!-- MODAL: IMPORT DATA KONTAK PRODUKSI -->
   <div id="modal-import-operators"
     class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4 overflow-y-auto">
     <div class="bg-white rounded-3xl max-w-xl w-full p-6 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div>
-          <h3 class="text-sm font-bold text-slate-900">Import No OPT Produksi</h3>
+          <h3 class="text-sm font-bold text-slate-900">Import Kontak Produksi</h3>
           <p class="text-xs text-slate-400">Unggah berkas Excel (.xlsx / .csv) untuk menambah atau memperbarui data
             kontak operator</p>
         </div>
@@ -6847,7 +6854,7 @@
       <!-- Download Template Link -->
       <div class="flex items-center justify-between p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs">
         <div>
-          <span class="font-extrabold text-emerald-950 block">Template Excel No OPT Produksi</span>
+          <span class="font-extrabold text-emerald-950 block">Template Excel Kontak Produksi</span>
           <span class="text-emerald-700 text-[10.5px]">Gunakan format resmi kolom: NO, NRP, NAMA, NO WA</span>
         </div>
         <button type="button" onclick="downloadMasterOperatorsTemplate()"
@@ -6927,13 +6934,13 @@
     // Silakan isi langsung Project URL, Anon Key, dan Endpoint Apps Script Anda di sini:
     // ========================================================================
     const SUPABASE_CONFIG = {
-      url: 'https://wgabhnjvjbvmgxebuusmv.supabase.co',
+      url: 'https://wgabhjvjbvmgxebuusmv.supabase.co',
       anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnYWJoanZqYnZtZ3hlYnV1c212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNTc4ODksImV4cCI6MjEwNjgzMzg4OX0.Il80MkiPYkPtoZIt-VnfYZ8mB09YJdO4dNnvq28Q-xU',
       publishableKey: 'sb_publishable_J2C5_w5qCkSeg0erRISNSg_m7sZjAws'
     };
 
     const APPS_SCRIPT_CONFIG = {
-      uploadEndpointUrl: 'https://script.google.com/macros/s/AKfycbzdIQ_gNc7q_TvnKZm8VhvclJcmuiZlJ4l54jIknNeY3hAVfPFuWiBFnQNhHQhBd3td/exec', // Isi dengan Web App URL hasil Deploy Google Apps Script (/exec)
+      uploadEndpointUrl: '', // Isi dengan Web App URL hasil Deploy Google Apps Script (/exec)
       driveFolderId: '11EQ_NsZYeMmEKURpibXCRtyrQw5kKkh3',
       driveFolderUrl: 'https://drive.google.com/drive/folders/11EQ_NsZYeMmEKURpibXCRtyrQw5kKkh3?usp=drive_link'
     };
@@ -6990,18 +6997,20 @@
         if (state.masterUnits !== undefined) {
           safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
           // Sinkronisasi ke Supabase jika online
-          if (state.supabaseClient) {
+          if (state.supabaseClient && Array.isArray(state.masterArmada)) {
             try {
-              state.supabaseClient.from('master_armada').upsert({
-                id: id || ('ARM-' + Date.now()),
-                unit: unit,
-                type_unit: typeUnit,
-                cluster: cluster,
-                status: status,
-                updated_at: new Date().toISOString()
-              }).then(res => {
-                if (res.error) console.warn('[Supabase Sync Armada Error]', res.error.message);
-                else console.log('[Supabase Sync Armada OK]', unit);
+              state.masterArmada.forEach(arm => {
+                state.supabaseClient.from('master_armada').upsert({
+                  id: arm.id || ('ARM-' + (arm.unit || Date.now())),
+                  unit: arm.unit,
+                  type_unit: arm.typeUnit || arm.type || 'Lubetruck',
+                  cluster: arm.cluster || '',
+                  status: arm.status || 'Aktif',
+                  updated_at: new Date().toISOString()
+                }).then(res => {
+                  if (res?.error) console.warn('[Supabase Sync Armada Error]', res.error.message);
+                  else console.log('[Supabase Sync Armada OK]', arm.unit);
+                }).catch(() => {});
               });
             } catch (e) { }
           }
@@ -7010,31 +7019,7 @@
         if (state.masterOperators !== undefined) {
           safeStorage.setItem('SE_MASTER_OPERATORS', JSON.stringify(state.masterOperators));
         }
-        if (state.masterRoster !== undefined) {
-          safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster));
-          // Sinkronisasi ke Supabase jika online
-          if (state.supabaseClient && state.parsedRosterData && state.parsedRosterData.length > 0) {
-            try {
-              const supaRows = state.parsedRosterData.map(r => ({
-                id: r.id,
-                jenis: r.jenis,
-                nrp: r.nrp,
-                nik: r.nik,
-                nama: r.nama,
-                unit: r.unit,
-                unit_efektif: r.unitEfektif,
-                tanggal: r.tanggal,
-                shift: r.shift,
-                kode_shift: r.kodeShift,
-                is_spare: r.isSpare || false
-              }));
-              state.supabaseClient.from('master_roster').upsert(supaRows).then(res => {
-                if (res.error) console.warn('[Supabase Sync Roster Error]', res.error.message);
-                else console.log('[Supabase Sync Roster OK]', supaRows.length, 'baris');
-              });
-            } catch (e) { }
-          }
-        }
+        // SE_MASTER_ROSTER tidak disimpan di localStorage (murni tersinkronisasi dengan Supabase)
         if (state.masterUsers !== undefined) {
           safeStorage.setItem('SE_MASTER_USERS', JSON.stringify(state.masterUsers));
         }
@@ -7116,11 +7101,8 @@
           const parsed = JSON.parse(savedOps);
           if (Array.isArray(parsed)) state.masterOperators = parsed;
         }
-        const savedRoster = safeStorage.getItem('SE_MASTER_ROSTER');
-        if (savedRoster !== null) {
-          const parsed = JSON.parse(savedRoster);
-          if (Array.isArray(parsed)) state.masterRoster = parsed;
-        }
+        safeStorage.removeItem("SE_MASTER_ROSTER");
+        syncMasterOperatorsWithUsers(); // Data roster murni dari Supabase
         const savedUsers = safeStorage.getItem('SE_MASTER_USERS');
         if (savedUsers !== null) {
           const parsed = JSON.parse(savedUsers);
@@ -7146,6 +7128,24 @@
       try {
         saveDatabaseSync();
         safeStorage.setItem('SE_SYNC_TIMESTAMP', String(Date.now()));
+
+        // Outbound Realtime Sync ke Supabase
+        if (state.supabaseClient && info) {
+          if (info.jobId && typeof syncJobToSupabase === 'function') {
+            const j = findJobById(info.jobId);
+            if (j) syncJobToSupabase(j);
+          }
+          if (info.orderId && typeof syncOrderToSupabase === 'function') {
+            const ord = findJobById(info.orderId);
+            if (ord) {
+              syncOrderToSupabase(ord);
+              syncJobToSupabase(ord);
+            }
+          }
+          if (info.deletedJobId && typeof deleteJobFromSupabase === 'function') {
+            deleteJobFromSupabase(info.deletedJobId);
+          }
+        }
       } catch (err) {
         console.warn('[Sync] Gagal menyimpan data via notifyDataChanged:', err);
       }
@@ -12351,12 +12351,95 @@
       }
     }
 
+    
+    function syncMasterOperatorsWithUsers() {
+      if (!Array.isArray(state.masterOperators)) {
+        state.masterOperators = [];
+      }
+
+      const existingNrpMap = new Map();
+      state.masterOperators.forEach(op => {
+        if (op.nrp) existingNrpMap.set(String(op.nrp).toUpperCase().trim(), op);
+      });
+
+      let changed = false;
+
+      // 1. Sinkronkan dari state.masterUsers (Akun & personil operasional: Admin, User, Oilman, Washingman, dll.)
+      if (Array.isArray(state.masterUsers) && state.masterUsers.length > 0) {
+        state.masterUsers.forEach(u => {
+          if (!u.nrp) return;
+          const nrpKey = String(u.nrp).toUpperCase().trim();
+          if (!existingNrpMap.has(nrpKey)) {
+            const newOp = {
+              id: 'KONT-' + nrpKey,
+              nrp: u.nrp,
+              nama: u.nama || u.nrp,
+              noWa: u.noWa || u.telepon || u.phone || '',
+              jabatan: u.jabatan || u.role || 'Operasional',
+              cluster: u.cluster || 'Selatan',
+              statusAktif: (u.statusAktif !== false)
+            };
+            state.masterOperators.push(newOp);
+            existingNrpMap.set(nrpKey, newOp);
+            changed = true;
+          } else {
+            const existing = existingNrpMap.get(nrpKey);
+            if ((!existing.noWa || existing.noWa === '-') && (u.noWa || u.telepon)) {
+              existing.noWa = u.noWa || u.telepon;
+              changed = true;
+            }
+          }
+        });
+      }
+
+      // 2. Sinkronkan dari data roster jika ada operator tambahan
+      if (Array.isArray(state.parsedRosterData) && state.parsedRosterData.length > 0) {
+        state.parsedRosterData.forEach(r => {
+          if (!r.nrp) return;
+          const nrpKey = String(r.nrp).toUpperCase().trim();
+          if (!existingNrpMap.has(nrpKey)) {
+            const newOp = {
+              id: 'KONT-' + nrpKey,
+              nrp: String(r.nrp).trim(),
+              nama: String(r.nama || r.nrp).trim(),
+              noWa: r.noWa || '',
+              jabatan: 'Operator Lapangan',
+              cluster: r.cluster || 'Selatan',
+              statusAktif: true
+            };
+            state.masterOperators.push(newOp);
+            existingNrpMap.set(nrpKey, newOp);
+            changed = true;
+          }
+        });
+      }
+
+      if (changed) {
+        safeStorage.setItem('SE_MASTER_OPERATORS', JSON.stringify(state.masterOperators));
+        if (state.supabaseClient && state.masterOperators.length > 0) {
+          const supaRows = state.masterOperators.map(o => ({
+            nrp: o.nrp,
+            nama: o.nama,
+            no_wa: o.noWa || '',
+            jabatan: o.jabatan || 'Operator',
+            cluster: o.cluster || 'Selatan',
+            status_aktif: true
+          }));
+          state.supabaseClient.from('master_operators').upsert(supaRows, { onConflict: 'nrp' }).catch(() => {});
+        }
+      }
+    }
+    window.syncMasterOperatorsWithUsers = syncMasterOperatorsWithUsers;
+
     function renderMasterOperatorsTable() {
       const tbody = document.getElementById('master-operators-tbody');
       const thSelect = document.getElementById('th-operators-select');
       const selectAllCheckbox = document.getElementById('operators-select-all');
       const countBadge = document.getElementById('operators-count-badge');
       if (!tbody) return;
+
+      // Pastikan data tersinkronisasi penuh dengan kontak pengguna & personil
+      syncMasterOperatorsWithUsers();
 
       const search = (document.getElementById('search-operator-input')?.value || '').toLowerCase().trim();
       let list = state.masterOperators || [];
@@ -12369,7 +12452,7 @@
         );
       }
 
-      if (countBadge) countBadge.textContent = `Total: ${list.length} Operator`;
+      if (countBadge) countBadge.textContent = `Total: ${list.length} Kontak Produksi`;
 
       if (thSelect) {
         if (state.isOperatorsSelectMode) thSelect.classList.remove('hidden');
@@ -12378,7 +12461,7 @@
 
       tbody.innerHTML = '';
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${state.isOperatorsSelectMode ? 6 : 5}" class="py-6 text-center text-slate-400 italic text-[11px]">Tidak ada data operator yang cocok</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${state.isOperatorsSelectMode ? 6 : 5}" class="py-6 text-center text-slate-400 italic text-[11px]">Tidak ada data kontak produksi yang cocok</td></tr>`;
         return;
       }
 
@@ -12510,7 +12593,7 @@
       state.masterOperators = state.masterOperators.filter(o => !state.selectedOperatorIds.has(o.id));
       state.selectedOperatorIds.clear();
       toggleModal('modal-confirm-bulk-delete-operators', false);
-      showToast(`Berhasil menghapus ${deleteCount} operator secara masal!`, 'success');
+      showToast(`Berhasil menghapus ${deleteCount} kontak produksi secara masal!`, 'success');
       renderMasterOperatorsTable();
     }
 
@@ -12546,26 +12629,42 @@
         return;
       }
 
+      let targetOp = null;
       if (id) {
         const op = state.masterOperators.find(o => o.id === id);
         if (op) {
           op.nrp = nrp;
           op.nama = nama;
           op.noWa = noWa;
+          targetOp = op;
         }
-        showToast(`Data operator ${nama} (${nrp}) berhasil diperbarui!`, 'success');
+        showToast(`Data kontak ${nama} (${nrp}) berhasil diperbarui!`, 'success');
       } else {
-        state.masterOperators.push({
+        const newOp = {
           id: 'OPT-' + String(Date.now()).slice(-4),
           nrp,
           nama,
           noWa
-        });
-        showToast(`Operator baru ${nama} (${nrp}) berhasil ditambahkan!`, 'success');
+        };
+        state.masterOperators.push(newOp);
+        targetOp = newOp;
+        showToast(`Kontak baru ${nama} (${nrp}) berhasil ditambahkan!`, 'success');
+      }
+
+      // Sinkronisasi Supabase jika online
+      if (state.supabaseClient && targetOp) {
+        state.supabaseClient.from('master_operators').upsert({
+          id: targetOp.id,
+          nrp: targetOp.nrp,
+          nama: targetOp.nama,
+          no_wa: targetOp.noWa,
+          status_aktif: true
+        }, { onConflict: 'nrp' }).catch(err => console.warn('[Supabase Operator Upsert]', err));
       }
 
       toggleModal('modal-operator-form', false);
-      renderMasterOperatorsTable();
+      if (typeof notifyDataChanged === 'function') notifyDataChanged();
+      else renderMasterOperatorsTable();
     }
 
     function promptDeleteMasterOperator(id) {
@@ -12581,10 +12680,15 @@
     function executeDeleteMasterOperator() {
       const id = state.currentDeletingOperatorId;
       if (!id) return;
+      const target = state.masterOperators.find(o => o.id === id);
       state.masterOperators = state.masterOperators.filter(o => o.id !== id);
+      if (state.supabaseClient && target) {
+        state.supabaseClient.from('master_operators').delete().eq('nrp', target.nrp).catch(() => {});
+      }
       toggleModal('modal-confirm-delete-operator', false);
-      showToast('Data operator berhasil dihapus!', 'info');
-      renderMasterOperatorsTable();
+      showToast('Data kontak produksi berhasil dihapus!', 'info');
+      if (typeof notifyDataChanged === 'function') notifyDataChanged();
+      else renderMasterOperatorsTable();
     }
 
     function openImportOperatorsModal() {
@@ -12602,24 +12706,121 @@
       toggleModal('modal-import-operators', true);
     }
 
-    function downloadMasterOperatorsTemplate() {
-      if (typeof XLSX === 'undefined') {
-        showToast('Library SheetJS belum siap!', 'error');
-        return;
+    /**
+     * Helper universal untuk download berkas lintas browser, PWA, dan mode offline
+     */
+    function triggerUniversalDownload(options) {
+      const {
+        fileName,
+        staticPath,
+        blobData,
+        mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        csvContent
+      } = options;
+
+      // 1. Prioritas 1: Download via Blob Data URL
+      if (blobData && typeof Blob !== 'undefined') {
+        try {
+          const blob = (blobData instanceof Blob) ? blobData : new Blob([blobData], { type: mimeType });
+          if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+            window.navigator.msSaveOrOpenBlob(blob, fileName);
+            return true;
+          }
+          if (typeof URL !== 'undefined' && URL.createObjectURL) {
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = blobUrl;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+              if (document.body.contains(a)) document.body.removeChild(a);
+              URL.revokeObjectURL(blobUrl);
+            }, 3000);
+            return true;
+          }
+        } catch (blobErr) {
+          console.warn('[Download Warning] Gagal via Blob URL, mencoba fallback berkas statis:', blobErr);
+        }
       }
 
+      // 2. Prioritas 2: Download berkas statis fisik (.xlsx) yang ada di direktori aplikasi
+      if (staticPath) {
+        try {
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = staticPath;
+          a.download = fileName;
+          a.target = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            if (document.body.contains(a)) document.body.removeChild(a);
+          }, 3000);
+          return true;
+        } catch (staticErr) {
+          console.warn('[Download Warning] Gagal via tautan statis, mencoba fallback CSV:', staticErr);
+        }
+      }
+
+      // 3. Prioritas 3: Fallback unduh versi CSV jika Excel tidak dapat diproses browser
+      if (csvContent && typeof Blob !== 'undefined') {
+        try {
+          const csvBlob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+          const csvUrl = URL.createObjectURL(csvBlob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = csvUrl;
+          a.download = fileName.replace(/\.xlsx$/i, '.csv');
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            if (document.body.contains(a)) document.body.removeChild(a);
+            URL.revokeObjectURL(csvUrl);
+          }, 3000);
+          return true;
+        } catch (csvErr) {
+          console.error('[Download Error] Semua metode unduh gagal:', csvErr);
+        }
+      }
+
+      return false;
+    }
+    window.triggerUniversalDownload = triggerUniversalDownload;
+
+    function downloadMasterOperatorsTemplate() {
+      showToast('Membuat template Excel Kontak Produksi...', 'info');
       const headers = ['NO', 'NRP', 'NAMA', 'NO WA'];
       const sampleData = [
-        ['1', 'OPT3001', 'Contoh Nama 1', '081234567801'],
-        ['2', 'OPT3002', 'Contoh Nama 2', '081234567802']
+        ['1', 'OPT3001', 'Budi Santoso', '081234567801'],
+        ['2', 'OPT3002', 'Joko Widodo', '081234567802'],
+        ['3', 'OPT3003', 'Slamet Riyadi', '081234567803'],
+        ['4', 'OPT3004', 'Andi Saputra', '081234567804']
       ];
 
-      const data = [headers, ...sampleData];
-      const ws = XLSX.utils.aoa_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'NO_OPT_PRODUKSI');
-      XLSX.writeFile(wb, 'TEMPLATE_NO_OPT_PRODUKSI_SE_MANAGEMENT.xlsx');
-      showToast('Template Excel No OPT Produksi berhasil diunduh!', 'success');
+      let excelBlob = null;
+      if (typeof XLSX !== 'undefined') {
+        try {
+          const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleData]);
+          ws['!cols'] = [{ wch: 6 }, { wch: 16 }, { wch: 24 }, { wch: 18 }];
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, 'KONTAK_PRODUKSI');
+          const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+          excelBlob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        } catch (err) {
+          console.warn('[Operators Template] SheetJS build error:', err);
+        }
+      }
+
+      const csvContent = [headers, ...sampleData].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+      triggerUniversalDownload({
+        fileName: 'TEMPLATE_NO_OPT_PRODUKSI_SE_MANAGEMENT.xlsx',
+        staticPath: './TEMPLATE_NO_OPT_PRODUKSI_SE_MANAGEMENT.xlsx',
+        blobData: excelBlob,
+        csvContent: csvContent
+      });
+      showToast('Template Excel Kontak Produksi berhasil diunduh!', 'success');
     }
 
     function handleOperatorsDragOver(e) {
@@ -12838,6 +13039,15 @@
       const value = document.getElementById('edit-cluster-lt-value')?.value.trim();
       if (cluster && value) {
         state.clusterLtAssigned[cluster] = value;
+        if (state.supabaseClient) {
+          state.supabaseClient.from('armada_clusters').upsert({
+            cluster_name: cluster,
+            armada_type: 'LT',
+            assigned_units: value,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'cluster_name,armada_type' }).catch(() => {});
+        }
+        if (typeof notifyDataChanged === 'function') notifyDataChanged();
         toggleModal('modal-edit-cluster-lt', false);
         showToast(`Daftar armada LT KGU ${cluster} berhasil diperbarui!`, 'success');
         renderLtScheduleTable();
@@ -12869,6 +13079,15 @@
       const value = document.getElementById('edit-cluster-wt-value')?.value.trim();
       if (cluster && value) {
         state.clusterWtAssigned[cluster] = value;
+        if (state.supabaseClient) {
+          state.supabaseClient.from('armada_clusters').upsert({
+            cluster_name: cluster,
+            armada_type: 'WT',
+            assigned_units: value,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'cluster_name,armada_type' }).catch(() => {});
+        }
+        if (typeof notifyDataChanged === 'function') notifyDataChanged();
         toggleModal('modal-edit-cluster-wt', false);
         showToast(`Daftar armada WT KGU ${cluster} berhasil diperbarui!`, 'success');
         renderWtScheduleTable();
@@ -13089,78 +13308,201 @@
         try {
           const data = e.target.result;
           const workbook = XLSX.read(data, { type: 'binary' });
-          const firstSheet = workbook.SheetNames[0];
-          const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], { header: 1, defval: '' });
+
+          // Prioritaskan sheet sesuai nama yang umum di unit tambang
+          const candidateSheets = ['ROSTER_LT_WT', 'LT WT', 'ROSTER', 'DATA_ROSTER', 'ROSTER OPT', 'OPT'];
+          let sheetName = workbook.SheetNames[0];
+          for (const s of candidateSheets) {
+            if (workbook.SheetNames.includes(s)) {
+              sheetName = s;
+              break;
+            }
+          }
+
+          const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
 
           if (!rawRows || rawRows.length < 2) {
             showToast('Format Excel tidak sesuai atau baris data kosong!', 'warning');
             return;
           }
 
-          let headerRowIdx = -1;
-          let colJenis = -1, colNrp = -1, colNama = -1, colUnit = -1, colTgl = -1, colShift = -1, colKode = -1;
+          const defaultJenis = document.getElementById('roster-upload-type')?.value || 'OPT';
+          const periodVal = document.getElementById('roster-upload-period')?.value || '2026-10';
+          const parsedData = [];
 
-          for (let r = 0; r < Math.min(rawRows.length, 5); r++) {
-            const rowUpper = rawRows[r].map(c => String(c).trim().toUpperCase());
-            const nrpIdx = rowUpper.findIndex(c => c.includes('NRP') || c.includes('NIK'));
-            const namaIdx = rowUpper.findIndex(c => c.includes('NAMA'));
-            if (nrpIdx !== -1 && namaIdx !== -1) {
+          // 1. CARI BARIS HEADER DENGAN NIK/NRP & NAMA
+          let headerRowIdx = -1;
+          let colNik = -1, colNama = -1, colUnit = -1, colCluster = -1, colJenis = -1;
+          let colTgl = -1, colShift = -1, colKode = -1;
+
+          for (let r = 0; r < Math.min(rawRows.length, 10); r++) {
+            const row = (rawRows[r] || []).map(c => String(c || '').trim().toUpperCase());
+            const nikIdx = row.findIndex(c => c && (c.includes('NIK') || c.includes('NRP')));
+            const namaIdx = row.findIndex(c => c && c.includes('NAMA'));
+            if (nikIdx !== -1 && namaIdx !== -1) {
               headerRowIdx = r;
-              colNrp = nrpIdx;
+              colNik = nikIdx;
               colNama = namaIdx;
-              colJenis = rowUpper.findIndex(c => c.includes('JENIS') || c.includes('TIPE'));
-              colUnit = rowUpper.findIndex(c => c.includes('UNIT') || c.includes('BATANGAN') || c.includes('LAMBUNG'));
-              colTgl = rowUpper.findIndex(c => c.includes('TANGGAL') || c.includes('DATE') || c.includes('TGL'));
-              colShift = rowUpper.findIndex(c => c.includes('SHIFT'));
-              colKode = rowUpper.findIndex(c => c.includes('KODE'));
+              colUnit = row.findIndex(c => c === 'UNIT' || c.includes('BATANGAN') || c.includes('LAMBUNG'));
+              colCluster = row.findIndex(c => c.includes('CLUSTER') || c.includes('CLSUTER'));
+              colJenis = row.findIndex(c => c.includes('JENIS') || c.includes('JABATAN'));
+              colTgl = row.findIndex(c => c.includes('TANGGAL') || c.includes('DATE') || c.includes('TGL'));
+              colShift = row.findIndex(c => c.includes('SHIFT'));
+              colKode = row.findIndex(c => c.includes('KODE'));
               break;
             }
           }
 
           if (headerRowIdx === -1) {
             headerRowIdx = 0;
-            colJenis = 1; colNrp = 2; colNama = 3; colUnit = 4; colTgl = 5; colShift = 6; colKode = 7;
+            colNik = 1; colNama = 2; colUnit = 3; colCluster = 4;
           }
 
-          const defaultJenis = document.getElementById('roster-upload-type')?.value || 'OPT';
-          const periodVal = document.getElementById('roster-upload-period')?.value || '2026-10';
-          const parsedData = [];
+          // 2. DETEKSI FORMAT MATRIKS (KOLOM HARI 1..31) ATAU FORMAT FLAT
+          const headerRow = rawRows[headerRowIdx] || [];
+          const dayCols = [];
 
-          for (let r = headerRowIdx + 1; r < rawRows.length; r++) {
-            const row = rawRows[r];
-            if (!row || row.length === 0) continue;
-            const nrp = String(row[colNrp] || '').trim();
-            const nama = String(row[colNama] || '').trim();
-            if (!nrp && !nama) continue;
+          // Cek angka 1..31 di baris header
+          for (let c = 0; c < headerRow.length; c++) {
+            const num = parseInt(String(headerRow[c] || '').trim(), 10);
+            if (!isNaN(num) && num >= 1 && num <= 31) {
+              dayCols.push({ colIdx: c, dayNum: num });
+            }
+          }
 
-            let jenis = (colJenis !== -1 && row[colJenis]) ? String(row[colJenis]).trim().toUpperCase() : defaultJenis;
-            if (!['OPT', 'OM', 'WM'].includes(jenis)) jenis = defaultJenis;
+          // Jika tidak di baris headerRowIdx, cek baris sebelumnya atau sesudahnya
+          if (dayCols.length === 0 && headerRowIdx > 0) {
+            const prevRow = rawRows[headerRowIdx - 1] || [];
+            for (let c = 0; c < prevRow.length; c++) {
+              const num = parseInt(String(prevRow[c] || '').trim(), 10);
+              if (!isNaN(num) && num >= 1 && num <= 31) {
+                dayCols.push({ colIdx: c, dayNum: num });
+              }
+            }
+          }
+          if (dayCols.length === 0 && headerRowIdx + 1 < rawRows.length) {
+            const nextRow = rawRows[headerRowIdx + 1] || [];
+            for (let c = 0; c < nextRow.length; c++) {
+              const num = parseInt(String(nextRow[c] || '').trim(), 10);
+              if (!isNaN(num) && num >= 1 && num <= 31) {
+                dayCols.push({ colIdx: c, dayNum: num });
+              }
+            }
+          }
 
-            let unit = (colUnit !== -1 && row[colUnit]) ? String(row[colUnit]).trim().toUpperCase() : '-';
-            let tgl = (colTgl !== -1 && row[colTgl]) ? String(row[colTgl]).trim() : `${periodVal}-01`;
-            let shift = (colShift !== -1 && row[colShift]) ? parseInt(row[colShift], 10) || 1 : 1;
-            let kodeShift = (colKode !== -1 && row[colKode]) ? String(row[colKode]).trim().toUpperCase() : 'DWS';
+          const isMatrixFormat = dayCols.length >= 7;
 
-            let isSpare = false;
-            let unitEfektif = unit;
-            if (/^[DN]\d{3}$/.test(kodeShift)) {
-              isSpare = true;
-              unitEfektif = 'LT2' + kodeShift.substring(1);
+          if (isMatrixFormat) {
+            // ========================================================
+            // A. PARSING FORMAT MATRIKS BULANAN (FORMAT RESMI LAPANGAN)
+            // ========================================================
+            let dataStartRow = headerRowIdx + 1;
+            if (dataStartRow < rawRows.length) {
+              const nextRowVals = (rawRows[dataStartRow] || []).map(c => String(c || '').trim().toUpperCase());
+              const hasDayNames = nextRowVals.some(v => ['SE', 'SL', 'RB', 'KM', 'JU', 'SA', 'MI', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU', 'MINGGU'].includes(v));
+              if (hasDayNames) dataStartRow++;
             }
 
-            parsedData.push({
-              id: `ROSTER-${Date.now()}-${r}`,
-              jenis,
-              nrp: nrp || `NRP-${r}`,
-              nik: nrp || `NRP-${r}`,
-              nama: nama || `Pegawai ${r}`,
-              unit,
-              unitEfektif,
-              tanggal: tgl,
-              shift,
-              kodeShift,
-              isSpare
-            });
+            for (let r = dataStartRow; r < rawRows.length; r++) {
+              const row = rawRows[r];
+              if (!row || row.length === 0) continue;
+
+              const nik = String(row[colNik] || '').trim();
+              const nama = String(row[colNama] || '').trim();
+              if (!nik && !nama) continue;
+
+              let unit = (colUnit !== -1 && row[colUnit]) ? String(row[colUnit]).trim().toUpperCase() : '-';
+              let cluster = (colCluster !== -1 && row[colCluster]) ? String(row[colCluster]).trim() : 'Utara';
+              let jenis = (colJenis !== -1 && row[colJenis]) ? String(row[colJenis]).trim().toUpperCase() : defaultJenis;
+              if (nama.toUpperCase().includes('(OM)') || unit.includes('OM')) jenis = 'OM';
+              if (nama.toUpperCase().includes('(WM)') || unit.includes('WM') || unit.includes('WT')) jenis = 'WM';
+              if (!['OPT', 'OM', 'WM'].includes(jenis)) jenis = defaultJenis;
+
+              for (const d of dayCols) {
+                const rawCode = String(row[d.colIdx] || '').trim().toUpperCase();
+                if (!rawCode || rawCode === '-' || rawCode === '0') continue;
+
+                const dayStr = String(d.dayNum).padStart(2, '0');
+                const tanggal = `${periodVal}-${dayStr}`;
+
+                let shift = 1;
+                let isOff = false;
+                let isSpare = false;
+                let unitEfektif = unit;
+
+                if (rawCode.includes('NWS') || rawCode.startsWith('N')) {
+                  shift = 2;
+                } else if (rawCode.includes('DWS') || rawCode.startsWith('D')) {
+                  shift = 1;
+                }
+
+                if (['OOFF', 'OFF', 'CCUTI', 'CUTI', 'INDK', 'INDR', 'TR', 'HR'].includes(rawCode)) {
+                  isOff = true;
+                }
+
+                if (/^[DN]\d{3}$/.test(rawCode)) {
+                  isSpare = true;
+                  unitEfektif = 'LT2' + rawCode.substring(1);
+                }
+
+                parsedData.push({
+                  id: `ROSTER-${r}-${d.dayNum}`,
+                  jenis,
+                  nrp: nik || `NIK-${r}`,
+                  nik: nik || `NIK-${r}`,
+                  nama: nama || `Pegawai ${r}`,
+                  unit: unit || '-',
+                  cluster: cluster || 'Utara',
+                  unitEfektif: unitEfektif || unit || '-',
+                  tanggal,
+                  shift,
+                  kodeShift: rawCode,
+                  isSpare,
+                  isOff
+                });
+              }
+            }
+          } else {
+            // ========================================================
+            // B. PARSING FORMAT FLAT VERTIKAL (CADANGAN/LEGACY)
+            // ========================================================
+            for (let r = headerRowIdx + 1; r < rawRows.length; r++) {
+              const row = rawRows[r];
+              if (!row || row.length === 0) continue;
+              const nrp = String(row[colNik] || '').trim();
+              const nama = String(row[colNama] || '').trim();
+              if (!nrp && !nama) continue;
+
+              let jenis = (colJenis !== -1 && row[colJenis]) ? String(row[colJenis]).trim().toUpperCase() : defaultJenis;
+              if (!['OPT', 'OM', 'WM'].includes(jenis)) jenis = defaultJenis;
+
+              let unit = (colUnit !== -1 && row[colUnit]) ? String(row[colUnit]).trim().toUpperCase() : '-';
+              let tgl = (colTgl !== -1 && row[colTgl]) ? String(row[colTgl]).trim() : `${periodVal}-01`;
+              let shift = (colShift !== -1 && row[colShift]) ? parseInt(row[colShift], 10) || 1 : 1;
+              let kodeShift = (colKode !== -1 && row[colKode]) ? String(row[colKode]).trim().toUpperCase() : 'DWS';
+
+              let isSpare = false;
+              let unitEfektif = unit;
+              if (/^[DN]\d{3}$/.test(kodeShift)) {
+                isSpare = true;
+                unitEfektif = 'LT2' + kodeShift.substring(1);
+              }
+
+              parsedData.push({
+                id: `ROSTER-${Date.now()}-${r}`,
+                jenis,
+                nrp: nrp || `NRP-${r}`,
+                nik: nrp || `NRP-${r}`,
+                nama: nama || `Pegawai ${r}`,
+                unit,
+                cluster: 'Utara',
+                unitEfektif,
+                tanggal: tgl,
+                shift,
+                kodeShift,
+                isSpare
+              });
+            }
           }
 
           if (parsedData.length === 0) {
@@ -13170,7 +13512,7 @@
 
           state.parsedRosterData = parsedData;
           renderRosterPreviewRows();
-          showToast(`Berhasil mem-parsing ${parsedData.length} baris roster!`, 'success');
+          showToast(`Berhasil mem-parsing ${parsedData.length} data roster ${isMatrixFormat ? '(Format Matriks Tanggal 1-31)' : '(Format Flat)'}!`, 'success');
         } catch (err) {
           console.error('[Process Roster File Error]', err);
           showToast('Gagal memproses file: ' + err.message, 'error');
@@ -13211,24 +13553,178 @@
       });
     }
 
-    function saveParsedRoster(append = false) {
+    async function loadRosterFromSupabase(periodFilter = null) {
+      if (!state.supabaseClient) {
+        console.warn('[Supabase Roster] Client belum siap');
+        return false;
+      }
+      try {
+        const tbody = document.getElementById('db-roster-tbody');
+        if (tbody && (!state.masterRoster || state.masterRoster.length === 0)) {
+          tbody.innerHTML = '<tr><td colspan="10" class="py-8 text-center text-slate-400 italic"><div class="flex items-center justify-center space-x-2"><svg class="w-4 h-4 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Memuat data roster langsung dari Supabase...</span></div></td></tr>';
+        }
+
+        // 1. Ambil pemetaan operator untuk unit batangan & cluster
+        const opMap = {};
+        const { data: opsData } = await state.supabaseClient
+          .from('master_operators')
+          .select('nrp, nama, cluster, armada_unit');
+        if (Array.isArray(opsData)) {
+          opsData.forEach(op => {
+            if (op.nrp) {
+              opMap[op.nrp] = {
+                unit: op.armada_unit || '-',
+                cluster: op.cluster || 'Selatan',
+                nama: op.nama || ''
+              };
+            }
+          });
+        }
+
+        // 2. Query data master_roster dari Supabase
+        let query = state.supabaseClient
+          .from('master_roster')
+          .select('*')
+          .order('tanggal', { ascending: true })
+          .order('nrp', { ascending: true });
+
+        if (periodFilter) {
+          query = query.eq('periode', periodFilter);
+        }
+
+        const { data, error } = await query;
+        if (error) {
+          console.error('[Supabase Roster Error]', error);
+          return false;
+        }
+
+        if (Array.isArray(data)) {
+          state.masterRoster = data.map((r, idx) => {
+            const opInfo = opMap[r.nrp] || {};
+            const baseUnit = opInfo.unit || '-';
+            let unitEfektif = baseUnit;
+
+            // Cek kode spare: D515 / N168
+            const matchSpare = (r.shift_code || '').match(/^[DN](\d{3,4})$/i);
+            if (matchSpare) {
+              unitEfektif = 'LT2' + matchSpare[1];
+            }
+
+            const shiftNum = (r.shift_code && r.shift_code.toUpperCase().startsWith('N')) ? 2 : 1;
+
+            return {
+              id: r.id,
+              jenis: r.tipe_karyawan || 'OPT',
+              nrp: r.nrp,
+              nik: r.nrp,
+              nama: r.nama || opInfo.nama || '-',
+              unit: baseUnit,
+              unitEfektif: unitEfektif,
+              cluster: opInfo.cluster || 'Selatan',
+              periode: r.periode,
+              tanggal: r.tanggal,
+              shift: shiftNum,
+              kodeShift: r.shift_code || 'DWS',
+              isSpare: !!matchSpare
+            };
+          });
+
+          console.log('[Supabase Roster] Berhasil memuat ' + state.masterRoster.length + ' data roster dari Supabase.');
+          renderDatabaseRosterTable();
+          return true;
+        }
+        return false;
+      } catch (err) {
+        console.error('[Supabase Roster Exception]', err);
+        return false;
+      }
+    }
+
+    async function saveParsedRoster(append = false) {
       if (!state.parsedRosterData || state.parsedRosterData.length === 0) {
         showToast('Tidak ada data roster hasil parsing untuk disimpan!', 'warning');
         return;
       }
 
-      if (append) {
-        state.masterRoster = [...(state.masterRoster || []), ...state.parsedRosterData];
-      } else {
-        state.masterRoster = [...state.parsedRosterData];
+      if (!state.supabaseClient) {
+        showToast('Koneksi Supabase belum aktif! Periksa koneksi internet Anda.', 'error');
+        return;
       }
 
-      safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster));
-      saveDatabaseSync();
-      renderDatabaseRosterTable();
+      const btn = document.querySelector('button[onclick*="saveParsedRoster"]');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="inline-flex items-center space-x-2"><svg class="w-3.5 h-3.5 animate-spin text-brand-800" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Menyimpan ke Supabase...</span></span>';
+      }
 
-      showToast(`Database Roster berhasil disimpan (${state.parsedRosterData.length} data)!`, 'success');
-      switchMasterSubtab('database');
+      showToast('Menyimpan ' + state.parsedRosterData.length + ' data roster langsung ke Supabase...', 'info');
+
+      try {
+        const periodVal = document.getElementById('roster-upload-period')?.value || '2026-10';
+
+        // 1. Ekstrak data operator untuk master_operators (agar unit batangan & cluster tersimpan)
+        const uniqueOps = new Map();
+        state.parsedRosterData.forEach(r => {
+          const nrp = String(r.nik || r.nrp || '').trim();
+          if (nrp && !uniqueOps.has(nrp)) {
+            uniqueOps.set(nrp, {
+              nrp: nrp,
+              nama: String(r.nama || '').trim(),
+              cluster: String(r.cluster || 'Selatan').trim(),
+              armada_unit: String(r.unit || '-').trim(),
+              jabatan: 'Operator'
+            });
+          }
+        });
+
+        const opList = Array.from(uniqueOps.values());
+        if (opList.length > 0) {
+          const { error: opErr } = await state.supabaseClient
+            .from('master_operators')
+            .upsert(opList, { onConflict: 'nrp' });
+          if (opErr) console.warn('[Supabase Sync Operators Warning]', opErr.message);
+        }
+
+        // 2. Siapkan baris untuk master_roster
+        const allRows = state.parsedRosterData.map(r => ({
+          nrp: String(r.nik || r.nrp || '').trim(),
+          nama: String(r.nama || '').trim(),
+          periode: String(r.periode || periodVal).trim(),
+          tanggal: r.tanggal,
+          shift_code: String(r.kodeShift || 'DWS').trim(),
+          tipe_karyawan: String(r.jenis || 'OPT').trim()
+        }));
+
+        // Simpan dalam batch 100 per request
+        const BATCH_SIZE = 100;
+        let savedCount = 0;
+        for (let i = 0; i < allRows.length; i += BATCH_SIZE) {
+          const batch = allRows.slice(i, i + BATCH_SIZE);
+          const { error: batchErr } = await state.supabaseClient
+            .from('master_roster')
+            .upsert(batch, { onConflict: 'nrp,tanggal' });
+
+          if (batchErr) {
+            throw new Error('Gagal menyimpan batch: ' + batchErr.message);
+          }
+          savedCount += batch.length;
+        }
+
+        // 3. Ambil data segar langsung dari Supabase ke memori
+        await loadRosterFromSupabase();
+
+        showToast('Sukses! ' + savedCount + ' data roster berhasil tersimpan & tersinkronisasi di Supabase!', 'success');
+        switchMasterSubtab('database');
+      } catch (err) {
+        console.error('[Save Roster Error]', err);
+        showToast('Gagal menyimpan ke Supabase: ' + err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalText || 'Simpan ke Database (Replace Bulan Ini)';
+        }
+      }
     }
 
     function loadSampleRosterTemplate() {
@@ -13460,9 +13956,10 @@
       });
       if (state.lubetruckState?.jobs) state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => j.id !== state.jobToDeleteId);
       if (state.watertruckState?.jobs) state.watertruckState.jobs = state.watertruckState.jobs.filter(j => j.id !== state.jobToDeleteId);
+      const deletedId = state.jobToDeleteId;
       toggleModal('modal-confirm-delete-job', false);
       showToast('Penugasan berhasil dihapus', 'success');
-      notifyDataChanged({ source: 'delete_job' });
+      notifyDataChanged({ source: 'delete_job', deletedJobId: deletedId });
     }
 
     function openAddJobModal(shift = 1, cluster = 'Selatan', targetType = 'LT', washingRound = 1) {
@@ -13747,73 +14244,93 @@
     function handleUnitsDropFile(e) { if (e && e.preventDefault) e.preventDefault(); showToast('File unit diproses', 'info'); }
 
     function downloadOfficialRosterTemplate() {
-      if (typeof XLSX === 'undefined') {
-        showToast('Library SheetJS belum siap!', 'error');
-        return;
-      }
-      showToast('Membuat template Excel Roster Bulanan...', 'info');
+      showToast('Membuat & mengunduh template Excel Roster Matriks...', 'info');
 
       try {
         const periodVal = document.getElementById('roster-upload-period')?.value || '2026-10';
-        const prefixDate = periodVal ? `${periodVal}-01` : '2026-10-01';
-
-        // 1. Sheet Utama: DATA ROSTER
-        const headers = ['NO', 'JENIS', 'NRP', 'NAMA PEGAWAI', 'UNIT BATANGAN', 'TANGGAL', 'SHIFT', 'KODE SHIFT', 'KETERANGAN'];
-        const sampleData = [
-          // Operator Tetap (DWS = Day / Siang, NWS = Night / Malam)
-          ['1', 'OPT', '800101', 'Budi Santoso', 'LT2510', prefixDate, '1', 'DWS', 'Operator Tetap Siang'],
-          ['2', 'OPT', '800102', 'Joko Widodo', 'LT2510', prefixDate, '2', 'NWS', 'Operator Tetap Malam'],
-          // Operator Spare (D514 = Day Shift spare unit LT2514)
-          ['3', 'OPT', '800103', 'Slamet Riyadi', 'LT2514', prefixDate, '1', 'D514', 'Operator Spare LT2514'],
-          // Operator Sedang Libur / Off
-          ['4', 'OPT', '800104', 'Andi Saputra', 'LT2535', prefixDate, '1', 'OOFF', 'Operator Sedang Off Libur'],
-          ['5', 'OPT', '800105', 'Hadi Purnomo', 'LT2535', prefixDate, '1', 'D535', 'Operator Spare Gantikan Andi'],
-          // Oilman (OM) untuk Lube Truck
-          ['6', 'OM', '800201', 'Hendra Gunawan', 'LT2510', prefixDate, '1', 'DWS', 'Oilman Lube Truck MP 1'],
-          ['7', 'OM', '800202', 'Doni Pratama', 'LT2510', prefixDate, '1', 'DWS', 'Oilman Lube Truck MP 2'],
-          ['8', 'OM', '800203', 'Rahmat Hidayat', 'LT2535', prefixDate, '1', 'DWS', 'Oilman LT2535'],
-          // Washingman (WM) untuk Water Truck
-          ['9', 'WM', '800301', 'Agus Setiawan', 'WT101', prefixDate, '1', 'DWS', 'Washingman WT101'],
-          ['10', 'WM', '800302', 'Bambang Supeno', 'WT102', prefixDate, '1', 'DWS', 'Washingman WT102']
-        ];
-
-        const wb = XLSX.utils.book_new();
-        const wsData = [headers, ...sampleData];
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        ws['!cols'] = [
-          { wch: 6 },
-          { wch: 10 },
-          { wch: 14 },
-          { wch: 22 },
-          { wch: 16 },
-          { wch: 14 },
-          { wch: 8 },
-          { wch: 14 },
-          { wch: 30 }
-        ];
-        XLSX.utils.book_append_sheet(wb, ws, 'DATA_ROSTER');
-
-        // 2. Sheet Petunjuk Kode Shift
-        const guideHeaders = ['KODE SHIFT', 'ARTI STATUS', 'KETERANGAN LOGIKA SISTEM'];
-        const guideData = [
-          ['DWS', 'Day Work Shift (Siang)', 'Operator batangan bertugas pada shift 1 di unit bawaannya'],
-          ['NWS', 'Night Work Shift (Malam)', 'Operator batangan bertugas pada shift 2 di unit bawaannya'],
-          ['D + 3 Digit Unit (cth: D510)', 'Spare Day Shift', 'Operator pengganti (spare) yang membawa unit LT2510 di shift siang'],
-          ['N + 3 Digit Unit (cth: N510)', 'Spare Night Shift', 'Operator pengganti (spare) yang membawa unit LT2510 di shift malam'],
-          ['OOFF', 'Off Kerja / Libur', 'Operator batangan libur, sistem otomatis mencari personil spare'],
-          ['CCUTI', 'Cuti Tahunan / Lapangan', 'Operator batangan cuti, sistem otomatis mencari personil spare'],
-          ['INDR', 'Induksi / Training / Izin', 'Personil tidak dijadwalkan pada unit servis atau unit operasional']
-        ];
-        const wsGuide = XLSX.utils.aoa_to_sheet([guideHeaders, ...guideData]);
-        wsGuide['!cols'] = [{ wch: 20 }, { wch: 25 }, { wch: 55 }];
-        XLSX.utils.book_append_sheet(wb, wsGuide, 'PANDUAN_KODE_SHIFT');
-
+        const [yearStr, monthStr] = periodVal.split('-');
+        const year = parseInt(yearStr, 10) || 2026;
+        const month = parseInt(monthStr, 10) || 10;
+        const daysInMonth = new Date(year, month, 0).getDate();
         const fileName = `TEMPLATE_ROSTER_${periodVal.replace('-', '_')}_SE_MANAGEMENT.xlsx`;
-        XLSX.writeFile(wb, fileName);
-        showToast('Template Excel Roster Bulanan berhasil diunduh!', 'success');
+
+        // Baris 1: Judul Tabel (Persis Foto 2)
+        const row1 = ['ROSTER OPERATOR LT & WT'];
+
+        // Baris 2: Header Kolom Utama + Angka Hari 1 .. daysInMonth (Persis Foto 2: NO, NIK, NAMA, UNIT, CLSUTER, 1, 2, 3...)
+        const row2 = ['NO', 'NIK', 'NAMA', 'UNIT', 'CLSUTER'];
+        for (let d = 1; d <= daysInMonth; d++) {
+          row2.push(d);
+        }
+
+        // Baris-baris template kosong bernomor 1 .. 20 untuk mempermudah pengguna langsung menginput data
+        // (Sesuai Foto 2: Tanpa baris singkatan hari KM/JU/SA dan tanpa data dummy terisi)
+        const allRows = [row1, row2];
+        for (let i = 1; i <= 20; i++) {
+          const emptyRow = [i, '', '', '', ''];
+          for (let d = 1; d <= daysInMonth; d++) emptyRow.push('');
+          allRows.push(emptyRow);
+        }
+
+        let excelBlob = null;
+        if (typeof XLSX !== 'undefined') {
+          try {
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(allRows);
+
+            const colWidths = [{ wch: 6 }, { wch: 15 }, { wch: 28 }, { wch: 14 }, { wch: 20 }];
+            for (let d = 1; d <= daysInMonth; d++) colWidths.push({ wch: 7 });
+            ws['!cols'] = colWidths;
+            ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
+
+            XLSX.utils.book_append_sheet(wb, ws, 'ROSTER_LT_WT');
+
+            // Sheet 2: Panduan Kode Shift
+            const guideRows = [
+              ['PANDUAN KODE SHIFT & STATUS OPERASIONAL'],
+              ['KODE SHIFT', 'ARTI STATUS', 'KETERANGAN SISTEM'],
+              ['DWS', 'Day Work Shift (Siang)', 'Bertugas pada shift siang (Shift 1) pada unit batangan'],
+              ['NWS', 'Night Work Shift (Malam)', 'Bertugas pada shift malam (Shift 2) pada unit batangan'],
+              ['D + 3 Digit Unit (cth: D514)', 'Spare Day Shift (Siang)', 'Operator spare yang membawa unit LT 2514 di shift siang'],
+              ['N + 3 Digit Unit (cth: N514)', 'Spare Night Shift (Malam)', 'Operator spare yang membawa unit LT 2514 di shift malam'],
+              ['OOFF', 'Off Kerja / Libur', 'Operator libur berkala terjadwal'],
+              ['CCUTI', 'Cuti Tahunan / Lapangan', 'Operator sedang dalam masa cuti kerja'],
+              ['INDK / INDR', 'Induksi / Training / Izin', 'Personil dalam masa induksi K3 atau izin resmi'],
+              ['TR', 'Training Lapangan', 'Personil sedang pelatihan unit lapangan']
+            ];
+            const wsGuide = XLSX.utils.aoa_to_sheet(guideRows);
+            wsGuide['!cols'] = [{ wch: 26 }, { wch: 30 }, { wch: 65 }];
+            wsGuide['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }];
+            XLSX.utils.book_append_sheet(wb, wsGuide, 'PANDUAN_KODE_SHIFT');
+
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            excelBlob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          } catch (wbErr) {
+            console.warn('[Roster Template] SheetJS build error, fallback to static file:', wbErr);
+          }
+        }
+
+        const csvContent = allRows.slice(1).map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n');
+
+        const success = triggerUniversalDownload({
+          fileName: fileName,
+          staticPath: './TEMPLATE_ROSTER_SE_MANAGEMENT.xlsx',
+          blobData: excelBlob,
+          csvContent: csvContent
+        });
+
+        if (success) {
+          showToast('Template Excel Roster Matriks berhasil diunduh!', 'success');
+        } else {
+          showToast('Gagal mengunduh template, silakan cek pengaturan browser.', 'error');
+        }
       } catch (err) {
         console.error('[Download Roster Error]', err);
-        showToast('Gagal membuat file template roster: ' + err.message, 'error');
+        triggerUniversalDownload({
+          fileName: 'TEMPLATE_ROSTER_SE_MANAGEMENT.xlsx',
+          staticPath: './TEMPLATE_ROSTER_SE_MANAGEMENT.xlsx'
+        });
+        showToast('Template Excel Roster diunduh melalui mode berkas cadangan!', 'info');
       }
     }
 
@@ -13822,7 +14339,55 @@
       return String(num).replace(/[^0-9]/g, '');
     }
 
-    function renderMpKontakProTable() { }
+    function renderMpKontakProTable() {
+      const tbody = document.getElementById('mp-kontak-pro-tbody');
+      if (!tbody) return;
+
+      // Selalu singkronkan dengan master data terbaru
+      syncMasterOperatorsWithUsers();
+
+      const search = (document.getElementById('search-mp-kontak-input')?.value || '').toLowerCase().trim();
+      let list = [...(state.masterOperators || [])];
+
+      if (search) {
+        list = list.filter(o =>
+          (o.nrp && o.nrp.toLowerCase().includes(search)) ||
+          (o.nama && o.nama.toLowerCase().includes(search)) ||
+          (o.noWa && o.noWa.toLowerCase().includes(search))
+        );
+      }
+
+      tbody.innerHTML = '';
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400 italic text-[11px]">Belum ada data kontak produksi. Silakan tambahkan nomor melalui menu Data Master &gt; Kontak Produksi.</td></tr>';
+        return;
+      }
+
+      list.forEach((op, idx) => {
+        const cleanWa = (op.noWa || '').replace(/[^0-9]/g, '');
+        const waLink = cleanWa ? (cleanWa.startsWith('0') ? '62' + cleanWa.slice(1) : cleanWa) : '';
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition border-b border-slate-100 text-xs';
+        tr.innerHTML = `
+          <td class="py-3 px-4 text-center font-mono text-slate-400 text-[11px] font-semibold">${idx + 1}</td>
+          <td class="py-3 px-4 font-bold text-slate-900 font-mono text-[11px]">${op.nrp || '-'}</td>
+          <td class="py-3 px-4 font-semibold text-slate-800">${op.nama || '-'}</td>
+          <td class="py-3 px-4 font-mono text-slate-700 font-medium">${op.noWa || '-'}</td>
+          <td class="py-3 px-4 text-center">
+            ${waLink ? `
+              <a href="https://wa.me/${waLink}" target="_blank" rel="noopener noreferrer"
+                class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-[11px] transition shadow-2xs">
+                <svg class="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                </svg>
+                <span>Chat WA</span>
+              </a>
+            ` : '<span class="text-slate-400 italic text-[11px]">-</span>'}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
     function submitJobAction(e) { if (e && e.preventDefault) e.preventDefault(); }
     function handleJobDecision() { }
     function confirmNonAchSubmission() { }
@@ -14199,8 +14764,12 @@
           }
         }
       });
-      if (subtabKey === 'database' && typeof renderDatabaseRosterTable === 'function') {
-        renderDatabaseRosterTable();
+      if (subtabKey === 'database') {
+        if ((!state.masterRoster || state.masterRoster.length === 0) && state.supabaseClient) {
+          loadRosterFromSupabase();
+        } else if (typeof renderDatabaseRosterTable === 'function') {
+          renderDatabaseRosterTable();
+        }
       }
     }
     window.switchMasterSubtab = switchMasterSubtab;
@@ -15093,18 +15662,35 @@
       toggleModal('modal-confirm-bulk-delete-roster', true);
     }
 
-    function executeBulkDeleteRoster() {
+    async function executeBulkDeleteRoster() {
       const deleteCount = state.selectedRosterIds.size;
-      state.masterRoster = state.masterRoster.filter((r, idx) => {
+      if (deleteCount === 0) return;
+
+      const selectedRows = state.masterRoster.filter((r, idx) => {
         const rowId = r.id || `${r.nik || r.nrp}_${r.tanggal}_${r.shift}_${idx}`;
-        return !state.selectedRosterIds.has(rowId);
+        return state.selectedRosterIds.has(rowId);
       });
 
-      safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster));
+      if (state.supabaseClient && selectedRows.length > 0) {
+        showToast(`Menghapus ${deleteCount} data dari Supabase...`, 'info');
+        try {
+          const idsToDelete = selectedRows.map(r => r.id).filter(Boolean);
+          if (idsToDelete.length > 0) {
+            const BATCH_SIZE = 100;
+            for (let i = 0; i < idsToDelete.length; i += BATCH_SIZE) {
+              const chunk = idsToDelete.slice(i, i + BATCH_SIZE);
+              await state.supabaseClient.from('master_roster').delete().in('id', chunk);
+            }
+          }
+        } catch (e) {
+          console.warn('[Supabase Delete Error]', e);
+        }
+      }
+
       state.selectedRosterIds.clear();
       toggleModal('modal-confirm-bulk-delete-roster', false);
-      showToast(`Berhasil menghapus ${deleteCount} data roster secara masal!`, 'success');
-      renderDatabaseRosterTable();
+      await loadRosterFromSupabase();
+      showToast(`Berhasil menghapus ${deleteCount} data roster dari database!`, 'success');
     }
 
 
@@ -15458,11 +16044,7 @@
     }
 
     function downloadMasterArmadaTemplate() {
-      if (typeof XLSX === 'undefined') {
-        showToast('Library SheetJS belum siap!', 'error');
-        return;
-      }
-
+      showToast('Membuat template Excel Master Armada...', 'info');
       const headers = ['NO', 'UNIT', 'TYPE UNIT', 'CLUSTER', 'STATUS OPERASIONAL'];
       const sampleData = [
         ['1', 'LT2510', 'Lubetruck', 'Utara', 'Aktif'],
@@ -15472,11 +16054,27 @@
         ['5', 'WT102', 'Water Truck', 'Tengah', 'Aktif']
       ];
 
-      const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleData]);
-      ws['!cols'] = [{ wch: 6 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 20 }];
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'MASTER_ARMADA');
-      XLSX.writeFile(wb, 'TEMPLATE_DATA_MASTER_ARMADA.xlsx');
+      let excelBlob = null;
+      if (typeof XLSX !== 'undefined') {
+        try {
+          const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleData]);
+          ws['!cols'] = [{ wch: 6 }, { wch: 14 }, { wch: 18 }, { wch: 16 }, { wch: 22 }];
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, 'MASTER_ARMADA');
+          const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+          excelBlob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        } catch (err) {
+          console.warn('[Armada Template] SheetJS build error:', err);
+        }
+      }
+
+      const csvContent = [headers, ...sampleData].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+      triggerUniversalDownload({
+        fileName: 'TEMPLATE_DATA_MASTER_ARMADA.xlsx',
+        staticPath: './TEMPLATE_DATA_MASTER_ARMADA.xlsx',
+        blobData: excelBlob,
+        csvContent: csvContent
+      });
       showToast('Template Excel Data Master Armada berhasil diunduh!', 'success');
     }
 
@@ -15797,11 +16395,16 @@
 
     function executeBulkDeleteUnits() {
       const deleteCount = state.selectedUnitIds.size;
+      const idsToDelete = Array.from(state.selectedUnitIds);
       state.masterUnits = state.masterUnits.filter(u => !state.selectedUnitIds.has(u.id));
+      if (state.supabaseClient && idsToDelete.length > 0) {
+        state.supabaseClient.from('master_units').delete().in('id', idsToDelete).catch(() => {});
+      }
       state.selectedUnitIds.clear();
       toggleModal('modal-confirm-bulk-delete-units', false);
       showToast(`Berhasil menghapus ${deleteCount} unit secara masal dari populasi!`, 'success');
-      renderMasterUnitsTable();
+      if (typeof notifyDataChanged === 'function') notifyDataChanged();
+      else renderMasterUnitsTable();
     }
 
     function openImportUnitsModal() {
@@ -16163,7 +16766,558 @@
       }
     }
 
-    function initSupabase() {
+    
+    // ========================================================================
+    // SUPABASE REALTIME TWO-WAY ENGINE (EVENT-DRIVEN & HEMAT KUOTA EGRESS)
+    // ========================================================================
+    let realtimeChannel = null;
+    let uiRefreshDebounceTimer = null;
+
+    function debouncedRefreshUI() {
+      if (uiRefreshDebounceTimer) clearTimeout(uiRefreshDebounceTimer);
+      uiRefreshDebounceTimer = setTimeout(() => {
+        refreshActiveTable();
+        if (state.activeTab === 'dashboard') {
+          try {
+            if (state.currentUser?.role === 'admin' || state.currentUser?.role === 'basecontrol') {
+              refreshDashboardData();
+            } else {
+              renderManpowerDashboard();
+            }
+          } catch (e) { }
+        } else if (state.activeTab === 'mp-kontak-pro') {
+          renderMpKontakProTable();
+        } else if (state.activeTab === 'master-data') {
+          if (state.masterActiveSection === 'operators') renderMasterOperatorsTable();
+          else if (state.masterActiveSection === 'units') renderMasterUnitsTable();
+          else if (state.masterActiveSection === 'armada') renderMasterArmadaTable();
+          else if (state.masterActiveSection === 'accounts') renderMasterAccountsTable();
+          else if (state.masterActiveSection === 'roster') renderDatabaseRosterTable();
+        } else if (state.activeTab === 'air-cleaner-monitor') {
+          renderAirCleanerMonitorTable();
+        } else if (state.activeTab === 'pica') {
+          renderPicaTable();
+        }
+      }, 80);
+    }
+
+    // A. OUTBOUND SYNC HELPERS (WEB -> SUPABASE)
+    async function syncJobToSupabase(job) {
+      if (!state.supabaseClient || !job || !job.id) return;
+      try {
+        const targetId = String(job.id);
+        const isUnschWt = (targetId.startsWith('UNS-WT') || job.serviceType === 'watertruck');
+        const isUnschLt = (targetId.startsWith('UNS-LT') || job.serviceType === 'lubetruck');
+        const isWt = (targetId.startsWith('WTJ') || job.targetType === 'WT' || (job.wtUnit && job.wtUnit !== '-'));
+
+        const supaRow = {
+          id: targetId,
+          job_type: isUnschWt ? 'unsch_wt' : isUnschLt ? 'unsch_lt' : isWt ? 'water' : 'lube',
+          cat: job.cat || (job.serviceType ? 'unscheduled' : 'small'),
+          tanggal: job.tanggal || getEffectiveTodayString(),
+          shift: parseInt(job.shift, 10) || 1,
+          cluster: job.cluster || 'Selatan',
+          waktu_rencana: job.waktu || '07:00 s/d 07:15',
+          type_unit: job.typeUnit || 'Unit',
+          no_lambung: job.noLambung || '',
+          lokasi: job.lokasi || '',
+          armada_unit: (isWt || isUnschWt) ? (job.wtUnit || job.armadaUnit || 'WT101') : (job.ltUnit || job.armadaUnit || 'LT2535'),
+          opt_name: job.opt || job.optName || '-',
+          mp1: job.mp1 || '-',
+          mp2: job.mp2 || '-',
+          jam_start: job.jamStart || '',
+          jam_end: job.jamEnd || '',
+          durasi: job.durasi ? parseFloat(job.durasi) : null,
+          status: job.status || 'scheduled',
+          keterangan: job.keterangan || '',
+          is_pending: Boolean(job.isPending),
+          unit_condition: job.unitCondition || '',
+          service_type: job.serviceType || '',
+          pemesan: job.namaPemesan || job.pemesan || '',
+          kondisi: job.kondisi || '',
+          updated_at: new Date().toISOString()
+        };
+
+        const res = await state.supabaseClient.from('jobs').upsert(supaRow, { onConflict: 'id' });
+        if (res?.error) {
+          console.warn('[Supabase Outbound Job Error]', res.error.message);
+        } else {
+          console.log('[Supabase Outbound Job OK]', targetId);
+        }
+      } catch (err) {
+        console.warn('[Supabase Outbound Job Exception]', err);
+      }
+    }
+
+    async function deleteJobFromSupabase(jobId) {
+      if (!state.supabaseClient || !jobId) return;
+      try {
+        await state.supabaseClient.from('jobs').delete().eq('id', String(jobId));
+        await state.supabaseClient.from('order_requests').delete().eq('id', String(jobId));
+        console.log('[Supabase Outbound Job Deleted]', jobId);
+      } catch (err) {
+        console.warn('[Supabase Outbound Delete Job Exception]', err);
+      }
+    }
+
+    async function syncOrderToSupabase(order) {
+      if (!state.supabaseClient || !order || !order.id) return;
+      try {
+        await state.supabaseClient.from('order_requests').upsert({
+          id: String(order.id),
+          kode_order: String(order.id),
+          tanggal: order.tanggal || getEffectiveTodayString(),
+          jam: order.waktu || '08:00',
+          nama_pemesan: order.namaPemesan || 'Pemohon Lapangan',
+          role_pemesan: order.createdByRole || 'user',
+          nrp_pemesan: order.createdByNrp || '',
+          no_lambung: order.noLambung || '',
+          cluster: order.cluster || 'Selatan',
+          lokasi: order.lokasi || '',
+          keadaan_unit: order.kondisi || 'ADD',
+          deskripsi: order.deskripsi || order.keterangan || '',
+          status: order.status === '-' ? 'Pending' : (order.status || 'Pending'),
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
+      } catch (err) {
+        console.warn('[Supabase Outbound Order Exception]', err);
+      }
+    }
+
+    async function syncAirCleanerToSupabase(item) {
+      if (!state.supabaseClient || !item || !item.noLambung) return;
+      try {
+        await state.supabaseClient.from('air_cleaner_monitoring').upsert({
+          id: 'AC-' + item.noLambung.toUpperCase(),
+          no_lambung: item.noLambung.toUpperCase(),
+          type_model: item.type || 'Unit',
+          cleans: item.cleans || [],
+          service_code: item.serviceCode || '',
+          status: item.status || 'Baik',
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'no_lambung' });
+      } catch (err) {
+        console.warn('[Supabase Outbound Air Cleaner Exception]', err);
+      }
+    }
+
+    // B. INBOUND REALTIME HANDLERS (SUPABASE WEBSOCKET -> MEMORI WEB)
+    function handleRealtimeJobChange(payload) {
+      const event = payload.eventType;
+      const row = payload.new;
+      const oldRow = payload.old;
+
+      if (event === 'DELETE' && oldRow?.id) {
+        const id = String(oldRow.id);
+        if (state.lubetruckState?.jobs) state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => j.id !== id);
+        if (state.watertruckState?.jobs) state.watertruckState.jobs = state.watertruckState.jobs.filter(j => j.id !== id);
+        if (state.unscheduledLtJobs) state.unscheduledLtJobs = state.unscheduledLtJobs.filter(j => j.id !== id);
+        if (state.unscheduledWtJobs) state.unscheduledWtJobs = state.unscheduledWtJobs.filter(j => j.id !== id);
+        safeStorage.setItem('SE_LUBE_JOBS', JSON.stringify(state.lubetruckState.jobs));
+        safeStorage.setItem('SE_WATER_JOBS', JSON.stringify(state.watertruckState.jobs));
+        safeStorage.setItem('SE_UNSCH_LT_JOBS', JSON.stringify(state.unscheduledLtJobs));
+        safeStorage.setItem('SE_UNSCH_WT_JOBS', JSON.stringify(state.unscheduledWtJobs));
+        debouncedRefreshUI();
+        return;
+      }
+
+      if (!row || !row.id) return;
+      const targetId = String(row.id);
+      const existingJob = findJobById(targetId);
+
+      if (existingJob) {
+        existingJob.status = row.status || existingJob.status;
+        if (row.jam_start) existingJob.jamStart = row.jam_start;
+        if (row.jam_end) existingJob.jamEnd = row.jam_end;
+        if (row.keterangan) existingJob.keterangan = row.keterangan;
+        if (row.durasi !== null && row.durasi !== undefined) existingJob.durasi = row.durasi;
+        if (row.unit_condition) existingJob.unitCondition = row.unit_condition;
+        if (row.no_lambung) existingJob.noLambung = row.no_lambung;
+        if (row.lokasi) existingJob.lokasi = row.lokasi;
+        if (row.waktu_rencana) existingJob.waktu = row.waktu_rencana;
+        if (row.opt_name && row.opt_name !== '-') existingJob.opt = row.opt_name;
+        if (row.mp1 && row.mp1 !== '-') existingJob.mp1 = row.mp1;
+        if (row.mp2 && row.mp2 !== '-') existingJob.mp2 = row.mp2;
+        if (row.cluster) existingJob.cluster = row.cluster;
+      } else {
+        const isUnschWt = (row.job_type === 'unsch_wt' || targetId.startsWith('UNS-WT'));
+        const isUnschLt = (row.job_type === 'unsch_lt' || targetId.startsWith('UNS-LT'));
+        const isWt = (row.job_type === 'water' || targetId.startsWith('WTJ'));
+
+        const newObj = {
+          id: targetId,
+          cat: row.cat || 'small',
+          tanggal: row.tanggal || getEffectiveTodayString(),
+          shift: row.shift || 1,
+          cluster: row.cluster || 'Selatan',
+          waktu: row.waktu_rencana || '07:00 s/d 07:15',
+          typeUnit: row.type_unit || 'Unit',
+          noLambung: row.no_lambung || '',
+          lokasi: row.lokasi || '',
+          ltUnit: (isWt || isUnschWt) ? '-' : (row.armada_unit || 'LT2535'),
+          wtUnit: (isWt || isUnschWt) ? (row.armada_unit || 'WT101') : '-',
+          targetType: (isWt || isUnschWt) ? 'WT' : 'LT',
+          opt: row.opt_name || '-',
+          mp1: row.mp1 || '-',
+          mp2: row.mp2 || '-',
+          jamStart: row.jam_start || '',
+          jamEnd: row.jam_end || '',
+          durasi: row.durasi || null,
+          status: row.status || 'scheduled',
+          keterangan: row.keterangan || '',
+          isPending: Boolean(row.is_pending),
+          unitCondition: row.unit_condition || '',
+          serviceType: row.service_type || (isUnschWt ? 'watertruck' : 'lubetruck'),
+          namaPemesan: row.pemesan || '',
+          kondisi: row.kondisi || ''
+        };
+
+        if (isUnschWt) state.unscheduledWtJobs.unshift(newObj);
+        else if (isUnschLt) state.unscheduledLtJobs.unshift(newObj);
+        else if (isWt) state.watertruckState.jobs.push(newObj);
+        else state.lubetruckState.jobs.push(newObj);
+      }
+
+      safeStorage.setItem('SE_LUBE_JOBS', JSON.stringify(state.lubetruckState.jobs));
+      safeStorage.setItem('SE_WATER_JOBS', JSON.stringify(state.watertruckState.jobs));
+      safeStorage.setItem('SE_UNSCH_LT_JOBS', JSON.stringify(state.unscheduledLtJobs));
+      safeStorage.setItem('SE_UNSCH_WT_JOBS', JSON.stringify(state.unscheduledWtJobs));
+      debouncedRefreshUI();
+    }
+
+    function handleRealtimeOrderChange(payload) {
+      const event = payload.eventType;
+      const row = payload.new;
+      const oldRow = payload.old;
+
+      if (event === 'DELETE' && oldRow?.id) {
+        const id = String(oldRow.id);
+        state.unscheduledLtJobs = state.unscheduledLtJobs.filter(j => j.id !== id);
+        state.unscheduledWtJobs = state.unscheduledWtJobs.filter(j => j.id !== id);
+        safeStorage.setItem('SE_UNSCH_LT_JOBS', JSON.stringify(state.unscheduledLtJobs));
+        safeStorage.setItem('SE_UNSCH_WT_JOBS', JSON.stringify(state.unscheduledWtJobs));
+        debouncedRefreshUI();
+        return;
+      }
+
+      if (!row || !row.id) return;
+      const orderId = String(row.id);
+      const existing = findJobById(orderId);
+
+      if (existing) {
+        if (row.status && row.status !== 'Pending') existing.status = row.status;
+        if (row.deskripsi) existing.deskripsi = row.deskripsi;
+      } else {
+        const isWt = (row.service_type === 'watertruck' || orderId.startsWith('UNS-WT'));
+        const orderObj = {
+          id: orderId,
+          tanggal: row.tanggal || getEffectiveTodayString(),
+          waktu: row.jam || '08:00',
+          serviceType: isWt ? 'watertruck' : 'lubetruck',
+          shift: 1,
+          cluster: row.cluster || 'Selatan',
+          kondisi: row.keadaan_unit || 'ADD',
+          typeUnit: getUnitTypeFromMaster(row.no_lambung, 'HAUL TRUCK'),
+          noLambung: row.no_lambung || '',
+          lokasi: row.lokasi || '',
+          deskripsi: row.deskripsi || '',
+          keterangan: row.deskripsi || '',
+          namaPemesan: row.nama_pemesan || 'Pemohon Lapangan',
+          createdBy: row.role_pemesan || 'user',
+          createdByNrp: row.nrp_pemesan || '',
+          createdByRole: row.role_pemesan || 'user',
+          ltUnit: '-',
+          opt: '-',
+          mp1: '-',
+          mp2: '-',
+          hmUnit: '-',
+          jamStart: '',
+          jamEnd: '',
+          fotos: [],
+          status: row.status || '-',
+          isPending: (row.status === 'Pending' || row.status === '-')
+        };
+        if (isWt) state.unscheduledWtJobs.unshift(orderObj);
+        else state.unscheduledLtJobs.unshift(orderObj);
+      }
+
+      safeStorage.setItem('SE_UNSCH_LT_JOBS', JSON.stringify(state.unscheduledLtJobs));
+      safeStorage.setItem('SE_UNSCH_WT_JOBS', JSON.stringify(state.unscheduledWtJobs));
+      debouncedRefreshUI();
+    }
+
+    function handleRealtimeUnitChange(payload) {
+      const event = payload.eventType;
+      const row = payload.new;
+      const oldRow = payload.old;
+
+      if (event === 'DELETE' && oldRow?.id) {
+        state.masterUnits = state.masterUnits.filter(u => u.id !== oldRow.id);
+        safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+        debouncedRefreshUI();
+        return;
+      }
+
+      if (!row) return;
+      const idx = state.masterUnits.findIndex(u => (u.id === row.id) || (u.lambung && u.lambung.toUpperCase() === (row.no_lambung || '').toUpperCase()));
+      const formatted = {
+        id: row.id || ('U-' + row.no_lambung),
+        lambung: row.no_lambung || row.lambung,
+        type: row.type_model || row.type || 'Unit',
+        kategori: row.kategori || 'coal',
+        cluster: row.cluster || 'Selatan',
+        lokasi: row.lokasi || 'Pit Area',
+        statusAktif: (row.status_aktif !== false && row.status !== 'Breakdown')
+      };
+
+      if (idx !== -1) {
+        state.masterUnits[idx] = formatted;
+      } else {
+        state.masterUnits.push(formatted);
+      }
+
+      safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+      debouncedRefreshUI();
+    }
+
+    function handleRealtimeOperatorChange(payload) {
+      const event = payload.eventType;
+      const row = payload.new;
+      const oldRow = payload.old;
+
+      if (event === 'DELETE' && (oldRow?.nrp || oldRow?.id)) {
+        const nrp = (oldRow.nrp || '').toUpperCase();
+        state.masterOperators = state.masterOperators.filter(o => o.nrp.toUpperCase() !== nrp && o.id !== oldRow.id);
+        safeStorage.setItem('SE_MASTER_OPERATORS', JSON.stringify(state.masterOperators));
+        debouncedRefreshUI();
+        return;
+      }
+
+      if (!row || !row.nrp) return;
+      const idx = state.masterOperators.findIndex(o => o.nrp.toUpperCase() === row.nrp.toUpperCase());
+      const formatted = {
+        id: row.id || ('OPT-' + row.nrp),
+        nrp: row.nrp,
+        nama: row.nama || row.nrp,
+        noWa: row.no_wa || row.noWa || '',
+        jabatan: row.jabatan || 'Operator',
+        cluster: row.cluster || 'Selatan',
+        statusAktif: (row.status_aktif !== false)
+      };
+
+      if (idx !== -1) {
+        state.masterOperators[idx] = formatted;
+      } else {
+        state.masterOperators.push(formatted);
+      }
+
+      safeStorage.setItem('SE_MASTER_OPERATORS', JSON.stringify(state.masterOperators));
+      debouncedRefreshUI();
+    }
+
+    function handleRealtimeArmadaChange(payload) {
+      const event = payload.eventType;
+      const row = payload.new;
+      const oldRow = payload.old;
+
+      if (event === 'DELETE' && (oldRow?.unit || oldRow?.id)) {
+        const u = (oldRow.unit || '').toUpperCase();
+        state.masterArmada = state.masterArmada.filter(a => a.unit.toUpperCase() !== u && a.id !== oldRow.id);
+        safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
+        debouncedRefreshUI();
+        return;
+      }
+
+      if (!row || !row.unit) return;
+      const idx = state.masterArmada.findIndex(a => a.unit.toUpperCase() === row.unit.toUpperCase());
+      const formatted = {
+        id: row.id || ('ARM-' + row.unit),
+        unit: row.unit,
+        typeUnit: row.type_unit || 'Lubetruck',
+        cluster: row.cluster || 'Selatan',
+        status: row.status || 'Aktif',
+        keterangan: row.keterangan || ''
+      };
+
+      if (idx !== -1) {
+        state.masterArmada[idx] = formatted;
+      } else {
+        state.masterArmada.push(formatted);
+      }
+
+      safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
+      debouncedRefreshUI();
+    }
+
+    function handleRealtimeClusterChange(payload) {
+      const row = payload.new;
+      if (!row || !row.cluster_name) return;
+      if (row.armada_type === 'LT') {
+        state.clusterLtAssigned[row.cluster_name] = row.assigned_units;
+        safeStorage.setItem('SE_CLUSTER_LT', JSON.stringify(state.clusterLtAssigned));
+      } else if (row.armada_type === 'WT') {
+        state.clusterWtAssigned[row.cluster_name] = row.assigned_units;
+        safeStorage.setItem('SE_CLUSTER_WT', JSON.stringify(state.clusterWtAssigned));
+      }
+      debouncedRefreshUI();
+    }
+
+    function handleRealtimeUserChange(payload) {
+      const event = payload.eventType;
+      const row = payload.new;
+      const oldRow = payload.old;
+
+      if (event === 'DELETE' && (oldRow?.nrp || oldRow?.id)) {
+        const nrp = (oldRow.nrp || '').toUpperCase();
+        state.masterUsers = state.masterUsers.filter(u => u.nrp.toUpperCase() !== nrp && u.id !== oldRow.id);
+        safeStorage.setItem('SE_MASTER_USERS', JSON.stringify(state.masterUsers));
+        debouncedRefreshUI();
+        return;
+      }
+
+      if (!row || !row.nrp) return;
+      const idx = state.masterUsers.findIndex(u => u.nrp.toUpperCase() === row.nrp.toUpperCase());
+      const formatted = {
+        id: row.id,
+        nrp: row.nrp,
+        nama: row.nama,
+        role: row.role,
+        jabatan: row.jabatan || 'Staff Operasional',
+        password: row.password,
+        noWa: row.no_wa || '',
+        statusAktif: (row.status_aktif !== false)
+      };
+
+      if (idx !== -1) {
+        state.masterUsers[idx] = formatted;
+      } else {
+        state.masterUsers.push(formatted);
+      }
+
+      safeStorage.setItem('SE_MASTER_USERS', JSON.stringify(state.masterUsers));
+      debouncedRefreshUI();
+    }
+
+    function handleRealtimeRosterChange(payload) {
+      const event = payload.eventType;
+      const row = payload.new;
+      const oldRow = payload.old;
+
+      if (event === 'DELETE' && oldRow?.id) {
+        state.masterRoster = state.masterRoster.filter(r => r.id !== oldRow.id);
+        debouncedRefreshUI();
+        return;
+      }
+
+      if (!row || !row.id) return;
+      const idx = state.masterRoster.findIndex(r => r.id === row.id);
+      const formatted = {
+        id: row.id,
+        jenis: row.jenis || 'OPT',
+        nrp: row.nrp,
+        nama: row.nama,
+        unit: row.unit || '-',
+        unitEfektif: row.unit_efektif || row.unit || '-',
+        tanggal: row.tanggal,
+        shift: row.shift || 1,
+        kodeShift: row.kode_shift || 'DWS',
+        isSpare: Boolean(row.is_spare),
+        periode: row.periode
+      };
+
+      if (idx !== -1) {
+        state.masterRoster[idx] = formatted;
+      } else {
+        state.masterRoster.push(formatted);
+      }
+      debouncedRefreshUI();
+    }
+
+    function handleRealtimeAirCleanerChange(payload) {
+      const row = payload.new;
+      if (!row || !row.no_lambung) return;
+      const lambung = row.no_lambung.toUpperCase();
+      let item = state.airCleanerMonitor.find(m => m.noLambung.toUpperCase() === lambung);
+      if (!item) {
+        item = {
+          noLambung: lambung,
+          type: row.type_model || 'Unit',
+          cleans: row.cleans || [],
+          serviceCode: row.service_code || '',
+          status: row.status || 'Baik'
+        };
+        state.airCleanerMonitor.push(item);
+      } else {
+        item.cleans = row.cleans || item.cleans;
+        item.serviceCode = row.service_code || item.serviceCode;
+        item.status = row.status || item.status;
+      }
+      safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(state.airCleanerMonitor));
+      debouncedRefreshUI();
+    }
+
+    // C. INITIAL ONE-TIME LOAD (HEMAT EGRESS: HANYA TANGGAL HARI INI)
+    async function loadJobsFromSupabase() {
+      if (!state.supabaseClient) return;
+      try {
+        const today = getEffectiveTodayString();
+        const { data: supaJobs, error } = await state.supabaseClient
+          .from('jobs')
+          .select('*')
+          .eq('tanggal', today);
+
+        if (!error && Array.isArray(supaJobs) && supaJobs.length > 0) {
+          supaJobs.forEach(row => {
+            handleRealtimeJobChange({ eventType: 'UPDATE', new: row });
+          });
+          console.log('[Supabase Sync] Jobs hari ini dimuat dari cloud:', supaJobs.length);
+        }
+      } catch (e) {
+        console.warn('[Supabase Sync] Load jobs error:', e);
+      }
+    }
+
+    // D. SINGLE WEBSOCKET CHANNEL SUBSCRIPTION
+    function setupSupabaseRealtimeListener() {
+      if (!state.supabaseClient) return;
+
+      if (realtimeChannel) {
+        try {
+          state.supabaseClient.removeChannel(realtimeChannel);
+        } catch (e) { }
+      }
+
+      realtimeChannel = state.supabaseClient
+        .channel('se-db-realtime-all')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, handleRealtimeJobChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'order_requests' }, handleRealtimeOrderChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'master_units' }, handleRealtimeUnitChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'master_operators' }, handleRealtimeOperatorChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'master_armada' }, handleRealtimeArmadaChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'armada_clusters' }, handleRealtimeClusterChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, handleRealtimeUserChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'master_roster' }, handleRealtimeRosterChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'air_cleaner_monitoring' }, handleRealtimeAirCleanerChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'pica_records' }, () => debouncedRefreshUI())
+        .subscribe((status) => {
+          const statusEl = document.getElementById('header-db-status');
+          if (status === 'SUBSCRIBED') {
+            console.log('[Realtime DB] WebSocket Terhubung & Realtime Aktif!');
+            if (statusEl) {
+              statusEl.innerHTML = '<span class="inline-flex items-center space-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span>Realtime Aktif</span></span>';
+              statusEl.className = 'px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center space-x-1 shadow-2xs';
+            }
+          } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+            console.warn('[Realtime DB] Status WebSocket:', status);
+            if (statusEl) {
+              statusEl.textContent = 'Menghubungkan...';
+              statusEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200';
+            }
+          }
+        });
+    }
+
+    async function initSupabase() {
       // Prioritaskan konfigurasi langsung dari konstanta SUPABASE_CONFIG di atas
       const supaUrl = SUPABASE_CONFIG.url || safeStorage.getItem('SE_SUPA_URL');
       const supaKey = SUPABASE_CONFIG.anonKey || safeStorage.getItem('SE_SUPA_KEY');
@@ -16174,9 +17328,23 @@
           state.isOnlineSupabase = true;
           const statusEl = document.getElementById('header-db-status');
           if (statusEl) statusEl.textContent = 'Online';
-          // Picu sinkronisasi data master dari Supabase di latar belakang
+
+          // Muat data master roster langsung dari Supabase saat awal web aktif
+          await loadRosterFromSupabase();
+
+          // Picu sinkronisasi data master lainnya di latar belakang
           if (typeof syncSupabaseMasterData === 'function') {
             syncSupabaseMasterData();
+          }
+
+          // Muat jobs hari ini (hanya 1 kali, hemat kuota egress)
+          if (typeof loadJobsFromSupabase === 'function') {
+            loadJobsFromSupabase();
+          }
+
+          // Aktifkan Realtime WebSocket Pub/Sub untuk semua tabel (Tanpa Polling)
+          if (typeof setupSupabaseRealtimeListener === 'function') {
+            setupSupabaseRealtimeListener();
           }
         } catch (e) {
           console.warn('[Supabase] Init gagal, menggunakan local fallback:', e);
@@ -16314,31 +17482,69 @@
           console.log('[Supabase Sync] Populasi Unit tersinkronisasi:', supaUnits.length, 'unit');
         }
 
-        // C. Sinkronisasi Master Roster
-        const { data: supaRoster, error: rosErr } = await state.supabaseClient
-          .from('master_roster')
-          .select('*')
-          .limit(500);
-        if (!rosErr && Array.isArray(supaRoster) && supaRoster.length > 0) {
-          state.masterRoster = supaRoster.map(r => ({
-            id: r.id,
-            jenis: r.jenis || 'OPT',
-            nrp: r.nrp,
-            nik: r.nik || r.nrp,
-            nama: r.nama,
-            unit: r.unit || '-',
-            unitEfektif: r.unit_efektif || r.unit || '-',
-            tanggal: r.tanggal,
-            shift: r.shift || 1,
-            kodeShift: r.kode_shift || 'DWS',
-            isSpare: r.is_spare || false
+        // C. Sinkronisasi Data Master Operator Produksi
+        const { data: supaOps, error: opErr } = await state.supabaseClient
+          .from('master_operators')
+          .select('*');
+        if (!opErr && Array.isArray(supaOps) && supaOps.length > 0) {
+          state.masterOperators = supaOps.map(o => ({
+            id: o.id || ('OPT-' + o.nrp),
+            nrp: o.nrp,
+            nama: o.nama,
+            noWa: o.no_wa || o.noWa || '',
+            cluster: o.cluster || 'Selatan',
+            statusAktif: (o.status_aktif !== false)
           }));
-          safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster));
-          if (state.masterActiveSection === 'roster' && state.masterSubtab === 'database' && typeof renderDatabaseRosterTable === 'function') {
-            renderDatabaseRosterTable();
+          safeStorage.setItem('SE_MASTER_OPERATORS', JSON.stringify(state.masterOperators));
+          if (state.masterActiveSection === 'operators' && typeof renderMasterOperatorsTable === 'function') {
+            renderMasterOperatorsTable();
           }
-          console.log('[Supabase Sync] Master Roster tersinkronisasi:', supaRoster.length, 'baris');
+          console.log('[Supabase Sync] Master Operators tersinkronisasi:', supaOps.length, 'orang');
         }
+
+        // D. Sinkronisasi Armada Clusters
+        const { data: supaClusters, error: clErr } = await state.supabaseClient
+          .from('armada_clusters')
+          .select('*');
+        if (!clErr && Array.isArray(supaClusters) && supaClusters.length > 0) {
+          supaClusters.forEach(c => {
+            if (c.armada_type === 'LT' && c.cluster_name) state.clusterLtAssigned[c.cluster_name] = c.assigned_units;
+            else if (c.armada_type === 'WT' && c.cluster_name) state.clusterWtAssigned[c.cluster_name] = c.assigned_units;
+          });
+          safeStorage.setItem('SE_CLUSTER_LT', JSON.stringify(state.clusterLtAssigned));
+          safeStorage.setItem('SE_CLUSTER_WT', JSON.stringify(state.clusterWtAssigned));
+          console.log('[Supabase Sync] Armada Clusters tersinkronisasi:', supaClusters.length, 'cluster');
+        }
+
+        // E. Sinkronisasi Akun Pengguna (Users)
+        const { data: supaUsers, error: usrErr } = await state.supabaseClient
+          .from('users')
+          .select('*');
+        if (!usrErr && Array.isArray(supaUsers) && supaUsers.length > 0) {
+          const uMap = new Map();
+          state.masterUsers.forEach(u => uMap.set(u.nrp, u));
+          supaUsers.forEach(su => {
+            uMap.set(su.nrp, {
+              id: su.id,
+              nrp: su.nrp,
+              nama: su.nama,
+              role: su.role,
+              jabatan: su.jabatan || 'Staff Operasional',
+              password: su.password,
+              noWa: su.no_wa || '',
+              statusAktif: (su.status_aktif !== false)
+            });
+          });
+          state.masterUsers = Array.from(uMap.values());
+          safeStorage.setItem('SE_MASTER_USERS', JSON.stringify(state.masterUsers));
+          if (state.masterActiveSection === 'accounts' && typeof renderMasterAccountsTable === 'function') {
+            renderMasterAccountsTable();
+          }
+          console.log('[Supabase Sync] Users tersinkronisasi:', supaUsers.length, 'pengguna');
+        }
+
+        // F. Sinkronisasi Master Roster langsung dari Supabase tanpa cache lokal
+        await loadRosterFromSupabase();
       } catch (err) {
         console.warn('[Supabase Master Data Sync Exception]', err);
       }
@@ -16438,6 +17644,7 @@
         return;
       }
 
+      let targetUnit = null;
       if (id) {
         const u = state.masterUnits.find(item => item.id === id);
         if (u) {
@@ -16447,6 +17654,7 @@
           u.cluster = cluster;
           u.lokasi = lokasi;
           u.statusAktif = statusAktif;
+          targetUnit = u;
         }
         showToast(`Unit ${lambung} berhasil diperbarui!`, 'success');
       } else {
@@ -16460,30 +17668,60 @@
           statusAktif
         };
         state.masterUnits.push(newUnit);
+        targetUnit = newUnit;
         showToast(`Unit baru ${lambung} berhasil ditambahkan!`, 'success');
       }
 
+      // Sinkronisasi Supabase jika online
+      if (state.supabaseClient && targetUnit) {
+        state.supabaseClient.from('master_units').upsert({
+          id: targetUnit.id,
+          no_lambung: targetUnit.lambung,
+          type_model: targetUnit.type,
+          kategori: targetUnit.kategori,
+          cluster: targetUnit.cluster,
+          lokasi: targetUnit.lokasi,
+          status: targetUnit.statusAktif ? 'Operasi' : 'Breakdown',
+          status_aktif: targetUnit.statusAktif
+        }).catch(err => console.warn('[Supabase Unit Upsert]', err));
+      }
+
       toggleModal('modal-unit-form', false);
-      renderMasterUnitsTable();
+      if (typeof notifyDataChanged === 'function') notifyDataChanged();
+      else renderMasterUnitsTable();
     }
 
     function downloadMasterUnitsTemplate() {
-      if (typeof XLSX === 'undefined') {
-        showToast('Library SheetJS belum siap!', 'error');
-        return;
-      }
-
+      showToast('Membuat template Excel Populasi Unit...', 'info');
       const headers = ['NO', 'TIPE UNIT', 'NO LAMBUNG', 'KATEGORI', 'CLUSTER', 'LOKASI', 'STATUS OPERASIONAL'];
       const sampleData = [
         ['1', 'PC210-10M0', 'EX001', 'coal', 'Selatan', 'BALANAI', 'Aktif'],
-        ['2', 'D85ESS-2', 'DZ001', 'non_coal', 'Tengah', 'FRONT RAJAWALI', 'Aktif']
+        ['2', 'D85ESS-2', 'DZ001', 'non_coal', 'Tengah', 'FRONT RAJAWALI', 'Aktif'],
+        ['3', 'PC300-8', 'EX002', 'coal', 'Utara', 'PIT 1 UTARA', 'Aktif'],
+        ['4', 'GD705-5', 'GR001', 'non_coal', 'Selatan', 'JALAN HAULING', 'Aktif']
       ];
 
-      const data = [headers, ...sampleData];
-      const ws = XLSX.utils.aoa_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'POPULASI_UNIT');
-      XLSX.writeFile(wb, 'TEMPLATE_POPULASI_UNIT_SE_MANAGEMENT.xlsx');
+      let excelBlob = null;
+      if (typeof XLSX !== 'undefined') {
+        try {
+          const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleData]);
+          ws['!cols'] = [{ wch: 6 }, { wch: 16 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 20 }, { wch: 20 }];
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, 'POPULASI_UNIT');
+          const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+          excelBlob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        } catch (err) {
+          console.warn('[Units Template] SheetJS build error:', err);
+        }
+      }
+
+      const csvContent = [headers, ...sampleData].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+      triggerUniversalDownload({
+        fileName: 'TEMPLATE_POPULASI_UNIT_SE_MANAGEMENT.xlsx',
+        staticPath: './TEMPLATE_POPULASI_UNIT_SE_MANAGEMENT.xlsx',
+        blobData: excelBlob,
+        csvContent: csvContent
+      });
       showToast('Template Excel Populasi Unit berhasil diunduh!', 'success');
     }
 
@@ -16695,9 +17933,13 @@
       const id = state.currentDeletingUnitId;
       if (!id) return;
       state.masterUnits = state.masterUnits.filter(u => u.id !== id);
+      if (state.supabaseClient) {
+        state.supabaseClient.from('master_units').delete().eq('id', id).catch(() => {});
+      }
       toggleModal('modal-confirm-delete-unit', false);
       showToast('Unit berhasil dihapus dari populasi!', 'info');
-      renderMasterUnitsTable();
+      if (typeof notifyDataChanged === 'function') notifyDataChanged();
+      else renderMasterUnitsTable();
     }
 
     function deleteMasterUnit(id) {
@@ -16802,6 +18044,7 @@
         return;
       }
 
+      let targetAccount = null;
       if (id) {
         const target = state.masterUsers.find(item => item.id === id);
         if (target) {
@@ -16811,10 +18054,11 @@
           target.jabatan = jabatan;
           if (pass) target.password = pass;
           target.statusAktif = statusAktif;
+          targetAccount = target;
         }
         showToast(`Akun ${nrp} berhasil diperbarui!`, 'success');
       } else {
-        state.masterUsers.push({
+        const newAcc = {
           id: String(Date.now()),
           nrp,
           nama,
@@ -16822,12 +18066,27 @@
           jabatan,
           password: pass || nrp,
           statusAktif
-        });
+        };
+        state.masterUsers.push(newAcc);
+        targetAccount = newAcc;
         showToast(`Akun baru ${nrp} berhasil dibuat!`, 'success');
       }
 
+      // Sinkronisasi Supabase jika online
+      if (state.supabaseClient && targetAccount) {
+        state.supabaseClient.from('users').upsert({
+          nrp: targetAccount.nrp,
+          nama: targetAccount.nama,
+          role: targetAccount.role,
+          jabatan: targetAccount.jabatan || 'Staff Operasional',
+          password: targetAccount.password,
+          status_aktif: targetAccount.statusAktif
+        }, { onConflict: 'nrp' }).catch(err => console.warn('[Supabase User Upsert]', err));
+      }
+
       toggleModal('modal-account-form', false);
-      renderMasterAccountsTable();
+      if (typeof notifyDataChanged === 'function') notifyDataChanged();
+      else renderMasterAccountsTable();
     }
 
     function deleteMasterAccount(id) {
@@ -16838,8 +18097,12 @@
         return;
       }
       state.masterUsers = state.masterUsers.filter(item => item.id !== id);
+      if (state.supabaseClient) {
+        state.supabaseClient.from('users').delete().eq('nrp', u.nrp).catch(() => {});
+      }
       showToast(`Akun ${u.nrp} berhasil dihapus!`, 'info');
-      renderMasterAccountsTable();
+      if (typeof notifyDataChanged === 'function') notifyDataChanged();
+      else renderMasterAccountsTable();
     }
 
     window.renderAirCleanerMonitorTable = renderAirCleanerMonitorTable;
@@ -16889,6 +18152,7 @@
     window.triggerParseRoster = triggerParseRoster;
     window.loadSampleRosterTemplate = loadSampleRosterTemplate;
     window.saveParsedRoster = saveParsedRoster;
+    window.loadRosterFromSupabase = loadRosterFromSupabase;
     window.renderDatabaseRosterTable = renderDatabaseRosterTable;
     window.runAutoFillTest = runAutoFillTest;
     window.downloadOfficialRosterTemplate = downloadOfficialRosterTemplate;

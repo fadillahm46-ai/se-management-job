@@ -1,10 +1,10 @@
 /**
  * Service Worker: SE MANAGEMENT JOB - Mine Operations
- * Versi Cache: se-mine-ops-v1.0.0
- * Fitur: Offline Caching, Stale-While-Revalidate untuk aset statis, Cache-First untuk Core Files
+ * Versi Cache: se-mine-ops-v1.0.2
+ * Fitur: Offline Caching, Network-First untuk Halaman Utama (Navigation), Stale-While-Revalidate untuk aset statis
  */
 
-const CACHE_NAME = 'se-mine-ops-v1.0.1';
+const CACHE_NAME = 'se-mine-ops-v1.0.2';
 
 // Daftar aset statis utama yang dicache saat instalasi
 const PRECACHE_ASSETS = [
@@ -34,7 +34,6 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[SW] Pre-caching file inti offline...');
-      // addAll secara bertahap agar kegagalan 1 CDN tidak memblokir instalasi offline file lokal
       return Promise.allSettled(
         PRECACHE_ASSETS.map((url) =>
           cache.add(url).catch((err) => {
@@ -43,7 +42,7 @@ self.addEventListener('install', (event) => {
         )
       );
     }).then(() => {
-      console.log('[SW] Service Worker berhasil diinstal.');
+      console.log('[SW] Service Worker v1.0.2 berhasil diinstal.');
       return self.skipWaiting();
     })
   );
@@ -62,7 +61,7 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => {
-      console.log('[SW] Service Worker aktif dan mengontrol halaman.');
+      console.log('[SW] Service Worker v1.0.2 aktif dan mengontrol halaman.');
       return self.clients.claim();
     })
   );
@@ -80,7 +79,27 @@ self.addEventListener('fetch', (event) => {
   // Abaikan request ke skema selain http/https (misal chrome-extension://)
   if (!url.protocol.startsWith('http')) return;
 
-  // Strategi Cache-First dengan Network Fallback untuk aset lokal & library CDN
+  // PRIORITAS UTAMA: Request navigasi (HTML / buka halaman) menggunakan strategi NETWORK-FIRST
+  // Agar saat ada pembaruan di GitHub/Server, browser langsung menampilkan kode terbaru
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // Jika pengguna sedang offline, baru sajikan dari cache
+          return caches.match('./index.html') || caches.match('./');
+        })
+    );
+    return;
+  }
+
+  // Untuk aset statis (gambar, font, css, js), gunakan Cache-First dengan background revalidate
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -89,9 +108,7 @@ self.addEventListener('fetch', (event) => {
           if (networkResponse && networkResponse.status === 200) {
             caches.open(CACHE_NAME).then((cache) => cache.put(request, networkResponse.clone()));
           }
-        }).catch(() => {
-          // Tetap gunakan cachedResponse jika offline
-        });
+        }).catch(() => {});
         return cachedResponse;
       }
 
@@ -108,10 +125,6 @@ self.addEventListener('fetch', (event) => {
 
         return networkResponse;
       }).catch((error) => {
-        // Fallback jika network offline dan bukan di cache
-        if (request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
         throw error;
       });
     })
