@@ -4,12 +4,17 @@
  * Fitur: Offline Caching, Stale-While-Revalidate untuk aset statis, Cache-First untuk Core Files
  */
 
-const CACHE_NAME = 'se-mine-ops-v1.0.0';
+const CACHE_NAME = 'se-mine-ops-v1.0.1';
 
 // Daftar aset statis utama yang dicache saat instalasi
 const PRECACHE_ASSETS = [
   './',
   './index.html',
+  './xlsx.full.min.js',
+  './TEMPLATE_ROSTER_SE_MANAGEMENT.xlsx',
+  './TEMPLATE_DATA_MASTER_ARMADA.xlsx',
+  './TEMPLATE_POPULASI_UNIT_SE_MANAGEMENT.xlsx',
+  './TEMPLATE_NO_OPT_PRODUKSI_SE_MANAGEMENT.xlsx',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
