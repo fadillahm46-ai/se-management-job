@@ -3079,16 +3079,16 @@
                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
                       </path>
                     </svg>
-                    <span id="btn-toggle-select-roster-text">Akses Edit / Pilih Masal</span>
+                    <span id="btn-toggle-select-roster-text">Mode Pilih Masal</span>
                   </button>
-                  <select id="db-roster-filter-type" onchange="renderDatabaseRosterTable()"
+                  <select id="db-roster-filter-type" onchange="handleRosterFilterChange()"
                     class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700">
                     <option value="ALL">All Jenis Roster</option>
                     <option value="OPT">Operator</option>
                     <option value="OM">Oilman</option>
                     <option value="WM">Washingman</option>
                   </select>
-                  <input type="text" id="db-roster-search" oninput="renderDatabaseRosterTable()"
+                  <input type="text" id="db-roster-search" oninput="handleRosterSearchChange()"
                     placeholder="Cari nama / NIK / unit..."
                     class="px-3 py-2 rounded-xl border border-slate-200 text-xs">
                 </div>
@@ -3139,6 +3139,7 @@
                         <th class="py-3 px-4 bg-slate-50">Tanggal</th>
                         <th class="py-3 px-4 bg-slate-50">Shift</th>
                         <th class="py-3 px-4 bg-slate-50">Kode Shift</th>
+                        <th class="py-3 px-4 bg-slate-50 text-center w-24">Aksi</th>
                       </tr>
                     </thead>
                     <tbody id="db-roster-tbody" class="divide-y divide-slate-100 text-slate-700">
@@ -3146,10 +3147,25 @@
                     </tbody>
                   </table>
                 </div>
-                <!-- Bar Footer Status Jumlah Data & Keterangan Roster -->
-                <div class="p-3.5 bg-slate-50/90 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between shrink-0 font-medium">
-                  <span id="db-roster-footer-count">Memuat data roster...</span>
-                  <span class="text-[11px] text-slate-400 italic">Gunakan scroll mouse untuk melihat seluruh tanggal & personil tanpa batasan</span>
+                <!-- Bar Footer Status Jumlah Data & Navigasi Pagination Roster -->
+                <div class="p-3.5 bg-slate-50/90 border-t border-slate-100 text-xs text-slate-600 flex flex-col md:flex-row items-center justify-between gap-3 shrink-0 font-medium">
+                  <div class="flex items-center flex-wrap gap-3">
+                    <span id="db-roster-footer-count" class="font-medium text-slate-700">Memuat data roster...</span>
+                    <div class="flex items-center space-x-1.5 text-xs text-slate-500">
+                      <span>Batas:</span>
+                      <select id="db-roster-page-size" onchange="changeRosterPageSize(this.value)"
+                        class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none focus:border-brand-500 text-xs shadow-2xs cursor-pointer">
+                        <option value="50" selected>50 / halaman</option>
+                        <option value="100">100 / halaman</option>
+                        <option value="200">200 / halaman</option>
+                        <option value="ALL">Semua Data</option>
+                      </select>
+                    </div>
+                  </div>
+                  <!-- Tombol Navigasi Pagination: 1, 2, dst -->
+                  <div id="db-roster-pagination-controls" class="flex items-center space-x-1 flex-wrap justify-center md:justify-end">
+                    <!-- Populated dynamically via renderRosterPagination() -->
+                  </div>
                 </div>
               </div>
             </div>
@@ -6587,6 +6603,134 @@
       <span>Tekan ESC untuk keluar</span>
     </div>
 
+  </div>
+
+  <!-- MODAL: EDIT & PENYESUAIAN ROSTER OPERASIONAL -->
+  <div id="modal-edit-roster"
+    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl my-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Edit & Penyesuaian Roster</h3>
+            <p class="text-[11px] text-slate-500">Perbaiki ketidaksesuaian penugasan unit atau shift</p>
+          </div>
+        </div>
+        <button type="button" onclick="toggleModal('modal-edit-roster', false)" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Ringkasan Info Personil -->
+      <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-full bg-brand-50 text-brand-700 flex items-center justify-center font-black text-xs font-mono" id="edit-roster-avatar">
+            OP
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span id="edit-roster-badge-jenis" class="px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-800">OPT</span>
+              <span id="edit-roster-nama-display" class="text-xs font-bold text-slate-900">-</span>
+            </div>
+            <div class="text-[11px] text-slate-500 font-mono mt-0.5">
+              NRP: <strong id="edit-roster-nrp-display" class="text-slate-700">-</strong>
+            </div>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="text-[10px] text-slate-400 block font-semibold">Periode</span>
+          <span id="edit-roster-periode-display" class="text-xs font-mono font-bold text-slate-700">-</span>
+        </div>
+      </div>
+
+      <form id="form-edit-roster" onsubmit="handleSaveEditRoster(event)" class="space-y-3.5 text-xs font-semibold">
+        <input type="hidden" id="edit-roster-id">
+        <input type="hidden" id="edit-roster-nrp">
+        <input type="hidden" id="edit-roster-nama">
+        <input type="hidden" id="edit-roster-jenis">
+        <input type="hidden" id="edit-roster-periode">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-700 mb-1">Tanggal Penugasan</label>
+            <input type="date" id="edit-roster-tanggal" required
+              class="w-full px-3 py-2 rounded-xl border border-slate-200 text-slate-800 font-mono focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+          </div>
+          <div>
+            <label class="block text-slate-700 mb-1">Shift Kerja</label>
+            <select id="edit-roster-shift" required
+              class="w-full px-3 py-2 rounded-xl border border-slate-200 text-slate-800 font-bold focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+              <option value="1">Shift 1 (Siang: 06.00 - 18.00)</option>
+              <option value="2">Shift 2 (Malam: 18.00 - 06.00)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-slate-700">Kode Shift</label>
+            <span class="text-[10px] text-slate-400">Contoh: DWS, NWS, D514, N168, OOFF, CCUTI</span>
+          </div>
+          <input type="text" id="edit-roster-kode-shift" placeholder="Ketik kode shift..." required
+            oninput="handleEditRosterKodeChange(this.value)"
+            class="w-full px-3 py-2.5 rounded-xl border border-slate-200 font-mono font-bold uppercase text-slate-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+          
+          <!-- Tombol Cepat Kode Shift -->
+          <div class="flex flex-wrap gap-1.5 mt-2">
+            <button type="button" onclick="setQuickEditKode('DWS')" class="px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-bold cursor-pointer">DWS (Siang)</button>
+            <button type="button" onclick="setQuickEditKode('NWS')" class="px-2 py-0.5 rounded-md bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-[10px] font-bold cursor-pointer">NWS (Malam)</button>
+            <button type="button" onclick="setQuickEditKode('OOFF')" class="px-2 py-0.5 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-bold cursor-pointer">OOFF (Libur)</button>
+            <button type="button" onclick="setQuickEditKode('CCUTI')" class="px-2 py-0.5 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-bold cursor-pointer">CCUTI (Cuti)</button>
+            <button type="button" onclick="setQuickEditKode('INDR')" class="px-2 py-0.5 rounded-md bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200 text-[10px] font-bold cursor-pointer">INDR (Induksi)</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <!-- Unit Batangan (Dibuat Font Besar Sesuai Permintaan) -->
+          <div class="bg-slate-50/70 p-3 rounded-2xl border border-slate-200">
+            <label class="block text-slate-700 mb-1 text-[11px] font-bold">No Lambung Unit Batangan</label>
+            <input type="text" id="edit-roster-unit" placeholder="cth: LT2515" required
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono font-black uppercase text-base text-slate-900 bg-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 tracking-wider">
+            <span class="text-[10px] text-slate-400 mt-1 block">Unit utama / batangan personil</span>
+          </div>
+
+          <!-- Unit Efektif (Dibuat Font Besar Sesuai Permintaan) -->
+          <div class="bg-emerald-50/40 p-3 rounded-2xl border border-emerald-200/80">
+            <label class="block text-emerald-950 mb-1 text-[11px] font-bold">No Lambung Unit Efektif</label>
+            <input type="text" id="edit-roster-unit-efektif" placeholder="cth: LT2515 atau LT2514" required
+              class="w-full px-3 py-2 rounded-xl border border-emerald-300 font-mono font-black uppercase text-base text-emerald-950 bg-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 tracking-wider">
+            <span class="text-[10px] text-emerald-700 mt-1 block" id="edit-roster-efektif-hint">Unit riil yang dibawa (otomatis jika spare)</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-700 mb-1">Keterangan / Alasan Penyesuaian (Opsional)</label>
+          <input type="text" id="edit-roster-keterangan" placeholder="Contoh: Rolling unit, backup operator sakit, unit breakdown"
+            class="w-full px-3 py-2 rounded-xl border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+        </div>
+
+        <div class="flex items-center space-x-2 pt-3 border-t border-slate-100">
+          <button type="submit" id="btn-save-edit-roster"
+            class="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md hover:shadow-lg transition flex items-center justify-center space-x-1.5 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span>Simpan Perubahan Roster</span>
+          </button>
+          <button type="button" onclick="toggleModal('modal-edit-roster', false)"
+            class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
+            Batal
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- MODAL: KONFIRMASI HAPUS MASAL ROSTER -->
@@ -13570,7 +13714,7 @@
           <td class="py-2.5 px-3 font-bold"><span class="px-2 py-0.5 rounded text-[10px] ${r.jenis === 'OPT' ? 'bg-amber-100 text-amber-800' : (r.jenis === 'OM' ? 'bg-emerald-100 text-emerald-800' : 'bg-cyan-100 text-cyan-800')}">${r.jenis}</span></td>
           <td class="py-2.5 px-3 font-mono text-[11px] font-bold text-slate-900">${r.nrp || r.nik}</td>
           <td class="py-2.5 px-3 text-slate-900 font-semibold">${r.nama}</td>
-          <td class="py-2.5 px-3 font-mono font-bold">${r.unit || '-'}</td>
+          <td class="py-2.5 px-3"><span class="inline-block font-mono font-black text-sm text-slate-900 bg-slate-100/90 px-2.5 py-1 rounded-lg border border-slate-200">${r.unit || '-'}</span></td>
           <td class="py-2.5 px-3 font-mono text-[11px]">${r.tanggal}</td>
           <td class="py-2.5 px-3 font-semibold ${r.shift === 2 ? 'text-purple-700' : 'text-blue-700'}">Shift ${r.shift}</td>
           <td class="py-2.5 px-3 font-mono font-bold text-slate-700">${r.kodeShift}</td>
@@ -13588,7 +13732,7 @@
       try {
         const tbody = document.getElementById('db-roster-tbody');
         if (tbody && (!state.masterRoster || state.masterRoster.length === 0)) {
-          tbody.innerHTML = '<tr><td colspan="10" class="py-8 text-center text-slate-400 italic"><div class="flex items-center justify-center space-x-2"><svg class="w-4 h-4 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Memuat data roster langsung dari Supabase...</span></div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="11" class="py-8 text-center text-slate-400 italic"><div class="flex items-center justify-center space-x-2"><svg class="w-4 h-4 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Memuat data roster langsung dari Supabase...</span></div></td></tr>';
         }
 
         // 1. Ambil pemetaan operator untuk unit batangan & cluster
@@ -15638,20 +15782,50 @@
         else thSelect.classList.add('hidden');
       }
 
+      // Pastikan inisialisasi state pagination
+      if (!state.rosterPagination) {
+        state.rosterPagination = { page: 1, pageSize: 50 };
+      }
+
+      const totalItems = list.length;
+      const pageSizeSelect = document.getElementById('db-roster-page-size');
+      let pageSizeVal = state.rosterPagination.pageSize;
+      if (pageSizeSelect && pageSizeSelect.value) {
+        pageSizeVal = pageSizeSelect.value === 'ALL' ? 'ALL' : (parseInt(pageSizeSelect.value) || 50);
+        state.rosterPagination.pageSize = pageSizeVal;
+      }
+
+      let pageSize = pageSizeVal === 'ALL' ? totalItems : (parseInt(pageSizeVal) || 50);
+      if (pageSize <= 0) pageSize = 50;
+
+      const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+      if (state.rosterPagination.page > totalPages) {
+        state.rosterPagination.page = totalPages;
+      }
+      if (state.rosterPagination.page < 1) {
+        state.rosterPagination.page = 1;
+      }
+      const currentPage = state.rosterPagination.page;
+
+      const startIndex = (currentPage - 1) * pageSize;
+      const endIndex = Math.min(startIndex + pageSize, totalItems);
+      const pageList = pageSizeVal === 'ALL' ? list : list.slice(startIndex, endIndex);
+
       tbody.innerHTML = '';
-      if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${state.isRosterSelectMode ? 10 : 9}" class="py-12 text-center text-slate-400 italic"><div class="flex flex-col items-center justify-center space-y-2"><svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><span>Tidak ada data roster aktif yang sesuai kriteria</span></div></td></tr>`;
+      if (totalItems === 0) {
+        tbody.innerHTML = `<tr><td colspan="${state.isRosterSelectMode ? 11 : 10}" class="py-12 text-center text-slate-400 italic"><div class="flex flex-col items-center justify-center space-y-2"><svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><span>Tidak ada data roster aktif yang sesuai kriteria</span></div></td></tr>`;
         const countLabel = document.getElementById('db-roster-count-label');
         if (countLabel) countLabel.innerHTML = `Total data tersimpan: <strong class="text-slate-800">${(state.masterRoster || []).length}</strong> data`;
         const footerCount = document.getElementById('db-roster-footer-count');
-        if (footerCount) footerCount.textContent = `Menampilkan 0 dari ${(state.masterRoster || []).length} data`;
+        if (footerCount) footerCount.textContent = 'Menampilkan 0 data';
+        renderRosterPagination(1, 1);
         return;
       }
 
       let allChecked = true;
-      // Menampilkan SELURUH data roster tersimpan tanpa batasan 100 baris
-      list.forEach((r, idx) => {
-        const rowId = r.id || `${r.nik || r.nrp}_${r.tanggal}_${r.shift}_${idx}`;
+      pageList.forEach((r, idx) => {
+        const rowNumber = startIndex + idx + 1;
+        const rowId = r.id || `${r.nik || r.nrp}_${r.tanggal}_${r.shift}_${startIndex + idx}`;
         const isChecked = state.selectedRosterIds.has(rowId);
         if (!isChecked) allChecked = false;
 
@@ -15661,13 +15835,19 @@
         const isOff = ['OOFF', 'OFF', 'CCUTI', 'CUTI'].includes(kode);
         const isTraining = ['INDR', 'INDK', 'TR', 'HR'].includes(kode);
 
-        let unitEfektifBadge = `<span class="font-mono text-slate-700">${r.unitEfektif || r.unit || '-'}</span>`;
+        // UKURAN NO LAMBUNG UNIT BATANGAN: Dibuat lebih besar, tegas, dan mencolok
+        const unitBatanganDisplay = (r.unit && r.unit !== '-') ?
+          `<span class="inline-block font-mono font-black text-sm md:text-base text-slate-900 bg-slate-100/90 px-3 py-1 rounded-lg border border-slate-200/90 shadow-2xs tracking-wider">${r.unit}</span>` :
+          `<span class="font-mono text-xs text-slate-400 font-semibold">-</span>`;
+
+        // UKURAN NO LAMBUNG UNIT EFEKTIF: Dibuat lebih besar, tegas, dan mencolok
+        let unitEfektifBadge = `<span class="inline-block font-mono font-black text-sm md:text-base text-blue-950 bg-blue-50/80 px-3 py-1 rounded-lg border border-blue-200/80 shadow-2xs tracking-wider">${r.unitEfektif || r.unit || '-'}</span>`;
         if (isSpare) {
-          unitEfektifBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">${r.unitEfektif || r.unit} (Spare)</span>`;
+          unitEfektifBadge = `<span class="inline-flex items-center gap-1.5 font-mono font-black text-sm md:text-base text-emerald-950 bg-emerald-100/90 px-3 py-1 rounded-lg border border-emerald-300 shadow-2xs tracking-wider">${r.unitEfektif || r.unit} <span class="font-sans font-extrabold text-[10px] bg-emerald-600 text-white px-1.5 py-0.5 rounded shadow-2xs">SPARE</span></span>`;
         } else if (isOff) {
-          unitEfektifBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-50 text-rose-600 border border-rose-200">Off / Cuti</span>`;
+          unitEfektifBadge = `<span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">Off / Cuti</span>`;
         } else if (isTraining) {
-          unitEfektifBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">Induksi/Training</span>`;
+          unitEfektifBadge = `<span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">Induksi/Training</span>`;
         }
 
         let kodeShiftBadge = `<span class="font-mono font-bold text-slate-700">${kode}</span>`;
@@ -15697,32 +15877,188 @@
               >
             </td>
           ` : ''}
-          <td class="py-2.5 px-4 text-center font-mono text-[11px] text-slate-400">${idx + 1}</td>
+          <td class="py-2.5 px-4 text-center font-mono text-[11px] text-slate-400">${rowNumber}</td>
           <td class="py-2.5 px-4 font-bold"><span class="px-2 py-0.5 rounded text-[10px] ${r.jenis === 'OPT' ? 'bg-amber-100 text-amber-800' : (r.jenis === 'OM' ? 'bg-emerald-100 text-emerald-800' : 'bg-cyan-100 text-cyan-800')}">${r.jenis}</span></td>
           <td class="py-2.5 px-4 font-mono text-[11px] font-bold text-slate-900">${r.nrp || r.nik}</td>
           <td class="py-2.5 px-4 text-slate-900 font-semibold">${r.nama}</td>
-          <td class="py-2.5 px-4 font-mono font-bold text-slate-700">${r.unit || '-'}</td>
+          <td class="py-2.5 px-4">${unitBatanganDisplay}</td>
           <td class="py-2.5 px-4">${unitEfektifBadge}</td>
           <td class="py-2.5 px-4 font-mono text-[11px] text-slate-600">${r.tanggal}</td>
           <td class="py-2.5 px-4 font-semibold ${r.shift === 2 ? 'text-purple-700' : 'text-blue-700'}">Shift ${r.shift}</td>
           <td class="py-2.5 px-4">${kodeShiftBadge}</td>
+          <td class="py-2.5 px-3 text-center whitespace-nowrap">
+            <button 
+              type="button" 
+              onclick="openEditRosterModal('${rowId}')" 
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 hover:text-amber-900 border border-amber-300/80 text-xs font-bold transition shadow-2xs hover:scale-105 active:scale-95 cursor-pointer"
+              title="Edit & Sesuaikan Penugasan Roster"
+            >
+              <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+              </svg>
+              <span>Edit</span>
+            </button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
 
       if (selectAllCheckbox) {
-        selectAllCheckbox.checked = (list.length > 0 && allChecked);
+        selectAllCheckbox.checked = (pageList.length > 0 && allChecked);
       }
       updateRosterBulkActionBar();
 
       const countLabel = document.getElementById('db-roster-count-label');
       if (countLabel) {
-        countLabel.innerHTML = `Menampilkan <strong class="text-emerald-700 font-bold">${list.length} data</strong> dari total <strong>${(state.masterRoster || []).length} data personil</strong>`;
+        countLabel.innerHTML = `Menampilkan <strong class="text-emerald-700 font-bold">${totalItems} data</strong> dari total <strong>${(state.masterRoster || []).length} data personil</strong>`;
       }
       const footerCount = document.getElementById('db-roster-footer-count');
       if (footerCount) {
-        footerCount.innerHTML = `Menampilkan seluruh <strong class="text-slate-800">${list.length} data</strong> yang tersimpan di sistem`;
+        if (pageSizeVal === 'ALL') {
+          footerCount.innerHTML = `Menampilkan seluruh <strong class="text-slate-800">${totalItems} data</strong> yang tersimpan di sistem`;
+        } else {
+          footerCount.innerHTML = `Menampilkan data <strong class="text-slate-800">${startIndex + 1} - ${endIndex}</strong> dari total <strong class="text-slate-800">${totalItems}</strong> (Halaman ${currentPage} dari ${totalPages})`;
+        }
       }
+
+      // Render tombol navigasi halaman 1, 2, dst
+      renderRosterPagination(totalPages, currentPage);
+    }
+
+    // Navigasi nomor halaman (1, 2, dst)
+    function renderRosterPagination(totalPages, currentPage) {
+      const container = document.getElementById('db-roster-pagination-controls');
+      if (!container) return;
+
+      if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+
+      // Tombol Sebelumnya (<)
+      const isPrevDisabled = (currentPage <= 1);
+      html += `
+        <button 
+          type="button" 
+          onclick="${!isPrevDisabled ? `goToRosterPage(${currentPage - 1})` : ''}"
+          ${isPrevDisabled ? 'disabled' : ''}
+          class="px-2.5 py-1.5 rounded-lg border text-xs font-bold transition flex items-center space-x-1 ${
+            isPrevDisabled 
+              ? 'bg-slate-100/60 text-slate-300 border-slate-200/50 cursor-not-allowed' 
+              : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs cursor-pointer'
+          }"
+          title="Halaman Sebelumnya"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="hidden sm:inline">Sebelumnya</span>
+        </button>
+      `;
+
+      // Pembentukan nomor halaman pintar (1, 2, 3, ...)
+      const delta = 2;
+      const pages = [];
+
+      for (let i = 1; i <= totalPages; i++) {
+        if (
+          i === 1 || 
+          i === totalPages || 
+          (i >= currentPage - delta && i <= currentPage + delta)
+        ) {
+          pages.push(i);
+        } else if (
+          pages[pages.length - 1] !== '...' &&
+          (i < currentPage - delta || i > currentPage + delta)
+        ) {
+          pages.push('...');
+        }
+      }
+
+      pages.forEach(p => {
+        if (p === '...') {
+          html += `<span class="px-2 py-1 text-slate-400 text-xs font-bold select-none">...</span>`;
+        } else if (p === currentPage) {
+          html += `
+            <button 
+              type="button" 
+              class="px-3 py-1.5 rounded-lg bg-brand-600 text-white font-black text-xs shadow-xs cursor-default"
+              title="Halaman ${p} (Aktif)"
+            >
+              ${p}
+            </button>
+          `;
+        } else {
+          html += `
+            <button 
+              type="button" 
+              onclick="goToRosterPage(${p})"
+              class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200 shadow-2xs transition cursor-pointer hover:border-brand-300"
+              title="Menuju ke Halaman ${p}"
+            >
+              ${p}
+            </button>
+          `;
+        }
+      });
+
+      // Tombol Selanjutnya (>)
+      const isNextDisabled = (currentPage >= totalPages);
+      html += `
+        <button 
+          type="button" 
+          onclick="${!isNextDisabled ? `goToRosterPage(${currentPage + 1})` : ''}"
+          ${isNextDisabled ? 'disabled' : ''}
+          class="px-2.5 py-1.5 rounded-lg border text-xs font-bold transition flex items-center space-x-1 ${
+            isNextDisabled 
+              ? 'bg-slate-100/60 text-slate-300 border-slate-200/50 cursor-not-allowed' 
+              : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs cursor-pointer'
+          }"
+          title="Halaman Selanjutnya"
+        >
+          <span class="hidden sm:inline">Selanjutnya</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function goToRosterPage(page) {
+      if (!state.rosterPagination) {
+        state.rosterPagination = { page: 1, pageSize: 50 };
+      }
+      state.rosterPagination.page = parseInt(page) || 1;
+      renderDatabaseRosterTable();
+
+      // Scroll halus ke awal tabel saat berpindah halaman
+      const tableWrapper = document.getElementById('db-roster-tbody')?.closest('.overflow-y-auto');
+      if (tableWrapper) {
+        tableWrapper.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function changeRosterPageSize(newSize) {
+      if (!state.rosterPagination) {
+        state.rosterPagination = { page: 1, pageSize: 50 };
+      }
+      state.rosterPagination.pageSize = newSize === 'ALL' ? 'ALL' : (parseInt(newSize) || 50);
+      state.rosterPagination.page = 1; // Kembali ke halaman pertama saat batas diubah
+      renderDatabaseRosterTable();
+    }
+
+    function handleRosterSearchChange() {
+      if (state.rosterPagination) state.rosterPagination.page = 1;
+      renderDatabaseRosterTable();
+    }
+
+    function handleRosterFilterChange() {
+      if (state.rosterPagination) state.rosterPagination.page = 1;
+      renderDatabaseRosterTable();
     }
 
     function toggleRosterSelectMode() {
@@ -15768,11 +16104,18 @@
 
       let list = state.masterRoster || [];
       if (typeFilter !== 'ALL') list = list.filter(r => r.jenis === typeFilter);
-      if (search) list = list.filter(r => (r.nama || '').toLowerCase().includes(search) || (r.nrp || r.nik || '').toLowerCase().includes(search) || (r.unit || '').toLowerCase().includes(search));
+      if (search) list = list.filter(r => (r.nama || '').toLowerCase().includes(search) || (r.nrp || r.nik || '').toLowerCase().includes(search) || (r.unit || '').toLowerCase().includes(search) || (r.unitEfektif || '').toLowerCase().includes(search) || (r.kodeShift || '').toLowerCase().includes(search));
 
-      // Memilih semua data tanpa slice 100
-      list.forEach((r, idx) => {
-        const rowId = r.id || `${r.nik || r.nrp}_${r.tanggal}_${r.shift}_${idx}`;
+      const currentPage = state.rosterPagination?.page || 1;
+      const pageSizeVal = state.rosterPagination?.pageSize || 50;
+      const pageSize = pageSizeVal === 'ALL' ? list.length : (parseInt(pageSizeVal) || 50);
+      const startIndex = (currentPage - 1) * pageSize;
+      const endIndex = Math.min(startIndex + pageSize, list.length);
+      const pageList = pageSizeVal === 'ALL' ? list : list.slice(startIndex, endIndex);
+
+      // Memilih item di halaman aktif saat ini
+      pageList.forEach((r, idx) => {
+        const rowId = r.id || `${r.nik || r.nrp}_${r.tanggal}_${r.shift}_${startIndex + idx}`;
         if (checked) state.selectedRosterIds.add(rowId);
         else state.selectedRosterIds.delete(rowId);
       });
@@ -15826,6 +16169,253 @@
       await loadRosterFromSupabase();
       showToast(`Berhasil menghapus ${deleteCount} data roster dari database!`, 'success');
     }
+
+    // ==============================================================================
+    // FITUR EDIT & PENYESUAIAN DATA ROSTER KETIKA TERDAPAT KETIDAKSESUAIAN
+    // ==============================================================================
+    function openEditRosterModal(rowId) {
+      if (!rowId) return;
+      const list = state.masterRoster || [];
+      const item = list.find((r, idx) => (r.id === rowId) || (`${r.nik || r.nrp}_${r.tanggal}_${r.shift}_${idx}` === rowId));
+      if (!item) {
+        showToast('Data penugasan roster tidak ditemukan di sistem', 'warning');
+        return;
+      }
+
+      // Set input tersembunyi
+      const idInput = document.getElementById('edit-roster-id');
+      const nrpInput = document.getElementById('edit-roster-nrp');
+      const namaInput = document.getElementById('edit-roster-nama');
+      const jenisInput = document.getElementById('edit-roster-jenis');
+      const periodeInput = document.getElementById('edit-roster-periode');
+
+      if (idInput) idInput.value = item.id || rowId;
+      const nrpVal = item.nrp || item.nik || '';
+      if (nrpInput) nrpInput.value = nrpVal;
+      if (namaInput) namaInput.value = item.nama || '';
+      if (jenisInput) jenisInput.value = item.jenis || 'OPT';
+      if (periodeInput) periodeInput.value = item.periode || (item.tanggal ? item.tanggal.substring(0, 7) : '');
+
+      // Tampilkan info personil di box atas
+      const avatarEl = document.getElementById('edit-roster-avatar');
+      const jenisBadge = document.getElementById('edit-roster-badge-jenis');
+      const namaDisplay = document.getElementById('edit-roster-nama-display');
+      const nrpDisplay = document.getElementById('edit-roster-nrp-display');
+      const periodeDisplay = document.getElementById('edit-roster-periode-display');
+
+      if (avatarEl) {
+        const words = (item.nama || 'OP').trim().split(/\s+/);
+        const initials = words.length > 1 ? (words[0][0] + words[1][0]) : (words[0] ? words[0].substring(0, 2) : 'OP');
+        avatarEl.textContent = initials.toUpperCase();
+      }
+      if (jenisBadge) {
+        jenisBadge.textContent = item.jenis || 'OPT';
+        jenisBadge.className = `px-2 py-0.5 rounded text-[10px] font-black ${
+          item.jenis === 'OPT' ? 'bg-amber-100 text-amber-800' :
+          (item.jenis === 'OM' ? 'bg-emerald-100 text-emerald-800' : 'bg-cyan-100 text-cyan-800')
+        }`;
+      }
+      if (namaDisplay) namaDisplay.textContent = item.nama || '-';
+      if (nrpDisplay) nrpDisplay.textContent = nrpVal || '-';
+      if (periodeDisplay) periodeDisplay.textContent = item.periode || (item.tanggal ? item.tanggal.substring(0, 7) : '-');
+
+      // Set form input
+      const tglInput = document.getElementById('edit-roster-tanggal');
+      const shiftInput = document.getElementById('edit-roster-shift');
+      const kodeInput = document.getElementById('edit-roster-kode-shift');
+      const unitInput = document.getElementById('edit-roster-unit');
+      const efektifInput = document.getElementById('edit-roster-unit-efektif');
+      const ketInput = document.getElementById('edit-roster-keterangan');
+
+      if (tglInput) tglInput.value = item.tanggal || '';
+      if (shiftInput) shiftInput.value = String(item.shift || 1);
+      if (kodeInput) kodeInput.value = item.kodeShift || 'DWS';
+      if (unitInput) unitInput.value = (item.unit && item.unit !== '-') ? item.unit : '';
+      if (efektifInput) efektifInput.value = (item.unitEfektif && item.unitEfektif !== '-') ? item.unitEfektif : (item.unit || '');
+      if (ketInput) ketInput.value = item.keterangan || '';
+
+      // Hitung & tampilkan petunjuk kode shift secara otomatis
+      handleEditRosterKodeChange(kodeInput ? kodeInput.value : '');
+
+      toggleModal('modal-edit-roster', true);
+    }
+
+    function handleEditRosterKodeChange(rawCode) {
+      const code = String(rawCode || '').trim().toUpperCase();
+      const shiftSelect = document.getElementById('edit-roster-shift');
+      const efektifInput = document.getElementById('edit-roster-unit-efektif');
+      const unitInput = document.getElementById('edit-roster-unit');
+      const hintEl = document.getElementById('edit-roster-efektif-hint');
+
+      // Deteksi otomatis Shift berdasarkan kode (D = Siang / Shift 1, N = Malam / Shift 2)
+      if (code.startsWith('D') && shiftSelect) {
+        shiftSelect.value = '1';
+      } else if (code.startsWith('N') && shiftSelect) {
+        shiftSelect.value = '2';
+      }
+
+      // Deteksi otomatis status spare (cth: D514, N168)
+      const matchSpare = code.match(/^[DN](\d{3,4})$/i);
+      if (matchSpare) {
+        const spareUnit = 'LT2' + matchSpare[1];
+        if (efektifInput) efektifInput.value = spareUnit;
+        if (hintEl) hintEl.innerHTML = `<span class="font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Spare Terdeteksi: ${spareUnit}</span>`;
+      } else if (['OOFF', 'OFF', 'CCUTI', 'CUTI'].includes(code)) {
+        if (hintEl) hintEl.innerHTML = `<span class="font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded">Status: Off Kerja / Libur / Cuti</span>`;
+      } else if (['INDR', 'INDK', 'TR', 'HR'].includes(code)) {
+        if (hintEl) hintEl.innerHTML = `<span class="font-bold text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded">Status: Induksi / Training</span>`;
+      } else if (['DWS', 'NWS'].includes(code)) {
+        if (unitInput && efektifInput && unitInput.value) {
+          efektifInput.value = unitInput.value;
+        }
+        if (hintEl) hintEl.textContent = 'Membawa unit batangan reguler';
+      } else {
+        if (hintEl) hintEl.textContent = 'Unit riil yang dibawa pada tanggal/shift ini';
+      }
+    }
+
+    function setQuickEditKode(kode) {
+      const kodeInput = document.getElementById('edit-roster-kode-shift');
+      if (kodeInput) {
+        kodeInput.value = kode;
+        handleEditRosterKodeChange(kode);
+      }
+    }
+
+    async function handleSaveEditRoster(event) {
+      if (event) event.preventDefault();
+
+      const idInput = document.getElementById('edit-roster-id');
+      const nrpInput = document.getElementById('edit-roster-nrp');
+      const namaInput = document.getElementById('edit-roster-nama');
+      const jenisInput = document.getElementById('edit-roster-jenis');
+      const periodeInput = document.getElementById('edit-roster-periode');
+      const tglInput = document.getElementById('edit-roster-tanggal');
+      const shiftInput = document.getElementById('edit-roster-shift');
+      const kodeInput = document.getElementById('edit-roster-kode-shift');
+      const unitInput = document.getElementById('edit-roster-unit');
+      const efektifInput = document.getElementById('edit-roster-unit-efektif');
+      const ketInput = document.getElementById('edit-roster-keterangan');
+      const submitBtn = document.getElementById('btn-save-edit-roster');
+
+      const rowId = idInput?.value;
+      const nrp = (nrpInput?.value || '').trim();
+      const nama = (namaInput?.value || '').trim();
+      const jenis = jenisInput?.value || 'OPT';
+      const tanggal = tglInput?.value;
+      const shift = parseInt(shiftInput?.value) || 1;
+      const kodeShift = (kodeInput?.value || 'DWS').trim().toUpperCase();
+      const unit = (unitInput?.value || '-').trim().toUpperCase();
+      let unitEfektif = (efektifInput?.value || unit).trim().toUpperCase();
+      const keterangan = (ketInput?.value || '').trim();
+      const periode = periodeInput?.value || (tanggal ? tanggal.substring(0, 7) : '2026-10');
+
+      if (!tanggal) {
+        showToast('Silakan tentukan tanggal penugasan', 'warning');
+        return;
+      }
+
+      // Deteksi status spare sesuai aturan PRD (Foto 1)
+      const matchSpare = kodeShift.match(/^[DN](\d{3,4})$/i);
+      const isOff = ['OOFF', 'OFF', 'CCUTI', 'CUTI'].includes(kodeShift);
+      const isTraining = ['INDR', 'INDK', 'TR', 'HR'].includes(kodeShift);
+      const isSpare = Boolean(matchSpare || (unitEfektif && unitEfektif !== unit && !isOff && !isTraining));
+
+      // 1. Update state di memori browser
+      const list = state.masterRoster || [];
+      const itemIndex = list.findIndex((r, idx) => (r.id === rowId) || (`${r.nik || r.nrp}_${r.tanggal}_${r.shift}_${idx}` === rowId));
+
+      const updatedItem = {
+        ...(itemIndex !== -1 ? list[itemIndex] : {}),
+        id: rowId || `ROSTER_${periode}_${nrp}_${tanggal}`,
+        nrp: nrp,
+        nik: nrp,
+        nama: nama,
+        jenis: jenis,
+        unit: unit,
+        unitEfektif: unitEfektif,
+        periode: periode,
+        tanggal: tanggal,
+        shift: shift,
+        kodeShift: kodeShift,
+        isSpare: isSpare,
+        keterangan: keterangan
+      };
+
+      if (itemIndex !== -1) {
+        state.masterRoster[itemIndex] = updatedItem;
+      } else {
+        state.masterRoster.unshift(updatedItem);
+      }
+
+      // 2. Simpan perubahan ke Supabase
+      if (state.supabaseClient) {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Menyimpan ke Database...</span>';
+        }
+
+        try {
+          const dbPayload = {
+            id: updatedItem.id,
+            nrp: updatedItem.nrp,
+            nik: updatedItem.nik,
+            nama: updatedItem.nama,
+            jenis: updatedItem.jenis,
+            unit: updatedItem.unit,
+            unit_efektif: updatedItem.unitEfektif,
+            periode: updatedItem.periode,
+            tanggal: updatedItem.tanggal,
+            shift: updatedItem.shift,
+            kode_shift: updatedItem.kodeShift,
+            is_spare: updatedItem.isSpare,
+            keterangan: updatedItem.keterangan || null
+          };
+
+          let { error } = await state.supabaseClient
+            .from('master_roster')
+            .upsert(dbPayload, { onConflict: 'id' });
+
+          if (error && (error.message?.includes('ON CONFLICT') || error.code === '42P10')) {
+            const retryRes = await state.supabaseClient
+              .from('master_roster')
+              .upsert(dbPayload, { onConflict: 'nrp,tanggal' });
+            error = retryRes.error;
+          }
+
+          if (error) {
+            console.warn('[Supabase Update Roster Error]', error);
+            showToast('Catatan: Gagal sinkron ke database cloud (' + error.message + '). Data diperbarui di sesi aktif.', 'warning');
+          } else {
+            showToast(`Penugasan roster untuk ${nama} (${tanggal}) berhasil diperbarui!`, 'success');
+          }
+        } catch (saveErr) {
+          console.warn('[Supabase Update Roster Exception]', saveErr);
+          showToast('Data berhasil diperbarui di sesi memori lokal.', 'info');
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span>Simpan Perubahan Roster</span>';
+          }
+        }
+      } else {
+        showToast(`Penugasan roster untuk ${nama} (${tanggal}) berhasil diperbarui!`, 'success');
+      }
+
+      toggleModal('modal-edit-roster', false);
+      renderDatabaseRosterTable();
+    }
+
+    // Registrasi ke window object
+    window.openEditRosterModal = openEditRosterModal;
+    window.handleEditRosterKodeChange = handleEditRosterKodeChange;
+    window.setQuickEditKode = setQuickEditKode;
+    window.handleSaveEditRoster = handleSaveEditRoster;
+    window.renderRosterPagination = renderRosterPagination;
+    window.goToRosterPage = goToRosterPage;
+    window.changeRosterPageSize = changeRosterPageSize;
+    window.handleRosterSearchChange = handleRosterSearchChange;
+    window.handleRosterFilterChange = handleRosterFilterChange;
 
 
     // ==============================================================================
