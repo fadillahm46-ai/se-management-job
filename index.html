@@ -2663,7 +2663,7 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-slate-700 mb-1.5">Nama Pemesan</label>
-                  <input type="text" id="order-nama-pemesan" placeholder="Contoh: Pak Supri (Foreman Balanai)" required
+                  <input type="text" id="order-nama-pemesan" placeholder="Contoh: fadillahm" required
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500">
                 </div>
                 <div>
@@ -2696,7 +2696,7 @@
                 </div>
                 <div>
                   <label class="block text-slate-700 mb-1.5">Lokasi Pit</label>
-                  <input type="text" id="order-lokasi" placeholder="Contoh: BALANAI RL 80" required
+                  <input type="text" id="order-lokasi" placeholder="Contoh: Rangkong" required
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 uppercase">
                 </div>
               </div>
@@ -5694,6 +5694,7 @@
             <label class="block text-slate-700 mb-1" id="add-job-cat-label">Kategori Jadwal</label>
             <select id="add-job-cat" onchange="handleCatChangeInAddModal(this.value)"
               class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 bg-white">
+              <option value="">-- Pilih Kategori Jadwal --</option>
               <option value="small">Greasing Small Track</option>
               <option value="digger">Big Digger</option>
               <option value="aircleaner">Air Cleaner</option>
@@ -5702,7 +5703,7 @@
           </div>
           <div>
             <label class="block text-slate-700 mb-1">Waktu Ditentukan</label>
-            <input type="text" id="add-job-waktu" value="07:00 s/d 07:15" required
+            <input type="text" id="add-job-waktu" value="" placeholder="Contoh: 07:00 s/d 07:15"
               class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 font-mono">
           </div>
         </div>
@@ -10054,8 +10055,13 @@
 
     function getPersonnelForArmada(armadaUnit, cluster = 'Selatan', shift = 1, tanggal = '') {
       const cleanArmada = (armadaUnit || '').trim().toUpperCase();
+      if (!cleanArmada || cleanArmada === '-' || cleanArmada.startsWith('--')) {
+        return { opt: '-', mp1: '-', mp2: '-' };
+      }
+
       const isWt = cleanArmada.startsWith('WT');
       const targetDate = tanggal || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : '');
+      const cleanArmadaNorm = cleanArmada.replace(/[^A-Z0-9]/g, '');
 
       let defaultOpt = '-';
       let defaultMp1 = '-';
@@ -10066,14 +10072,38 @@
         const roster = state.masterRoster || [];
         const targetJenis = isWt ? 'WM' : 'OM';
 
-        // Cari MP1 & MP2 aktif dari Roster
-        const matchedMp = roster.filter(r =>
-          r.jenis === targetJenis &&
-          (r.tanggal === targetDate || !r.tanggal) &&
+        const normMatch = (unitVal) => {
+          if (!unitVal) return false;
+          const uNorm = String(unitVal).toUpperCase().replace(/[^A-Z0-9]/g, '');
+          return uNorm === cleanArmadaNorm;
+        };
+
+        // 1. Cari MP1 & MP2 aktif dari Roster yang bertugas pada armada/unit ini
+        let matchedMp = roster.filter(r =>
+          (r.jenis === targetJenis || (!isWt && r.jenis === 'OM') || (isWt && r.jenis === 'WM')) &&
+          r.tanggal === targetDate &&
           (Number(r.shift) === Number(shift) || !r.shift) &&
-          (r.unit?.toUpperCase() === cleanArmada || r.unitEfektif?.toUpperCase() === cleanArmada) &&
+          (normMatch(r.unit) || normMatch(r.unitEfektif)) &&
           r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI'
         );
+
+        if (matchedMp.length === 0) {
+          matchedMp = roster.filter(r =>
+            (r.jenis === targetJenis || (!isWt && r.jenis === 'OM') || (isWt && r.jenis === 'WM')) &&
+            (!r.tanggal || r.tanggal === targetDate) &&
+            (Number(r.shift) === Number(shift) || !r.shift) &&
+            (normMatch(r.unit) || normMatch(r.unitEfektif)) &&
+            r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI'
+          );
+        }
+
+        if (matchedMp.length === 0) {
+          matchedMp = roster.filter(r =>
+            (r.jenis === targetJenis || (!isWt && r.jenis === 'OM') || (isWt && r.jenis === 'WM')) &&
+            (normMatch(r.unit) || normMatch(r.unitEfektif)) &&
+            r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI'
+          );
+        }
 
         if (matchedMp.length >= 2) {
           defaultMp1 = matchedMp[0].nama;
@@ -10082,16 +10112,47 @@
           defaultMp1 = matchedMp[0].nama;
         }
 
-        // Cari OPT dari Roster
-        const matchedOpt = roster.find(r =>
+        // 2. Cari OPT dari Roster yang bertugas pada armada/unit ini (unitEfektif atau unit batangan)
+        let optCandidates = roster.filter(r =>
           r.jenis === 'OPT' &&
-          (r.tanggal === targetDate || !r.tanggal) &&
+          r.tanggal === targetDate &&
           (Number(r.shift) === Number(shift) || !r.shift) &&
           r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI' &&
-          (r.cluster?.toLowerCase() === cluster?.toLowerCase() || getParentCluster(r.cluster).toLowerCase() === getParentCluster(cluster).toLowerCase())
+          (normMatch(r.unitEfektif) || normMatch(r.unit))
         );
+
+        if (optCandidates.length === 0) {
+          optCandidates = roster.filter(r =>
+            r.jenis === 'OPT' &&
+            (!r.tanggal || r.tanggal === targetDate) &&
+            (Number(r.shift) === Number(shift) || !r.shift) &&
+            r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI' &&
+            (normMatch(r.unitEfektif) || normMatch(r.unit))
+          );
+        }
+
+        if (optCandidates.length === 0) {
+          optCandidates = roster.filter(r =>
+            r.jenis === 'OPT' &&
+            (normMatch(r.unitEfektif) || normMatch(r.unit)) &&
+            r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI'
+          );
+        }
+
+        // Prioritas kandidat OPT: unitEfektif (misal spare aktif pengganti), lalu unit batangan
+        const matchedOpt = optCandidates.find(r => normMatch(r.unitEfektif))
+          || optCandidates.find(r => normMatch(r.unit))
+          || null;
+
         if (matchedOpt && matchedOpt.nama) {
           defaultOpt = matchedOpt.nama;
+        } else {
+          // Fallback ke masterOperators HANYA jika ada operator dengan unit/armada yang cocok persis
+          const ops = state.masterOperators || [];
+          const opMatch = ops.find(o => normMatch(o.armada_unit || o.armada || o.unit) && (o.jabatan?.toLowerCase().includes('opt') || o.jabatan?.toLowerCase().includes('operator') || !o.jabatan));
+          if (opMatch && opMatch.nama) {
+            defaultOpt = opMatch.nama;
+          }
         }
       } catch (err) {
         console.warn('[Roster Lookup Error]', err);
@@ -12514,25 +12575,12 @@
 
       let changed = false;
 
-      // 1. Sinkronkan dari state.masterUsers (Akun & personil operasional: Admin, User, Oilman, Washingman, dll.)
+      // Sinkronkan nomor WA dari state.masterUsers jika ada kontak yang nomor WA-nya belum terisi
       if (Array.isArray(state.masterUsers) && state.masterUsers.length > 0) {
         state.masterUsers.forEach(u => {
           if (!u.nrp) return;
           const nrpKey = String(u.nrp).toUpperCase().trim();
-          if (!existingNrpMap.has(nrpKey)) {
-            const newOp = {
-              id: 'KONT-' + nrpKey,
-              nrp: u.nrp,
-              nama: u.nama || u.nrp,
-              noWa: u.noWa || u.telepon || u.phone || '',
-              jabatan: u.jabatan || u.role || 'Operasional',
-              cluster: u.cluster || 'Selatan',
-              statusAktif: (u.statusAktif !== false)
-            };
-            state.masterOperators.push(newOp);
-            existingNrpMap.set(nrpKey, newOp);
-            changed = true;
-          } else {
+          if (existingNrpMap.has(nrpKey)) {
             const existing = existingNrpMap.get(nrpKey);
             if ((!existing.noWa || existing.noWa === '-') && (u.noWa || u.telepon)) {
               existing.noWa = u.noWa || u.telepon;
@@ -12542,41 +12590,8 @@
         });
       }
 
-      // 2. Sinkronkan dari data roster jika ada operator tambahan
-      if (Array.isArray(state.parsedRosterData) && state.parsedRosterData.length > 0) {
-        state.parsedRosterData.forEach(r => {
-          if (!r.nrp) return;
-          const nrpKey = String(r.nrp).toUpperCase().trim();
-          if (!existingNrpMap.has(nrpKey)) {
-            const newOp = {
-              id: 'KONT-' + nrpKey,
-              nrp: String(r.nrp).trim(),
-              nama: String(r.nama || r.nrp).trim(),
-              noWa: r.noWa || '',
-              jabatan: 'Operator Lapangan',
-              cluster: r.cluster || 'Selatan',
-              statusAktif: true
-            };
-            state.masterOperators.push(newOp);
-            existingNrpMap.set(nrpKey, newOp);
-            changed = true;
-          }
-        });
-      }
-
       if (changed) {
         safeStorage.setItem('SE_MASTER_OPERATORS', JSON.stringify(state.masterOperators));
-        if (state.supabaseClient && state.masterOperators.length > 0) {
-          const supaRows = state.masterOperators.map(o => ({
-            nrp: o.nrp,
-            nama: o.nama,
-            no_wa: o.noWa || '',
-            jabatan: o.jabatan || 'Operator',
-            cluster: o.cluster || 'Selatan',
-            status_aktif: true
-          }));
-          state.supabaseClient.from('master_operators').upsert(supaRows, { onConflict: 'nrp' }).catch(() => {});
-        }
       }
     }
     window.syncMasterOperatorsWithUsers = syncMasterOperatorsWithUsers;
@@ -12588,7 +12603,7 @@
       const countBadge = document.getElementById('operators-count-badge');
       if (!tbody) return;
 
-      // Pastikan data tersinkronisasi penuh dengan kontak pengguna & personil
+      // Pastikan nomor WA tersinkron dengan profil akun pengguna jika tersedia
       syncMasterOperatorsWithUsers();
 
       const search = (document.getElementById('search-operator-input')?.value || '').toLowerCase().trim();
@@ -12612,12 +12627,15 @@
       tbody.innerHTML = '';
       if (list.length === 0) {
         tbody.innerHTML = `<tr><td colspan="${state.isOperatorsSelectMode ? 6 : 5}" class="py-6 text-center text-slate-400 italic text-[11px]">Tidak ada data kontak produksi yang cocok</td></tr>`;
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+        updateOperatorsBulkActionBar();
         return;
       }
 
       let allChecked = true;
       list.forEach((op, idx) => {
-        const isChecked = state.selectedOperatorIds.has(op.id);
+        const opId = String(op.id || ('OPT-' + op.nrp));
+        const isChecked = state.selectedOperatorIds.has(opId) || (op.nrp && state.selectedOperatorIds.has(String(op.nrp)));
         if (!isChecked) allChecked = false;
         const cleanWa = formatWaClean(op.noWa);
 
@@ -12628,9 +12646,9 @@
             <td class="py-2.5 px-3 text-center">
               <input 
                 type="checkbox" 
-                value="${op.id}" 
+                value="${opId}" 
                 ${isChecked ? 'checked' : ''} 
-                onchange="toggleSelectOperatorRow('${op.id}', this.checked)" 
+                onchange="toggleSelectOperatorRow('${opId}', this.checked)" 
                 class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 cursor-pointer"
               >
             </td>
@@ -12650,10 +12668,10 @@
             </div>
           </td>
           <td class="py-2.5 px-4 text-center space-x-1.5">
-            <button type="button" onclick="openEditOperatorModal('${op.id}')" class="p-1 rounded-lg text-slate-500 hover:text-brand-800 hover:bg-slate-100 transition inline-flex items-center justify-center cursor-pointer" title="Edit Data Operator">
+            <button type="button" onclick="openEditOperatorModal('${opId}')" class="p-1 rounded-lg text-slate-500 hover:text-brand-800 hover:bg-slate-100 transition inline-flex items-center justify-center cursor-pointer" title="Edit Data Operator">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
             </button>
-            <button type="button" onclick="promptDeleteMasterOperator('${op.id}')" class="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition inline-flex items-center justify-center cursor-pointer" title="Hapus Operator">
+            <button type="button" onclick="promptDeleteMasterOperator('${opId}')" class="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition inline-flex items-center justify-center cursor-pointer" title="Hapus Operator">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </button>
           </td>
@@ -12674,8 +12692,8 @@
       const bar = document.getElementById('operators-bulk-actions-bar');
 
       if (state.isOperatorsSelectMode) {
-        if (btnText) btnText.textContent = 'Keluar Mode Pilih';
-        if (btn) btn.className = 'px-3.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-2xs border border-amber-300';
+        if (btnText) btnText.textContent = 'Selesai Pilih';
+        if (btn) btn.className = 'px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-sm';
         if (bar) bar.classList.remove('hidden');
       } else {
         if (btnText) btnText.textContent = 'Akses Edit / Pilih Masal';
@@ -12699,8 +12717,12 @@
     }
 
     function toggleSelectOperatorRow(opId, checked) {
-      if (checked) state.selectedOperatorIds.add(opId);
-      else state.selectedOperatorIds.delete(opId);
+      const idStr = String(opId);
+      if (checked) {
+        state.selectedOperatorIds.add(idStr);
+      } else {
+        state.selectedOperatorIds.delete(idStr);
+      }
       updateOperatorsBulkActionBar();
     }
 
@@ -12715,8 +12737,12 @@
         );
       }
       list.forEach(op => {
-        if (checked) state.selectedOperatorIds.add(op.id);
-        else state.selectedOperatorIds.delete(op.id);
+        const idStr = String(op.id || ('OPT-' + op.nrp));
+        if (checked) {
+          state.selectedOperatorIds.add(idStr);
+        } else {
+          state.selectedOperatorIds.delete(idStr);
+        }
       });
       renderMasterOperatorsTable();
     }
@@ -12727,6 +12753,17 @@
     }
 
     function promptBulkDeleteOperators() {
+      // Fallback cerdas: jika Set kosong tapi checkbox di tabel tercentang
+      if (state.selectedOperatorIds.size === 0) {
+        const checkedBoxes = document.querySelectorAll('#master-operators-tbody input[type="checkbox"]:checked');
+        if (checkedBoxes && checkedBoxes.length > 0) {
+          checkedBoxes.forEach(cb => {
+            if (cb.value) state.selectedOperatorIds.add(String(cb.value));
+          });
+          updateOperatorsBulkActionBar();
+        }
+      }
+
       if (state.selectedOperatorIds.size === 0) {
         showToast('Pilih setidaknya satu operator untuk dihapus!', 'warning');
         return;
@@ -12738,13 +12775,61 @@
       toggleModal('modal-confirm-bulk-delete-operators', true);
     }
 
-    function executeBulkDeleteOperators() {
+    async function executeBulkDeleteOperators() {
+      // Fallback pastikan Set terisi jika ada checkbox DOM
+      if (state.selectedOperatorIds.size === 0) {
+        const checkedBoxes = document.querySelectorAll('#master-operators-tbody input[type="checkbox"]:checked');
+        if (checkedBoxes && checkedBoxes.length > 0) {
+          checkedBoxes.forEach(cb => {
+            if (cb.value) state.selectedOperatorIds.add(String(cb.value));
+          });
+        }
+      }
+
       const deleteCount = state.selectedOperatorIds.size;
-      state.masterOperators = state.masterOperators.filter(o => !state.selectedOperatorIds.has(o.id));
+      if (deleteCount === 0) {
+        showToast('Pilih setidaknya satu operator untuk dihapus!', 'warning');
+        return;
+      }
+
+      const selectedIds = Array.from(state.selectedOperatorIds).map(String);
+      const targets = (state.masterOperators || []).filter(o => {
+        const opId = String(o.id || ('OPT-' + o.nrp));
+        return selectedIds.includes(opId) || (o.nrp && selectedIds.includes(String(o.nrp)));
+      });
+      const nrpsToDelete = targets.map(o => o.nrp).filter(Boolean);
+
+      // 1. Hapus dari Supabase jika online
+      if (state.supabaseClient && nrpsToDelete.length > 0) {
+        showToast(`Menghapus ${deleteCount} kontak produksi dari cloud...`, 'info');
+        try {
+          const chunkSize = 100;
+          for (let i = 0; i < nrpsToDelete.length; i += chunkSize) {
+            const chunk = nrpsToDelete.slice(i, i + chunkSize);
+            await state.supabaseClient.from('master_operators').delete().in('nrp', chunk);
+          }
+        } catch (supaErr) {
+          console.warn('[Supabase Bulk Delete Operators Error]', supaErr);
+        }
+      }
+
+      // 2. Hapus dari memory state
+      state.masterOperators = (state.masterOperators || []).filter(o => {
+        const opId = String(o.id || ('OPT-' + op.nrp));
+        return !selectedIds.includes(opId) && (!o.nrp || !nrpsToDelete.includes(o.nrp));
+      });
+
+      // 3. Simpan ke local storage
+      safeStorage.setItem('SE_MASTER_OPERATORS', JSON.stringify(state.masterOperators));
+
+      // 4. Bersihkan seleksi
       state.selectedOperatorIds.clear();
       toggleModal('modal-confirm-bulk-delete-operators', false);
       showToast(`Berhasil menghapus ${deleteCount} kontak produksi secara masal!`, 'success');
-      renderMasterOperatorsTable();
+
+      // 5. Render ulang tabel
+      if (typeof notifyDataChanged === 'function') notifyDataChanged();
+      else renderMasterOperatorsTable();
     }
 
     function openAddOperatorModal() {
@@ -12757,9 +12842,10 @@
     }
 
     function openEditOperatorModal(id) {
-      const op = (state.masterOperators || []).find(o => o.id === id);
+      const idStr = String(id);
+      const op = (state.masterOperators || []).find(o => String(o.id || ('OPT-' + o.nrp)) === idStr || String(o.id) === idStr);
       if (!op) return;
-      document.getElementById('operator-form-id').value = op.id;
+      document.getElementById('operator-form-id').value = op.id || ('OPT-' + op.nrp);
       document.getElementById('operator-modal-title').textContent = 'Edit Data Operator';
       document.getElementById('operator-form-nrp').value = op.nrp || '';
       document.getElementById('operator-form-nama').value = op.nama || '';
@@ -12775,51 +12861,59 @@
       const noWa = (document.getElementById('operator-form-nowa')?.value || '').trim();
 
       if (!nrp || !nama) {
-        showToast('NRP dan Nama Operator wajib diisi!', 'warning');
+        showToast('NRP dan Nama operator wajib diisi!', 'warning');
         return;
       }
 
-      let targetOp = null;
+      if (!Array.isArray(state.masterOperators)) state.masterOperators = [];
+
       if (id) {
-        const op = state.masterOperators.find(o => o.id === id);
-        if (op) {
-          op.nrp = nrp;
-          op.nama = nama;
-          op.noWa = noWa;
-          targetOp = op;
+        const idStr = String(id);
+        const idx = state.masterOperators.findIndex(o => String(o.id || ('OPT-' + o.nrp)) === idStr || String(o.id) === idStr);
+        if (idx !== -1) {
+          state.masterOperators[idx].nrp = nrp;
+          state.masterOperators[idx].nama = nama;
+          state.masterOperators[idx].noWa = noWa;
+        } else {
+          state.masterOperators.push({ id: idStr, nrp, nama, noWa, cluster: 'Selatan', statusAktif: true });
         }
-        showToast(`Data kontak ${nama} (${nrp}) berhasil diperbarui!`, 'success');
       } else {
-        const newOp = {
-          id: 'OPT-' + String(Date.now()).slice(-4),
+        const exists = state.masterOperators.some(o => o.nrp === nrp);
+        if (exists) {
+          showToast('NRP operator sudah terdaftar!', 'warning');
+          return;
+        }
+        state.masterOperators.push({
+          id: 'OPT-' + nrp,
           nrp,
           nama,
-          noWa
-        };
-        state.masterOperators.push(newOp);
-        targetOp = newOp;
-        showToast(`Kontak baru ${nama} (${nrp}) berhasil ditambahkan!`, 'success');
+          noWa,
+          cluster: 'Selatan',
+          statusAktif: true
+        });
       }
 
-      // Sinkronisasi Supabase jika online
-      if (state.supabaseClient && targetOp) {
+      safeStorage.setItem('SE_MASTER_OPERATORS', JSON.stringify(state.masterOperators));
+      if (state.supabaseClient) {
         state.supabaseClient.from('master_operators').upsert({
-          id: targetOp.id,
-          nrp: targetOp.nrp,
-          nama: targetOp.nama,
-          no_wa: targetOp.noWa,
+          nrp,
+          nama,
+          no_wa: noWa,
+          cluster: 'Selatan',
           status_aktif: true
-        }, { onConflict: 'nrp' }).catch(err => console.warn('[Supabase Operator Upsert]', err));
+        }, { onConflict: 'nrp' }).catch(() => {});
       }
 
       toggleModal('modal-operator-form', false);
+      showToast('Data kontak produksi berhasil disimpan!', 'success');
       if (typeof notifyDataChanged === 'function') notifyDataChanged();
       else renderMasterOperatorsTable();
     }
 
     function promptDeleteMasterOperator(id) {
-      state.currentDeletingOperatorId = id;
-      const op = state.masterOperators.find(o => o.id === id);
+      const idStr = String(id);
+      state.currentDeletingOperatorId = idStr;
+      const op = state.masterOperators.find(o => String(o.id || ('OPT-' + o.nrp)) === idStr || String(o.id) === idStr);
       const descEl = document.getElementById('delete-operator-confirm-desc');
       if (descEl && op) {
         descEl.textContent = `Apakah Anda yakin ingin menghapus data operator ${op.nama} (${op.nrp})?`;
@@ -12828,10 +12922,11 @@
     }
 
     function executeDeleteMasterOperator() {
-      const id = state.currentDeletingOperatorId;
+      const id = String(state.currentDeletingOperatorId);
       if (!id) return;
-      const target = state.masterOperators.find(o => o.id === id);
-      state.masterOperators = state.masterOperators.filter(o => o.id !== id);
+      const target = state.masterOperators.find(o => String(o.id || ('OPT-' + o.nrp)) === id || String(o.id) === id);
+      state.masterOperators = state.masterOperators.filter(o => String(o.id || ('OPT-' + o.nrp)) !== id && String(o.id) !== id);
+      safeStorage.setItem('SE_MASTER_OPERATORS', JSON.stringify(state.masterOperators));
       if (state.supabaseClient && target) {
         state.supabaseClient.from('master_operators').delete().eq('nrp', target.nrp).catch(() => {});
       }
@@ -13732,7 +13827,7 @@
       try {
         const tbody = document.getElementById('db-roster-tbody');
         if (tbody && (!state.masterRoster || state.masterRoster.length === 0)) {
-          tbody.innerHTML = '<tr><td colspan="11" class="py-8 text-center text-slate-400 italic"><div class="flex items-center justify-center space-x-2"><svg class="w-4 h-4 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Memuat data roster langsung dari Supabase...</span></div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="11" class="py-8 text-center text-slate-400 italic"><div class="flex items-center justify-center space-x-2"><svg class="w-4 h-4 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Memuat seluruh data master roster dari Supabase...</span></div></td></tr>';
         }
 
         // 1. Ambil pemetaan operator untuk unit batangan & cluster
@@ -13752,26 +13847,45 @@
           });
         }
 
-        // 2. Query data master_roster dari Supabase
-        let query = state.supabaseClient
-          .from('master_roster')
-          .select('*')
-          .limit(10000)
-          .order('tanggal', { ascending: true })
-          .order('nrp', { ascending: true });
+        // 2. Query data master_roster dari Supabase menggunakan Pagination Range (Mengatasi hard limit 1.000 baris PostgREST)
+        let allRosterData = [];
+        let fromOffset = 0;
+        const pageSize = 1000;
+        let hasMore = true;
 
-        if (periodFilter) {
-          query = query.eq('periode', periodFilter);
+        while (hasMore) {
+          let query = state.supabaseClient
+            .from('master_roster')
+            .select('*')
+            .order('tanggal', { ascending: true })
+            .order('nrp', { ascending: true })
+            .range(fromOffset, fromOffset + pageSize - 1);
+
+          if (periodFilter) {
+            query = query.eq('periode', periodFilter);
+          }
+
+          const { data, error } = await query;
+          if (error) {
+            console.error('[Supabase Roster Error]', error);
+            if (allRosterData.length === 0) return false;
+            break;
+          }
+
+          if (Array.isArray(data) && data.length > 0) {
+            allRosterData = allRosterData.concat(data);
+            if (data.length < pageSize) {
+              hasMore = false;
+            } else {
+              fromOffset += pageSize;
+            }
+          } else {
+            hasMore = false;
+          }
         }
 
-        const { data, error } = await query;
-        if (error) {
-          console.error('[Supabase Roster Error]', error);
-          return false;
-        }
-
-        if (Array.isArray(data)) {
-          state.masterRoster = data.map((r, idx) => {
+        if (Array.isArray(allRosterData) && allRosterData.length > 0) {
+          state.masterRoster = allRosterData.map((r, idx) => {
             const opInfo = opMap[r.nrp] || {};
             const baseUnit = r.unit || opInfo.unit || '-';
             let unitEfektif = r.unit_efektif || baseUnit;
@@ -13802,7 +13916,11 @@
             };
           });
 
-          console.log('[Supabase Roster] Berhasil memuat ' + state.masterRoster.length + ' data roster dari Supabase.');
+          console.log('[Supabase Roster] Berhasil memuat total ' + state.masterRoster.length + ' data roster dari Supabase (Pagination Lengkap).');
+          renderDatabaseRosterTable();
+          return true;
+        } else if (allRosterData.length === 0) {
+          state.masterRoster = [];
           renderDatabaseRosterTable();
           return true;
         }
@@ -14218,11 +14336,12 @@
       if (subtitleEl) subtitleEl.textContent = `Shift ${shift} • KGU ${cluster}${isWt ? ` • Round ${washingRound}` : ''}`;
       if (armadaLabelEl) armadaLabelEl.textContent = isWt ? 'No WT Bertugas' : 'No LT Bertugas';
 
-      // Sesuaikan opsi kategori untuk LT vs WT
+      // Sesuaikan opsi kategori untuk LT vs WT (dikosongkan secara default dengan pilihan kosong)
       if (catSelect) {
         if (isWt) {
           if (catLabelEl) catLabelEl.textContent = 'Kategori Washing';
           catSelect.innerHTML = `
+            <option value="">-- Pilih Kategori Washing --</option>
             <option value="coal">Washing Coal</option>
             <option value="rom">Washing ROM</option>
             <option value="non_coal">Non Coal / Lainnya</option>
@@ -14230,17 +14349,20 @@
         } else {
           if (catLabelEl) catLabelEl.textContent = 'Kategori Jadwal';
           catSelect.innerHTML = `
+            <option value="">-- Pilih Kategori Jadwal --</option>
             <option value="small">Greasing Small Track</option>
             <option value="digger">Big Digger</option>
             <option value="aircleaner">Air Cleaner</option>
             <option value="topup">Top Up Oil</option>
           `;
         }
+        catSelect.value = '';
       }
 
       // Reset field input
       const noUnitInp = document.getElementById('add-job-no-unit');
       const lokasiInp = document.getElementById('add-job-lokasi');
+      const waktuInp = document.getElementById('add-job-waktu');
       const optInp = document.getElementById('add-job-opt');
       const mp1Inp = document.getElementById('add-job-mp1');
       const mp2Inp = document.getElementById('add-job-mp2');
@@ -14249,6 +14371,10 @@
 
       if (noUnitInp) noUnitInp.value = '';
       if (lokasiInp) lokasiInp.value = '';
+      if (waktuInp) {
+        waktuInp.value = '';
+        waktuInp.placeholder = isWt ? 'Contoh: 12:00 s/d 13:00' : 'Contoh: 07:00 s/d 07:15';
+      }
       if (optInp) optInp.value = '';
       if (mp1Inp) mp1Inp.value = '';
       if (mp2Inp) mp2Inp.value = '';
@@ -14286,7 +14412,7 @@
       const inCluster = filtered.filter(a => (a.cluster || '').toLowerCase() === clusterClean);
       const otherCluster = filtered.filter(a => (a.cluster || '').toLowerCase() !== clusterClean);
 
-      let html = '';
+      let html = `<option value="">-- Pilih Armada ${isWt ? 'WT' : 'LT'} --</option>`;
       if (inCluster.length > 0) {
         html += `<optgroup label="Armada KGU ${cluster.toUpperCase()}">`;
         inCluster.forEach(a => {
@@ -14305,31 +14431,43 @@
         html += '</optgroup>';
       }
 
-      if (!html) {
+      if (!html || html === `<option value="">-- Pilih Armada ${isWt ? 'WT' : 'LT'} --</option>`) {
         const fallbacks = isWt ? ['WT101', 'WT102', 'WT103'] : ['LT2510', 'LT2514', 'LT2535', 'LT2536'];
-        html = fallbacks.map(a => `<option value="${a}">${a}</option>`).join('');
+        html = `<option value="">-- Pilih Armada ${isWt ? 'WT' : 'LT'} --</option>` + fallbacks.map(a => `<option value="${a}">${a}</option>`).join('');
       }
 
       selectEl.innerHTML = html;
+      selectEl.value = '';
 
-      // Pilih unit pertama
-      const selectedUnit = (inCluster.length > 0 ? inCluster[0].unit : (otherCluster.length > 0 ? otherCluster[0].unit : (selectEl.options[0]?.value || '')));
-      if (selectedUnit) {
-        selectEl.value = selectedUnit;
-        handleArmadaSelectChange(selectedUnit);
-      }
+      // Armada dan personel dibiarkan kosong secara default
+      const optInp = document.getElementById('add-job-opt');
+      const mp1Inp = document.getElementById('add-job-mp1');
+      const mp2Inp = document.getElementById('add-job-mp2');
+      if (optInp) optInp.value = '';
+      if (mp1Inp) mp1Inp.value = '';
+      if (mp2Inp) mp2Inp.value = '';
     }
     window.populateAddJobArmadaOptions = populateAddJobArmadaOptions;
 
     function handleArmadaSelectChange(armada) {
-      const shift = parseInt(document.getElementById('add-job-shift')?.value || '1', 10);
-      const cluster = document.getElementById('add-job-cluster')?.value || 'Selatan';
-      const today = getEffectiveTodayString();
-
-      const crew = getPersonnelForArmada(armada, cluster, shift, today);
       const optInp = document.getElementById('add-job-opt');
       const mp1Inp = document.getElementById('add-job-mp1');
       const mp2Inp = document.getElementById('add-job-mp2');
+
+      if (!armada) {
+        if (optInp) optInp.value = '';
+        if (mp1Inp) mp1Inp.value = '';
+        if (mp2Inp) mp2Inp.value = '';
+        return;
+      }
+
+      const shift = parseInt(document.getElementById('add-job-shift')?.value || '1', 10);
+      const cluster = document.getElementById('add-job-cluster')?.value || 'Selatan';
+      const targetType = document.getElementById('add-job-target-type')?.value || 'LT';
+      const isWt = (targetType === 'WT');
+      const today = (isWt ? state.watertruckState?.filterDate : state.lubetruckState?.filterDate) || getEffectiveTodayString();
+
+      const crew = getPersonnelForArmada(armada, cluster, shift, today);
 
       if (optInp) optInp.value = crew.opt || '-';
       if (mp1Inp) mp1Inp.value = crew.mp1 || '-';
@@ -14340,10 +14478,16 @@
     function handleCatChangeInAddModal(val) {
       const waktuInp = document.getElementById('add-job-waktu');
       if (!waktuInp) return;
-      if (val === 'aircleaner') waktuInp.value = '08:00 s/d 08:30';
-      else if (val === 'topup') waktuInp.value = '10:00 s/d 10:20';
-      else if (val === 'coal') waktuInp.value = '12:00 s/d 13:00';
-      else waktuInp.value = '07:00 s/d 07:15';
+      if (!val) {
+        waktuInp.placeholder = 'Contoh: 07:00 s/d 07:15';
+        return;
+      }
+      if (val === 'aircleaner') waktuInp.placeholder = 'Contoh: 08:00 s/d 08:30';
+      else if (val === 'topup') waktuInp.placeholder = 'Contoh: 10:00 s/d 10:20';
+      else if (val === 'coal') waktuInp.placeholder = 'Contoh: 12:00 s/d 13:00';
+      else if (val === 'rom') waktuInp.placeholder = 'Contoh: 13:00 s/d 14:00';
+      else if (val === 'digger') waktuInp.placeholder = 'Contoh: 11:30 s/d 12:30';
+      else waktuInp.placeholder = 'Contoh: 07:00 s/d 07:15';
     }
     window.handleCatChangeInAddModal = handleCatChangeInAddModal;
 
@@ -14414,8 +14558,10 @@
       const shift = parseInt(document.getElementById('add-job-shift')?.value || '1', 10);
       const cluster = document.getElementById('add-job-cluster')?.value || 'Selatan';
       const targetType = document.getElementById('add-job-target-type')?.value || 'LT';
-      const cat = document.getElementById('add-job-cat')?.value || 'small';
-      const waktu = document.getElementById('add-job-waktu')?.value?.trim() || '07:00 s/d 07:15';
+      const isWtJob = (targetType === 'WT');
+      const cat = document.getElementById('add-job-cat')?.value || (isWtJob ? 'non_coal' : 'small');
+      const waktuInpVal = document.getElementById('add-job-waktu')?.value?.trim();
+      const waktu = waktuInpVal || '-';
       const noLambung = document.getElementById('add-job-no-unit')?.value?.trim().toUpperCase();
       const lokasi = document.getElementById('add-job-lokasi')?.value?.trim().toUpperCase();
       const ltUnit = document.getElementById('add-job-lt')?.value || '-';
@@ -18206,13 +18352,13 @@
           console.log('[Supabase Sync] Populasi Unit tersinkronisasi:', supaUnits.length, 'unit');
         }
 
-        // C. Sinkronisasi Data Master Operator Produksi
+        // C. Sinkronisasi Data Master Operator Produksi (Murni Kontak Produksi)
         const { data: supaOps, error: opErr } = await state.supabaseClient
           .from('master_operators')
           .select('*');
-        if (!opErr && Array.isArray(supaOps) && supaOps.length > 0) {
+        if (!opErr && Array.isArray(supaOps)) {
           state.masterOperators = supaOps.map(o => ({
-            id: o.id || ('OPT-' + o.nrp),
+            id: String(o.id || ('OPT-' + o.nrp)),
             nrp: o.nrp,
             nama: o.nama,
             noWa: o.no_wa || o.noWa || '',
@@ -18223,7 +18369,7 @@
           if (state.masterActiveSection === 'operators' && typeof renderMasterOperatorsTable === 'function') {
             renderMasterOperatorsTable();
           }
-          console.log('[Supabase Sync] Master Operators tersinkronisasi:', supaOps.length, 'orang');
+          console.log('[Supabase Sync] Master Operators tersinkronisasi murni:', state.masterOperators.length, 'orang');
         }
 
         // D. Sinkronisasi Armada Clusters
