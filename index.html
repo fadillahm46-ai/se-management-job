@@ -5539,33 +5539,8 @@
             class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-mono text-slate-800 focus:outline-none focus:border-brand-500">
         </div>
         <div>
-          <span class="block text-slate-500 text-[11px] mb-1.5">Pilihan Cepat Unit Lubetruck:</span>
-          <div class="flex flex-wrap gap-1.5">
-            <button type="button" onclick="appendLtToInput('LT2535')"
-              class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-700 text-[10px] font-mono font-bold">+
-              LT2535</button>
-            <button type="button" onclick="appendLtToInput('LT2622')"
-              class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-700 text-[10px] font-mono font-bold">+
-              LT2622</button>
-            <button type="button" onclick="appendLtToInput('LT2530')"
-              class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-700 text-[10px] font-mono font-bold">+
-              LT2530</button>
-            <button type="button" onclick="appendLtToInput('LT2514')"
-              class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-700 text-[10px] font-mono font-bold">+
-              LT2514</button>
-            <button type="button" onclick="appendLtToInput('LT2518')"
-              class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-700 text-[10px] font-mono font-bold">+
-              LT2518</button>
-            <button type="button" onclick="appendLtToInput('LT2510')"
-              class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-700 text-[10px] font-mono font-bold">+
-              LT2510</button>
-            <button type="button" onclick="appendLtToInput('LT2525')"
-              class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-700 text-[10px] font-mono font-bold">+
-              LT2525</button>
-            <button type="button" onclick="appendLtToInput('LT2515')"
-              class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-700 text-[10px] font-mono font-bold">+
-              LT2515</button>
-          </div>
+          <span class="block text-slate-500 text-[11px] mb-1.5">Pilihan Cepat Unit Lubetruck (Dari Master Data):</span>
+          <div id="quick-pick-lt-units" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto"></div>
         </div>
         <div class="pt-2 flex items-center space-x-2">
           <button type="submit"
@@ -5604,24 +5579,8 @@
             class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-mono text-slate-800 focus:outline-none focus:border-cyan-500">
         </div>
         <div>
-          <span class="block text-slate-500 text-[11px] mb-1.5">Pilihan Cepat Unit Water Truck:</span>
-          <div class="flex flex-wrap gap-1.5">
-            <button type="button" onclick="appendWtToInput('WT101')"
-              class="px-2 py-1 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-800 text-[10px] font-mono font-bold border border-cyan-200">+
-              WT101</button>
-            <button type="button" onclick="appendWtToInput('WT102')"
-              class="px-2 py-1 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-800 text-[10px] font-mono font-bold border border-cyan-200">+
-              WT102</button>
-            <button type="button" onclick="appendWtToInput('WT103')"
-              class="px-2 py-1 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-800 text-[10px] font-mono font-bold border border-cyan-200">+
-              WT103</button>
-            <button type="button" onclick="appendWtToInput('WT104')"
-              class="px-2 py-1 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-800 text-[10px] font-mono font-bold border border-cyan-200">+
-              WT104</button>
-            <button type="button" onclick="appendWtToInput('WT105')"
-              class="px-2 py-1 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-800 text-[10px] font-mono font-bold border border-cyan-200">+
-              WT105</button>
-          </div>
+          <span class="block text-slate-500 text-[11px] mb-1.5">Pilihan Cepat Unit Water Truck (Dari Master Data):</span>
+          <div id="quick-pick-wt-units" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto"></div>
         </div>
         <div class="pt-2 flex items-center space-x-2">
           <button type="submit"
@@ -7250,7 +7209,15 @@
         const savedOps = safeStorage.getItem('SE_MASTER_OPERATORS');
         if (savedOps !== null) {
           const parsed = JSON.parse(savedOps);
-          if (Array.isArray(parsed)) state.masterOperators = parsed;
+          if (Array.isArray(parsed)) {
+            // Bersihkan data jika noWa terlanjur salah terisi nomor urut (1-3 digit angka murni)
+            state.masterOperators = parsed.map(o => {
+              if (o.noWa && /^\d{1,3}$/.test(String(o.noWa).trim())) {
+                return { ...o, noWa: '' };
+              }
+              return o;
+            });
+          }
         }
         safeStorage.removeItem("SE_MASTER_ROSTER");
         syncMasterOperatorsWithUsers(); // Data roster murni dari Supabase
@@ -7385,15 +7352,16 @@
       picaCategory: 'ALL',
       airCleanerMonitor: [],
       clusterLtAssigned: {
-        'Selatan': 'LT2535, LT2622, LT2530',
-        'Tengah': 'LT2514, LT2518',
-        'Utara': 'LT2510, LT2525'
+        'Selatan': 'LT2530, LT2535, LT2622',
+        'Tengah': 'LT2514, LT2518, LT52506',
+        'Utara': 'LT2510, LT2515, LT2525, LT2620',
+        'Workshop': 'LT2536, LT2621, LT52507, LT52605'
       },
       clusterWtAssigned: {
-        'Selatan': 'WT101',
-        'Tengah': 'WT102',
-        'Utara': 'WT101',
-        'ROM': 'WT101'
+        'Selatan': 'WT2520, WT2636',
+        'Utara': 'WT2640, WT2644, WT52534',
+        'ROM': 'WT2620, WT2645',
+        'Workshop': 'WT2638'
       },
       masterArmada: [...DEFAULT_MASTER_ARMADA],
       isArmadaSelectMode: false,
@@ -9461,9 +9429,9 @@
         pillsContainer.innerHTML = '';
         let assignedString = '';
         if (isWt) {
-          assignedString = (state.clusterWtAssigned && state.clusterWtAssigned[cluster]) || 'WT101';
+          assignedString = (state.clusterWtAssigned && state.clusterWtAssigned[cluster]) || '';
         } else {
-          assignedString = (state.clusterLtAssigned && state.clusterLtAssigned[cluster]) || 'LT2535';
+          assignedString = (state.clusterLtAssigned && state.clusterLtAssigned[cluster]) || '';
         }
         const assignedUnits = assignedString.split(',').map(s => s.trim()).filter(Boolean);
         assignedUnits.forEach(u => {
@@ -11356,6 +11324,14 @@
       else if (state.activeTab === 'completed') renderCompletedTable();
       else if (state.activeTab === 'pica') renderPicaTable();
       else if (state.activeTab === 'air-cleaner-monitor') renderAirCleanerMonitorTable();
+      else if (state.activeTab === 'mp-kontak-pro') renderMpKontakProTable();
+      else if (state.activeTab === 'master-data') {
+        if (state.masterActiveSection === 'operators') renderMasterOperatorsTable();
+        else if (state.masterActiveSection === 'units') renderMasterUnitsTable();
+        else if (state.masterActiveSection === 'armada') renderMasterArmadaTable();
+        else if (state.masterActiveSection === 'accounts') renderMasterAccountsTable();
+        else if (state.masterActiveSection === 'roster') renderDatabaseRosterTable();
+      }
       else if (state.activeTab === 'more') renderFullMoreMenu();
       else if (state.activeTab === 'dashboard') {
         if (state.currentUser?.role === 'admin' || state.currentUser?.role === 'basecontrol') refreshDashboardData();
@@ -13130,7 +13106,22 @@
               headerRowIdx = r;
               colNrp = nrpIdx;
               colNama = namaIdx;
-              colWa = rowUpper.findIndex(c => c.includes('WA') || c.includes('WHATSAPP') || c.includes('TELP') || c.includes('HP') || c.includes('NO'));
+              
+              // Cari kolom WA / Kontak / HP secara akurat dan abaikan kolom nomor urut (NO, NO., NOMOR, #)
+              colWa = rowUpper.findIndex((c, idx) => {
+                if (idx === colNrp || idx === colNama) return false;
+                if (c === 'NO' || c === 'NO.' || c === 'NOMOR' || c === '#' || c === 'NO URUT' || c === 'NUM') return false;
+                return c.includes('WA') || c.includes('WHATSAPP') || c.includes('TELP') || c.includes('TELEPON') || c.includes('HP') || c.includes('HANDPHONE') || c.includes('KONTAK') || c.includes('PHONE');
+              });
+
+              // Jika belum ketemu, cari kolom lain yang bukan NRP, bukan NAMA, dan bukan kolom NO urut
+              if (colWa === -1) {
+                colWa = rowUpper.findIndex((c, idx) => {
+                  if (idx === colNrp || idx === colNama) return false;
+                  if (c === 'NO' || c === 'NO.' || c === 'NOMOR' || c === '#' || c === 'NO URUT' || c === 'NUM') return false;
+                  return true;
+                });
+              }
               break;
             }
           }
@@ -13140,6 +13131,8 @@
             colNrp = 1;
             colNama = 2;
             colWa = 3;
+          } else if (colWa === -1) {
+            colWa = (colNama !== -1 && colNama + 1 < rawRows[headerRowIdx].length) ? colNama + 1 : 3;
           }
 
           const parsedList = [];
@@ -13151,7 +13144,11 @@
             const nama = String(row[colNama] || '').trim();
             if (!nrp || !nama || nrp === '-' || nrp.startsWith('NO')) continue;
 
-            let noWa = (colWa !== -1 && row[colWa]) ? String(row[colWa]).trim() : '';
+            let noWa = (colWa !== -1 && row[colWa] !== undefined && row[colWa] !== null) ? String(row[colWa]).trim() : '';
+            // Normalisasi nomor WA jika terpotong format number Excel (misal 85251438073)
+            if (/^8\d{8,12}$/.test(noWa)) {
+              noWa = '0' + noWa;
+            }
 
             const isExisting = (state.masterOperators || []).some(o => o.nrp.toUpperCase() === nrp);
 
@@ -13213,12 +13210,13 @@
       if (saveBtn) saveBtn.disabled = (list.length === 0);
     }
 
-    function saveImportedOperators() {
+    async function saveImportedOperators() {
       const list = state.parsedOperatorsImportData;
       if (!list || list.length === 0) return;
 
       let newCount = 0;
       let updateCount = 0;
+      const supaUpsertPayload = [];
 
       list.forEach(item => {
         const existingIdx = state.masterOperators.findIndex(o => o.nrp.toUpperCase() === item.nrp.toUpperCase());
@@ -13228,19 +13226,48 @@
           updateCount++;
         } else {
           state.masterOperators.push({
-            id: 'OPT-' + String(Date.now()).slice(-5) + Math.floor(Math.random() * 100),
+            id: 'OPT-' + item.nrp,
             nrp: item.nrp,
             nama: item.nama,
-            noWa: item.noWa
+            noWa: item.noWa,
+            cluster: 'Selatan',
+            statusAktif: true
           });
           newCount++;
         }
+
+        supaUpsertPayload.push({
+          nrp: item.nrp,
+          nama: item.nama,
+          no_wa: item.noWa,
+          jabatan: 'Operator',
+          status_aktif: true,
+          updated_at: new Date().toISOString()
+        });
       });
+
+      // Simpan ke local storage
+      safeStorage.setItem('SE_MASTER_OPERATORS', JSON.stringify(state.masterOperators));
+
+      // Simpan langsung ke Supabase master_operators jika online
+      if (state.supabaseClient && supaUpsertPayload.length > 0) {
+        try {
+          const chunkSize = 100;
+          for (let i = 0; i < supaUpsertPayload.length; i += chunkSize) {
+            const chunk = supaUpsertPayload.slice(i, i + chunkSize);
+            await state.supabaseClient.from('master_operators').upsert(chunk, { onConflict: 'nrp' });
+          }
+          console.log('[Supabase Sync] Kontak Operator berhasil diupsert ke Supabase:', supaUpsertPayload.length);
+        } catch (supaErr) {
+          console.error('[Supabase Sync Operator Error]', supaErr);
+        }
+      }
 
       toggleModal('modal-import-operators', false);
       showToast(`Sukses import: ${newCount} operator baru ditambahkan, ${updateCount} operator diperbarui!`, 'success');
       if (typeof notifyDataChanged === 'function') notifyDataChanged();
-      else renderMasterOperatorsTable();
+      renderMasterOperatorsTable();
+      if (typeof renderMpKontakProTable === 'function') renderMpKontakProTable();
     }
 
     function initMiningWeekData() {
@@ -13264,7 +13291,28 @@
       if (!modal) return;
       document.getElementById('edit-cluster-lt-name').value = clusterName;
       document.getElementById('cluster-lt-modal-subtitle').textContent = `KGU ${clusterName}`;
-      document.getElementById('edit-cluster-lt-value').value = state.clusterLtAssigned[clusterName] || 'LT2535';
+      document.getElementById('edit-cluster-lt-value').value = (state.clusterLtAssigned && state.clusterLtAssigned[clusterName]) || '';
+      
+      // Render pilihan cepat unit LT murni dari Master Data
+      const container = document.getElementById('quick-pick-lt-units');
+      if (container) {
+        container.innerHTML = '';
+        const ltArmadas = (state.masterArmada || []).filter(a => 
+          (a.typeUnit === 'Lubetruck' || a.tipe === 'Lubetruck' || (a.unit && a.unit.toUpperCase().startsWith('LT'))) &&
+          (a.status === 'Aktif' || !a.status || a.status === 'Operasional') && (a.statusAktif !== false)
+        );
+        ltArmadas.forEach(a => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.onclick = () => appendLtToInput(a.unit);
+          btn.className = 'px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-700 text-[10px] font-mono font-bold transition';
+          btn.textContent = `+ ${a.unit}`;
+          container.appendChild(btn);
+        });
+        if (ltArmadas.length === 0) {
+          container.innerHTML = '<span class="text-[10px] text-slate-400 italic">Tidak ada armada LT di Data Master.</span>';
+        }
+      }
       toggleModal('modal-edit-cluster-lt', true);
     }
 
@@ -13278,24 +13326,43 @@
       }
     }
 
-    function saveClusterLtAssignment(e) {
+    async function saveClusterLtAssignment(e) {
       if (e) e.preventDefault();
       const cluster = document.getElementById('edit-cluster-lt-name')?.value;
       const value = document.getElementById('edit-cluster-lt-value')?.value.trim();
-      if (cluster && value) {
+      if (cluster !== undefined) {
+        if (!state.clusterLtAssigned) state.clusterLtAssigned = {};
         state.clusterLtAssigned[cluster] = value;
+        safeStorage.setItem('SE_CLUSTER_LT', JSON.stringify(state.clusterLtAssigned));
         if (state.supabaseClient) {
-          state.supabaseClient.from('armada_clusters').upsert({
-            cluster_name: cluster,
-            armada_type: 'LT',
-            assigned_units: value,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'cluster_name,armada_type' }).catch(() => {});
+          try {
+            await state.supabaseClient.from('armada_clusters').upsert({
+              cluster_name: cluster,
+              armada_type: 'LT',
+              assigned_units: value,
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'cluster_name,armada_type' });
+          } catch (supaErr) {
+            console.error('[Supabase Upsert Cluster LT Error]', supaErr);
+          }
         }
+        // Sinkronkan cluster unit di Master Armada jika unit tersebut ada
+        const unitsInCluster = value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+        (state.masterArmada || []).forEach(a => {
+          if (a.typeUnit === 'Lubetruck' || (a.unit && a.unit.toUpperCase().startsWith('LT'))) {
+            if (unitsInCluster.includes(a.unit.toUpperCase()) && a.cluster !== cluster) {
+              a.cluster = cluster;
+              if (state.supabaseClient) {
+                state.supabaseClient.from('master_armada').update({ cluster: cluster }).eq('id', a.id).catch(() => {});
+              }
+            }
+          }
+        });
+        safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
         if (typeof notifyDataChanged === 'function') notifyDataChanged();
         toggleModal('modal-edit-cluster-lt', false);
-        showToast(`Daftar armada LT KGU ${cluster} berhasil diperbarui!`, 'success');
-        renderLtScheduleTable();
+        showToast(`Daftar armada LT KGU ${cluster} berhasil diperbarui & tersinkron!`, 'success');
+        if (typeof renderLtScheduleTable === 'function') renderLtScheduleTable();
       }
     }
 
@@ -13304,7 +13371,28 @@
       if (!modal) return;
       document.getElementById('edit-cluster-wt-name').value = clusterName;
       document.getElementById('cluster-wt-modal-subtitle').textContent = `KGU ${clusterName}`;
-      document.getElementById('edit-cluster-wt-value').value = state.clusterWtAssigned[clusterName] || 'WT101';
+      document.getElementById('edit-cluster-wt-value').value = (state.clusterWtAssigned && state.clusterWtAssigned[clusterName]) || '';
+      
+      // Render pilihan cepat unit WT murni dari Master Data
+      const container = document.getElementById('quick-pick-wt-units');
+      if (container) {
+        container.innerHTML = '';
+        const wtArmadas = (state.masterArmada || []).filter(a => 
+          (a.typeUnit === 'Water Truck' || a.tipe === 'Water Truck' || (a.unit && a.unit.toUpperCase().startsWith('WT'))) &&
+          (a.status === 'Aktif' || !a.status || a.status === 'Operasional') && (a.statusAktif !== false)
+        );
+        wtArmadas.forEach(a => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.onclick = () => appendWtToInput(a.unit);
+          btn.className = 'px-2 py-1 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-800 text-[10px] font-mono font-bold border border-cyan-200 transition';
+          btn.textContent = `+ ${a.unit}`;
+          container.appendChild(btn);
+        });
+        if (wtArmadas.length === 0) {
+          container.innerHTML = '<span class="text-[10px] text-slate-400 italic">Tidak ada armada WT di Data Master.</span>';
+        }
+      }
       toggleModal('modal-edit-cluster-wt', true);
     }
 
@@ -13318,24 +13406,43 @@
       }
     }
 
-    function saveClusterWtAssignment(e) {
+    async function saveClusterWtAssignment(e) {
       if (e) e.preventDefault();
       const cluster = document.getElementById('edit-cluster-wt-name')?.value;
       const value = document.getElementById('edit-cluster-wt-value')?.value.trim();
-      if (cluster && value) {
+      if (cluster !== undefined) {
+        if (!state.clusterWtAssigned) state.clusterWtAssigned = {};
         state.clusterWtAssigned[cluster] = value;
+        safeStorage.setItem('SE_CLUSTER_WT', JSON.stringify(state.clusterWtAssigned));
         if (state.supabaseClient) {
-          state.supabaseClient.from('armada_clusters').upsert({
-            cluster_name: cluster,
-            armada_type: 'WT',
-            assigned_units: value,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'cluster_name,armada_type' }).catch(() => {});
+          try {
+            await state.supabaseClient.from('armada_clusters').upsert({
+              cluster_name: cluster,
+              armada_type: 'WT',
+              assigned_units: value,
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'cluster_name,armada_type' });
+          } catch (supaErr) {
+            console.error('[Supabase Upsert Cluster WT Error]', supaErr);
+          }
         }
+        // Sinkronkan cluster unit di Master Armada jika unit tersebut ada
+        const unitsInCluster = value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+        (state.masterArmada || []).forEach(a => {
+          if (a.typeUnit === 'Water Truck' || (a.unit && a.unit.toUpperCase().startsWith('WT'))) {
+            if (unitsInCluster.includes(a.unit.toUpperCase()) && a.cluster !== cluster) {
+              a.cluster = cluster;
+              if (state.supabaseClient) {
+                state.supabaseClient.from('master_armada').update({ cluster: cluster }).eq('id', a.id).catch(() => {});
+              }
+            }
+          }
+        });
+        safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
         if (typeof notifyDataChanged === 'function') notifyDataChanged();
         toggleModal('modal-edit-cluster-wt', false);
-        showToast(`Daftar armada WT KGU ${cluster} berhasil diperbarui!`, 'success');
-        renderWtScheduleTable();
+        showToast(`Daftar armada WT KGU ${cluster} berhasil diperbarui & tersinkron!`, 'success');
+        if (typeof renderWtScheduleTable === 'function') renderWtScheduleTable();
       }
     }
 
@@ -14701,7 +14808,16 @@
 
     function formatWaClean(num) {
       if (!num) return '';
-      return String(num).replace(/[^0-9]/g, '');
+      // Jika nomor telepon ganda (contoh: 08115133611/081251055505), ambil nomor pertama untuk link Chat WA
+      const firstNum = String(num).split(/[/,;]/)[0].trim();
+      let digits = firstNum.replace(/[^0-9]/g, '');
+      if (!digits) return '';
+      if (digits.startsWith('08')) {
+        digits = '62' + digits.slice(1);
+      } else if (digits.startsWith('8')) {
+        digits = '62' + digits;
+      }
+      return digits;
     }
 
     function renderMpKontakProTable() {
@@ -16754,40 +16870,79 @@
       if (typeof renderWtScheduleTable === 'function') renderWtScheduleTable();
     }
 
-    function syncClusterAssignedFromMasterArmada() {
-      if (!state.masterArmada) return;
-      const clusters = ['Selatan', 'Tengah', 'Utara', 'ROM', 'Workshop', 'Outpit Selatan', 'Outpit Tengah', 'Outpit Utara'];
-
-      clusters.forEach(c => {
-        const ltUnits = state.masterArmada
-          .filter(a => a.typeUnit === 'Lubetruck' && (a.cluster || '').toLowerCase() === c.toLowerCase() && a.status === 'Aktif')
-          .map(a => a.unit);
-        if (!state.clusterLtAssigned) state.clusterLtAssigned = {};
-        state.clusterLtAssigned[c] = ltUnits.join(', ');
-
-        const wtUnits = state.masterArmada
-          .filter(a => a.typeUnit === 'Water Truck' && (a.cluster || '').toLowerCase() === c.toLowerCase() && a.status === 'Aktif')
-          .map(a => a.unit);
-        if (!state.clusterWtAssigned) state.clusterWtAssigned = {};
-        state.clusterWtAssigned[c] = wtUnits.join(', ');
-
-        // Sinkronisasi otomatis ke Supabase armada_clusters jika online
-        if (state.supabaseClient) {
-          state.supabaseClient.from('armada_clusters').upsert({
-            cluster_name: c,
-            armada_type: 'LT',
-            assigned_units: state.clusterLtAssigned[c] || '',
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'cluster_name,armada_type' }).catch(() => {});
-
-          state.supabaseClient.from('armada_clusters').upsert({
-            cluster_name: c,
-            armada_type: 'WT',
-            assigned_units: state.clusterWtAssigned[c] || '',
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'cluster_name,armada_type' }).catch(() => {});
+    async function syncClusterAssignedFromMasterArmada(skipSupabaseUpsert = false) {
+      if (!state.masterArmada || !Array.isArray(state.masterArmada)) return;
+      const baseClusters = ['Selatan', 'Tengah', 'Utara', 'ROM', 'Workshop', 'Outpit Selatan', 'Outpit Tengah', 'Outpit Utara'];
+      const allClusters = [...baseClusters];
+      state.masterArmada.forEach(a => {
+        const c = (a.cluster || '').trim();
+        if (c && !allClusters.some(x => x.toLowerCase() === c.toLowerCase())) {
+          allClusters.push(c);
         }
       });
+
+      if (!state.clusterLtAssigned) state.clusterLtAssigned = {};
+      if (!state.clusterWtAssigned) state.clusterWtAssigned = {};
+
+      const upsertPayload = [];
+
+      allClusters.forEach(c => {
+        const cleanC = c.replace(/^KGU\s+/i, '').trim().toLowerCase();
+
+        // Lubetruck Aktif murni dari Master Data
+        const ltUnits = state.masterArmada
+          .filter(a => {
+            const isLt = (a.typeUnit === 'Lubetruck' || a.tipe === 'Lubetruck' || (a.unit && a.unit.toUpperCase().startsWith('LT')));
+            const matchC = (a.cluster || '').replace(/^KGU\s+/i, '').trim().toLowerCase() === cleanC;
+            const isActive = (a.status === 'Aktif' || !a.status || a.status === 'Operasional') && (a.statusAktif !== false);
+            return isLt && matchC && isActive;
+          })
+          .map(a => a.unit)
+          .sort();
+        state.clusterLtAssigned[c] = ltUnits.join(', ');
+
+        // Water Truck Aktif murni dari Master Data
+        const wtUnits = state.masterArmada
+          .filter(a => {
+            const isWt = (a.typeUnit === 'Water Truck' || a.tipe === 'Water Truck' || (a.unit && a.unit.toUpperCase().startsWith('WT')));
+            const matchC = (a.cluster || '').replace(/^KGU\s+/i, '').trim().toLowerCase() === cleanC;
+            const isActive = (a.status === 'Aktif' || !a.status || a.status === 'Operasional') && (a.statusAktif !== false);
+            return isWt && matchC && isActive;
+          })
+          .map(a => a.unit)
+          .sort();
+        state.clusterWtAssigned[c] = wtUnits.join(', ');
+
+        upsertPayload.push({
+          cluster_name: c,
+          armada_type: 'LT',
+          assigned_units: state.clusterLtAssigned[c] || '',
+          updated_at: new Date().toISOString()
+        });
+        upsertPayload.push({
+          cluster_name: c,
+          armada_type: 'WT',
+          assigned_units: state.clusterWtAssigned[c] || '',
+          updated_at: new Date().toISOString()
+        });
+      });
+
+      safeStorage.setItem('SE_CLUSTER_LT', JSON.stringify(state.clusterLtAssigned));
+      safeStorage.setItem('SE_CLUSTER_WT', JSON.stringify(state.clusterWtAssigned));
+
+      // Sinkronisasi otomatis ke Supabase armada_clusters jika online
+      if (!skipSupabaseUpsert && state.supabaseClient && upsertPayload.length > 0) {
+        try {
+          await state.supabaseClient.from('armada_clusters').upsert(upsertPayload, { onConflict: 'cluster_name,armada_type' });
+          console.log('[Supabase Sync] armada_clusters sukses disinkronkan dari master_armada!');
+        } catch (err) {
+          console.error('[Supabase Sync] Gagal upsert armada_clusters:', err);
+        }
+      }
+
+      // Re-render UI jadwal jika sedang aktif
+      if (typeof renderLtScheduleTable === 'function' && state.activeTab === 'schedule-lt') renderLtScheduleTable();
+      if (typeof renderWtScheduleTable === 'function' && state.activeTab === 'schedule-wt') renderWtScheduleTable();
     }
 
     function promptDeleteMasterArmada(id) {
@@ -17303,18 +17458,49 @@
       toggleModal('modal-confirm-bulk-delete-units', true);
     }
 
-    function executeBulkDeleteUnits() {
-      const deleteCount = state.selectedUnitIds.size;
-      const idsToDelete = Array.from(state.selectedUnitIds);
-      state.masterUnits = state.masterUnits.filter(u => !state.selectedUnitIds.has(u.id));
-      if (state.supabaseClient && idsToDelete.length > 0) {
-        state.supabaseClient.from('master_units').delete().in('id', idsToDelete).catch(() => {});
+    async function executeBulkDeleteUnits() {
+      const selected = Array.from(state.selectedUnitIds || []).map(String);
+      if (selected.length === 0) {
+        showToast('Pilih setidaknya satu unit untuk dihapus!', 'warning');
+        return;
       }
+
+      const deleteCount = selected.length;
+      const targets = (state.masterUnits || []).filter(u => selected.includes(String(u.id)) || (u.lambung && selected.includes(String(u.lambung).toUpperCase())));
+      const idsToDelete = targets.map(u => u.id).filter(Boolean);
+      const lambungsToDelete = targets.map(u => u.lambung).filter(Boolean);
+
+      state.masterUnits = (state.masterUnits || []).filter(u => !selected.includes(String(u.id)) && (!u.lambung || !lambungsToDelete.includes(u.lambung)));
+      safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
       state.selectedUnitIds.clear();
+
+      if (state.supabaseClient) {
+        try {
+          const chunkSize = 100;
+          if (idsToDelete.length > 0) {
+            for (let i = 0; i < idsToDelete.length; i += chunkSize) {
+              const chunk = idsToDelete.slice(i, i + chunkSize);
+              await state.supabaseClient.from('master_units').delete().in('id', chunk);
+            }
+          }
+          if (lambungsToDelete.length > 0) {
+            for (let i = 0; i < lambungsToDelete.length; i += chunkSize) {
+              const chunk = lambungsToDelete.slice(i, i + chunkSize);
+              await state.supabaseClient.from('master_units').delete().in('no_lambung', chunk);
+            }
+          }
+          console.log('[Supabase Bulk Delete Master Units OK]', deleteCount, 'unit');
+        } catch (supaErr) {
+          console.error('[Bulk Delete Master Units Supabase Error]', supaErr);
+        }
+      }
+
       toggleModal('modal-confirm-bulk-delete-units', false);
       showToast(`Berhasil menghapus ${deleteCount} unit secara masal dari populasi!`, 'success');
+
+      if (typeof cancelUnitsSelectMode === 'function') cancelUnitsSelectMode();
+      renderMasterUnitsTable();
       if (typeof notifyDataChanged === 'function') notifyDataChanged();
-      else renderMasterUnitsTable();
     }
 
     function openImportUnitsModal() {
@@ -17961,8 +18147,11 @@
       const row = payload.new;
       const oldRow = payload.old;
 
-      if (event === 'DELETE' && oldRow?.id) {
-        state.masterUnits = state.masterUnits.filter(u => u.id !== oldRow.id);
+      if (event === 'DELETE' && (oldRow?.id || oldRow?.no_lambung)) {
+        state.masterUnits = state.masterUnits.filter(u => 
+          (!oldRow.id || u.id !== oldRow.id) && 
+          (!oldRow.no_lambung || u.lambung.toUpperCase() !== oldRow.no_lambung.toUpperCase())
+        );
         safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
         debouncedRefreshUI();
         return;
@@ -18056,6 +18245,9 @@
       }
 
       safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
+      if (typeof syncClusterAssignedFromMasterArmada === 'function') {
+        syncClusterAssignedFromMasterArmada();
+      }
       debouncedRefreshUI();
     }
 
@@ -18363,19 +18555,19 @@
           }));
           safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
           if (typeof syncClusterAssignedFromMasterArmada === 'function') {
-            syncClusterAssignedFromMasterArmada();
+            await syncClusterAssignedFromMasterArmada();
           }
           if (state.masterActiveSection === 'armada' && typeof renderMasterArmadaTable === 'function') {
             renderMasterArmadaTable();
           }
-          console.log('[Supabase Sync] Master Armada tersinkronisasi:', supaArmada.length, 'unit');
+          console.log('[Supabase Sync] Master Armada & Clusters tersinkronisasi:', supaArmada.length, 'unit');
         }
 
         // B. Sinkronisasi Data Master Populasi Unit Lapangan
         const { data: supaUnits, error: unitErr } = await state.supabaseClient
           .from('master_units')
           .select('*');
-        if (!unitErr && Array.isArray(supaUnits) && supaUnits.length > 0) {
+        if (!unitErr && Array.isArray(supaUnits)) {
           state.masterUnits = supaUnits.map(u => ({
             id: u.id,
             lambung: u.no_lambung || u.lambung,
@@ -18412,18 +18604,10 @@
           console.log('[Supabase Sync] Master Operators tersinkronisasi murni:', state.masterOperators.length, 'orang');
         }
 
-        // D. Sinkronisasi Armada Clusters
-        const { data: supaClusters, error: clErr } = await state.supabaseClient
-          .from('armada_clusters')
-          .select('*');
-        if (!clErr && Array.isArray(supaClusters) && supaClusters.length > 0) {
-          supaClusters.forEach(c => {
-            if (c.armada_type === 'LT' && c.cluster_name) state.clusterLtAssigned[c.cluster_name] = c.assigned_units;
-            else if (c.armada_type === 'WT' && c.cluster_name) state.clusterWtAssigned[c.cluster_name] = c.assigned_units;
-          });
-          safeStorage.setItem('SE_CLUSTER_LT', JSON.stringify(state.clusterLtAssigned));
-          safeStorage.setItem('SE_CLUSTER_WT', JSON.stringify(state.clusterWtAssigned));
-          console.log('[Supabase Sync] Armada Clusters tersinkronisasi:', supaClusters.length, 'cluster');
+        // D. Sinkronisasi Armada Clusters (Terkoneksi langsung ke Master Data Armada)
+        if (typeof syncClusterAssignedFromMasterArmada === 'function') {
+          await syncClusterAssignedFromMasterArmada();
+          console.log('[Supabase Sync] Armada Clusters tersinkronisasi murni dari Master Data Armada');
         }
 
         // E. Sinkronisasi Akun Pengguna (Users)
@@ -18830,8 +19014,9 @@
     }
 
     function promptDeleteMasterUnit(id) {
-      state.currentDeletingUnitId = id;
-      const u = state.masterUnits.find(item => item.id === id);
+      const idStr = String(id);
+      state.currentDeletingUnitId = idStr;
+      const u = (state.masterUnits || []).find(item => String(item.id) === idStr || (item.lambung && String(item.lambung).toUpperCase() === idStr.toUpperCase()));
       const descEl = document.getElementById('delete-unit-confirm-desc');
       if (descEl && u) {
         descEl.textContent = `Apakah Anda yakin ingin menghapus unit ${u.lambung} (${u.type}) dari database populasi unit?`;
@@ -18839,17 +19024,36 @@
       toggleModal('modal-confirm-delete-unit', true);
     }
 
-    function executeDeleteMasterUnit() {
-      const id = state.currentDeletingUnitId;
-      if (!id) return;
-      state.masterUnits = state.masterUnits.filter(u => u.id !== id);
+    async function executeDeleteMasterUnit() {
+      const idStr = String(state.currentDeletingUnitId || '');
+      if (!idStr) return;
+      const targetUnit = (state.masterUnits || []).find(u => String(u.id) === idStr || (u.lambung && String(u.lambung).toUpperCase() === idStr.toUpperCase()));
+      const targetId = targetUnit ? targetUnit.id : idStr;
+      const targetLambung = targetUnit ? targetUnit.lambung : idStr;
+
+      state.masterUnits = (state.masterUnits || []).filter(u => String(u.id) !== idStr && (!targetLambung || String(u.lambung).toUpperCase() !== String(targetLambung).toUpperCase()));
+      safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+
       if (state.supabaseClient) {
-        state.supabaseClient.from('master_units').delete().eq('id', id).catch(() => {});
+        try {
+          if (targetId) {
+            await state.supabaseClient.from('master_units').delete().eq('id', targetId);
+          }
+          if (targetLambung) {
+            await state.supabaseClient.from('master_units').delete().eq('no_lambung', targetLambung);
+          }
+          console.log('[Supabase Delete Master Unit OK]', targetId, targetLambung);
+        } catch (supaErr) {
+          console.error('[Supabase Delete Master Unit Error]', supaErr);
+        }
       }
+
+      state.currentDeletingUnitId = null;
       toggleModal('modal-confirm-delete-unit', false);
-      showToast('Unit berhasil dihapus dari populasi!', 'info');
+      showToast(`Unit ${targetLambung || ''} berhasil dihapus dari populasi!`, 'info');
+
+      renderMasterUnitsTable();
       if (typeof notifyDataChanged === 'function') notifyDataChanged();
-      else renderMasterUnitsTable();
     }
 
     function deleteMasterUnit(id) {
