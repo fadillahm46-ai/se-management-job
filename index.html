@@ -7145,7 +7145,7 @@
         if (state.clusterWtAssigned !== undefined) {
           safeStorage.setItem('SE_CLUSTER_WT', JSON.stringify(state.clusterWtAssigned));
         }
-        if (state.masterUnits !== undefined) {
+        if (state.masterArmada !== undefined) {
           safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
           // Sinkronisasi ke Supabase jika online
           if (state.supabaseClient && Array.isArray(state.masterArmada)) {
@@ -7234,7 +7234,7 @@
         if (savedArmada !== null) {
           try {
             const parsedArm = JSON.parse(savedArmada);
-            if (Array.isArray(parsedArm) && parsedArm.length > 0) state.masterArmada = parsedArm;
+            if (Array.isArray(parsedArm)) state.masterArmada = parsedArm;
             else state.masterArmada = [...DEFAULT_MASTER_ARMADA];
           } catch (e) {
             state.masterArmada = [...DEFAULT_MASTER_ARMADA];
@@ -13658,9 +13658,26 @@
 
               let unit = (colUnit !== -1 && row[colUnit]) ? String(row[colUnit]).trim().toUpperCase() : '-';
               let cluster = (colCluster !== -1 && row[colCluster]) ? String(row[colCluster]).trim() : 'Utara';
-              let jenis = (colJenis !== -1 && row[colJenis]) ? String(row[colJenis]).trim().toUpperCase() : defaultJenis;
-              if (nama.toUpperCase().includes('(OM)') || unit.includes('OM')) jenis = 'OM';
-              if (nama.toUpperCase().includes('(WM)') || unit.includes('WM') || unit.includes('WT')) jenis = 'WM';
+              let jenis = defaultJenis;
+
+              if (colJenis !== -1 && row[colJenis]) {
+                const jRaw = String(row[colJenis]).trim().toUpperCase();
+                if (jRaw.includes('OILMAN') || jRaw === 'OM') jenis = 'OM';
+                else if (jRaw.includes('WASHING') || jRaw === 'WM') jenis = 'WM';
+                else if (jRaw.includes('OPERATOR') || jRaw === 'OPT') jenis = 'OPT';
+              } else {
+                jenis = defaultJenis;
+                // Aturan: Jika upload Roster Operator (OPT), semua personil tetap Operator (OPT)
+                // Jangan pernah mengubah menjadi WM hanya karena personil mengoperasikan unit Water Truck (WT)!
+                if (defaultJenis === 'OPT') {
+                  if (nama.toUpperCase().includes('(OM)')) jenis = 'OM';
+                  else if (nama.toUpperCase().includes('(WM)')) jenis = 'WM';
+                } else if (defaultJenis === 'OM') {
+                  if (nama.toUpperCase().includes('(WM)')) jenis = 'WM';
+                } else if (defaultJenis === 'WM') {
+                  if (nama.toUpperCase().includes('(OM)')) jenis = 'OM';
+                }
+              }
               if (!['OPT', 'OM', 'WM'].includes(jenis)) jenis = defaultJenis;
 
               for (const d of dayCols) {
@@ -13830,22 +13847,8 @@
           tbody.innerHTML = '<tr><td colspan="11" class="py-8 text-center text-slate-400 italic"><div class="flex items-center justify-center space-x-2"><svg class="w-4 h-4 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Memuat seluruh data master roster dari Supabase...</span></div></td></tr>';
         }
 
-        // 1. Ambil pemetaan operator untuk unit batangan & cluster
+        // Data unit batangan, unit efektif, cluster, dan personil tersimpan lengkap di master_roster
         const opMap = {};
-        const { data: opsData } = await state.supabaseClient
-          .from('master_operators')
-          .select('nrp, nama, cluster, armada_unit');
-        if (Array.isArray(opsData)) {
-          opsData.forEach(op => {
-            if (op.nrp) {
-              opMap[op.nrp] = {
-                unit: op.armada_unit || '-',
-                cluster: op.cluster || 'Selatan',
-                nama: op.nama || ''
-              };
-            }
-          });
-        }
 
         // 2. Query data master_roster dari Supabase menggunakan Pagination Range (Mengatasi hard limit 1.000 baris PostgREST)
         let allRosterData = [];
@@ -13954,28 +13957,9 @@
       try {
         const periodVal = document.getElementById('roster-upload-period')?.value || '2026-10';
 
-        // 1. Ekstrak data operator untuk master_operators (agar unit batangan & cluster tersimpan)
-        const uniqueOps = new Map();
-        state.parsedRosterData.forEach(r => {
-          const nrp = String(r.nik || r.nrp || '').trim();
-          if (nrp && !uniqueOps.has(nrp)) {
-            uniqueOps.set(nrp, {
-              nrp: nrp,
-              nama: String(r.nama || '').trim(),
-              cluster: String(r.cluster || 'Selatan').trim(),
-              armada_unit: String(r.unit || '-').trim(),
-              jabatan: 'Operator'
-            });
-          }
-        });
-
-        const opList = Array.from(uniqueOps.values());
-        if (opList.length > 0) {
-          const { error: opErr } = await state.supabaseClient
-            .from('master_operators')
-            .upsert(opList, { onConflict: 'nrp' });
-          if (opErr) console.warn('[Supabase Sync Operators Warning]', opErr.message);
-        }
+        // CATATAN PENTING: Data personil di roster adalah Operator Plant (bukan Operator Produksi tambang).
+        // Kontak Produksi (master_operators) HANYA untuk nomor kontak operator produksi tambang.
+        // Operator plant di roster TIDAK dimasukkan ke master_operators agar tidak mencemari Kontak Produksi.
 
         // 2. Jika mode replace (default), bersihkan data bulan/periode ini terlebih dahulu
         if (!append && periodVal) {
@@ -15335,9 +15319,8 @@
       const mp1Select = document.getElementById('ach-mp1-name');
       const mp2Select = document.getElementById('ach-mp2-name');
 
-      // 1. Kumpulkan seluruh data nama Operator OPT dari Master & Roster
+      // 1. Kumpulkan seluruh data nama Operator OPT dari Roster Operator Plant
       const optNames = new Set();
-      (state.masterOperators || []).forEach(o => { if (o.nama) optNames.add(o.nama); });
       (state.masterRoster || []).filter(r => r.jenis === 'OPT').forEach(r => { if (r.nama) optNames.add(r.nama); });
       if (selectedOpt && selectedOpt !== '-') optNames.add(selectedOpt);
 
@@ -16779,17 +16762,30 @@
         const ltUnits = state.masterArmada
           .filter(a => a.typeUnit === 'Lubetruck' && (a.cluster || '').toLowerCase() === c.toLowerCase() && a.status === 'Aktif')
           .map(a => a.unit);
-        if (ltUnits.length > 0) {
-          if (!state.clusterLtAssigned) state.clusterLtAssigned = {};
-          state.clusterLtAssigned[c] = ltUnits.join(', ');
-        }
+        if (!state.clusterLtAssigned) state.clusterLtAssigned = {};
+        state.clusterLtAssigned[c] = ltUnits.join(', ');
 
         const wtUnits = state.masterArmada
           .filter(a => a.typeUnit === 'Water Truck' && (a.cluster || '').toLowerCase() === c.toLowerCase() && a.status === 'Aktif')
           .map(a => a.unit);
-        if (wtUnits.length > 0) {
-          if (!state.clusterWtAssigned) state.clusterWtAssigned = {};
-          state.clusterWtAssigned[c] = wtUnits.join(', ');
+        if (!state.clusterWtAssigned) state.clusterWtAssigned = {};
+        state.clusterWtAssigned[c] = wtUnits.join(', ');
+
+        // Sinkronisasi otomatis ke Supabase armada_clusters jika online
+        if (state.supabaseClient) {
+          state.supabaseClient.from('armada_clusters').upsert({
+            cluster_name: c,
+            armada_type: 'LT',
+            assigned_units: state.clusterLtAssigned[c] || '',
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'cluster_name,armada_type' }).catch(() => {});
+
+          state.supabaseClient.from('armada_clusters').upsert({
+            cluster_name: c,
+            armada_type: 'WT',
+            assigned_units: state.clusterWtAssigned[c] || '',
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'cluster_name,armada_type' }).catch(() => {});
         }
       });
     }
@@ -16804,20 +16800,37 @@
       }
     }
 
-    function executeDeleteMasterArmada() {
+    async function executeDeleteMasterArmada() {
       if (!armadaIdToDelete) return;
-      const a = state.masterArmada.find(item => item.id === armadaIdToDelete);
+      const a = (state.masterArmada || []).find(item => item.id === armadaIdToDelete);
       const unitName = a ? a.unit : 'Armada';
+      const targetId = armadaIdToDelete;
+      const targetUnit = a ? a.unit : null;
 
-      state.masterArmada = state.masterArmada.filter(item => item.id !== armadaIdToDelete);
-      state.selectedArmadaIds.delete(armadaIdToDelete);
+      state.masterArmada = (state.masterArmada || []).filter(item => item.id !== targetId);
+      state.selectedArmadaIds.delete(targetId);
       armadaIdToDelete = null;
 
       safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
       syncClusterAssignedFromMasterArmada();
       saveDatabaseSync();
 
-      showToast(`Armada ${unitName} berhasil dihapus dari sistem!`, 'info');
+      // Hapus permanen dari Supabase master_armada
+      if (state.supabaseClient) {
+        try {
+          if (targetId) {
+            await state.supabaseClient.from('master_armada').delete().eq('id', targetId);
+          }
+          if (targetUnit) {
+            await state.supabaseClient.from('master_armada').delete().eq('unit', targetUnit);
+          }
+          console.log('[Supabase Delete Armada OK]', targetId, targetUnit);
+        } catch (supaErr) {
+          console.error('[Supabase Delete Armada Error]', supaErr);
+        }
+      }
+
+      showToast(`Armada ${unitName} berhasil dihapus dari sistem & database cloud!`, 'info');
       renderMasterArmadaTable();
     }
 
@@ -16882,16 +16895,43 @@
       }
     }
 
-    function executeBulkDeleteArmada() {
-      const total = state.selectedArmadaIds.size;
-      state.masterArmada = state.masterArmada.filter(a => !state.selectedArmadaIds.has(a.id));
+    async function executeBulkDeleteArmada() {
+      const selectedIds = Array.from(state.selectedArmadaIds);
+      const targets = (state.masterArmada || []).filter(a => selectedIds.includes(a.id));
+      const idsToDelete = targets.map(a => a.id).filter(Boolean);
+      const unitsToDelete = targets.map(a => a.unit).filter(Boolean);
+      const total = targets.length || selectedIds.length;
+
+      state.masterArmada = (state.masterArmada || []).filter(a => !state.selectedArmadaIds.has(a.id));
       state.selectedArmadaIds.clear();
 
       safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
       syncClusterAssignedFromMasterArmada();
       saveDatabaseSync();
 
-      showToast(`Berhasil menghapus ${total} data armada!`, 'success');
+      // Hapus permanen dari Supabase master_armada
+      if (state.supabaseClient) {
+        try {
+          const chunkSize = 100;
+          if (idsToDelete.length > 0) {
+            for (let i = 0; i < idsToDelete.length; i += chunkSize) {
+              const chunk = idsToDelete.slice(i, i + chunkSize);
+              await state.supabaseClient.from('master_armada').delete().in('id', chunk);
+            }
+          }
+          if (unitsToDelete.length > 0) {
+            for (let i = 0; i < unitsToDelete.length; i += chunkSize) {
+              const chunk = unitsToDelete.slice(i, i + chunkSize);
+              await state.supabaseClient.from('master_armada').delete().in('unit', chunk);
+            }
+          }
+          console.log('[Supabase Bulk Delete Armada OK]', total, 'unit');
+        } catch (supaErr) {
+          console.error('[Supabase Bulk Delete Armada Error]', supaErr);
+        }
+      }
+
+      showToast(`Berhasil menghapus ${total} data armada dari sistem & cloud!`, 'success');
       cancelArmadaSelectMode();
       renderMasterArmadaTable();
     }
@@ -18312,7 +18352,7 @@
           .from('master_armada')
           .select('*')
           .order('unit');
-        if (!armErr && Array.isArray(supaArmada) && supaArmada.length > 0) {
+        if (!armErr && Array.isArray(supaArmada)) {
           state.masterArmada = supaArmada.map(a => ({
             id: a.id || ('ARM-' + a.unit),
             unit: a.unit,
