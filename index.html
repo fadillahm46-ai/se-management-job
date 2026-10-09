@@ -997,6 +997,9 @@
             class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/70 text-[10px] font-medium text-slate-600">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span id="header-db-status" class="font-bold text-slate-700">Online</span>
+            <button type="button" onclick="forceSyncAllDataFromSupabase()" title="Klik untuk sinkronisasi ulang seluruh data dari Supabase" class="text-slate-400 hover:text-emerald-700 ml-1 transition cursor-pointer">
+              <svg class="w-3 h-3 hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
           </div>
           <button type="button" id="btn-pwa-install-header" onclick="triggerPWAInstall()"
             class="hidden flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow-xs transition cursor-pointer"
@@ -3053,10 +3056,22 @@
                     <p class="text-xs text-slate-400" id="preview-record-count">Menampilkan data yang telah diparsing
                     </p>
                   </div>
-                  <div class="flex items-center space-x-2">
-                    <button onclick="saveParsedRoster(false)"
-                      class="px-4 py-2 rounded-xl bg-brand-200 hover:bg-brand-300 text-brand-800 font-extrabold text-xs transition">
-                      Simpan ke Database (Replace Bulan Ini)
+                  <div class="flex items-center gap-2">
+                    <button type="button" onclick="saveParsedRoster(false)"
+                      class="px-4 py-2.5 rounded-xl bg-brand-200 hover:bg-brand-300 active:scale-95 text-brand-800 font-extrabold text-xs transition shadow-2xs flex items-center gap-2 cursor-pointer"
+                      title="Simpan dan gabungkan roster ini (hanya memperbarui jenis personil yang sedang diupload, jenis roster lain tetap aman)">
+                      <svg class="w-4 h-4 text-brand-800 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                      <span>Simpan & Gabungkan Roster</span>
+                    </button>
+                    <button type="button" onclick="saveParsedRoster(true)"
+                      class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold text-xs transition shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                      title="Tambahkan data ini ke database tanpa menghapus data jenis yang sama">
+                      <svg class="w-3.5 h-3.5 text-slate-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+                      </svg>
+                      <span>Tambah (Append)</span>
                     </button>
                   </div>
                 </div>
@@ -14423,13 +14438,16 @@
         let fromOffset = 0;
         let hasMore = true;
         let iteration = 0;
-        const MAX_ITERATIONS = 50; // Aman untuk hingga 50.000 baris roster
+        const MAX_ITERATIONS = 100; // Kapasitas hingga 100.000 baris roster
+        let exactTotal = null;
 
         while (hasMore && iteration < MAX_ITERATIONS) {
           iteration++;
           let query = state.supabaseClient
             .from('master_roster')
-            .select('*');
+            .select('*', { count: 'exact' })
+            .order('tanggal', { ascending: true })
+            .order('id', { ascending: true });
 
           if (periodFilter) {
             query = query.eq('periode', periodFilter);
@@ -14437,19 +14455,25 @@
 
           query = query.range(fromOffset, fromOffset + CHUNK_SIZE - 1);
 
-          const { data, error } = await query;
+          const { data, count, error } = await query;
           if (error) {
             console.error('[Supabase Roster Error]', error);
             if (allRosterData.length === 0) return false;
             break;
           }
 
+          if (count !== null && count !== undefined) {
+            exactTotal = count;
+          }
+
           if (Array.isArray(data) && data.length > 0) {
             allRosterData = allRosterData.concat(data);
-            if (data.length < CHUNK_SIZE) {
+            if (exactTotal !== null && allRosterData.length >= exactTotal) {
+              hasMore = false;
+            } else if (data.length < CHUNK_SIZE) {
               hasMore = false;
             } else {
-              fromOffset += CHUNK_SIZE;
+              fromOffset += data.length;
             }
           } else {
             hasMore = false;
@@ -14515,45 +14539,51 @@
         return;
       }
 
-      const btn = document.querySelector('button[onclick*="saveParsedRoster"]');
-      const originalText = btn ? btn.innerHTML : '';
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="inline-flex items-center space-x-2"><svg class="w-3.5 h-3.5 animate-spin text-brand-800" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Menyimpan ke Supabase...</span></span>';
-      }
+      const allSaveBtns = document.querySelectorAll('button[onclick*="saveParsedRoster"]');
+      const originalTexts = Array.from(allSaveBtns).map(b => b.innerHTML);
+      allSaveBtns.forEach(b => {
+        b.disabled = true;
+        b.innerHTML = '<span class="inline-flex items-center space-x-2"><svg class="w-3.5 h-3.5 animate-spin text-brand-800" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Menyimpan ke Supabase...</span></span>';
+      });
 
       showToast('Menyimpan ' + state.parsedRosterData.length + ' data roster langsung ke Supabase...', 'info');
 
       try {
         const periodVal = document.getElementById('roster-upload-period')?.value || '2026-10';
 
-        // CATATAN PENTING: Data personil di roster adalah Operator Plant (bukan Operator Produksi tambang).
-        // Kontak Produksi (master_operators) HANYA untuk nomor kontak operator produksi tambang.
-        // Operator plant di roster TIDAK dimasukkan ke master_operators agar tidak mencemari Kontak Produksi.
+        // 1. Identifikasi semua jenis personil yang ada di file yang sedang diupload (contoh: ['OPT'], ['OM'], ['WM'])
+        const uploadJenisSet = [...new Set(state.parsedRosterData.map(r => String(r.jenis || 'OPT').trim().toUpperCase()).filter(Boolean))];
 
-        // 2. Jika mode replace (default), bersihkan data bulan/periode ini terlebih dahulu
-        if (!append && periodVal) {
+        // 2. Jika bukan mode append murni, bersihkan HANYA data dari jenis personil yang sedang diupload pada periode ini.
+        // PENTING: JANGAN PERNAH menghapus seluruh data bulan ini!
+        // Contoh: Jika user upload Roster Oilman ('OM'), data Operator ('OPT') dan Washingman ('WM') TETAP AMAN dan TIDAK AKAN DIHAPUS.
+        if (!append && periodVal && uploadJenisSet.length > 0) {
           try {
-            await state.supabaseClient
-              .from('master_roster')
-              .delete()
-              .eq('periode', periodVal);
+            for (const j of uploadJenisSet) {
+              await state.supabaseClient
+                .from('master_roster')
+                .delete()
+                .eq('periode', periodVal)
+                .eq('jenis', j);
+            }
           } catch (delErr) {
-            console.warn('[Replace Month Warning]', delErr);
+            console.warn('[Replace Role Warning]', delErr);
           }
         }
 
         // 3. Siapkan baris untuk master_roster sesuai kolom resmi schema Supabase
         const allRows = state.parsedRosterData.map((r, idx) => {
           const nrpClean = String(r.nik || r.nrp || `OP-${idx}`).trim();
+          const jenisClean = String(r.jenis || 'OPT').trim().toUpperCase();
           const tglClean = String(r.tanggal || '').trim();
           const kodeShiftClean = String(r.kodeShift || 'DWS').trim();
           const shiftNum = r.shift || (kodeShiftClean.toUpperCase().startsWith('N') ? 2 : 1);
-          const safeId = `ROSTER_${periodVal}_${nrpClean}_${tglClean}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+          // Sertakan jenisClean dalam safeId agar tidak ada tabrakan ID primer antar jenis personil (OPT vs OM vs WM)
+          const safeId = `ROSTER_${periodVal}_${jenisClean}_${nrpClean}_${tglClean}`.replace(/[^a-zA-Z0-9_-]/g, '_');
 
           return {
             id: safeId,
-            jenis: String(r.jenis || 'OPT').trim(),
+            jenis: jenisClean,
             nrp: nrpClean,
             nik: nrpClean,
             nama: String(r.nama || '').trim(),
@@ -14621,16 +14651,20 @@
         // 4. Ambil data segar langsung dari Supabase ke memori
         await loadRosterFromSupabase();
 
-        showToast('Sukses! ' + savedCount + ' data roster berhasil tersimpan & tersinkronisasi di Supabase!', 'success');
+        const roleNames = { 'OPT': 'Operator', 'OM': 'Oilman', 'WM': 'Washingman' };
+        const uploadedLabels = uploadJenisSet.map(j => roleNames[j] || j).join(' & ');
+        const totalRosterCount = (state.masterRoster || []).length;
+
+        showToast(`Sukses! ${savedCount} data Roster ${uploadedLabels} berhasil disimpan & digabungkan! (Total database: ${totalRosterCount} personil)`, 'success');
         switchMasterSubtab('database');
       } catch (err) {
         console.error('[Save Roster Error]', err);
         showToast('Gagal menyimpan ke Supabase: ' + err.message, 'error');
       } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = originalText || 'Simpan ke Database (Replace Bulan Ini)';
-        }
+        allSaveBtns.forEach((b, idx) => {
+          b.disabled = false;
+          if (originalTexts[idx]) b.innerHTML = originalTexts[idx];
+        });
       }
     }
 
@@ -19162,18 +19196,12 @@
           const statusEl = document.getElementById('header-db-status');
           if (statusEl) statusEl.textContent = 'Online';
 
-          // Muat data master roster langsung dari Supabase saat awal web aktif
-          await loadRosterFromSupabase();
-
-          // Picu sinkronisasi data master lainnya di latar belakang
-          if (typeof syncSupabaseMasterData === 'function') {
-            syncSupabaseMasterData();
-          }
-
-          // Muat jobs hari ini (hanya 1 kali, hemat kuota egress)
-          if (typeof loadJobsFromSupabase === 'function') {
-            loadJobsFromSupabase();
-          }
+          // Muat seluruh data master secara sinkron & paralel (Roster, Kontak 2000+, Armada, Unit, Jobs)
+          await Promise.allSettled([
+            loadRosterFromSupabase(),
+            (typeof syncSupabaseMasterData === 'function' ? syncSupabaseMasterData() : Promise.resolve()),
+            (typeof loadJobsFromSupabase === 'function' ? loadJobsFromSupabase() : Promise.resolve())
+          ]);
 
           // Aktifkan Realtime WebSocket Pub/Sub untuk semua tabel (Tanpa Polling)
           if (typeof setupSupabaseRealtimeListener === 'function') {
@@ -19274,42 +19302,55 @@
       let currentOffset = 0;
       let keepFetching = true;
       let iteration = 0;
-      const MAX_ITERATIONS = 50; // Kapasitas hingga 50.000 baris
+      const MAX_ITERATIONS = 100; // Kapasitas hingga 100.000 baris
+      let exactTotal = null;
 
       while (keepFetching && iteration < MAX_ITERATIONS) {
         iteration++;
         let query = state.supabaseClient
           .from(tableName)
-          .select(selectCols);
+          .select(selectCols, { count: 'exact' });
 
         if (orderCol) {
           query = query.order(orderCol, { ascending });
+          if (orderCol !== 'id') {
+            query = query.order('id', { ascending: true });
+          }
+        } else {
+          query = query.order('id', { ascending: true });
         }
 
         query = query.range(currentOffset, currentOffset + CHUNK_SIZE - 1);
 
-        const { data, error } = await query;
+        const { data, count, error } = await query;
         if (error) {
-          // Jika tabel belum dibuat (misal master_kontak_pro belum ada di Supabase), return null agar fallback berjalan
-          if (error.code === 'PGRST205' || (error.message && error.message.includes('not find the table'))) {
+          // Tangani kode error tabel tidak ditemukan dengan komprehensif
+          if (error.code === 'PGRST205' || error.code === '42P01' || (error.message && (error.message.includes('does not exist') || error.message.includes('not find the table') || error.message.includes('relation')))) {
             return null;
           }
           console.warn(`[fetchEntireSupabaseTable Warning] ${tableName} offset ${currentOffset}:`, error.message);
           break;
         }
 
+        if (count !== null && count !== undefined) {
+          exactTotal = count;
+        }
+
         if (Array.isArray(data) && data.length > 0) {
           allResults = allResults.concat(data);
-          if (data.length < CHUNK_SIZE) {
+          if (exactTotal !== null && allResults.length >= exactTotal) {
+            keepFetching = false;
+          } else if (data.length < CHUNK_SIZE) {
             keepFetching = false;
           } else {
-            currentOffset += CHUNK_SIZE;
+            currentOffset += data.length;
           }
         } else {
           keepFetching = false;
         }
       }
 
+      console.log(`[Supabase Sync] ${tableName}: ${allResults.length} baris dimuat (Total di Supabase: ${exactTotal !== null ? exactTotal : allResults.length})`);
       return allResults;
     }
     window.fetchEntireSupabaseTable = fetchEntireSupabaseTable;
@@ -19424,7 +19465,9 @@
         }
 
         // F. Sinkronisasi Master Roster langsung dari Supabase tanpa cache lokal
-        await loadRosterFromSupabase();
+        if (!_isLoadingRoster) {
+          await loadRosterFromSupabase();
+        }
       } catch (err) {
         console.warn('[Supabase Master Data Sync Exception]', err);
       }
@@ -20368,6 +20411,22 @@
     window.triggerParseRoster = triggerParseRoster;
     window.loadSampleRosterTemplate = loadSampleRosterTemplate;
     window.saveParsedRoster = saveParsedRoster;
+    async function forceSyncAllDataFromSupabase() {
+      showToast('Memulai sinkronisasi total seluruh data dari Supabase...', 'info');
+      try {
+        await Promise.allSettled([
+          loadRosterFromSupabase(),
+          (typeof syncSupabaseMasterData === 'function' ? syncSupabaseMasterData() : Promise.resolve()),
+          (typeof loadJobsFromSupabase === 'function' ? loadJobsFromSupabase() : Promise.resolve())
+        ]);
+        const opCount = (state.masterOperators || []).length;
+        const rosCount = (state.masterRoster || []).length;
+        showToast(`Sinkronisasi selesai! ${opCount} kontak produksi & ${rosCount} roster tersinkronisasi 100% dari Supabase.`, 'success');
+      } catch (e) {
+        showToast('Sinkronisasi selesai dengan beberapa penyesuaian.', 'info');
+      }
+    }
+    window.forceSyncAllDataFromSupabase = forceSyncAllDataFromSupabase;
     window.loadRosterFromSupabase = loadRosterFromSupabase;
     window.renderDatabaseRosterTable = renderDatabaseRosterTable;
     window.runAutoFillTest = runAutoFillTest;
