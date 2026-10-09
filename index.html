@@ -3447,8 +3447,15 @@
                   serta kredensial</p>
               </div>
               <div class="flex items-center space-x-2">
+                <button type="button" onclick="openImportAccountsModal()"
+                  class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer">
+                  <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                  </svg>
+                  <span>Import Akun (.xlsx)</span>
+                </button>
                 <button onclick="openAddAccountModal()"
-                  class="px-4 py-2 rounded-xl bg-brand-200 hover:bg-brand-300 text-brand-800 font-bold text-xs flex items-center space-x-1.5 transition">
+                  class="px-4 py-2 rounded-xl bg-brand-200 hover:bg-brand-300 text-brand-800 font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
@@ -7021,6 +7028,90 @@
           Simpan ke Database Operator
         </button>
         <button type="button" onclick="toggleModal('modal-import-operators', false)"
+          class="px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition cursor-pointer">
+          Batal
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL: IMPORT DATA AKUN PENGGUNA -->
+  <div id="modal-import-accounts"
+    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900">Import Akun Pengguna</h3>
+          <p class="text-xs text-slate-400">Unggah berkas Excel (.xlsx / .csv) untuk mendaftarkan akun pegawai dan hak akses login secara masal</p>
+        </div>
+        <button type="button" onclick="toggleModal('modal-import-accounts', false)"
+          class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Download Template Link -->
+      <div class="flex items-center justify-between p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs">
+        <div>
+          <span class="font-extrabold text-emerald-950 block">Template Excel Akun Pengguna</span>
+          <span class="text-emerald-700 text-[10.5px]">Format resmi: NO, NRP, NAMA, ROLE, JABATAN, PASSWORD, NO WA</span>
+        </div>
+        <button type="button" onclick="downloadMasterAccountsTemplate()"
+          class="px-3 py-1.5 rounded-xl bg-white text-emerald-800 border border-emerald-300 font-bold text-xs hover:bg-emerald-100/60 transition cursor-pointer shadow-2xs">
+          Unduh Template (.xlsx)
+        </button>
+      </div>
+
+      <!-- Drag & Drop Zone -->
+      <div id="accounts-import-drop-zone" ondragover="handleAccountsDragOver(event)"
+        ondragleave="handleAccountsDragLeave(event)" ondrop="handleAccountsDropFile(event)"
+        onclick="document.getElementById('input-accounts-import-file').click()"
+        class="border-2 border-dashed border-slate-200 hover:border-emerald-400 rounded-2xl p-6 text-center transition cursor-pointer bg-slate-50/50">
+        <input type="file" id="input-accounts-import-file" accept=".xlsx,.xls,.csv"
+          onchange="handleAccountsImportFile(event)" class="hidden">
+        <svg class="w-10 h-10 mx-auto text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+        </svg>
+        <p class="text-xs font-bold text-slate-700 mt-2">Pilih File Excel / Tarik Berkas ke Sini</p>
+        <p class="text-[10px] text-slate-400 mt-1" id="accounts-import-file-label">Mendukung format .xlsx, .xls, atau .csv (Maksimal 10MB)</p>
+      </div>
+
+      <!-- Preview Table Container -->
+      <div id="accounts-import-preview-box" class="hidden space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-extrabold text-slate-800" id="accounts-import-preview-count">Pratinjau Data Akun:</span>
+          <span class="text-[10px] text-slate-400">Password default: '123456' jika dikosongkan</span>
+        </div>
+        <div class="max-h-52 overflow-y-auto rounded-xl border border-slate-200">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-400 uppercase text-[9px] sticky top-0 border-b border-slate-100 font-bold">
+              <tr>
+                <th class="py-2 px-3 text-center">No</th>
+                <th class="py-2 px-3">NRP / NIK</th>
+                <th class="py-2 px-3">Nama Lengkap</th>
+                <th class="py-2 px-3">Role Akses</th>
+                <th class="py-2 px-3">Jabatan</th>
+                <th class="py-2 px-3">Password</th>
+                <th class="py-2 px-3 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody id="accounts-import-preview-tbody" class="divide-y divide-slate-100 text-slate-700 font-medium">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="pt-2 flex items-center space-x-2 border-t border-slate-100">
+        <button type="button" id="btn-save-imported-accounts" onclick="saveImportedAccounts()" disabled
+          class="flex-1 py-3 rounded-2xl bg-brand-200 hover:bg-brand-300 disabled:opacity-50 disabled:cursor-not-allowed text-brand-800 font-extrabold uppercase tracking-wider text-xs transition cursor-pointer">
+          Simpan Semua Akun ke Database
+        </button>
+        <button type="button" onclick="toggleModal('modal-import-accounts', false)"
           class="px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition cursor-pointer">
           Batal
         </button>
@@ -13268,13 +13359,24 @@
       // Simpan ke local storage
       safeStorage.setItem('SE_MASTER_OPERATORS', JSON.stringify(state.masterOperators));
 
-      // Simpan langsung ke Supabase master_operators jika online
+      // Simpan langsung ke Supabase (master_kontak_pro & legacy master_operators) jika online
       if (state.supabaseClient && supaUpsertPayload.length > 0) {
         try {
+          const cleanPayload = supaUpsertPayload.map(item => ({
+            nrp: item.nrp,
+            nama: item.nama,
+            no_wa: item.no_wa,
+            updated_at: new Date().toISOString()
+          }));
           const chunkSize = 100;
-          for (let i = 0; i < supaUpsertPayload.length; i += chunkSize) {
-            const chunk = supaUpsertPayload.slice(i, i + chunkSize);
-            await state.supabaseClient.from('master_operators').upsert(chunk, { onConflict: 'nrp' });
+          for (let i = 0; i < cleanPayload.length; i += chunkSize) {
+            const chunk = cleanPayload.slice(i, i + chunkSize);
+            // 1. Coba upsert ke master_kontak_pro
+            const resPro = await state.supabaseClient.from('master_kontak_pro').upsert(chunk, { onConflict: 'nrp' });
+            if (resPro.error) {
+              // 2. Fallback upsert ke master_operators jika master_kontak_pro belum dibuat di SQL
+              await state.supabaseClient.from('master_operators').upsert(chunk, { onConflict: 'nrp' });
+            }
           }
           console.log('[Supabase Sync] Kontak Operator berhasil diupsert ke Supabase:', supaUpsertPayload.length);
         } catch (supaErr) {
@@ -18526,7 +18628,8 @@
         .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, handleRealtimeJobChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'order_requests' }, handleRealtimeOrderChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_units' }, handleRealtimeUnitChange)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'master_operators' }, handleRealtimeOperatorChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'master_kontak_pro' }, handleRealtimeOperatorChange)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'master_operators' }, handleRealtimeOperatorChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_armada' }, handleRealtimeArmadaChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'armada_clusters' }, handleRealtimeClusterChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, handleRealtimeUserChange)
@@ -18716,24 +18819,46 @@
           console.log('[Supabase Sync] Populasi Unit tersinkronisasi:', supaUnits.length, 'unit');
         }
 
-        // C. Sinkronisasi Data Master Operator Produksi (Murni Kontak Produksi)
-        const { data: supaOps, error: opErr } = await state.supabaseClient
-          .from('master_operators')
-          .select('*');
-        if (!opErr && Array.isArray(supaOps)) {
+        // C. Sinkronisasi Data Master Kontak Produksi (Prioritas master_kontak_pro, fallback master_operators)
+        let supaOps = null;
+        try {
+          // 1. Coba baca dari tabel master_kontak_pro terlebih dahulu
+          const { data: proData, error: proErr } = await state.supabaseClient
+            .from('master_kontak_pro')
+            .select('id, nrp, nama, no_wa')
+            .order('nama');
+          
+          if (!proErr && Array.isArray(proData) && proData.length > 0) {
+            supaOps = proData;
+          } else {
+            // 2. Fallback baca dari master_operators jika master_kontak_pro belum dibuat / masih kosong
+            const { data: legacyData, error: legacyErr } = await state.supabaseClient
+              .from('master_operators')
+              .select('id, nrp, nama, no_wa')
+              .order('nama');
+            if (!legacyErr && Array.isArray(legacyData)) {
+              supaOps = legacyData;
+            }
+          }
+        } catch (fetchErr) {
+          console.warn('[Supabase Sync Kontak Pro Error]', fetchErr);
+        }
+
+        if (Array.isArray(supaOps) && supaOps.length > 0) {
           state.masterOperators = supaOps.map(o => ({
             id: String(o.id || ('OPT-' + o.nrp)),
-            nrp: o.nrp,
-            nama: o.nama,
-            noWa: o.no_wa || o.noWa || '',
-            cluster: o.cluster || 'Selatan',
-            statusAktif: (o.status_aktif !== false)
+            nrp: String(o.nrp || '').trim(),
+            nama: String(o.nama || '').trim(),
+            noWa: o.no_wa || o.noWa || ''
           }));
           safeStorage.setItem('SE_MASTER_OPERATORS', JSON.stringify(state.masterOperators));
-          if (state.masterActiveSection === 'operators' && typeof renderMasterOperatorsTable === 'function') {
+          if (typeof renderMasterOperatorsTable === 'function') {
             renderMasterOperatorsTable();
           }
-          console.log('[Supabase Sync] Master Operators tersinkronisasi murni:', state.masterOperators.length, 'orang');
+          if (typeof renderMpKontakProTable === 'function') {
+            renderMpKontakProTable();
+          }
+          console.log('[Supabase Sync] Kontak Produksi tersinkronisasi:', state.masterOperators.length, 'kontak');
         }
 
         // D. Sinkronisasi Armada Clusters (Terkoneksi langsung ke Master Data Armada)
@@ -19196,6 +19321,314 @@
       promptDeleteMasterUnit(id);
     }
 
+
+    // ========================================================================
+    // LOGIKA IMPORT AKUN PENGGUNA VIA EXCEL
+    // ========================================================================
+    function openImportAccountsModal() {
+      if (state.currentUser?.role !== 'admin') {
+        showToast('Akses ditolak: Hanya Admin yang dapat mengimpor Akun Pengguna!', 'error');
+        return;
+      }
+      state.parsedAccountsImportData = [];
+      const fileInput = document.getElementById('input-accounts-import-file');
+      if (fileInput) fileInput.value = '';
+      const fileLabel = document.getElementById('accounts-import-file-label');
+      if (fileLabel) fileLabel.textContent = 'Mendukung format .xlsx, .xls, atau .csv (Maksimal 10MB)';
+      const previewBox = document.getElementById('accounts-import-preview-box');
+      if (previewBox) previewBox.classList.add('hidden');
+      const saveBtn = document.getElementById('btn-save-imported-accounts');
+      if (saveBtn) saveBtn.disabled = true;
+
+      toggleModal('modal-import-accounts', true);
+    }
+
+    function downloadMasterAccountsTemplate() {
+      showToast('Membuat template Excel Akun Pengguna...', 'info');
+      const headers = ['NO', 'NRP', 'NAMA', 'ROLE', 'JABATAN', 'PASSWORD', 'NO WA'];
+      const sampleData = [
+        ['1', 'ADMIN01', 'Admin Operasional', 'admin', 'Admin / Planner', 'admin123', '081234567891'],
+        ['2', 'BC01', 'Operator Base Control', 'basecontrol', 'Radio Room / Dispatcher', 'bsc123', '081234567892'],
+        ['3', 'USER01', 'User Lapangan', 'user', 'Foreman / Pengawas Plant', 'user123', '081234567893'],
+        ['4', 'OM1001', 'Budi Santoso', 'oilman', 'Crew Lube Truck', 'om123', '081234567894'],
+        ['5', 'WM2001', 'Dedi Prasetyo', 'washingman', 'Crew Water Truck', 'wm123', '081234567895']
+      ];
+
+      let excelBlob = null;
+      if (typeof XLSX !== 'undefined') {
+        try {
+          const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleData]);
+          ws['!cols'] = [{ wch: 6 }, { wch: 14 }, { wch: 24 }, { wch: 16 }, { wch: 26 }, { wch: 16 }, { wch: 18 }];
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, 'AKUN_PENGGUNA');
+          const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+          excelBlob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        } catch (err) {
+          console.warn('[Accounts Template] SheetJS build error:', err);
+        }
+      }
+
+      const csvContent = [headers, ...sampleData].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+      triggerUniversalDownload({
+        fileName: 'TEMPLATE_AKUN_PEGAWAI_SE_MANAGEMENT.xlsx',
+        staticPath: './TEMPLATE_AKUN_PEGAWAI_SE_MANAGEMENT.xlsx',
+        blobData: excelBlob,
+        csvContent: csvContent
+      });
+      showToast('Template Excel Akun Pengguna berhasil diunduh!', 'success');
+    }
+
+    function handleAccountsDragOver(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      const dropZone = document.getElementById('accounts-import-drop-zone');
+      if (dropZone) dropZone.classList.add('border-emerald-500', 'bg-emerald-50/50');
+    }
+
+    function handleAccountsDragLeave(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      const dropZone = document.getElementById('accounts-import-drop-zone');
+      if (dropZone) dropZone.classList.remove('border-emerald-500', 'bg-emerald-50/50');
+    }
+
+    function handleAccountsDropFile(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      const dropZone = document.getElementById('accounts-import-drop-zone');
+      if (dropZone) dropZone.classList.remove('border-emerald-500', 'bg-emerald-50/50');
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) processAccountsFile(files[0]);
+    }
+
+    function handleAccountsImportFile(e) {
+      const files = e.target.files;
+      if (files && files.length > 0) processAccountsFile(files[0]);
+    }
+
+    function processAccountsFile(file) {
+      const fileLabel = document.getElementById('accounts-import-file-label');
+      if (fileLabel) fileLabel.textContent = `File terpilih: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const data = e.target.result;
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const firstSheet = workbook.SheetNames[0];
+          const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], { header: 1, defval: '' });
+
+          if (!rawRows || rawRows.length < 2) {
+            showToast('Format Excel tidak sesuai atau data kosong!', 'warning');
+            return;
+          }
+
+          let headerRowIdx = -1;
+          let colNrp = -1;
+          let colNama = -1;
+          let colRole = -1;
+          let colJabatan = -1;
+          let colPass = -1;
+          let colWa = -1;
+
+          for (let r = 0; r < Math.min(rawRows.length, 5); r++) {
+            const rowUpper = rawRows[r].map(c => String(c).trim().toUpperCase());
+            const nrpIdx = rowUpper.findIndex(c => c.includes('NRP') || c.includes('NIK') || c.includes('USERNAME'));
+            const namaIdx = rowUpper.findIndex(c => c.includes('NAMA'));
+            if (nrpIdx !== -1 && namaIdx !== -1) {
+              headerRowIdx = r;
+              colNrp = nrpIdx;
+              colNama = namaIdx;
+              colRole = rowUpper.findIndex(c => c.includes('ROLE') || c.includes('HAK AKSES') || c.includes('AKSES'));
+              colJabatan = rowUpper.findIndex(c => c.includes('JABATAN') || c.includes('POSISI'));
+              colPass = rowUpper.findIndex(c => c.includes('PASSWORD') || c.includes('PASS') || c.includes('PIN') || c.includes('SANDI'));
+              colWa = rowUpper.findIndex((c, idx) => {
+                if (idx === colNrp || idx === colNama || idx === colRole || idx === colJabatan || idx === colPass) return false;
+                if (c === 'NO' || c === 'NO.' || c === 'NOMOR' || c === '#' || c === 'NO URUT') return false;
+                return c.includes('WA') || c.includes('WHATSAPP') || c.includes('TELP') || c.includes('HP') || c.includes('KONTAK');
+              });
+              break;
+            }
+          }
+
+          if (headerRowIdx === -1) {
+            headerRowIdx = 0;
+            colNrp = 1;
+            colNama = 2;
+            colRole = 3;
+            colJabatan = 4;
+            colPass = 5;
+            colWa = 6;
+          }
+
+          const parsedList = [];
+          for (let r = headerRowIdx + 1; r < rawRows.length; r++) {
+            const row = rawRows[r];
+            if (!row || row.length === 0) continue;
+
+            const nrp = String(row[colNrp] || '').trim().toUpperCase();
+            const nama = String(row[colNama] || '').trim();
+            if (!nrp || !nama || nrp === '-' || nrp.startsWith('NO')) continue;
+
+            let rawRole = (colRole !== -1 && row[colRole]) ? String(row[colRole]).trim().toLowerCase() : 'user';
+            let role = 'user';
+            if (rawRole.includes('admin') || rawRole.includes('planner')) role = 'admin';
+            else if (rawRole.includes('base') || rawRole.includes('bc') || rawRole.includes('dispatcher')) role = 'basecontrol';
+            else if (rawRole.includes('oil') || rawRole.includes('lube') || rawRole.includes('lt')) role = 'oilman';
+            else if (rawRole.includes('wash') || rawRole.includes('cuci') || rawRole.includes('wt')) role = 'washingman';
+            else role = 'user';
+
+            let jabatan = (colJabatan !== -1 && row[colJabatan]) ? String(row[colJabatan]).trim() : '';
+            if (!jabatan) {
+              if (role === 'admin') jabatan = 'Admin / Planner';
+              else if (role === 'basecontrol') role = 'basecontrol', jabatan = 'Radio Room / Dispatcher';
+              else if (role === 'oilman') jabatan = 'Crew Lube Truck';
+              else if (role === 'washingman') jabatan = 'Crew Water Truck';
+              else jabatan = 'User Pemohon / Driver';
+            }
+
+            let password = (colPass !== -1 && row[colPass]) ? String(row[colPass]).trim() : '';
+            if (!password) password = '123456';
+
+            let noWa = (colWa !== -1 && row[colWa] !== undefined && row[colWa] !== null) ? String(row[colWa]).trim() : '';
+            if (/^8\d{8,12}$/.test(noWa)) noWa = '0' + noWa;
+
+            const isExisting = (state.masterUsers || []).some(u => (u.nrp || '').toUpperCase() === nrp);
+
+            parsedList.push({
+              nrp,
+              nama,
+              role,
+              jabatan,
+              password,
+              noWa,
+              statusAktif: true,
+              isUpdate: isExisting
+            });
+          }
+
+          if (parsedList.length === 0) {
+            showToast('Tidak ada data akun yang valid dalam file!', 'warning');
+            return;
+          }
+
+          state.parsedAccountsImportData = parsedList;
+          renderAccountsImportPreview();
+          showToast(`Berhasil membaca ${parsedList.length} data akun dari file Excel!`, 'success');
+        } catch (err) {
+          console.error(err);
+          showToast('Gagal memproses file Excel!', 'error');
+        }
+      };
+      reader.readAsBinaryString(file);
+    }
+
+    function renderAccountsImportPreview() {
+      const previewBox = document.getElementById('accounts-import-preview-box');
+      const countEl = document.getElementById('accounts-import-preview-count');
+      const tbody = document.getElementById('accounts-import-preview-tbody');
+      const saveBtn = document.getElementById('btn-save-imported-accounts');
+
+      if (!previewBox || !tbody) return;
+
+      const list = state.parsedAccountsImportData || [];
+      if (countEl) countEl.textContent = `Pratinjau Data Akun (${list.length} akun siap disimpan):`;
+
+      tbody.innerHTML = '';
+      list.forEach((acc, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition font-medium';
+        tr.innerHTML = `
+          <td class="py-2 px-3 text-center font-mono text-[11px] text-slate-400">${idx + 1}</td>
+          <td class="py-2 px-3 font-mono font-black text-slate-900">${acc.nrp}</td>
+          <td class="py-2 px-3 font-bold text-slate-900">${acc.nama}</td>
+          <td class="py-2 px-3">
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold ${
+              acc.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+              acc.role === 'basecontrol' ? 'bg-amber-100 text-amber-800' :
+              acc.role === 'oilman' ? 'bg-emerald-100 text-emerald-800' :
+              acc.role === 'washingman' ? 'bg-cyan-100 text-cyan-800' : 'bg-slate-100 text-slate-800'
+            }">${acc.role}</span>
+          </td>
+          <td class="py-2 px-3 text-slate-600">${acc.jabatan}</td>
+          <td class="py-2 px-3 font-mono text-slate-500 text-[11px]">${acc.password}</td>
+          <td class="py-2 px-3 text-center">
+            <span class="inline-block px-2 py-0.2 rounded-full text-[9px] font-bold ${acc.isUpdate ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'}">
+              ${acc.isUpdate ? 'Update Akun' : '+ Akun Baru'}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      previewBox.classList.remove('hidden');
+      if (saveBtn) saveBtn.disabled = (list.length === 0);
+    }
+
+    async function saveImportedAccounts() {
+      const list = state.parsedAccountsImportData;
+      if (!list || list.length === 0) return;
+
+      let newCount = 0;
+      let updateCount = 0;
+      const supaUpsertPayload = [];
+
+      list.forEach(item => {
+        const existingIdx = (state.masterUsers || []).findIndex(u => (u.nrp || '').toUpperCase() === item.nrp.toUpperCase());
+        if (existingIdx !== -1) {
+          state.masterUsers[existingIdx].nama = item.nama;
+          state.masterUsers[existingIdx].role = item.role;
+          state.masterUsers[existingIdx].jabatan = item.jabatan;
+          state.masterUsers[existingIdx].password = item.password;
+          if (item.noWa) state.masterUsers[existingIdx].noWa = item.noWa;
+          state.masterUsers[existingIdx].statusAktif = true;
+          updateCount++;
+        } else {
+          state.masterUsers.push({
+            id: 'USR-' + item.nrp,
+            nrp: item.nrp,
+            nama: item.nama,
+            role: item.role,
+            jabatan: item.jabatan,
+            password: item.password,
+            noWa: item.noWa,
+            statusAktif: true
+          });
+          newCount++;
+        }
+
+        supaUpsertPayload.push({
+          nrp: item.nrp,
+          nama: item.nama,
+          role: item.role,
+          jabatan: item.jabatan,
+          password: item.password,
+          no_wa: item.noWa || null,
+          status_aktif: true,
+          updated_at: new Date().toISOString()
+        });
+      });
+
+      // Simpan ke local storage
+      safeStorage.setItem('SE_MASTER_USERS', JSON.stringify(state.masterUsers));
+
+      // Simpan langsung ke Supabase tabel users jika online
+      if (state.supabaseClient && supaUpsertPayload.length > 0) {
+        try {
+          const chunkSize = 100;
+          for (let i = 0; i < supaUpsertPayload.length; i += chunkSize) {
+            const chunk = supaUpsertPayload.slice(i, i + chunkSize);
+            await state.supabaseClient.from('users').upsert(chunk, { onConflict: 'nrp' });
+          }
+          console.log('[Supabase Sync] Akun Pengguna berhasil diupsert ke Supabase:', supaUpsertPayload.length);
+        } catch (supaErr) {
+          console.error('[Supabase Sync Users Error]', supaErr);
+        }
+      }
+
+      toggleModal('modal-import-accounts', false);
+      showToast(`Sukses import: ${newCount} akun baru dibuat, ${updateCount} akun diperbarui!`, 'success');
+      if (typeof notifyDataChanged === 'function') notifyDataChanged();
+      renderMasterAccountsTable();
+    }
+
     function renderMasterAccountsTable() {
       const tbody = document.getElementById('master-accounts-tbody');
       if (!tbody) return;
@@ -19464,6 +19897,13 @@
     window.renderOperatorsImportPreview = renderOperatorsImportPreview;
     window.saveImportedOperators = saveImportedOperators;
     window.renderMasterAccountsTable = renderMasterAccountsTable;
+    window.openImportAccountsModal = openImportAccountsModal;
+    window.downloadMasterAccountsTemplate = downloadMasterAccountsTemplate;
+    window.handleAccountsDragOver = handleAccountsDragOver;
+    window.handleAccountsDragLeave = handleAccountsDragLeave;
+    window.handleAccountsDropFile = handleAccountsDropFile;
+    window.handleAccountsImportFile = handleAccountsImportFile;
+    window.saveImportedAccounts = saveImportedAccounts;
     window.openAddAccountModal = openAddAccountModal;
     window.openEditAccountModal = openEditAccountModal;
     window.handleSaveAccount = handleSaveAccount;
