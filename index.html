@@ -20,6 +20,28 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="SE Mining Job">
 
+  <!-- Sinkronisasi Skala Ukuran Font Permanen (Cegah font mengecil/reset saat reload) -->
+  <script>
+    (function () {
+      try {
+        var steps = [
+          { rem: '12.5px', mobileRem: '11.5px' },
+          { rem: '14px', mobileRem: '12.8px' },
+          { rem: '15.6px', mobileRem: '14.3px' },
+          { rem: '18.75px', mobileRem: '17.2px' }
+        ];
+        var saved = localStorage.getItem('SE_FONT_STEP');
+        var step = parseInt(saved || '0', 10);
+        if (isNaN(step) || step < 0) step = 0;
+        if (step > 3) step = 3;
+        var cfg = steps[step];
+        if (cfg) {
+          document.documentElement.style.fontSize = (window.innerWidth <= 640) ? cfg.mobileRem : cfg.rem;
+        }
+      } catch (e) { }
+    })();
+  </script>
+
 
 
 
@@ -4174,11 +4196,8 @@
               placeholder="Cari nama operator, NRP, atau No WA..."
               class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:border-brand-500 bg-slate-50 focus:bg-white transition">
           </div>
-          <div class="flex items-center space-x-3">
-            <span id="mp-kontak-count-badge" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200">
-              Total Kontak: ...
-            </span>
-            <span class="text-[11px] text-slate-500 font-medium hidden sm:inline">Klik "Chat WA" untuk langsung menghubungi operator</span>
+          <div class="flex items-center space-x-2">
+            <span class="text-[11px] text-slate-500 font-medium">Klik "Chat WA" untuk langsung menghubungi operator</span>
           </div>
         </div>
 
@@ -6219,7 +6238,7 @@
           </div>
           <h3 class="text-sm font-black text-slate-900">Pengaturan Aplikasi</h3>
         </div>
-        <button onclick="toggleModal('modal-profile-settings', false)" class="text-slate-400 hover:text-slate-600 p-1">
+        <button onclick="closeProfileSettingsModal()" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer" title="Tutup">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
@@ -6228,7 +6247,10 @@
 
       <!-- Stepped Line Slider Ukuran Font (100% Simetris & Konsentris) -->
       <div class="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 shadow-2xs select-none mb-3">
-        <div class="text-[11px] font-bold text-slate-800 tracking-wide mb-3">Font size</div>
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-[11px] font-bold text-slate-800 tracking-wide">Font size</div>
+          <span id="font-scale-badge" class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/70">Original Kecil</span>
+        </div>
 
         <!-- Jalur Garis Track & Thumb Slider Sempurna Simetris -->
         <div class="flex items-center gap-3 px-1">
@@ -6247,7 +6269,7 @@
         <div class="border-t border-slate-200/70 my-2.5"></div>
 
         <!-- Label 4 Langkah -->
-        <div class="grid grid-cols-4 gap-1 text-center select-none">
+        <div class="grid grid-cols-4 gap-1 text-center select-none mb-3">
           <button type="button" onclick="setFontStep(0)" class="focus:outline-none cursor-pointer" id="font-label-0">
             <div class="text-[11px] font-extrabold text-blue-600 step-title">Original</div>
             <div class="text-[9px] text-blue-500 step-sub font-semibold leading-none">Kecil</div>
@@ -6263,6 +6285,21 @@
           <button type="button" onclick="setFontStep(3)" class="focus:outline-none cursor-pointer" id="font-label-3">
             <div class="text-[11px] font-medium text-slate-500 step-title">Sangat Besar</div>
             <div class="text-[9px] text-slate-400 step-sub font-medium leading-none">(+50%)</div>
+          </button>
+        </div>
+
+        <!-- Tombol Konfirmasi Ukuran Teks Permanen -->
+        <div class="pt-2.5 border-t border-slate-200/80 flex items-center justify-between gap-2">
+          <div id="font-scale-info" class="text-[10px] text-slate-500 font-semibold truncate flex items-center gap-1">
+            <svg class="w-3.5 h-3.5 text-emerald-600 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+            <span>Tersimpan permanen</span>
+          </div>
+          <button type="button" id="btn-confirm-font-step" onclick="confirmFontStepChange()"
+            class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-400 font-bold text-[11px] shadow-none transition flex items-center gap-1.5 cursor-not-allowed" disabled>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span>Konfirmasi</span>
           </button>
         </div>
       </div>
@@ -9365,32 +9402,59 @@
       toggleModal('modal-profile-identity', true);
     }
 
-    function openProfileSettingsModal() {
-      const oldPass = document.getElementById('input-prof-old-pass');
-      const newPass = document.getElementById('input-prof-new-pass');
-      const confirmPass = document.getElementById('input-prof-confirm-pass');
-      if (oldPass) oldPass.value = '';
-      if (newPass) newPass.value = '';
-      if (confirmPass) confirmPass.value = '';
-      const savedStep = safeStorage.getItem('SE_FONT_STEP') || '0';
-      setFontStep(parseInt(savedStep, 10));
-      toggleModal('modal-profile-settings', true);
-    }
-
     const fontScaleSteps = [
-      { rem: '12.5px', mobileRem: '11.5px' },
-      { rem: '14px', mobileRem: '12.8px' },
-      { rem: '15.6px', mobileRem: '14.3px' },
-      { rem: '18.75px', mobileRem: '17.2px' }
+      { name: 'Original', sub: 'Kecil', rem: '12.5px', mobileRem: '11.5px' },
+      { name: 'Sedang', sub: '(+12%)', rem: '14px', mobileRem: '12.8px' },
+      { name: 'Besar', sub: '(+25%)', rem: '15.6px', mobileRem: '14.3px' },
+      { name: 'Sangat Besar', sub: '(+50%)', rem: '18.75px', mobileRem: '17.2px' }
     ];
 
-    function setFontStep(step) {
+    function getSavedFontStep() {
+      try {
+        let val = null;
+        if (typeof safeStorage !== 'undefined' && safeStorage && typeof safeStorage.getItem === 'function') {
+          val = safeStorage.getItem('SE_FONT_STEP');
+        }
+        if (val === null || val === undefined) {
+          val = localStorage.getItem('SE_FONT_STEP');
+        }
+        const num = parseInt(val || '0', 10);
+        return (isNaN(num) || num < 0 || num > 3) ? 0 : num;
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    let activeConfirmedFontStep = getSavedFontStep();
+    let pendingFontStep = activeConfirmedFontStep;
+
+    function applyFontStep(step) {
+      step = parseInt(step, 10);
+      if (isNaN(step) || step < 0) step = 0;
+      if (step > 3) step = 3;
+
+      const cfg = fontScaleSteps[step];
+      if (cfg) {
+        if (window.innerWidth <= 640) {
+          document.documentElement.style.fontSize = cfg.mobileRem;
+        } else {
+          document.documentElement.style.fontSize = cfg.rem;
+        }
+      }
+    }
+
+    function updateFontSliderUI(step) {
       step = parseInt(step, 10);
       if (isNaN(step) || step < 0) step = 0;
       if (step > 3) step = 3;
 
       const sliderInput = document.getElementById('font-scale-slider');
       if (sliderInput) sliderInput.value = step;
+
+      const badgeEl = document.getElementById('font-scale-badge');
+      if (badgeEl && fontScaleSteps[step]) {
+        badgeEl.textContent = `${fontScaleSteps[step].name} ${fontScaleSteps[step].sub}`;
+      }
 
       for (let i = 0; i <= 3; i++) {
         const label = document.getElementById(`font-label-${i}`);
@@ -9409,13 +9473,83 @@
         }
       }
 
-      const cfg = fontScaleSteps[step];
-      if (window.innerWidth <= 640) {
-        document.documentElement.style.fontSize = cfg.mobileRem;
-      } else {
-        document.documentElement.style.fontSize = cfg.rem;
+      const infoEl = document.getElementById('font-scale-info');
+      const btnConfirm = document.getElementById('btn-confirm-font-step');
+      const isChanged = (step !== activeConfirmedFontStep);
+
+      if (infoEl) {
+        if (isChanged) {
+          infoEl.innerHTML = `<span class="text-amber-600 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block animate-ping"></span>Belum dikonfirmasi</span>`;
+        } else {
+          infoEl.innerHTML = `<span class="text-emerald-600 font-bold flex items-center gap-1"><svg class="w-3.5 h-3.5 text-emerald-600 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>Tersimpan permanen</span>`;
+        }
       }
-      safeStorage.setItem('SE_FONT_STEP', step.toString());
+
+      if (btnConfirm) {
+        if (isChanged) {
+          btnConfirm.className = 'px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-[11px] shadow-sm transition flex items-center gap-1.5 cursor-pointer ring-2 ring-blue-400/50';
+          btnConfirm.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg><span>Konfirmasi</span>`;
+          btnConfirm.disabled = false;
+        } else {
+          btnConfirm.className = 'px-3 py-1.5 rounded-xl bg-slate-100 text-slate-400 font-bold text-[11px] shadow-none transition flex items-center gap-1.5 cursor-not-allowed';
+          btnConfirm.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg><span>Tersimpan</span>`;
+          btnConfirm.disabled = true;
+        }
+      }
+    }
+
+    function setFontStep(step) {
+      step = parseInt(step, 10);
+      if (isNaN(step) || step < 0) step = 0;
+      if (step > 3) step = 3;
+      pendingFontStep = step;
+      applyFontStep(step); // Berikan live preview langsung saat digeser/dipilih
+      updateFontSliderUI(step);
+    }
+
+    function confirmFontStepChange() {
+      activeConfirmedFontStep = pendingFontStep;
+      applyFontStep(activeConfirmedFontStep);
+
+      const stepStr = activeConfirmedFontStep.toString();
+      try {
+        if (typeof safeStorage !== 'undefined' && safeStorage && typeof safeStorage.setItem === 'function') {
+          safeStorage.setItem('SE_FONT_STEP', stepStr);
+        }
+        localStorage.setItem('SE_FONT_STEP', stepStr);
+      } catch (e) {
+        console.warn('Gagal menyimpan SE_FONT_STEP:', e);
+      }
+
+      updateFontSliderUI(activeConfirmedFontStep);
+      const stepCfg = fontScaleSteps[activeConfirmedFontStep];
+      const stepName = stepCfg ? `${stepCfg.name} ${stepCfg.sub}` : '';
+      showToast(`Ukuran teks (${stepName}) berhasil dikonfirmasi & disimpan permanen!`, 'success');
+    }
+
+    function openProfileSettingsModal() {
+      const oldPass = document.getElementById('input-prof-old-pass');
+      const newPass = document.getElementById('input-prof-new-pass');
+      const confirmPass = document.getElementById('input-prof-confirm-pass');
+      if (oldPass) oldPass.value = '';
+      if (newPass) newPass.value = '';
+      if (confirmPass) confirmPass.value = '';
+
+      activeConfirmedFontStep = getSavedFontStep();
+      pendingFontStep = activeConfirmedFontStep;
+      applyFontStep(activeConfirmedFontStep);
+      updateFontSliderUI(activeConfirmedFontStep);
+
+      toggleModal('modal-profile-settings', true);
+    }
+
+    function closeProfileSettingsModal() {
+      // Revert preview jika modal ditutup tanpa konfirmasi
+      if (pendingFontStep !== activeConfirmedFontStep) {
+        applyFontStep(activeConfirmedFontStep);
+        pendingFontStep = activeConfirmedFontStep;
+      }
+      toggleModal('modal-profile-settings', false);
     }
 
     function calculateDuration(jamStart, jamEnd) {
@@ -10009,6 +10143,14 @@
       } else {
         modal.classList.add('hidden');
         modal.style.display = 'none';
+        if (modalId === 'modal-profile-settings') {
+          if (typeof activeConfirmedFontStep !== 'undefined' && typeof pendingFontStep !== 'undefined') {
+            if (pendingFontStep !== activeConfirmedFontStep) {
+              applyFontStep(activeConfirmedFontStep);
+              pendingFontStep = activeConfirmedFontStep;
+            }
+          }
+        }
       }
     }
 
@@ -14259,37 +14401,41 @@
       });
     }
 
+    let _isLoadingRoster = false;
     async function loadRosterFromSupabase(periodFilter = null) {
       if (!state.supabaseClient) {
         console.warn('[Supabase Roster] Client belum siap');
         return false;
       }
+      if (_isLoadingRoster) {
+        return true;
+      }
+      _isLoadingRoster = true;
       try {
         const tbody = document.getElementById('db-roster-tbody');
         if (tbody && (!state.masterRoster || state.masterRoster.length === 0)) {
           tbody.innerHTML = '<tr><td colspan="11" class="py-8 text-center text-slate-400 italic"><div class="flex items-center justify-center space-x-2"><svg class="w-4 h-4 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Memuat seluruh data master roster dari Supabase...</span></div></td></tr>';
         }
 
-        // Data unit batangan, unit efektif, cluster, dan personil tersimpan lengkap di master_roster
         const opMap = {};
-
-        // 2. Query data master_roster dari Supabase menggunakan Pagination Range (Mengatasi hard limit 1.000 baris PostgREST)
+        const CHUNK_SIZE = 1000;
         let allRosterData = [];
         let fromOffset = 0;
-        const pageSize = 1000;
         let hasMore = true;
+        let iteration = 0;
+        const MAX_ITERATIONS = 50; // Aman untuk hingga 50.000 baris roster
 
-        while (hasMore) {
+        while (hasMore && iteration < MAX_ITERATIONS) {
+          iteration++;
           let query = state.supabaseClient
             .from('master_roster')
-            .select('*')
-            .order('tanggal', { ascending: true })
-            .order('nrp', { ascending: true })
-            .range(fromOffset, fromOffset + pageSize - 1);
+            .select('*');
 
           if (periodFilter) {
             query = query.eq('periode', periodFilter);
           }
+
+          query = query.range(fromOffset, fromOffset + CHUNK_SIZE - 1);
 
           const { data, error } = await query;
           if (error) {
@@ -14300,10 +14446,10 @@
 
           if (Array.isArray(data) && data.length > 0) {
             allRosterData = allRosterData.concat(data);
-            if (data.length < pageSize) {
+            if (data.length < CHUNK_SIZE) {
               hasMore = false;
             } else {
-              fromOffset += pageSize;
+              fromOffset += CHUNK_SIZE;
             }
           } else {
             hasMore = false;
@@ -14316,7 +14462,6 @@
             const baseUnit = r.unit || opInfo.unit || '-';
             let unitEfektif = r.unit_efektif || baseUnit;
 
-            // Kode shift didukung dari kode_shift (standar schema) dan shift_code (fallback legacy)
             const shiftCode = String(r.kode_shift || r.shift_code || 'DWS').trim();
             const matchSpare = shiftCode.match(/^[DN](\d{3,4})$/i);
             if (matchSpare && (!r.unit_efektif || r.unit_efektif === baseUnit)) {
@@ -14342,7 +14487,7 @@
             };
           });
 
-          console.log('[Supabase Roster] Berhasil memuat total ' + state.masterRoster.length + ' data roster dari Supabase (Pagination Lengkap).');
+          console.log('[Supabase Roster] Berhasil memuat total ' + state.masterRoster.length + ' data roster dari Supabase (Lengkap Tanpa Batas).');
           renderDatabaseRosterTable();
           return true;
         } else if (allRosterData.length === 0) {
@@ -14354,6 +14499,8 @@
       } catch (err) {
         console.error('[Supabase Roster Exception]', err);
         return false;
+      } finally {
+        _isLoadingRoster = false;
       }
     }
 
@@ -15253,10 +15400,6 @@
       }
 
       const totalItems = list.length;
-      const countBadge = document.getElementById('mp-kontak-count-badge');
-      if (countBadge) {
-        countBadge.textContent = 'Total: ' + totalItems + ' Kontak';
-      }
 
       const pageSizeSelect = document.getElementById('mp-kontak-page-size');
       let pageSizeVal = state.mpKontakPagination.pageSize;
@@ -19124,15 +19267,59 @@
     }
 
 
+    async function fetchEntireSupabaseTable(tableName, selectCols = '*', orderCol = null, ascending = true) {
+      if (!state.supabaseClient) return [];
+      const CHUNK_SIZE = 1000;
+      let allResults = [];
+      let currentOffset = 0;
+      let keepFetching = true;
+      let iteration = 0;
+      const MAX_ITERATIONS = 50; // Kapasitas hingga 50.000 baris
+
+      while (keepFetching && iteration < MAX_ITERATIONS) {
+        iteration++;
+        let query = state.supabaseClient
+          .from(tableName)
+          .select(selectCols);
+
+        if (orderCol) {
+          query = query.order(orderCol, { ascending });
+        }
+
+        query = query.range(currentOffset, currentOffset + CHUNK_SIZE - 1);
+
+        const { data, error } = await query;
+        if (error) {
+          // Jika tabel belum dibuat (misal master_kontak_pro belum ada di Supabase), return null agar fallback berjalan
+          if (error.code === 'PGRST205' || (error.message && error.message.includes('not find the table'))) {
+            return null;
+          }
+          console.warn(`[fetchEntireSupabaseTable Warning] ${tableName} offset ${currentOffset}:`, error.message);
+          break;
+        }
+
+        if (Array.isArray(data) && data.length > 0) {
+          allResults = allResults.concat(data);
+          if (data.length < CHUNK_SIZE) {
+            keepFetching = false;
+          } else {
+            currentOffset += CHUNK_SIZE;
+          }
+        } else {
+          keepFetching = false;
+        }
+      }
+
+      return allResults;
+    }
+    window.fetchEntireSupabaseTable = fetchEntireSupabaseTable;
+
     async function syncSupabaseMasterData() {
       if (!state.supabaseClient) return;
       try {
         // A. Sinkronisasi Data Master Armada
-        const { data: supaArmada, error: armErr } = await state.supabaseClient
-          .from('master_armada')
-          .select('*')
-          .order('unit');
-        if (!armErr && Array.isArray(supaArmada)) {
+        const supaArmada = await fetchEntireSupabaseTable('master_armada', '*', 'unit');
+        if (Array.isArray(supaArmada) && supaArmada.length > 0) {
           state.masterArmada = supaArmada.map(a => ({
             id: a.id || ('ARM-' + a.unit),
             unit: a.unit,
@@ -19148,14 +19335,12 @@
           if (state.masterActiveSection === 'armada' && typeof renderMasterArmadaTable === 'function') {
             renderMasterArmadaTable();
           }
-          console.log('[Supabase Sync] Master Armada & Clusters tersinkronisasi:', supaArmada.length, 'unit');
+          console.log('[Supabase Sync] Master Armada & Clusters tersinkronisasi lengkap:', supaArmada.length, 'unit');
         }
 
-        // B. Sinkronisasi Data Master Populasi Unit Lapangan
-        const { data: supaUnits, error: unitErr } = await state.supabaseClient
-          .from('master_units')
-          .select('*');
-        if (!unitErr && Array.isArray(supaUnits)) {
+        // B. Sinkronisasi Data Master Populasi Unit Lapangan (Seluruh baris tanpa batas 1.000)
+        const supaUnits = await fetchEntireSupabaseTable('master_units', '*', 'id');
+        if (Array.isArray(supaUnits) && supaUnits.length > 0) {
           state.masterUnits = supaUnits.map(u => ({
             id: u.id,
             lambung: u.no_lambung || u.lambung,
@@ -19169,27 +19354,20 @@
           if (state.masterActiveSection === 'units' && typeof renderMasterUnitsTable === 'function') {
             renderMasterUnitsTable();
           }
-          console.log('[Supabase Sync] Populasi Unit tersinkronisasi:', supaUnits.length, 'unit');
+          console.log('[Supabase Sync] Populasi Unit tersinkronisasi lengkap:', supaUnits.length, 'unit');
         }
 
-        // C. Sinkronisasi Data Master Kontak Produksi (Prioritas master_kontak_pro, fallback master_operators)
+        // C. Sinkronisasi Data Master Kontak Produksi (Seluruh ribuan baris tanpa batas 1.000)
         let supaOps = null;
         try {
-          // 1. Coba baca dari tabel master_kontak_pro terlebih dahulu
-          const { data: proData, error: proErr } = await state.supabaseClient
-            .from('master_kontak_pro')
-            .select('id, nrp, nama, no_wa')
-            .order('nama');
-          
-          if (!proErr && Array.isArray(proData) && proData.length > 0) {
+          // 1. Coba baca seluruh data dari master_kontak_pro terlebih dahulu
+          const proData = await fetchEntireSupabaseTable('master_kontak_pro', 'id, nrp, nama, no_wa', 'nama');
+          if (Array.isArray(proData) && proData.length > 0) {
             supaOps = proData;
           } else {
-            // 2. Fallback baca dari master_operators jika master_kontak_pro belum dibuat / masih kosong
-            const { data: legacyData, error: legacyErr } = await state.supabaseClient
-              .from('master_operators')
-              .select('id, nrp, nama, no_wa')
-              .order('nama');
-            if (!legacyErr && Array.isArray(legacyData)) {
+            // 2. Fallback baca seluruh data dari master_operators (hingga ribuan data)
+            const legacyData = await fetchEntireSupabaseTable('master_operators', 'id, nrp, nama, no_wa', 'nama');
+            if (Array.isArray(legacyData) && legacyData.length > 0) {
               supaOps = legacyData;
             }
           }
@@ -19211,7 +19389,7 @@
           if (typeof renderMpKontakProTable === 'function') {
             renderMpKontakProTable();
           }
-          console.log('[Supabase Sync] Kontak Produksi tersinkronisasi:', state.masterOperators.length, 'kontak');
+          console.log('[Supabase Sync] Kontak Produksi tersinkronisasi lengkap:', state.masterOperators.length, 'kontak');
         }
 
         // D. Sinkronisasi Armada Clusters (Terkoneksi langsung ke Master Data Armada)
@@ -19220,11 +19398,9 @@
           console.log('[Supabase Sync] Armada Clusters tersinkronisasi murni dari Master Data Armada');
         }
 
-        // E. Sinkronisasi Akun Pengguna (Users)
-        const { data: supaUsers, error: usrErr } = await state.supabaseClient
-          .from('users')
-          .select('*');
-        if (!usrErr && Array.isArray(supaUsers) && supaUsers.length > 0) {
+        // E. Sinkronisasi Akun Pengguna (Users - Seluruh data tanpa batas 1.000)
+        const supaUsers = await fetchEntireSupabaseTable('users', '*', 'nrp');
+        if (Array.isArray(supaUsers) && supaUsers.length > 0) {
           const uMap = new Map();
           state.masterUsers.forEach(u => uMap.set(u.nrp, u));
           supaUsers.forEach(su => {
@@ -19244,7 +19420,7 @@
           if (state.masterActiveSection === 'accounts' && typeof renderMasterAccountsTable === 'function') {
             renderMasterAccountsTable();
           }
-          console.log('[Supabase Sync] Users tersinkronisasi:', supaUsers.length, 'pengguna');
+          console.log('[Supabase Sync] Users tersinkronisasi lengkap:', supaUsers.length, 'pengguna');
         }
 
         // F. Sinkronisasi Master Roster langsung dari Supabase tanpa cache lokal
@@ -20294,6 +20470,10 @@
     window.renderWtUnscheduleTable = renderWtUnscheduleTable;
     window.openProfileIdentityModal = openProfileIdentityModal;
     window.openProfileSettingsModal = openProfileSettingsModal;
+    window.closeProfileSettingsModal = closeProfileSettingsModal;
+    window.confirmFontStepChange = confirmFontStepChange;
+    window.applyFontStep = applyFontStep;
+    window.getSavedFontStep = getSavedFontStep;
     window.setTextScale = setTextScale;
     window.setFontStep = setFontStep;
     window.calculateDuration = calculateDuration;
@@ -20727,8 +20907,19 @@
     window.initSplashScreen = initSplashScreen;
 
 
+    // Listener Resize Window untuk menjaga skala font sinkron antara Desktop & Mobile
+    window.addEventListener('resize', () => {
+      if (typeof activeConfirmedFontStep !== 'undefined') {
+        const step = (typeof pendingFontStep !== 'undefined') ? pendingFontStep : activeConfirmedFontStep;
+        applyFontStep(step);
+      }
+    });
+
     // Initialization on DOMContentLoaded
     window.addEventListener('DOMContentLoaded', () => {
+      if (typeof getSavedFontStep === 'function' && typeof applyFontStep === 'function') {
+        applyFontStep(getSavedFontStep());
+      }
       initSplashScreen();
       initSupabase();
       loadDatabaseSync();
