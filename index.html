@@ -3401,7 +3401,7 @@
                 </span>
               </div>
               <div class="w-full sm:w-64">
-                <input type="text" id="search-operator-input" oninput="renderMasterOperatorsTable()"
+                <input type="text" id="search-operator-input" oninput="handleMasterOperatorsSearchChange()"
                   placeholder="Cari nama, NRP, atau No WA..."
                   class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs">
               </div>
@@ -3431,6 +3431,27 @@
                     <!-- Populated via renderMasterOperatorsTable() -->
                   </tbody>
                 </table>
+              </div>
+              <!-- Bar Footer Status Jumlah Data & Navigasi Pagination Master Kontak -->
+              <div class="p-3.5 bg-slate-50/90 border-t border-slate-100 text-xs text-slate-600 flex flex-col md:flex-row items-center justify-between gap-3 shrink-0 font-medium">
+                <div class="flex items-center flex-wrap gap-3">
+                  <span id="master-operators-footer-count" class="font-medium text-slate-700">Memuat data kontak...</span>
+                  <div class="flex items-center space-x-1.5 text-xs text-slate-500">
+                    <span>Batas:</span>
+                    <select id="master-operators-page-size" onchange="changeMasterOperatorsPageSize(this.value)"
+                      class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none focus:border-brand-500 text-xs shadow-2xs cursor-pointer">
+                      <option value="25">25 / halaman</option>
+                      <option value="50" selected>50 / halaman</option>
+                      <option value="100">100 / halaman</option>
+                      <option value="200">200 / halaman</option>
+                      <option value="ALL">Semua Data</option>
+                    </select>
+                  </div>
+                </div>
+                <!-- Tombol Navigasi Pagination: 1, 2, dst -->
+                <div id="master-operators-pagination-controls" class="flex items-center space-x-1 flex-wrap justify-center md:justify-end">
+                  <!-- Populated dynamically via renderMasterOperatorsPagination() -->
+                </div>
               </div>
             </div>
           </div>
@@ -4149,13 +4170,15 @@
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
             </span>
-            <input type="text" id="search-mp-kontak-input" oninput="renderMpKontakProTable()"
+            <input type="text" id="search-mp-kontak-input" oninput="handleMpKontakSearchChange()"
               placeholder="Cari nama operator, NRP, atau No WA..."
               class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:border-brand-500 bg-slate-50 focus:bg-white transition">
           </div>
-          <div class="flex items-center space-x-2">
-            <span class="text-[11px] text-slate-500 font-medium">Klik "Chat WA" untuk langsung menghubungi
-              operator</span>
+          <div class="flex items-center space-x-3">
+            <span id="mp-kontak-count-badge" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200">
+              Total Kontak: ...
+            </span>
+            <span class="text-[11px] text-slate-500 font-medium hidden sm:inline">Klik "Chat WA" untuk langsung menghubungi operator</span>
           </div>
         </div>
 
@@ -4177,6 +4200,27 @@
                 <!-- Populated via renderMpKontakProTable() -->
               </tbody>
             </table>
+          </div>
+          <!-- Bar Footer Status Jumlah Data & Navigasi Pagination Kontak Pro -->
+          <div class="p-3.5 bg-slate-50/90 border-t border-slate-100 text-xs text-slate-600 flex flex-col md:flex-row items-center justify-between gap-3 shrink-0 font-medium">
+            <div class="flex items-center flex-wrap gap-3">
+              <span id="mp-kontak-footer-count" class="font-medium text-slate-700">Memuat data kontak...</span>
+              <div class="flex items-center space-x-1.5 text-xs text-slate-500">
+                <span>Batas:</span>
+                <select id="mp-kontak-page-size" onchange="changeMpKontakPageSize(this.value)"
+                  class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none focus:border-brand-500 text-xs shadow-2xs cursor-pointer">
+                  <option value="25">25 / halaman</option>
+                  <option value="50" selected>50 / halaman</option>
+                  <option value="100">100 / halaman</option>
+                  <option value="200">200 / halaman</option>
+                  <option value="ALL">Semua Data</option>
+                </select>
+              </div>
+            </div>
+            <!-- Tombol Navigasi Pagination: 1, 2, dst -->
+            <div id="mp-kontak-pagination-controls" class="flex items-center space-x-1 flex-wrap justify-center md:justify-end">
+              <!-- Populated dynamically via renderMpKontakPagination() -->
+            </div>
           </div>
         </div>
       </div>
@@ -12675,8 +12719,11 @@
       const countBadge = document.getElementById('operators-count-badge');
       if (!tbody) return;
 
-      // Pastikan nomor WA tersinkron dengan profil akun pengguna jika tersedia
       syncMasterOperatorsWithUsers();
+
+      if (!state.masterOperatorsPagination) {
+        state.masterOperatorsPagination = { page: 1, pageSize: 50 };
+      }
 
       const search = (document.getElementById('search-operator-input')?.value || '').toLowerCase().trim();
       let list = state.masterOperators || [];
@@ -12689,30 +12736,63 @@
         );
       }
 
-      if (countBadge) countBadge.textContent = `Total: ${list.length} Kontak Produksi`;
+      const totalItems = list.length;
+      if (countBadge) countBadge.textContent = 'Total: ' + totalItems + ' Kontak Produksi';
 
       if (thSelect) {
         if (state.isOperatorsSelectMode) thSelect.classList.remove('hidden');
         else thSelect.classList.add('hidden');
       }
 
+      const pageSizeSelect = document.getElementById('master-operators-page-size');
+      let pageSizeVal = state.masterOperatorsPagination.pageSize;
+      if (pageSizeSelect && pageSizeSelect.value) {
+        pageSizeVal = pageSizeSelect.value === 'ALL' ? 'ALL' : (parseInt(pageSizeSelect.value) || 50);
+        state.masterOperatorsPagination.pageSize = pageSizeVal;
+      }
+
+      let pageSize = pageSizeVal === 'ALL' ? totalItems : (parseInt(pageSizeVal) || 50);
+      if (pageSize <= 0) pageSize = 50;
+
+      const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+      if (state.masterOperatorsPagination.page > totalPages) state.masterOperatorsPagination.page = totalPages;
+      if (state.masterOperatorsPagination.page < 1) state.masterOperatorsPagination.page = 1;
+      const currentPage = state.masterOperatorsPagination.page;
+
+      const startIndex = (currentPage - 1) * pageSize;
+      const endIndex = Math.min(startIndex + pageSize, totalItems);
+      const pageList = pageSizeVal === 'ALL' ? list : list.slice(startIndex, endIndex);
+
       tbody.innerHTML = '';
-      if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${state.isOperatorsSelectMode ? 6 : 5}" class="py-6 text-center text-slate-400 italic text-[11px]">Tidak ada data kontak produksi yang cocok</td></tr>`;
+      if (totalItems === 0) {
+        tbody.innerHTML = '<tr><td colspan="' + (state.isOperatorsSelectMode ? 6 : 5) + '" class="py-6 text-center text-slate-400 italic text-[11px]">Tidak ada data kontak produksi yang cocok</td></tr>';
         if (selectAllCheckbox) selectAllCheckbox.checked = false;
         updateOperatorsBulkActionBar();
+        const footerCount = document.getElementById('master-operators-footer-count');
+        if (footerCount) footerCount.innerHTML = 'Menampilkan <strong class="text-slate-800">0</strong> data dari total <strong class="text-slate-800">' + (state.masterOperators || []).length + '</strong>';
+        renderMasterOperatorsPagination(1, 1);
         return;
       }
 
+      const footerCount = document.getElementById('master-operators-footer-count');
+      if (footerCount) {
+        if (pageSizeVal === 'ALL') {
+          footerCount.innerHTML = 'Menampilkan seluruh <strong class="text-slate-800">' + totalItems + ' data</strong> yang tersimpan di sistem';
+        } else {
+          footerCount.innerHTML = 'Menampilkan data <strong class="text-slate-800">' + (startIndex + 1) + ' - ' + endIndex + '</strong> dari total <strong class="text-slate-800">' + totalItems + '</strong> (Halaman ' + currentPage + ' dari ' + totalPages + ')';
+        }
+      }
+
       let allChecked = true;
-      list.forEach((op, idx) => {
+      pageList.forEach((op, idx) => {
+        const rowNumber = startIndex + idx + 1;
         const opId = String(op.id || ('OPT-' + op.nrp));
         const isChecked = state.selectedOperatorIds.has(opId) || (op.nrp && state.selectedOperatorIds.has(String(op.nrp)));
         if (!isChecked) allChecked = false;
         const cleanWa = formatWaClean(op.noWa);
 
         const tr = document.createElement('tr');
-        tr.className = `hover:bg-slate-50 transition align-middle font-medium text-[11px] ${isChecked ? 'bg-amber-50/60' : ''}`;
+        tr.className = 'hover:bg-slate-50 transition align-middle font-medium text-[11px] ' + (isChecked ? 'bg-amber-50/60' : '');
         tr.innerHTML = `
           ${state.isOperatorsSelectMode ? `
             <td class="py-2.5 px-3 text-center">
@@ -12725,20 +12805,17 @@
               >
             </td>
           ` : ''}
-          <td class="py-2.5 px-4 text-center text-slate-400 font-mono text-[11px] font-semibold">${idx + 1}</td>
+          <td class="py-2.5 px-4 text-center text-slate-400 font-mono text-[11px] font-semibold">${rowNumber}</td>
           <td class="py-2.5 px-4 font-mono font-bold text-slate-900">${op.nrp}</td>
           <td class="py-2.5 px-4 font-bold text-slate-900">${op.nama}</td>
           <td class="py-2.5 px-4">
             <div class="flex items-center space-x-2">
               <span class="font-mono text-slate-700 font-semibold">${op.noWa || '-'}</span>
               ${op.noWa ? `
-                <button type="button" onclick="copyContactNumber('${op.noWa}')"
-                  class="px-2 py-0.5 rounded-lg bg-emerald-50/90 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/90 transition shadow-2xs inline-flex items-center space-x-1 cursor-pointer text-[10px] font-bold"
-                  title="Salin Nomor Kontak (Buku Kontak)">
-                  <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                <button type="button" onclick="copyContactNumber('${op.noWa}')" class="p-1 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-900 border border-emerald-200/80 transition shadow-2xs inline-flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95" title="Salin Nomor Kontak">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                   </svg>
-                  <span>Salin No</span>
                 </button>
               ` : ''}
               ${cleanWa ? `
@@ -12762,9 +12839,127 @@
       });
 
       if (selectAllCheckbox) {
-        selectAllCheckbox.checked = (list.length > 0 && allChecked);
+        selectAllCheckbox.checked = (pageList.length > 0 && allChecked);
       }
       updateOperatorsBulkActionBar();
+      renderMasterOperatorsPagination(totalPages, currentPage);
+    }
+
+    function renderMasterOperatorsPagination(totalPages, currentPage) {
+      const container = document.getElementById('master-operators-pagination-controls');
+      if (!container) return;
+
+      if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      const isPrevDisabled = (currentPage <= 1);
+      html += `
+        <button 
+          type="button" 
+          onclick="${!isPrevDisabled ? `goToMasterOperatorsPage(${currentPage - 1})` : ''}"
+          ${isPrevDisabled ? 'disabled' : ''}
+          class="px-2.5 py-1.5 rounded-lg border text-xs font-bold transition flex items-center space-x-1 ${
+            isPrevDisabled 
+              ? 'bg-slate-100/60 text-slate-300 border-slate-200/50 cursor-not-allowed' 
+              : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs cursor-pointer'
+          }"
+          title="Halaman Sebelumnya"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="hidden sm:inline">Sebelumnya</span>
+        </button>
+      `;
+
+      const delta = 2;
+      const pages = [];
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+          pages.push(i);
+        } else if (pages[pages.length - 1] !== '...' && (i < currentPage - delta || i > currentPage + delta)) {
+          pages.push('...');
+        }
+      }
+
+      pages.forEach(p => {
+        if (p === '...') {
+          html += '<span class="px-2 py-1 text-slate-400 text-xs font-bold select-none">...</span>';
+        } else if (p === currentPage) {
+          html += `
+            <button 
+              type="button" 
+              class="px-3 py-1.5 rounded-lg bg-brand-600 text-white font-black text-xs shadow-xs cursor-default"
+              title="Halaman ${p} (Aktif)"
+            >
+              ${p}
+            </button>
+          `;
+        } else {
+          html += `
+            <button 
+              type="button" 
+              onclick="goToMasterOperatorsPage(${p})"
+              class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200 shadow-2xs transition cursor-pointer hover:border-brand-300"
+              title="Menuju ke Halaman ${p}"
+            >
+              ${p}
+            </button>
+          `;
+        }
+      });
+
+      const isNextDisabled = (currentPage >= totalPages);
+      html += `
+        <button 
+          type="button" 
+          onclick="${!isNextDisabled ? `goToMasterOperatorsPage(${currentPage + 1})` : ''}"
+          ${isNextDisabled ? 'disabled' : ''}
+          class="px-2.5 py-1.5 rounded-lg border text-xs font-bold transition flex items-center space-x-1 ${
+            isNextDisabled 
+              ? 'bg-slate-100/60 text-slate-300 border-slate-200/50 cursor-not-allowed' 
+              : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs cursor-pointer'
+          }"
+          title="Halaman Selanjutnya"
+        >
+          <span class="hidden sm:inline">Selanjutnya</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function goToMasterOperatorsPage(page) {
+      if (!state.masterOperatorsPagination) {
+        state.masterOperatorsPagination = { page: 1, pageSize: 50 };
+      }
+      state.masterOperatorsPagination.page = parseInt(page) || 1;
+      renderMasterOperatorsTable();
+
+      const tableWrapper = document.getElementById('master-operators-tbody')?.closest('.overflow-x-auto');
+      if (tableWrapper) {
+        tableWrapper.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function changeMasterOperatorsPageSize(newSize) {
+      if (!state.masterOperatorsPagination) {
+        state.masterOperatorsPagination = { page: 1, pageSize: 50 };
+      }
+      state.masterOperatorsPagination.pageSize = newSize === 'ALL' ? 'ALL' : (parseInt(newSize) || 50);
+      state.masterOperatorsPagination.page = 1;
+      renderMasterOperatorsTable();
+    }
+
+    function handleMasterOperatorsSearchChange() {
+      if (state.masterOperatorsPagination) state.masterOperatorsPagination.page = 1;
+      renderMasterOperatorsTable();
     }
 
     function toggleOperatorsSelectMode() {
@@ -15040,8 +15235,11 @@
       const tbody = document.getElementById('mp-kontak-pro-tbody');
       if (!tbody) return;
 
-      // Selalu singkronkan dengan master data terbaru
       syncMasterOperatorsWithUsers();
+
+      if (!state.mpKontakPagination) {
+        state.mpKontakPagination = { page: 1, pageSize: 50 };
+      }
 
       const search = (document.getElementById('search-mp-kontak-input')?.value || '').toLowerCase().trim();
       let list = [...(state.masterOperators || [])];
@@ -15054,32 +15252,67 @@
         );
       }
 
+      const totalItems = list.length;
+      const countBadge = document.getElementById('mp-kontak-count-badge');
+      if (countBadge) {
+        countBadge.textContent = 'Total: ' + totalItems + ' Kontak';
+      }
+
+      const pageSizeSelect = document.getElementById('mp-kontak-page-size');
+      let pageSizeVal = state.mpKontakPagination.pageSize;
+      if (pageSizeSelect && pageSizeSelect.value) {
+        pageSizeVal = pageSizeSelect.value === 'ALL' ? 'ALL' : (parseInt(pageSizeSelect.value) || 50);
+        state.mpKontakPagination.pageSize = pageSizeVal;
+      }
+
+      let pageSize = pageSizeVal === 'ALL' ? totalItems : (parseInt(pageSizeVal) || 50);
+      if (pageSize <= 0) pageSize = 50;
+
+      const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+      if (state.mpKontakPagination.page > totalPages) state.mpKontakPagination.page = totalPages;
+      if (state.mpKontakPagination.page < 1) state.mpKontakPagination.page = 1;
+      const currentPage = state.mpKontakPagination.page;
+
+      const startIndex = (currentPage - 1) * pageSize;
+      const endIndex = Math.min(startIndex + pageSize, totalItems);
+      const pageList = pageSizeVal === 'ALL' ? list : list.slice(startIndex, endIndex);
+
       tbody.innerHTML = '';
-      if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400 italic text-[11px]">Belum ada data kontak produksi. Silakan tambahkan nomor melalui menu Data Master &gt; Kontak Produksi.</td></tr>';
+      if (totalItems === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400 italic text-[11px]">Tidak ada data kontak produksi yang sesuai kriteria pencarian.</td></tr>';
+        const footerCount = document.getElementById('mp-kontak-footer-count');
+        if (footerCount) footerCount.innerHTML = 'Menampilkan <strong class="text-slate-800">0</strong> data dari total <strong class="text-slate-800">' + (state.masterOperators || []).length + '</strong>';
+        renderMpKontakPagination(1, 1);
         return;
       }
 
-      list.forEach((op, idx) => {
+      const footerCount = document.getElementById('mp-kontak-footer-count');
+      if (footerCount) {
+        if (pageSizeVal === 'ALL') {
+          footerCount.innerHTML = 'Menampilkan seluruh <strong class="text-slate-800">' + totalItems + ' data</strong> yang tersimpan di sistem';
+        } else {
+          footerCount.innerHTML = 'Menampilkan data <strong class="text-slate-800">' + (startIndex + 1) + ' - ' + endIndex + '</strong> dari total <strong class="text-slate-800">' + totalItems + '</strong> (Halaman ' + currentPage + ' dari ' + totalPages + ')';
+        }
+      }
+
+      pageList.forEach((op, idx) => {
+        const rowNumber = startIndex + idx + 1;
         const cleanWa = (op.noWa || '').replace(/[^0-9]/g, '');
         const waLink = cleanWa ? (cleanWa.startsWith('0') ? '62' + cleanWa.slice(1) : cleanWa) : '';
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition border-b border-slate-100 text-xs';
         tr.innerHTML = `
-          <td class="py-3 px-4 text-center font-mono text-slate-400 text-[11px] font-semibold">${idx + 1}</td>
+          <td class="py-3 px-4 text-center font-mono text-slate-400 text-[11px] font-semibold">${rowNumber}</td>
           <td class="py-3 px-4 font-bold text-slate-900 font-mono text-[11px]">${op.nrp || '-'}</td>
           <td class="py-3 px-4 font-semibold text-slate-800">${op.nama || '-'}</td>
           <td class="py-3 px-4 font-mono text-slate-700 font-medium">
             <div class="flex items-center space-x-2">
               <span class="font-bold text-slate-800">${op.noWa || '-'}</span>
               ${op.noWa ? `
-                <button type="button" onclick="copyContactNumber('${op.noWa}')"
-                  class="px-2 py-0.5 rounded-lg bg-emerald-50/90 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/90 transition shadow-2xs inline-flex items-center space-x-1 cursor-pointer text-[10px] font-bold"
-                  title="Salin Nomor Kontak (Buku Kontak)">
-                  <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                <button type="button" onclick="copyContactNumber('${op.noWa}')" class="p-1 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-900 border border-emerald-200/80 transition shadow-2xs inline-flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95" title="Salin Nomor Kontak">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                   </svg>
-                  <span>Salin No</span>
                 </button>
               ` : ''}
             </div>
@@ -15098,7 +15331,127 @@
         `;
         tbody.appendChild(tr);
       });
+
+      renderMpKontakPagination(totalPages, currentPage);
     }
+
+    function renderMpKontakPagination(totalPages, currentPage) {
+      const container = document.getElementById('mp-kontak-pagination-controls');
+      if (!container) return;
+
+      if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      const isPrevDisabled = (currentPage <= 1);
+      html += `
+        <button 
+          type="button" 
+          onclick="${!isPrevDisabled ? `goToMpKontakPage(${currentPage - 1})` : ''}"
+          ${isPrevDisabled ? 'disabled' : ''}
+          class="px-2.5 py-1.5 rounded-lg border text-xs font-bold transition flex items-center space-x-1 ${
+            isPrevDisabled 
+              ? 'bg-slate-100/60 text-slate-300 border-slate-200/50 cursor-not-allowed' 
+              : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs cursor-pointer'
+          }"
+          title="Halaman Sebelumnya"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span class="hidden sm:inline">Sebelumnya</span>
+        </button>
+      `;
+
+      const delta = 2;
+      const pages = [];
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+          pages.push(i);
+        } else if (pages[pages.length - 1] !== '...' && (i < currentPage - delta || i > currentPage + delta)) {
+          pages.push('...');
+        }
+      }
+
+      pages.forEach(p => {
+        if (p === '...') {
+          html += '<span class="px-2 py-1 text-slate-400 text-xs font-bold select-none">...</span>';
+        } else if (p === currentPage) {
+          html += `
+            <button 
+              type="button" 
+              class="px-3 py-1.5 rounded-lg bg-brand-600 text-white font-black text-xs shadow-xs cursor-default"
+              title="Halaman ${p} (Aktif)"
+            >
+              ${p}
+            </button>
+          `;
+        } else {
+          html += `
+            <button 
+              type="button" 
+              onclick="goToMpKontakPage(${p})"
+              class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200 shadow-2xs transition cursor-pointer hover:border-brand-300"
+              title="Menuju ke Halaman ${p}"
+            >
+              ${p}
+            </button>
+          `;
+        }
+      });
+
+      const isNextDisabled = (currentPage >= totalPages);
+      html += `
+        <button 
+          type="button" 
+          onclick="${!isNextDisabled ? `goToMpKontakPage(${currentPage + 1})` : ''}"
+          ${isNextDisabled ? 'disabled' : ''}
+          class="px-2.5 py-1.5 rounded-lg border text-xs font-bold transition flex items-center space-x-1 ${
+            isNextDisabled 
+              ? 'bg-slate-100/60 text-slate-300 border-slate-200/50 cursor-not-allowed' 
+              : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs cursor-pointer'
+          }"
+          title="Halaman Selanjutnya"
+        >
+          <span class="hidden sm:inline">Selanjutnya</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function goToMpKontakPage(page) {
+      if (!state.mpKontakPagination) {
+        state.mpKontakPagination = { page: 1, pageSize: 50 };
+      }
+      state.mpKontakPagination.page = parseInt(page) || 1;
+      renderMpKontakProTable();
+
+      const tableWrapper = document.getElementById('mp-kontak-pro-tbody')?.closest('.overflow-x-auto');
+      if (tableWrapper) {
+        tableWrapper.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function changeMpKontakPageSize(newSize) {
+      if (!state.mpKontakPagination) {
+        state.mpKontakPagination = { page: 1, pageSize: 50 };
+      }
+      state.mpKontakPagination.pageSize = newSize === 'ALL' ? 'ALL' : (parseInt(newSize) || 50);
+      state.mpKontakPagination.page = 1;
+      renderMpKontakProTable();
+    }
+
+    function handleMpKontakSearchChange() {
+      if (state.mpKontakPagination) state.mpKontakPagination.page = 1;
+      renderMpKontakProTable();
+    }
+
     function submitJobAction(e) { if (e && e.preventDefault) e.preventDefault(); }
     function handleJobDecision() { }
     function confirmNonAchSubmission() { }
@@ -19875,6 +20228,14 @@
     window.copyContactNumber = copyContactNumber;
     window.formatWaClean = formatWaClean;
     window.renderMpKontakProTable = renderMpKontakProTable;
+    window.renderMpKontakPagination = renderMpKontakPagination;
+    window.goToMpKontakPage = goToMpKontakPage;
+    window.changeMpKontakPageSize = changeMpKontakPageSize;
+    window.handleMpKontakSearchChange = handleMpKontakSearchChange;
+    window.renderMasterOperatorsPagination = renderMasterOperatorsPagination;
+    window.goToMasterOperatorsPage = goToMasterOperatorsPage;
+    window.changeMasterOperatorsPageSize = changeMasterOperatorsPageSize;
+    window.handleMasterOperatorsSearchChange = handleMasterOperatorsSearchChange;
     window.renderMasterOperatorsTable = renderMasterOperatorsTable;
     window.handleLoginSubmit = handleLoginSubmit;
     window.fillQuickAuth = fillQuickAuth;
