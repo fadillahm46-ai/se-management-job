@@ -5921,12 +5921,24 @@
             <p class="text-xs text-slate-400 font-medium mt-0.5" id="detail-modal-category">Greasing Small Track</p>
           </div>
         </div>
-        <button onclick="toggleModal('modal-job-detail', false)"
-          class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
+        <div class="flex items-center space-x-1.5">
+          <!-- Tombol Hapus: HANYA BENTUK ICON BAK SAMPAH, KHUSUS ADMIN SAJA -->
+          <button type="button" id="detail-modal-btn-delete" onclick="promptDeleteCurrentDetailJob()"
+            title="Hapus Penugasan / Jadwal Unit (Khusus Admin)"
+            class="hidden p-2 rounded-xl text-rose-500 hover:text-white hover:bg-rose-600 transition cursor-pointer flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+              </path>
+            </svg>
+          </button>
+          <button onclick="toggleModal('modal-job-detail', false)"
+            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div class="space-y-3.5 text-xs">
@@ -6075,7 +6087,15 @@
       <!-- Modal Footer -->
       <div class="pt-2 flex items-center justify-between border-t border-slate-100">
         <div id="detail-modal-admin-actions" class="flex items-center space-x-2">
-          <!-- Populated if Admin -->
+          <button type="button" id="detail-modal-btn-delete-footer" onclick="promptDeleteCurrentDetailJob()"
+            title="Hapus Penugasan / Jadwal Unit (Khusus Admin)"
+            class="hidden p-2 rounded-xl text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 hover:border-rose-600 transition cursor-pointer shadow-2xs flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+              </path>
+            </svg>
+          </button>
         </div>
         <button type="button" onclick="toggleModal('modal-job-detail', false)"
           class="ml-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
@@ -7423,8 +7443,15 @@
         }
         const savedUnits = safeStorage.getItem('SE_MASTER_UNITS');
         if (savedUnits !== null) {
-          const parsed = JSON.parse(savedUnits);
-          if (Array.isArray(parsed)) state.masterUnits = parsed;
+          try {
+            const parsed = JSON.parse(savedUnits);
+            if (Array.isArray(parsed) && parsed.length > 0) state.masterUnits = parsed;
+            else state.masterUnits = [...DEFAULT_MASTER_UNITS];
+          } catch(e) {
+            state.masterUnits = [...DEFAULT_MASTER_UNITS];
+          }
+        } else {
+          state.masterUnits = [...DEFAULT_MASTER_UNITS];
         }
         const savedOps = safeStorage.getItem('SE_MASTER_OPERATORS');
         if (savedOps !== null) {
@@ -7544,6 +7571,17 @@
 
     // Global Reactive Application State (Siap Uji Coba Data Riil)
 
+    const DEFAULT_MASTER_UNITS = [
+      { id: 'UNIT-EX2168', lambung: 'EX2168', type: 'PC210-10M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
+      { id: 'UNIT-EX2169', lambung: 'EX2169', type: 'PC210-10M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'SIM E', statusAktif: true },
+      { id: 'UNIT-DZ8589', lambung: 'DZ8589', type: 'D85ESS-2', kategori: 'non_coal', cluster: 'Tengah', lokasi: 'FRONT RAJAWALI', statusAktif: true },
+      { id: 'UNIT-EX8501', lambung: 'EX8501', type: 'PC850-8R1', kategori: 'coal', cluster: 'Utara', lokasi: 'PIT UTARA', statusAktif: true },
+      { id: 'UNIT-EX001', lambung: 'EX001', type: 'PC200-8M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
+      { id: 'UNIT-EX002', lambung: 'EX002', type: 'PC300SE-8M0', kategori: 'coal', cluster: 'Tengah', lokasi: 'SIM E', statusAktif: true },
+      { id: 'UNIT-DZ001', lambung: 'DZ001', type: 'D85ESS-2', kategori: 'non_coal', cluster: 'Utara', lokasi: 'PIT 1 UTARA', statusAktif: true },
+      { id: 'UNIT-DZ155', lambung: 'DZ155', type: 'D155A-6', kategori: 'non_coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true }
+    ];
+
     const DEFAULT_MASTER_ARMADA = [
       { id: 'ARM-01', unit: 'LT2535', typeUnit: 'Lubetruck', cluster: 'Selatan', status: 'Aktif' },
       { id: 'ARM-02', unit: 'LT2622', typeUnit: 'Lubetruck', cluster: 'Selatan', status: 'Aktif' },
@@ -7595,7 +7633,7 @@
       isArmadaSelectMode: false,
       selectedArmadaIds: new Set(),
       parsedArmadaImportData: [],
-      masterUnits: [],
+      masterUnits: [...DEFAULT_MASTER_UNITS],
       masterUsers: [...MOCK_USERS],
       currentAchPhotos: ['', '', '', ''],
       isRosterSelectMode: false,
@@ -10307,21 +10345,119 @@
       return 'Aturan: Unit di Shift 2 jika mengalami kendala akan dicatat sebagai NON-ACH dan masuk evaluasi backlog shift berikutnya.';
     }
 
-    function evaluateShift1PendingJobs() {
-      let countMoved = 0;
-      const list = state.lubetruckState.jobs.filter(j => j.shift === 1 && j.status !== 'ach');
-      list.forEach(j => {
-        if (isExca300Unit(j)) {
-          j.status = 'non_ach';
-          j.isPending = false;
-        } else {
-          j.status = 'pending';
-          j.isPending = true;
-          j.shift = 2;
-          countMoved++;
+    function getJobEndTimeMinutes(waktuStr) {
+      if (!waktuStr || waktuStr === '-') return 17 * 60; // default jam 17:00 (akhir Shift 1)
+      if (String(waktuStr).includes('s/d')) {
+        const parts = String(waktuStr).split('s/d');
+        const cleanEnd = (parts[1] || '').trim().replace('.', ':');
+        const p = cleanEnd.split(':');
+        if (p.length >= 2) {
+          const h = parseInt(p[0], 10);
+          const m = parseInt(p[1], 10);
+          if (!isNaN(h) && !isNaN(m)) return h * 60 + m;
         }
+      } else if (String(waktuStr).includes('-')) {
+        const parts = String(waktuStr).split('-');
+        const cleanEnd = (parts[1] || '').trim().replace('.', ':');
+        const p = cleanEnd.split(':');
+        if (p.length >= 2) {
+          const h = parseInt(p[0], 10);
+          const m = parseInt(p[1], 10);
+          if (!isNaN(h) && !isNaN(m)) return h * 60 + m;
+        }
+      } else {
+        const clean = String(waktuStr).trim().replace('.', ':');
+        const p = clean.split(':');
+        if (p.length >= 2) {
+          const h = parseInt(p[0], 10);
+          const m = parseInt(p[1], 10);
+          if (!isNaN(h) && !isNaN(m)) return h * 60 + m;
+        }
+      }
+      return 17 * 60;
+    }
+
+    function autoEvaluatePendingJobs(showNotification = false) {
+      if (!state.lubetruckState || !Array.isArray(state.lubetruckState.jobs)) return 0;
+
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinutes = currentHour * 60 + now.getMinutes();
+      const todayStr = getEffectiveTodayString();
+      const isShift2Now = (currentHour >= 17 || currentHour < 5);
+
+      let countMoved = 0;
+      let hasChanges = false;
+
+      const collections = [
+        state.lubetruckState.jobs,
+        (state.watertruckState && Array.isArray(state.watertruckState.jobs)) ? state.watertruckState.jobs : []
+      ];
+
+      collections.forEach(list => {
+        list.forEach(j => {
+          // Hanya evaluasi job yang tercatat di Shift 1 dan belum tercapai (bukan ach/done/service/bd)
+          if (Number(j.shift) === 1 && j.status !== 'ach' && j.status !== 'done' && j.status !== 'service' && j.status !== 'bd') {
+            const jDate = j.tanggal || todayStr;
+            const endTimeMin = getJobEndTimeMinutes(j.waktu);
+
+            let shouldEvaluate = false;
+            if (jDate < todayStr) {
+              // Jadwal tanggal lampau yang belum tercapai di Shift 1
+              shouldEvaluate = true;
+            } else if (jDate === todayStr) {
+              // Jadwal hari ini: otomatis dipindahkan jika sudah masuk jam Shift 2 (>= 17:00 WITA) ATAU waktu slot unit sudah lewat
+              if (isShift2Now || currentMinutes >= endTimeMin) {
+                shouldEvaluate = true;
+              }
+            }
+
+            if (shouldEvaluate) {
+              if (isExca300Unit(j)) {
+                // Aturan Exca 300: dijadwalkan 2x sehari (S1 & S2), tidak ada pending, langsung non_ach
+                if (j.status !== 'non_ach') {
+                  j.status = 'non_ach';
+                  j.isPending = false;
+                  hasChanges = true;
+                  if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                }
+              } else {
+                // Aturan Unit Lainnya (Dozer / Exca Non-300 / Big Digger / Greasing):
+                // Pindah ke Shift 2 sebagai status PENDING dan diletakkan paling atas
+                j.shift = 2;
+                j.status = 'pending';
+                j.isPending = true;
+                if (!j.keterangan || j.keterangan === '-') {
+                  j.keterangan = 'Pending Shift 1 (Otomatis: Waktu terlewati)';
+                }
+                hasChanges = true;
+                countMoved++;
+                if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+              }
+            }
+          }
+        });
       });
-      showToast(`Evaluasi selesai: ${countMoved} unit dialihkan ke Shift 2 Pending!`, 'info');
+
+      if (hasChanges) {
+        saveDatabaseSync();
+        if (typeof notifyDataChanged === 'function') {
+          notifyDataChanged({ source: 'auto_evaluate_pending' });
+        }
+      }
+
+      if (showNotification && countMoved > 0) {
+        showToast(`Evaluasi otomatis: ${countMoved} unit kendala Shift 1 dialihkan ke antrean Shift 2 (Pending)!`, 'success');
+      }
+
+      return countMoved;
+    }
+
+    function evaluateShift1PendingJobs() {
+      const moved = autoEvaluatePendingJobs(true);
+      if (moved === 0) {
+        showToast('Tidak ada unit Shift 1 yang perlu dievaluasi ke Shift 2.', 'info');
+      }
       renderLtScheduleTable();
     }
 
@@ -10690,6 +10826,11 @@
       const container = document.getElementById('lt-schedule-table-container');
       if (!container) return;
 
+      // Evaluasi otomatis sebelum me-render tabel jadwal
+      if (typeof autoEvaluatePendingJobs === 'function') {
+        autoEvaluatePendingJobs();
+      }
+
       const isAdmin = (state.currentUser?.role === 'admin');
       const isMp = !isAdmin;
       const maxDate = getEffectiveTodayString();
@@ -10773,6 +10914,12 @@
         const clusters = (clusterFilter === 'ALL') ? defaultClusters : [targetParent];
         clusters.forEach(clusterName => {
           const clusterJobs = jobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
+          clusterJobs.sort((a, b) => {
+            const aPending = (a.status === 'pending' || a.isPending) ? 1 : 0;
+            const bPending = (b.status === 'pending' || b.isPending) ? 1 : 0;
+            if (bPending !== aPending) return bPending - aPending;
+            return (a.waktu || '').localeCompare(b.waktu || '');
+          });
           const clusterSection = document.createElement('div');
           clusterSection.className = 'border-b border-slate-100 last:border-b-0';
 
@@ -10906,7 +11053,9 @@
             <span class="font-black text-xs uppercase tracking-tight">${shiftTitle}</span>
             ${isMp ? `<span class="ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-white/20 text-white animate-pulse">● SHIFT AKTIF</span>` : ''}
           </div>
-          <span class="text-[11px] font-bold text-emerald-100">Total: ${shiftJobs.length} Job</span>
+          <div class="flex items-center space-x-2">
+            <span class="text-[11px] font-bold text-emerald-100">Total: ${shiftJobs.length} Job</span>
+          </div>
         `;
         shiftWrapper.appendChild(shiftHeader);
 
@@ -10915,6 +11064,13 @@
         const clusters = (clusterFilter === 'ALL') ? defaultClusters : [targetParent];
         clusters.forEach(clusterName => {
           const clusterJobs = shiftJobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
+          // Urutkan: Job Pending selalu diletakkan paling atas (top priority), disusul jam rencana
+          clusterJobs.sort((a, b) => {
+            const aPending = (a.status === 'pending' || a.isPending) ? 1 : 0;
+            const bPending = (b.status === 'pending' || b.isPending) ? 1 : 0;
+            if (bPending !== aPending) return bPending - aPending;
+            return (a.waktu || '').localeCompare(b.waktu || '');
+          });
           const clusterSection = document.createElement('div');
           clusterSection.className = 'border-b border-slate-100 last:border-b-0';
 
@@ -10963,9 +11119,18 @@
             clusterJobs.forEach(job => {
               const unitType = getUnitTypeFromMaster(job.noLambung, job.typeUnit || 'Unit');
               const tr = document.createElement('tr');
-              tr.className = `hover:bg-slate-50/80 transition align-top ${job.status === 'ach' ? 'bg-emerald-50/20' : (job.status === 'non_ach' ? 'bg-rose-50/20' : '')}`;
+              const isPendingJob = (job.status === 'pending' || job.isPending);
+              let rowHighlight = '';
+              if (job.status === 'ach') rowHighlight = 'bg-emerald-50/20';
+              else if (job.status === 'non_ach') rowHighlight = 'bg-rose-50/20';
+              else if (isPendingJob) rowHighlight = 'bg-amber-50/70 border-l-4 border-l-amber-500';
+
+              tr.className = `hover:bg-slate-50/80 transition align-top ${rowHighlight}`;
               tr.innerHTML = `
-                <td class="py-1 px-1.5 md:py-1.5 md:px-2 font-mono text-[10px] text-slate-700 break-words">${job.waktu || '07:00 s/d 07:15'}</td>
+                <td class="py-1 px-1.5 md:py-1.5 md:px-2 font-mono text-[10px] text-slate-700 break-words">
+                  <div>${job.waktu || '07:00 s/d 07:15'}</div>
+                  ${isPendingJob ? `<span class="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[8px] font-extrabold bg-amber-200/80 text-amber-950 uppercase tracking-tighter">PENDING S1</span>` : ''}
+                </td>
                 <td class="py-1 px-1.5 md:py-1.5 md:px-2 break-words">
                   <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-900 font-mono hover:text-emerald-700 text-left cursor-pointer text-[14.5px] leading-snug">
                     ${job.noLambung}
@@ -11035,6 +11200,11 @@
     function renderWtScheduleTable() {
       const container = document.getElementById('wt-schedule-table-container');
       if (!container) return;
+
+      // Evaluasi otomatis sebelum me-render tabel jadwal
+      if (typeof autoEvaluatePendingJobs === 'function') {
+        autoEvaluatePendingJobs();
+      }
 
       const isAdmin = (state.currentUser?.role === 'admin');
       const isMp = !isAdmin;
@@ -11123,6 +11293,12 @@
         const clusters = (clusterFilter === 'ALL') ? defaultClusters : [targetParent];
         clusters.forEach(clusterName => {
           const clusterJobs = jobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
+          clusterJobs.sort((a, b) => {
+            const aPending = (a.status === 'pending' || a.isPending) ? 1 : 0;
+            const bPending = (b.status === 'pending' || b.isPending) ? 1 : 0;
+            if (bPending !== aPending) return bPending - aPending;
+            return (a.waktu || '').localeCompare(b.waktu || '');
+          });
           const clusterSection = document.createElement('div');
           clusterSection.className = 'border-b border-slate-100 last:border-b-0';
 
@@ -11285,6 +11461,12 @@
 
           clusters.forEach(clusterName => {
             const clusterJobs = roundJobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
+            clusterJobs.sort((a, b) => {
+              const aPending = (a.status === 'pending' || a.isPending) ? 1 : 0;
+              const bPending = (b.status === 'pending' || b.isPending) ? 1 : 0;
+              if (bPending !== aPending) return bPending - aPending;
+              return (a.waktu || '').localeCompare(b.waktu || '');
+            });
             const clusterSection = document.createElement('div');
             clusterSection.className = 'border-b border-slate-100 last:border-b-0';
 
@@ -14895,10 +15077,18 @@
         }
       }
 
-      // 3. Status Badge
+      // 3. Status Badge & Lempok Pending Badge
       const badgeEl = document.getElementById('detail-modal-status-badge');
       if (badgeEl) {
         badgeEl.innerHTML = (typeof getJobStatusBadge === 'function') ? getJobStatusBadge(job) : (job.status || 'SCHEDULED');
+      }
+      const pendingBadgeEl = document.getElementById('detail-modal-pending-badge');
+      if (pendingBadgeEl) {
+        if (job.status === 'pending' || job.isPending) {
+          pendingBadgeEl.classList.remove('hidden');
+        } else {
+          pendingBadgeEl.classList.add('hidden');
+        }
       }
 
       // 4. Cluster & Lokasi Pit
@@ -15055,6 +15245,19 @@
         ketEl.textContent = job.alasanNonAch || job.keterangan || job.kendala || 'Nihil / Tidak ada kendala';
       }
 
+      // 12. Akses Hapus Penugasan (HANYA BENTUK ICON BAK SAMPAH, KHUSUS AKSES ADMIN SAJA)
+      const isAdminUser = (state.currentUser?.role === 'admin');
+      const delBtnHeader = document.getElementById('detail-modal-btn-delete');
+      const delBtnFooter = document.getElementById('detail-modal-btn-delete-footer');
+      if (delBtnHeader) {
+        if (isAdminUser) delBtnHeader.classList.remove('hidden');
+        else delBtnHeader.classList.add('hidden');
+      }
+      if (delBtnFooter) {
+        if (isAdminUser) delBtnFooter.classList.remove('hidden');
+        else delBtnFooter.classList.add('hidden');
+      }
+
       toggleModal('modal-job-detail', true);
     }
 
@@ -15136,23 +15339,133 @@
       }
     }
 
+    function promptDeleteCurrentDetailJob() {
+      if (state.currentUser?.role !== 'admin') {
+        showToast('Akses ditolak: Hanya Admin yang dapat menghapus jadwal / order!', 'error');
+        return;
+      }
+      if (!state.currentDetailJobId) return;
+      promptDeleteJob(state.currentDetailJobId);
+    }
+    window.promptDeleteCurrentDetailJob = promptDeleteCurrentDetailJob;
+
     function promptDeleteJob(jobId) {
+      if (state.currentUser?.role !== 'admin') {
+        showToast('Akses ditolak: Hanya Admin yang berhak menghapus penugasan!', 'error');
+        return;
+      }
       state.jobToDeleteId = jobId;
+      const job = findJobById(jobId);
+      const descEl = document.getElementById('delete-job-confirm-desc');
+      if (descEl && job) {
+        descEl.innerHTML = `Apakah Anda yakin ingin menghapus jadwal unit <b class="font-mono text-slate-900">${job.noLambung || ''}</b> (${job.typeUnit || 'Unit'}) dari sistem operasional & Cloud Supabase? Tindakan ini tidak dapat dibatalkan.`;
+      }
       toggleModal('modal-confirm-delete-job', true);
     }
 
-    function executeDeleteJob() {
+    async function executeDeleteJob() {
       if (!state.jobToDeleteId) return;
+      if (state.currentUser?.role !== 'admin') {
+        showToast('Akses ditolak: Hanya Admin yang berhak menghapus penugasan!', 'error');
+        return;
+      }
+
+      const deletedId = String(state.jobToDeleteId);
+      const job = findJobById(deletedId);
+      const noLambung = job ? job.noLambung : '';
+
+      // 1. Hapus dari seluruh state lokal (Lubetruck, Watertruck, dan Job Requests)
       ['unscheduledLtJobs', 'unscheduledWtJobs'].forEach(k => {
-        if (state[k]) state[k] = state[k].filter(j => j.id !== state.jobToDeleteId);
+        if (state[k]) state[k] = state[k].filter(j => String(j.id) !== deletedId);
       });
-      if (state.lubetruckState?.jobs) state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => j.id !== state.jobToDeleteId);
-      if (state.watertruckState?.jobs) state.watertruckState.jobs = state.watertruckState.jobs.filter(j => j.id !== state.jobToDeleteId);
-      const deletedId = state.jobToDeleteId;
+      if (state.lubetruckState?.jobs) {
+        state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => String(j.id) !== deletedId);
+      }
+      if (state.watertruckState?.jobs) {
+        state.watertruckState.jobs = state.watertruckState.jobs.filter(j => String(j.id) !== deletedId);
+      }
+
+      // 2. Tutup modal konfirmasi dan modal detail job
       toggleModal('modal-confirm-delete-job', false);
-      showToast('Penugasan berhasil dihapus', 'success');
-      notifyDataChanged({ source: 'delete_job', deletedJobId: deletedId });
+      toggleModal('modal-job-detail', false);
+
+      // 3. Simpan state lokal dan hapus dari Supabase
+      saveDatabaseSync();
+      if (typeof deleteJobFromSupabase === 'function') {
+        await deleteJobFromSupabase(deletedId);
+      }
+      if (typeof notifyDataChanged === 'function') {
+        notifyDataChanged({ source: 'delete_job', deletedJobId: deletedId });
+      }
+
+      showToast(`Penugasan unit ${noLambung || ''} berhasil dihapus permanen!`, 'success');
+      state.jobToDeleteId = null;
+      state.currentDetailJobId = null;
+
+      if (typeof refreshActiveTable === 'function') refreshActiveTable();
+      if (typeof debouncedRefreshUI === 'function') debouncedRefreshUI();
     }
+
+    // Helper pendaftaran & sinkronisasi unit otomatis ke Master Populasi (Lokal & Supabase)
+    async function registerOrUpdateMasterUnit(unitData) {
+      if (!unitData || !unitData.lambung) return;
+      const cleanLambung = unitData.lambung.trim().toUpperCase();
+      if (!state.masterUnits) state.masterUnits = [];
+
+      let u = state.masterUnits.find(item => (item.lambung || '').toUpperCase() === cleanLambung);
+      if (u) {
+        if (unitData.type && unitData.type !== 'Unit') u.type = unitData.type;
+        if (unitData.cluster) u.cluster = unitData.cluster;
+        if (unitData.lokasi && unitData.lokasi !== '-') u.lokasi = unitData.lokasi;
+        if (unitData.kategori) u.kategori = unitData.kategori;
+      } else {
+        u = {
+          id: 'UNIT-' + cleanLambung,
+          lambung: cleanLambung,
+          type: unitData.type || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(cleanLambung, 'PC210-10M0') : 'PC210-10M0'),
+          kategori: unitData.kategori || 'coal',
+          cluster: unitData.cluster || 'Selatan',
+          lokasi: unitData.lokasi || 'Pit Area',
+          statusAktif: true
+        };
+        state.masterUnits.push(u);
+      }
+      safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+
+      // Sinkronkan ke Supabase tabel master_units jika online
+      if (state.supabaseClient) {
+        try {
+          const payload = {
+            no_lambung: u.lambung,
+            type_model: u.type || 'PC210-10M0',
+            kategori: u.kategori || 'coal',
+            cluster: u.cluster || 'Selatan',
+            lokasi: u.lokasi || 'Pit Area',
+            status: u.statusAktif ? 'Operasi' : 'Breakdown',
+            status_aktif: u.statusAktif !== false,
+            updated_at: new Date().toISOString()
+          };
+          if (u.id && !String(u.id).startsWith('U-') && !String(u.id).startsWith('UNIT-')) {
+            payload.id = u.id;
+          }
+          const { data, error } = await state.supabaseClient
+            .from('master_units')
+            .upsert(payload, { onConflict: 'no_lambung' })
+            .select('id, no_lambung');
+          if (!error && Array.isArray(data) && data[0]?.id) {
+            u.id = data[0].id;
+            safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+          }
+          console.log('[registerOrUpdateMasterUnit OK]', cleanLambung);
+        } catch (err) {
+          console.warn('[registerOrUpdateMasterUnit Supabase Error]', err);
+        }
+      }
+      if (typeof renderMasterUnitsTable === 'function' && state.masterActiveSection === 'units') {
+        renderMasterUnitsTable();
+      }
+    }
+    window.registerOrUpdateMasterUnit = registerOrUpdateMasterUnit;
 
     function openAddJobModal(shift = 1, cluster = 'Selatan', targetType = 'LT', washingRound = 1) {
       const shiftInp = document.getElementById('add-job-shift');
@@ -15482,6 +15795,17 @@
         state.watertruckState.jobs.push(newJob);
       } else {
         state.lubetruckState.jobs.push(newJob);
+      }
+
+      // Pastikan unit produksi otomatis terdaftar & sinkron ke Supabase master_units
+      if (typeof registerOrUpdateMasterUnit === 'function' && noLambung) {
+        registerOrUpdateMasterUnit({
+          lambung: noLambung,
+          type: typeUnit,
+          cluster: cluster,
+          lokasi: lokasi,
+          kategori: (cat === 'coal' || cat === 'rom') ? 'coal' : 'non_coal'
+        });
       }
 
       saveDatabaseSync();
@@ -18675,6 +18999,7 @@
         saveBtn.innerHTML = '<span class="inline-block animate-spin mr-1">⌛</span> Menyimpan & Menyinkronkan...';
       }
 
+      if (!state.masterUnits) state.masterUnits = [];
       let newCount = 0;
       let updateCount = 0;
 
@@ -18689,7 +19014,7 @@
           updateCount++;
         } else {
           state.masterUnits.push({
-            id: 'U-' + String(Date.now()).slice(-5) + Math.floor(Math.random() * 100),
+            id: 'UNIT-' + item.lambung,
             type: item.type,
             lambung: item.lambung,
             kategori: item.kategori,
@@ -18703,14 +19028,13 @@
 
       safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
 
-      // SINKRONISASI KE SUPABASE (Tabel public.master_units sesuai Foto 2)
+      // SINKRONISASI KE SUPABASE (Tabel public.master_units)
       if (state.supabaseClient) {
         try {
           showToast(`Menyinkronkan ${list.length} unit ke Cloud Supabase...`, 'info');
           const supaRows = list.map(item => {
             const existing = state.masterUnits.find(u => (u.lambung || '').toUpperCase() === item.lambung.toUpperCase());
-            return {
-              id: existing?.id || item.id || ('UNIT-' + item.lambung),
+            const row = {
               no_lambung: item.lambung,
               type_model: item.type || 'PC210-10M0',
               kategori: item.kategori || 'coal',
@@ -18720,19 +19044,31 @@
               status_aktif: item.statusAktif !== false,
               updated_at: new Date().toISOString()
             };
+            if (existing?.id && !String(existing.id).startsWith('U-') && !String(existing.id).startsWith('UNIT-')) {
+              row.id = existing.id;
+            }
+            return row;
           });
 
           const CHUNK = 50;
           let supaSuccessCount = 0;
           for (let i = 0; i < supaRows.length; i += CHUNK) {
             const chunk = supaRows.slice(i, i + CHUNK);
-            const { error } = await state.supabaseClient
+            const { data, error } = await state.supabaseClient
               .from('master_units')
-              .upsert(chunk, { onConflict: 'no_lambung' });
+              .upsert(chunk, { onConflict: 'no_lambung' })
+              .select('id, no_lambung');
             if (error) {
               console.warn('[Supabase Units Upsert Error]', error);
             } else {
               supaSuccessCount += chunk.length;
+              if (Array.isArray(data)) {
+                data.forEach(d => {
+                  const u = state.masterUnits.find(m => (m.lambung || '').toUpperCase() === (d.no_lambung || '').toUpperCase());
+                  if (u && d.id) u.id = d.id;
+                });
+                safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+              }
             }
           }
           console.log(`[Supabase Units Sync Success] ${supaSuccessCount}/${supaRows.length} unit berhasil tersimpan ke tabel master_units.`);
@@ -18748,8 +19084,9 @@
         saveBtn.innerHTML = 'Simpan Data Unit Terpilih';
       }
       if (typeof notifyDataChanged === 'function') notifyDataChanged();
-      else renderMasterUnitsTable();
+      if (typeof renderMasterUnitsTable === 'function') renderMasterUnitsTable();
     }
+    window.saveImportedUnits = saveImportedUnits;
 
     // Fungsi Sinkronisasi Menyeluruh Populasi Unit ke Cloud Supabase
     async function syncMasterUnitsToSupabase(showToastAlert = true) {
@@ -18758,40 +19095,79 @@
         return;
       }
       if (!Array.isArray(state.masterUnits) || state.masterUnits.length === 0) {
-        if (showToastAlert) showToast('Tidak ada data unit untuk disinkronkan!', 'warning');
-        return;
+        // Coba baca dari Supabase jika lokal kosong
+        try {
+          const supaUnits = await fetchEntireSupabaseTable('master_units', '*', 'id');
+          if (Array.isArray(supaUnits) && supaUnits.length > 0) {
+            state.masterUnits = supaUnits.map(u => ({
+              id: u.id,
+              lambung: u.no_lambung || u.lambung,
+              type: u.type_model || u.type,
+              kategori: u.kategori || 'coal',
+              cluster: u.cluster || 'Selatan',
+              lokasi: u.lokasi || 'Pit Area',
+              statusAktif: (u.status_aktif !== false && u.status !== 'Breakdown')
+            }));
+            safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+            if (typeof renderMasterUnitsTable === 'function') renderMasterUnitsTable();
+            if (showToastAlert) showToast(`Berhasil mengambil ${state.masterUnits.length} unit dari Cloud Supabase!`, 'success');
+            return;
+          }
+        } catch (e) {}
+
+        // Jika lokal dan cloud keduanya masih kosong, isi dengan unit standar tambang
+        state.masterUnits = [...DEFAULT_MASTER_UNITS];
+        safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
       }
 
       try {
-        if (showToastAlert) showToast(`Menyinkronkan seluruh ${state.masterUnits.length} data unit ke Supabase...`, 'info');
-        const supaRows = state.masterUnits.map(u => ({
-          id: u.id || ('UNIT-' + u.lambung),
-          no_lambung: u.lambung,
-          type_model: u.type || 'PC210-10M0',
-          kategori: u.kategori || 'coal',
-          cluster: u.cluster || 'Selatan',
-          lokasi: u.lokasi || 'Pit Area',
-          status: u.statusAktif ? 'Operasi' : 'Breakdown',
-          status_aktif: u.statusAktif !== false,
-          updated_at: new Date().toISOString()
-        }));
+        if (showToastAlert) showToast(`Menyinkronkan ${state.masterUnits.length} data unit ke Supabase...`, 'info');
+        const supaRows = state.masterUnits.map(u => {
+          const row = {
+            no_lambung: u.lambung,
+            type_model: u.type || 'PC210-10M0',
+            kategori: u.kategori || 'coal',
+            cluster: u.cluster || 'Selatan',
+            lokasi: u.lokasi || 'Pit Area',
+            status: u.statusAktif ? 'Operasi' : 'Breakdown',
+            status_aktif: u.statusAktif !== false,
+            updated_at: new Date().toISOString()
+          };
+          if (u.id && !String(u.id).startsWith('U-') && !String(u.id).startsWith('UNIT-')) {
+            row.id = u.id;
+          }
+          return row;
+        });
 
         const CHUNK = 50;
         let successCount = 0;
         for (let i = 0; i < supaRows.length; i += CHUNK) {
           const chunk = supaRows.slice(i, i + CHUNK);
-          const { error } = await state.supabaseClient
+          const { data, error } = await state.supabaseClient
             .from('master_units')
-            .upsert(chunk, { onConflict: 'no_lambung' });
-          if (!error) successCount += chunk.length;
+            .upsert(chunk, { onConflict: 'no_lambung' })
+            .select('id, no_lambung');
+          if (!error) {
+            successCount += chunk.length;
+            if (Array.isArray(data)) {
+              data.forEach(d => {
+                const u = state.masterUnits.find(m => (m.lambung || '').toUpperCase() === (d.no_lambung || '').toUpperCase());
+                if (u && d.id) u.id = d.id;
+              });
+              safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+            }
+          } else {
+            console.warn('[syncMasterUnitsToSupabase Error]', error);
+          }
         }
 
         if (showToastAlert) {
           showToast(`Berhasil menyinkronkan ${successCount} unit ke tabel master_units Supabase!`, 'success');
         }
         console.log(`[syncMasterUnitsToSupabase OK] ${successCount} unit tersinkron.`);
+        if (typeof renderMasterUnitsTable === 'function') renderMasterUnitsTable();
       } catch (err) {
-        console.error('[syncMasterUnitsToSupabase Error]', err);
+        console.error('[syncMasterUnitsToSupabase Exception]', err);
         if (showToastAlert) showToast('Gagal sinkronisasi unit: ' + err.message, 'error');
       }
     }
@@ -19605,6 +19981,16 @@
         state.unscheduledLtJobs.unshift(newOrder);
       }
 
+      // Pastikan unit produksi dari order tercatat di Populasi Unit
+      if (typeof registerOrUpdateMasterUnit === 'function' && lambung) {
+        registerOrUpdateMasterUnit({
+          lambung: lambung,
+          type: getUnitTypeFromMaster(lambung, 'HAUL TRUCK'),
+          cluster: cluster,
+          lokasi: lokasi
+        });
+      }
+
       // Reset form
       if (document.getElementById('order-nama-pemesan')) document.getElementById('order-nama-pemesan').value = '';
       if (document.getElementById('order-no-lambung')) document.getElementById('order-no-lambung').value = '';
@@ -19725,6 +20111,19 @@
             renderMasterUnitsTable();
           }
           console.log('[Supabase Sync] Populasi Unit tersinkronisasi lengkap:', supaUnits.length, 'unit');
+        } else {
+          // Jika di Cloud Supabase tabel master_units masih kosong, inisialisasi & sinkronkan
+          if (!Array.isArray(state.masterUnits) || state.masterUnits.length === 0) {
+            state.masterUnits = [...DEFAULT_MASTER_UNITS];
+            safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+          }
+          console.log('[Supabase Sync] Inisialisasi awal master_units ke Supabase:', state.masterUnits.length, 'unit');
+          if (typeof syncMasterUnitsToSupabase === 'function') {
+            await syncMasterUnitsToSupabase(false);
+          }
+          if (state.masterActiveSection === 'units' && typeof renderMasterUnitsTable === 'function') {
+            renderMasterUnitsTable();
+          }
         }
 
         // C. Sinkronisasi Data Master Kontak Produksi (Seluruh ribuan baris tanpa batas 1.000)
@@ -19879,7 +20278,7 @@
       toggleModal('modal-unit-form', true);
     }
 
-    function handleSaveUnit(event) {
+    async function handleSaveUnit(event) {
       if (event) event.preventDefault();
       if (state.currentUser?.role !== 'admin') {
         showToast('Akses ditolak: Hanya Admin yang dapat mengelola Data Master Populasi Unit!', 'error');
@@ -19898,22 +20297,26 @@
         return;
       }
 
+      if (!state.masterUnits) state.masterUnits = [];
       let targetUnit = null;
-      if (id) {
-        const u = state.masterUnits.find(item => item.id === id);
-        if (u) {
-          u.type = type;
-          u.lambung = lambung;
-          u.kategori = kategori;
-          u.cluster = cluster;
-          u.lokasi = lokasi;
-          u.statusAktif = statusAktif;
-          targetUnit = u;
-        }
-        showToast(`Unit ${lambung} berhasil diperbarui!`, 'success');
+
+      // Cari berdasarkan ID atau nomor lambung yang sama
+      const existingById = id ? state.masterUnits.find(item => item.id === id) : null;
+      const existingByLambung = state.masterUnits.find(item => (item.lambung || '').toUpperCase() === lambung);
+      const existing = existingById || existingByLambung;
+
+      if (existing) {
+        existing.type = type;
+        existing.lambung = lambung;
+        existing.kategori = kategori;
+        existing.cluster = cluster;
+        existing.lokasi = lokasi;
+        existing.statusAktif = statusAktif;
+        targetUnit = existing;
+        showToast(`Unit ${lambung} berhasil diperbarui di populasi!`, 'success');
       } else {
         const newUnit = {
-          id: 'U-' + String(Date.now()).slice(-4),
+          id: 'UNIT-' + lambung,
           type,
           lambung,
           kategori,
@@ -19923,26 +20326,52 @@
         };
         state.masterUnits.push(newUnit);
         targetUnit = newUnit;
-        showToast(`Unit baru ${lambung} berhasil ditambahkan!`, 'success');
+        showToast(`Unit baru ${lambung} berhasil ditambahkan ke populasi!`, 'success');
       }
 
-      // Sinkronisasi Supabase jika online
+      // Simpan langsung ke Local Storage browser
+      safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+
+      // Sinkronisasi Supabase tabel master_units
       if (state.supabaseClient && targetUnit) {
-        state.supabaseClient.from('master_units').upsert({
-          id: targetUnit.id,
-          no_lambung: targetUnit.lambung,
-          type_model: targetUnit.type,
-          kategori: targetUnit.kategori,
-          cluster: targetUnit.cluster,
-          lokasi: targetUnit.lokasi,
-          status: targetUnit.statusAktif ? 'Operasi' : 'Breakdown',
-          status_aktif: targetUnit.statusAktif
-        }).catch(err => console.warn('[Supabase Unit Upsert]', err));
+        try {
+          const payload = {
+            no_lambung: targetUnit.lambung,
+            type_model: targetUnit.type,
+            kategori: targetUnit.kategori,
+            cluster: targetUnit.cluster,
+            lokasi: targetUnit.lokasi,
+            status: targetUnit.statusAktif ? 'Operasi' : 'Breakdown',
+            status_aktif: targetUnit.statusAktif,
+            updated_at: new Date().toISOString()
+          };
+          if (targetUnit.id && !String(targetUnit.id).startsWith('U-') && !String(targetUnit.id).startsWith('UNIT-')) {
+            payload.id = targetUnit.id;
+          }
+          const { data, error } = await state.supabaseClient
+            .from('master_units')
+            .upsert(payload, { onConflict: 'no_lambung' })
+            .select('id, no_lambung');
+
+          if (error) {
+            console.error('[Supabase Unit Upsert Error]', error);
+            showToast('Peringatan: Gagal simpan ke Supabase (' + error.message + ')', 'warning');
+          } else {
+            if (data && data[0]?.id) {
+              targetUnit.id = data[0].id;
+              safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+            }
+            console.log('[Supabase Unit Upsert OK]', targetUnit.lambung);
+            showToast(`Unit ${lambung} tersimpan di Cloud Supabase!`, 'success');
+          }
+        } catch (supaErr) {
+          console.warn('[Supabase Unit Upsert Exception]', supaErr);
+        }
       }
 
       toggleModal('modal-unit-form', false);
       if (typeof notifyDataChanged === 'function') notifyDataChanged();
-      else renderMasterUnitsTable();
+      if (typeof renderMasterUnitsTable === 'function') renderMasterUnitsTable();
     }
 
     function downloadMasterUnitsTemplate() {
@@ -20138,40 +20567,7 @@
       if (saveBtn) saveBtn.disabled = (list.length === 0);
     }
 
-    function saveImportedUnits() {
-      const list = state.parsedUnitsImportData;
-      if (!list || list.length === 0) return;
-
-      let newCount = 0;
-      let updateCount = 0;
-
-      list.forEach(item => {
-        const existingIdx = state.masterUnits.findIndex(u => u.lambung.toUpperCase() === item.lambung.toUpperCase());
-        if (existingIdx !== -1) {
-          state.masterUnits[existingIdx].type = item.type;
-          state.masterUnits[existingIdx].kategori = item.kategori;
-          state.masterUnits[existingIdx].cluster = item.cluster;
-          state.masterUnits[existingIdx].lokasi = item.lokasi || state.masterUnits[existingIdx].lokasi || '-';
-          state.masterUnits[existingIdx].statusAktif = item.statusAktif;
-          updateCount++;
-        } else {
-          state.masterUnits.push({
-            id: 'U-' + String(Date.now()).slice(-5) + Math.floor(Math.random() * 100),
-            type: item.type,
-            lambung: item.lambung,
-            kategori: item.kategori,
-            cluster: item.cluster,
-            lokasi: item.lokasi || '-',
-            statusAktif: item.statusAktif
-          });
-          newCount++;
-        }
-      });
-
-      toggleModal('modal-import-units', false);
-      showToast(`Sukses import: ${newCount} unit baru ditambahkan, ${updateCount} unit diperbarui!`, 'success');
-      renderMasterUnitsTable();
-    }
+// Duplicate saveImportedUnits dihapus (menggunakan versi utama di atas)
 
     function promptDeleteMasterUnit(id) {
       const idStr = String(id);
@@ -20728,6 +21124,7 @@
     window.submitNonAchAction = submitNonAchAction;
     window.getPendingRule = getPendingRule;
     window.evaluateShift1PendingJobs = evaluateShift1PendingJobs;
+    window.autoEvaluatePendingJobs = autoEvaluatePendingJobs;
     window.openAdminEditModal = openAdminEditModal;
     window.saveAdminJobEdit = saveAdminJobEdit;
     window.switchMasterSubtab = switchMasterSubtab;
@@ -21331,6 +21728,10 @@
       syncAllDateFiltersToToday();
       updateLiveClocks();
       setInterval(updateLiveClocks, 1000);
+      if (typeof autoEvaluatePendingJobs === 'function') {
+        autoEvaluatePendingJobs();
+        setInterval(autoEvaluatePendingJobs, 30000); // Evaluasi otomatis setiap 30 detik
+      }
       enforceDateRestrictions();
 
       // Auto-set roster upload period to current year-month
