@@ -10786,7 +10786,7 @@
               <span class="text-[10px] text-emerald-800 font-bold">${clusterJobs.length} Alat Berat</span>
               ${isAdmin ? `
                 <button type="button" onclick="openClusterArmadaModal('${clusterName}', 'LT')" class="px-2 py-0.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 text-[10px] font-extrabold transition shadow-2xs flex items-center space-x-1 cursor-pointer">
-                  <span>🚚 Armada KGU ${clusterName}</span>
+                  <span>Armada</span>
                 </button>
                 <button type="button" onclick="openAddJobModal(1, '${clusterName}', 'LT')" class="px-2 py-0.5 rounded-lg bg-brand-200 hover:bg-brand-300 text-brand-900 text-[10px] font-extrabold transition shadow-2xs">+ Tambah Unit</button>
               ` : ''}
@@ -10928,7 +10928,7 @@
               <span class="text-[10px] text-emerald-800 font-bold">${clusterJobs.length} Alat Berat</span>
               ${isAdmin ? `
                 <button type="button" onclick="openClusterArmadaModal('${clusterName}', 'LT')" class="px-2 py-0.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 text-[10px] font-extrabold transition shadow-2xs flex items-center space-x-1 cursor-pointer">
-                  <span>🚚 Armada KGU ${clusterName}</span>
+                  <span>Armada</span>
                 </button>
                 <button type="button" onclick="openAddJobModal(${shiftNum}, '${clusterName}', 'LT')" class="px-2 py-0.5 rounded-lg bg-brand-200 hover:bg-brand-300 text-brand-900 text-[10px] font-extrabold transition shadow-2xs">+ Tambah Unit</button>
               ` : ''}
@@ -11136,7 +11136,7 @@
               <span class="text-[10px] text-cyan-800 font-bold">${clusterJobs.length} Alat Berat</span>
               ${isAdmin ? `
                 <button type="button" onclick="openClusterArmadaModal('${clusterName}', 'WT')" class="px-2 py-0.5 rounded-lg bg-cyan-100 hover:bg-cyan-200 text-cyan-950 border border-cyan-300 text-[10px] font-extrabold transition shadow-2xs flex items-center space-x-1 cursor-pointer">
-                  <span>💧 Armada</span>
+                  <span>Armada</span>
                 </button>
                 <button type="button" onclick="openAddJobModal(1, '${clusterName}', 'WT')" class="px-2 py-0.5 rounded-lg bg-cyan-200 hover:bg-cyan-300 text-cyan-950 text-[10px] font-extrabold transition shadow-2xs">+ Tambah Unit</button>
               ` : ''}
@@ -11277,7 +11277,6 @@
           roundHeader.className = `px-3 py-1.5 ${round.bg} text-white flex items-center justify-between border-t border-teal-500/40`;
           roundHeader.innerHTML = `
             <div class="flex items-center space-x-2">
-              <span class="text-xs">💧</span>
               <span class="font-black text-[11px] tracking-wide uppercase">${round.title}</span>
             </div>
             <span class="text-[10px] font-bold text-teal-100">${roundJobs.length} Job</span>
@@ -11300,7 +11299,7 @@
                 <span class="text-[10px] text-cyan-800 font-bold">${clusterJobs.length} Alat Berat</span>
                 ${isAdmin ? `
                   <button type="button" onclick="openClusterArmadaModal('${clusterName}', 'WT')" class="px-2 py-0.5 rounded-lg bg-cyan-100 hover:bg-cyan-200 text-cyan-950 border border-cyan-300 text-[10px] font-extrabold transition shadow-2xs flex items-center space-x-1 cursor-pointer">
-                    <span>💧 Armada</span>
+                    <span>Armada</span>
                   </button>
                   <button type="button" onclick="openAddJobModal(${shiftNum}, '${clusterName}', 'WT', ${round.num})" class="px-2 py-0.5 rounded-lg bg-cyan-200 hover:bg-cyan-300 text-cyan-950 text-[10px] font-extrabold transition shadow-2xs">+ Tambah Unit</button>
                 ` : ''}
