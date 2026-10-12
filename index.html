@@ -4869,6 +4869,37 @@
 
         <!-- Kontainer Isian Validasi Normal -->
         <div id="ach-normal-form-fields" class="space-y-3">
+          <!-- Penyesuaian Lokasi & Cluster Pit Aktual Lapangan (Prioritas Utama MP - Realtime Sync ke Data Master) -->
+          <div class="p-2.5 rounded-2xl bg-amber-50/80 border border-amber-200 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-amber-950 flex items-center space-x-1">
+                <span>📍 Lokasi & Cluster Pit Aktual (MP Lapangan)</span>
+              </span>
+              <span class="text-[9px] font-extrabold text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded tracking-tight">● SINKRON DATA MASTER</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-slate-600 text-[10px] mb-0.5 font-semibold">Cluster Pit Aktual</label>
+                <select id="ach-cluster"
+                  class="w-full px-2.5 py-1.5 rounded-xl border border-amber-300 bg-white text-slate-900 font-bold text-xs focus:outline-none focus:border-brand-500 shadow-2xs">
+                  <option value="Selatan">KGU SELATAN</option>
+                  <option value="Tengah">KGU TENGAH</option>
+                  <option value="Utara">KGU UTARA</option>
+                  <option value="ROM">ROM AREA</option>
+                  <option value="Outpit Selatan">Outpit Selatan</option>
+                  <option value="Outpit Tengah">Outpit Tengah</option>
+                  <option value="Outpit Utara">Outpit Utara</option>
+                  <option value="HRM Selatan">HRM Selatan</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-slate-600 text-[10px] mb-0.5 font-semibold">Lokasi Pit Aktual</label>
+                <input type="text" id="ach-lokasi" placeholder="Contoh: BALANAI / SIM E"
+                  class="w-full px-2.5 py-1.5 rounded-xl border border-amber-300 bg-white text-slate-900 font-bold text-xs uppercase focus:outline-none focus:border-brand-500">
+              </div>
+            </div>
+          </div>
+
           <!-- Baris 1: Armada & Nama OPT (Dropdown List dari Roster) -->
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -5773,10 +5804,10 @@
             <select id="add-job-cat" onchange="handleCatChangeInAddModal(this.value)"
               class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 bg-white">
               <option value="">-- Pilih Kategori Jadwal --</option>
-              <option value="small">Greasing Small Track</option>
-              <option value="digger">Big Digger</option>
-              <option value="aircleaner">Air Cleaner</option>
-              <option value="topup">Top Up Oil</option>
+              <option value="small">Greasing Small Track (Daily)</option>
+              <option value="digger">Big Digger (Siklus 3 Hari)</option>
+              <option value="aircleaner">Air Cleaner (Filter Udara)</option>
+              <option value="topup">Top Up Oil (Mingguan)</option>
             </select>
           </div>
           <div>
@@ -5784,6 +5815,30 @@
             <input type="text" id="add-job-waktu" value="" placeholder="Contoh: 07:00 s/d 07:15"
               class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 font-mono">
           </div>
+        </div>
+
+        <!-- Opsi Siklus 3 Hari Khusus Big Digger -->
+        <div id="add-job-pattern-container" class="hidden p-3 rounded-2xl bg-amber-50/80 border border-amber-200 text-xs space-y-1">
+          <label class="block font-bold text-amber-950">Pola Siklus 3 Hari Big Digger (Jumat Libur):</label>
+          <select id="add-job-pattern" class="w-full px-3 py-2 rounded-xl border border-amber-300 bg-white font-semibold text-slate-800 focus:outline-none focus:border-brand-500">
+            <option value="AUTO">Otomatis Sesuai Hari Awal (Recommended)</option>
+            <option value="POLA_A">Pola A (Minggu & Rabu)</option>
+            <option value="POLA_B">Pola B (Senin & Kamis)</option>
+            <option value="POLA_C">Pola C (Selasa & Sabtu)</option>
+          </select>
+          <p class="text-[10px] text-amber-800 font-medium">Catatan: Hari Jumat otomatis libur jadwal operasi Big Digger.</p>
+        </div>
+
+        <!-- Toggle Auto-Generate 1 Bulan Penuh -->
+        <div class="p-3 rounded-2xl bg-emerald-50/80 border border-emerald-200/90 flex items-center justify-between">
+          <div class="space-y-0.5 pr-2">
+            <label for="add-job-generate-month" class="text-xs font-black text-emerald-950 cursor-pointer flex items-center space-x-1.5">
+              <span>📅 Auto-Generate Jadwal 1 Bulan Penuh</span>
+              <span class="px-1.5 py-0.2 rounded text-[9px] font-black bg-emerald-200 text-emerald-900 uppercase">Auto-Fill 30/31 Hari</span>
+            </label>
+            <p class="text-[10.5px] text-emerald-800 font-medium leading-tight">Otomatis membentuk jadwal 1 bulan penuh berulang sesuai frekuensi unit (harian / siklus 3 hari / mingguan). Reset otomatis setiap tanggal 1.</p>
+          </div>
+          <input type="checkbox" id="add-job-generate-month" checked class="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer shrink-0">
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -10377,8 +10432,308 @@
       return 17 * 60;
     }
 
+    // ==============================================================================
+    // LOGIKA BISNIS: ATURAN PENDING, SIKLUS CARRY-OVER & AUTO-GENERATE BULANAN
+    // ==============================================================================
+    function parseDateString(dStr) {
+      if (!dStr) return new Date();
+      const parts = String(dStr).split('-');
+      return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    }
+
+    function addDaysToDateStr(dStr, n) {
+      const d = parseDateString(dStr);
+      d.setDate(d.getDate() + n);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function isSameMiningWeek(dStr1, dStr2) {
+      const d1 = parseDateString(dStr1);
+      const d2 = parseDateString(dStr2);
+      const sun1 = new Date(d1);
+      sun1.setDate(d1.getDate() - d1.getDay());
+      sun1.setHours(0, 0, 0, 0);
+      const sun2 = new Date(d2);
+      sun2.setDate(d2.getDate() - d2.getDay());
+      sun2.setHours(0, 0, 0, 0);
+      return sun1.getTime() === sun2.getTime();
+    }
+
+    function isUnitCoal(noLambung, job) {
+      if (job?.kategori === 'coal' || job?.unitKategori === 'coal') return true;
+      if (job?.kategori === 'non_coal' || job?.unitKategori === 'non_coal') return false;
+      if (job?.cat === 'coal' || job?.cat === 'rom') return true;
+      if (job?.cat === 'non_coal') return false;
+      const clean = (noLambung || '').trim().toUpperCase();
+      const u = (state.masterUnits || []).find(m => (m.lambung || m.no_lambung || '').toUpperCase() === clean);
+      if (u && (u.kategori === 'coal' || u.kategori === 'rom')) return true;
+      return false;
+    }
+
+    function getJobCategoryRule(job) {
+      const cat = (job.cat || '').toLowerCase();
+      if (cat === 'small') return 'GREASING_SMALL';
+      if (cat === 'digger') return 'BIG_DIGGER';
+      if (cat === 'aircleaner') {
+        return isUnitCoal(job.noLambung, job) ? 'AIR_CLEANER_COAL' : 'AIR_CLEANER_NON_COAL';
+      }
+      if (cat === 'topup') return 'TOP_UP_OIL';
+      if (cat === 'coal' || cat === 'rom') return 'WASHING_COAL_ROM';
+      if (cat === 'non_coal') return 'WASHING_NON_COAL';
+      return 'GENERAL';
+    }
+
+    /**
+     * Mengunci snapshot histori pekerjaan secara permanen (Snapshot Table)
+     */
+    async function lockJobHistorySnapshot(job, finalStatus, reason = '') {
+      if (!job || !job.id) return;
+      const normFinalStatus = (finalStatus || job.status || 'ACHIEVED').toUpperCase();
+      const statusFinal = (normFinalStatus === 'ACH' || normFinalStatus === 'DONE') ? 'ACHIEVED' : ((normFinalStatus === 'NON-ACH' || normFinalStatus === 'NON_ACH') ? 'NON_ACH' : normFinalStatus);
+
+      if (!state.jobHistory) state.jobHistory = [];
+      const cleanId = String(job.id);
+      const existingIdx = state.jobHistory.findIndex(h => h.job_id === cleanId);
+
+      const snapshotRecord = {
+        id: 'HIST-' + cleanId + '-' + Date.now(),
+        job_id: cleanId,
+        no_lambung: job.noLambung || job.no_lambung || 'UNIT',
+        type_unit: job.typeUnit || job.type_unit || 'Unit',
+        cat: job.cat || 'small',
+        job_type: (cleanId.includes('WT') || job.targetType === 'WT') ? 'water' : 'lube',
+        tanggal_rencana: job.originalDate || job.original_date || job.tanggal,
+        shift_rencana: parseInt(job.shift || 1, 10),
+        waktu_rencana: job.waktu || job.waktu_rencana || '07:00 s/d 07:15',
+        cluster: job.cluster || 'Selatan',
+        lokasi: job.lokasi || 'Pit Area',
+        armada_unit: job.armada || job.ltUnit || job.wtUnit || job.armada_unit || 'LT2535',
+        opt_name: job.opt || job.opt_name || '-',
+        mp1: job.mp1 || '-',
+        mp2: job.mp2 || '-',
+        tanggal_eksekusi: job.tanggalRealisasi || job.tanggal || getEffectiveTodayString(),
+        jam_start: job.jamStart || job.jam_start || '',
+        jam_end: job.jamEnd || job.jam_end || '',
+        durasi: (typeof calculateDuration === 'function') ? calculateDuration(job.jamStart, job.jamEnd) : (job.durasi || null),
+        status_final: statusFinal,
+        keterangan: reason || job.keterangan || '',
+        non_ach_category: job.nonAchCategory || job.non_ach_category || 'Operasional',
+        non_ach_reason: reason || job.alasanNonAch || job.non_ach_reason || '',
+        created_at: new Date().toISOString()
+      };
+
+      if (existingIdx !== -1) {
+        state.jobHistory[existingIdx] = snapshotRecord;
+      } else {
+        state.jobHistory.unshift(snapshotRecord);
+      }
+      safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
+
+      // Kunci ke Supabase tabel job_history jika online
+      if (state.supabaseClient) {
+        try {
+          await state.supabaseClient.from('job_history').upsert({
+            job_id: snapshotRecord.job_id,
+            no_lambung: snapshotRecord.no_lambung,
+            type_unit: snapshotRecord.type_unit,
+            cat: snapshotRecord.cat,
+            job_type: snapshotRecord.job_type,
+            tanggal_rencana: snapshotRecord.tanggal_rencana,
+            shift_rencana: snapshotRecord.shift_rencana,
+            waktu_rencana: snapshotRecord.waktu_rencana,
+            cluster: snapshotRecord.cluster,
+            lokasi: snapshotRecord.lokasi,
+            armada_unit: snapshotRecord.armada_unit,
+            opt_name: snapshotRecord.opt_name,
+            mp1: snapshotRecord.mp1,
+            mp2: snapshotRecord.mp2,
+            tanggal_eksekusi: snapshotRecord.tanggal_eksekusi,
+            jam_start: snapshotRecord.jam_start,
+            jam_end: snapshotRecord.jam_end,
+            status_final: snapshotRecord.status_final,
+            keterangan: snapshotRecord.keterangan,
+            non_ach_category: snapshotRecord.non_ach_category,
+            non_ach_reason: snapshotRecord.non_ach_reason,
+            snapshot_data: job,
+            created_at: snapshotRecord.created_at
+          }, { onConflict: 'job_id' });
+          console.log('[Snapshot History Locked OK]', cleanId);
+        } catch (err) {
+          console.warn('[Snapshot History Lock Warn]', err.message);
+        }
+      }
+    }
+    window.lockJobHistorySnapshot = lockJobHistorySnapshot;
+
+    /**
+     * Membentuk jadwal 1 bulan penuh (auto-fill 30/31 hari) sesuai aturan frekuensi pekerjaan
+     */
+    function generateMonthlySchedule(baseJob, targetMonthStr, masterUnits = []) {
+      const targetMonth = targetMonthStr || (baseJob.tanggal ? baseJob.tanggal.slice(0, 7) : getEffectiveTodayString().slice(0, 7));
+      const [yearStr, monthStr] = targetMonth.split('-');
+      const year = parseInt(yearStr, 10);
+      const month = parseInt(monthStr, 10);
+      const daysInMonth = new Date(year, month, 0).getDate();
+
+      const rule = getJobCategoryRule(baseJob);
+      const baseDate = baseJob.tanggal || `${yearStr}-${monthStr}-01`;
+      const baseDayOfWeek = parseDateString(baseDate).getDay(); // 0 = Sun
+      const baseDayNum = parseDateString(baseDate).getDate();
+
+      const generatedJobs = [];
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayOfWeek = parseDateString(dateStr).getDay();
+
+        let shouldInclude = false;
+
+        switch (rule) {
+          case 'GREASING_SMALL':
+            // 1x sehari (Daily) -> auto-fill seluruh 30/31 hari
+            shouldInclude = true;
+            break;
+
+          case 'BIG_DIGGER': {
+            // Siklus per 3 hari: Pola A (Sun & Wed), Pola B (Mon & Thu), Pola C (Tue & Sat). Jumat Libur.
+            let pattern = baseJob.pattern || 'AUTO';
+            if (pattern === 'AUTO') {
+              if (baseDayOfWeek === 0 || baseDayOfWeek === 3) pattern = 'POLA_A';
+              else if (baseDayOfWeek === 1 || baseDayOfWeek === 4) pattern = 'POLA_B';
+              else if (baseDayOfWeek === 2 || baseDayOfWeek === 6) pattern = 'POLA_C';
+              else pattern = 'POLA_B';
+            }
+
+            if (dayOfWeek === 5) {
+              shouldInclude = false; // Jumat Libur
+            } else if (pattern === 'POLA_A' && (dayOfWeek === 0 || dayOfWeek === 3)) {
+              shouldInclude = true;
+            } else if (pattern === 'POLA_B' && (dayOfWeek === 1 || dayOfWeek === 4)) {
+              shouldInclude = true;
+            } else if (pattern === 'POLA_C' && (dayOfWeek === 2 || dayOfWeek === 6)) {
+              shouldInclude = true;
+            }
+            break;
+          }
+
+          case 'AIR_CLEANER_COAL': {
+            // Frekuensi 2 hari sekali
+            const diff = Math.abs(day - baseDayNum);
+            if (diff % 2 === 0) shouldInclude = true;
+            break;
+          }
+
+          case 'AIR_CLEANER_NON_COAL':
+          case 'TOP_UP_OIL':
+          case 'WASHING_NON_COAL': {
+            // Frekuensi 1 minggu sekali (berulang pada hari yang sama setiap minggunya)
+            if (dayOfWeek === baseDayOfWeek) shouldInclude = true;
+            break;
+          }
+
+          case 'WASHING_COAL_ROM': {
+            // Washing Coal / ROM berulang mingguan pada hari yang sama
+            if (dayOfWeek === baseDayOfWeek) shouldInclude = true;
+            break;
+          }
+
+          default:
+            shouldInclude = (dateStr === baseDate);
+            break;
+        }
+
+        if (shouldInclude) {
+          const isWt = (baseJob.targetType === 'WT' || baseJob.cat === 'coal' || baseJob.cat === 'rom' || baseJob.cat === 'non_coal');
+          const cleanLambung = (baseJob.noLambung || 'UNIT').trim().toUpperCase();
+          const shift = parseInt(baseJob.shift || 1, 10);
+          const idPrefix = isWt ? 'WT-SCH-' : 'LT-SCH-';
+          const jobId = `${idPrefix}${dateStr.replace(/-/g, '')}-${cleanLambung}-S${shift}`;
+
+          // Otomatis tentukan armada & personil roster untuk tanggal dan shift tersebut
+          const assignedArmada = baseJob.ltUnit || baseJob.armada || (isWt ? 'WT101' : 'LT2535');
+          const crew = (typeof getPersonnelForArmada === 'function')
+            ? getPersonnelForArmada(assignedArmada, baseJob.cluster || 'Selatan', shift, dateStr)
+            : { opt: baseJob.opt || '-', mp1: baseJob.mp1 || '-', mp2: baseJob.mp2 || '-' };
+
+          const newJob = {
+            ...baseJob,
+            id: jobId,
+            tanggal: dateStr,
+            shift: shift,
+            status: 'scheduled',
+            isPending: false,
+            carryCount: 0,
+            originalDate: dateStr,
+            armada: assignedArmada,
+            ltUnit: isWt ? '-' : assignedArmada,
+            wtUnit: isWt ? assignedArmada : '-',
+            opt: crew.opt || baseJob.opt || '-',
+            mp1: crew.mp1 || baseJob.mp1 || '-',
+            mp2: crew.mp2 || baseJob.mp2 || '-',
+            keterangan: baseJob.keterangan || '',
+            fotos: []
+          };
+          generatedJobs.push(newJob);
+        }
+      }
+
+      return generatedJobs;
+    }
+    window.generateMonthlySchedule = generateMonthlySchedule;
+
+    /**
+     * Reset Otomatis Jadwal Bulanan Setiap Tanggal 1 Pukul 00:00
+     */
+    function checkAndExecuteMonthlyReset() {
+      const today = getEffectiveTodayString();
+      const currentDay = parseDateString(today).getDate();
+      const currentMonthKey = today.slice(0, 7);
+      const lastResetMonth = safeStorage.getItem('SE_LAST_MONTHLY_RESET');
+
+      if (currentDay === 1 && lastResetMonth !== currentMonthKey) {
+        console.log(`[Monthly Reset] Melakukan reset otomatis jadwal bulanan untuk ${currentMonthKey}...`);
+        const collections = [
+          state.lubetruckState?.jobs || [],
+          state.watertruckState?.jobs || []
+        ];
+
+        let resetCount = 0;
+        collections.forEach(list => {
+          list.forEach(j => {
+            if (j.tanggal && j.tanggal < today) {
+              const s = (j.status || '').toLowerCase();
+              if (s !== 'ach' && s !== 'achieved' && s !== 'done' && s !== 'non_ach' && s !== 'non-ach') {
+                j.status = 'non_ach';
+                j.isPending = false;
+                j.alasanNonAch = 'Non ACH: Reset otomatis pergantian bulan tanggal 1';
+                j.keterangan = '[TUTUP BUKU BULANAN] Non ACH: Reset tanggal 1';
+                lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
+                if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                resetCount++;
+              }
+            }
+          });
+        });
+
+        safeStorage.setItem('SE_LAST_MONTHLY_RESET', currentMonthKey);
+        saveDatabaseSync();
+        if (resetCount > 0) {
+          console.log(`[Monthly Reset Selesai] ${resetCount} jadwal bulan sebelumnya ditutup NON ACH.`);
+        }
+      }
+    }
+
+    /**
+     * Evaluator Pending & Transisi Status Otomatis untuk Seluruh Kategori Pekerjaan
+     */
     function autoEvaluatePendingJobs(showNotification = false) {
       if (!state.lubetruckState || !Array.isArray(state.lubetruckState.jobs)) return 0;
+
+      // 1. Cek reset bulanan jika tanggal 1
+      checkAndExecuteMonthlyReset();
 
       const now = new Date();
       const currentHour = now.getHours();
@@ -10387,6 +10742,7 @@
       const isShift2Now = (currentHour >= 17 || currentHour < 5);
 
       let countMoved = 0;
+      let countClosed = 0;
       let hasChanges = false;
 
       const collections = [
@@ -10396,45 +10752,181 @@
 
       collections.forEach(list => {
         list.forEach(j => {
-          // Hanya evaluasi job yang tercatat di Shift 1 dan belum tercapai (bukan ach/done/service/bd)
-          if (Number(j.shift) === 1 && j.status !== 'ach' && j.status !== 'done' && j.status !== 'service' && j.status !== 'bd') {
-            const jDate = j.tanggal || todayStr;
-            const endTimeMin = getJobEndTimeMinutes(j.waktu);
+          const s = (j.status || '').toLowerCase();
+          if (s === 'ach' || s === 'achieved' || s === 'done' || s === 'non_ach' || s === 'non-ach' || s === 'service' || s === 'bd' || s === 'cancelled') {
+            return;
+          }
 
-            let shouldEvaluate = false;
-            if (jDate < todayStr) {
-              // Jadwal tanggal lampau yang belum tercapai di Shift 1
-              shouldEvaluate = true;
-            } else if (jDate === todayStr) {
-              // Jadwal hari ini: otomatis dipindahkan jika sudah masuk jam Shift 2 (>= 17:00 WITA) ATAU waktu slot unit sudah lewat
-              if (isShift2Now || currentMinutes >= endTimeMin) {
-                shouldEvaluate = true;
-              }
-            }
+          const rule = getJobCategoryRule(j);
+          const jDate = j.tanggal || todayStr;
+          const endTimeMin = getJobEndTimeMinutes(j.waktu);
+          const isPastDate = jDate < todayStr;
+          const isToday = (jDate === todayStr);
 
-            if (shouldEvaluate) {
-              if (isExca300Unit(j)) {
-                // Aturan Exca 300: dijadwalkan 2x sehari (S1 & S2), tidak ada pending, langsung non_ach
-                if (j.status !== 'non_ach') {
-                  j.status = 'non_ach';
-                  j.isPending = false;
+          // LOGIKA TRANSISI SESUAI ATURAN KATEGORI:
+          switch (rule) {
+            case 'GREASING_SMALL': {
+              // 1x sehari: S1 -> S2 (PENDING), S2 -> NON ACH (Batas 1 hari)
+              if (Number(j.shift) === 1) {
+                if (isPastDate || (isToday && isShift2Now)) {
+                  j.shift = 2;
+                  j.status = 'pending';
+                  j.isPending = true;
+                  j.keterangan = 'Pending Shift 1 (Dialihkan ke Shift 2)';
                   hasChanges = true;
+                  countMoved++;
                   if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
                 }
-              } else {
-                // Aturan Unit Lainnya (Dozer / Exca Non-300 / Big Digger / Greasing):
-                // Pindah ke Shift 2 sebagai status PENDING dan diletakkan paling atas
-                j.shift = 2;
-                j.status = 'pending';
-                j.isPending = true;
-                if (!j.keterangan || j.keterangan === '-') {
-                  j.keterangan = 'Pending Shift 1 (Otomatis: Waktu terlewati)';
+              } else if (Number(j.shift) === 2) {
+                if (isPastDate || (isToday && !isShift2Now)) {
+                  j.status = 'non_ach';
+                  j.isPending = false;
+                  j.alasanNonAch = 'Non ACH: Batas pengerjaan harian (Shift 2) terlewati';
+                  j.keterangan = '[TUTUP BUKU] Non ACH: Maksimal 1 hari';
+                  hasChanges = true;
+                  countClosed++;
+                  lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
+                  if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
                 }
+              }
+              break;
+            }
+
+            case 'BIG_DIGGER': {
+              // Siklus 3 hari: S1 -> S2 (PENDING), Hari H S2 -> Rollover H+1 (PENDING), H+1 S2 -> NON ACH
+              if (Number(j.shift) === 1) {
+                if (isPastDate || (isToday && isShift2Now)) {
+                  j.shift = 2;
+                  j.status = 'pending';
+                  j.isPending = true;
+                  j.keterangan = 'Pending Shift 1 (Dialihkan ke Shift 2)';
+                  hasChanges = true;
+                  countMoved++;
+                  if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                }
+              } else if (Number(j.shift) === 2) {
+                const carry = j.carryCount || 0;
+                if (isPastDate || (isToday && !isShift2Now)) {
+                  if (carry === 0) {
+                    // Rollover ke H+1
+                    j.originalDate = j.originalDate || jDate;
+                    j.tanggal = isPastDate ? todayStr : addDaysToDateStr(jDate, 1);
+                    j.shift = 1;
+                    j.status = 'pending';
+                    j.isPending = true;
+                    j.carryCount = 1;
+                    j.keterangan = `Pending Big Digger (Rollover H+1 dari ${j.originalDate})`;
+                    hasChanges = true;
+                    countMoved++;
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                  } else {
+                    // Batas H+1 berakhir -> TUTUP BUKU
+                    j.status = 'non_ach';
+                    j.isPending = false;
+                    j.alasanNonAch = 'Non ACH: Batas pengerjaan H+1 Big Digger terlewati';
+                    j.keterangan = `[TUTUP BUKU] Non ACH: Melewati H+1 (Asal: ${j.originalDate || jDate})`;
+                    hasChanges = true;
+                    countClosed++;
+                    lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                  }
+                }
+              }
+              break;
+            }
+
+            case 'AIR_CLEANER_COAL': {
+              // Sama dengan Greasing Small (Batas 1 hari)
+              if (Number(j.shift) === 1) {
+                if (isPastDate || (isToday && isShift2Now)) {
+                  j.shift = 2;
+                  j.status = 'pending';
+                  j.isPending = true;
+                  j.keterangan = 'Pending Shift 1 (Dialihkan ke Shift 2)';
+                  hasChanges = true;
+                  countMoved++;
+                  if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                }
+              } else if (Number(j.shift) === 2) {
+                if (isPastDate || (isToday && !isShift2Now)) {
+                  j.status = 'non_ach';
+                  j.isPending = false;
+                  j.alasanNonAch = 'Non ACH: Batas pengerjaan harian (Shift 2) Air Cleaner Coal terlewati';
+                  j.keterangan = '[TUTUP BUKU] Non ACH: Maksimal 1 hari';
+                  hasChanges = true;
+                  countClosed++;
+                  lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
+                  if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                }
+              }
+              break;
+            }
+
+            case 'AIR_CLEANER_NON_COAL':
+            case 'TOP_UP_OIL':
+            case 'WASHING_NON_COAL': {
+              // Rolling Accumulative harian sepanjang minggu berjalan (Minggu s/d Sabtu)
+              if (Number(j.shift) === 1) {
+                if (isPastDate || (isToday && isShift2Now)) {
+                  j.shift = 2;
+                  j.status = 'pending';
+                  j.isPending = true;
+                  j.keterangan = 'Pending Shift 1 (Dialihkan ke Shift 2)';
+                  hasChanges = true;
+                  countMoved++;
+                  if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                }
+              } else if (Number(j.shift) === 2) {
+                if (isPastDate || (isToday && !isShift2Now)) {
+                  const orig = j.originalDate || jDate;
+                  const isSameWeek = isSameMiningWeek(orig, todayStr);
+                  const isSaturday = parseDateString(jDate).getDay() === 6;
+
+                  if (!isSameWeek || (isSaturday && (isPastDate || !isShift2Now))) {
+                    // Batas akhir siklus Sabtu lewat -> TUTUP BUKU
+                    j.status = 'non_ach';
+                    j.isPending = false;
+                    j.alasanNonAch = 'Non ACH: Batas akhir siklus mingguan (Sabtu) terlewati';
+                    j.keterangan = `[TUTUP BUKU] Non ACH: Melewati siklus mingguan (Asal: ${orig})`;
+                    hasChanges = true;
+                    countClosed++;
+                    lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                  } else {
+                    // Rollover ke hari berikutnya
+                    j.originalDate = orig;
+                    j.tanggal = isPastDate ? todayStr : addDaysToDateStr(jDate, 1);
+                    j.shift = 1;
+                    j.status = 'pending';
+                    j.isPending = true;
+                    j.carryCount = (j.carryCount || 0) + 1;
+                    j.keterangan = `Pending Rolling Mingguan (dari ${orig})`;
+                    hasChanges = true;
+                    countMoved++;
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                  }
+                }
+              }
+              break;
+            }
+
+            case 'WASHING_COAL_ROM': {
+              // Sesi washing pertama tidak ter-action -> LANGSUNG TUTUP BUKU TANPA PENDING
+              if (isPastDate || (isToday && isShift2Now)) {
+                j.status = 'non_ach';
+                j.isPending = false;
+                j.alasanNonAch = 'Non ACH: Sesi washing pertama terjadwal tidak ter-action';
+                j.keterangan = '[TUTUP BUKU] Non ACH: Tanpa Pending';
                 hasChanges = true;
-                countMoved++;
+                countClosed++;
+                lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
                 if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
               }
+              break;
             }
+
+            default:
+              break;
           }
         });
       });
@@ -10446,17 +10938,17 @@
         }
       }
 
-      if (showNotification && countMoved > 0) {
-        showToast(`Evaluasi otomatis: ${countMoved} unit kendala Shift 1 dialihkan ke antrean Shift 2 (Pending)!`, 'success');
+      if (showNotification && (countMoved > 0 || countClosed > 0)) {
+        showToast(`Evaluasi selesai: ${countMoved} unit pending dialihkan, ${countClosed} unit ditutup NON ACH.`, 'info');
       }
 
-      return countMoved;
+      return countMoved + countClosed;
     }
 
     function evaluateShift1PendingJobs() {
-      const moved = autoEvaluatePendingJobs(true);
-      if (moved === 0) {
-        showToast('Tidak ada unit Shift 1 yang perlu dievaluasi ke Shift 2.', 'info');
+      const affected = autoEvaluatePendingJobs(true);
+      if (affected === 0) {
+        showToast('Seluruh jadwal telah sesuai status operasional terkini.', 'info');
       }
       renderLtScheduleTable();
     }
@@ -10955,7 +11447,7 @@
                 <th class="hidden md:table-cell py-1.5 px-2 w-[7%] text-center">DURASI</th>
                 <th class="hidden md:table-cell py-1.5 px-2 w-[5%] text-center">FOTO</th>
                 <th class="hidden md:table-cell py-1.5 px-2 w-[12%]">TEMUAN / KENDALA</th>
-                <th class="py-1.5 px-2 w-[18%] md:w-[9%] text-center">${isAdmin ? 'STATUS' : 'AKSI'}</th>
+                <th class="py-1.5 px-2 w-[18%] md:w-[9%] text-center">AKSI / STATUS</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -10999,15 +11491,7 @@
                 </td>
                 <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-500 break-words">${job.keterangan || '-'}</td>
                 <td class="py-1 px-1.5 md:py-1.5 md:px-2 text-center">
-                  ${isAdmin ? `
-                    <div class="flex items-center justify-center">
-                      ${getJobStatusBadge(job)}
-                    </div>
-                  ` : `
-                    <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95">
-                      ACTION
-                    </button>
-                  `}
+                  ${renderJobActionCell(job)}
                 </td>
               `;
               tbody.appendChild(tr);
@@ -11106,7 +11590,7 @@
                 <th class="hidden md:table-cell py-1.5 px-2 w-[7%] text-center">DURASI</th>
                 <th class="hidden md:table-cell py-1.5 px-2 w-[5%] text-center">FOTO</th>
                 <th class="hidden md:table-cell py-1.5 px-2 w-[12%]">TEMUAN / KENDALA</th>
-                <th class="py-1.5 px-2 w-[18%] md:w-[9%] text-center">${isAdmin ? 'STATUS' : 'AKSI'}</th>
+                <th class="py-1.5 px-2 w-[18%] md:w-[9%] text-center">AKSI / STATUS</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -11159,15 +11643,7 @@
                 </td>
                 <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-500 break-words">${job.keterangan || '-'}</td>
                 <td class="py-1 px-1.5 md:py-1.5 md:px-2 text-center">
-                  ${isAdmin ? `
-                    <div class="flex items-center justify-center">
-                      ${getJobStatusBadge(job)}
-                    </div>
-                  ` : `
-                    <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95">
-                      ACTION
-                    </button>
-                  `}
+                  ${renderJobActionCell(job)}
                 </td>
               `;
               tbody.appendChild(tr);
@@ -11334,7 +11810,7 @@
                 <th class="hidden md:table-cell py-1.5 px-2 w-[7%] text-center">DURASI</th>
                 <th class="hidden md:table-cell py-1.5 px-2 w-[5%] text-center">FOTO</th>
                 <th class="hidden md:table-cell py-1.5 px-2 w-[12%]">TEMUAN / KENDALA</th>
-                <th class="py-1.5 px-2 w-[18%] md:w-[9%] text-center">${isAdmin ? 'STATUS' : 'AKSI'}</th>
+                <th class="py-1.5 px-2 w-[18%] md:w-[9%] text-center">AKSI / STATUS</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -11378,15 +11854,7 @@
                 </td>
                 <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-500 break-words">${job.keterangan || '-'}</td>
                 <td class="py-1 px-1.5 md:py-1.5 md:px-2 text-center">
-                  ${isAdmin ? `
-                    <div class="flex items-center justify-center">
-                      ${getJobStatusBadge(job)}
-                    </div>
-                  ` : `
-                    <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95">
-                      ACTION
-                    </button>
-                  `}
+                  ${renderJobActionCell(job)}
                 </td>
               `;
               tbody.appendChild(tr);
@@ -11503,7 +11971,7 @@
                   <th class="hidden md:table-cell py-1.5 px-2 w-[7%] text-center">DURASI</th>
                   <th class="hidden md:table-cell py-1.5 px-2 w-[5%] text-center">FOTO</th>
                   <th class="hidden md:table-cell py-1.5 px-2 w-[12%]">TEMUAN / KENDALA</th>
-                  <th class="py-1.5 px-2 w-[18%] md:w-[9%] text-center">${isAdmin ? 'STATUS' : 'AKSI'}</th>
+                  <th class="py-1.5 px-2 w-[18%] md:w-[9%] text-center">AKSI / STATUS</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -11547,15 +12015,7 @@
                   </td>
                   <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-500 break-words">${job.keterangan || '-'}</td>
                   <td class="py-1 px-1.5 md:py-1.5 md:px-2 text-center">
-                    ${isAdmin ? `
-                      <div class="flex items-center justify-center">
-                        ${getJobStatusBadge(job)}
-                      </div>
-                    ` : `
-                      <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95">
-                        ACTION
-                      </button>
-                    `}
+                    ${renderJobActionCell(job)}
                   </td>
                 `;
                 tbody.appendChild(tr);
@@ -14333,6 +14793,201 @@
       toggleModal('modal-non-ach-form', true);
     }
 
+        /**
+     * Memproses aksi NON ACH berdasarkan Roles / SOP Pekerjaan
+     * Alur: ACTION -> NON ACH -> Evaluasi Roles:
+     * 1. Washing Coal & ROM: Langsung Tutup Buku Non ACH (tanpa pendingan)
+     * 2. Greasing Small Track & Air Cleaner Coal: S1 -> PENDING S2. S2 -> Tutup Buku Non ACH (maks 1 hari).
+     * 3. Greasing Big Digger: S1 -> PENDING S2. S2 Hari H -> rollover PENDING S1 H+1. S2 H+1 -> Tutup Buku Non ACH.
+     * 4. Air Cleaner Non Coal, Top Up Oil, & Washing Non Coal: S1 -> PENDING S2. S2 -> rollover harian PENDING sampai Sabtu malam -> Tutup Buku Non ACH.
+     */
+    function processNonAchByRoles(job, kategori, alasan) {
+      if (!job) return { isClosed: false, message: '' };
+      const rule = (typeof getJobCategoryRule === 'function') ? getJobCategoryRule(job) : 'GENERAL';
+      const shiftNum = Number(job.shift || 1);
+      const actionDate = getEffectiveTodayString();
+      job.tanggalRealisasi = actionDate;
+      job.jamEnd = new Date().toTimeString().slice(0, 5);
+      job.pica = true;
+      job.alasanNonAch = alasan;
+      job.nonAchCategory = kategori;
+
+      let msg = '';
+      let isClosed = false;
+
+      switch (rule) {
+        case 'WASHING_COAL_ROM': {
+          // Aturan 1: Langsung Tutup Buku Non ACH tanpa sistem pending
+          job.status = 'non_ach';
+          job.isPending = false;
+          job.keterangan = `[TUTUP BUKU] Non ACH: ${kategori} (${alasan}) - SOP Washing Coal/ROM`;
+          isClosed = true;
+          msg = `Unit ${job.noLambung} selesai sebagai Non ACH (Tutup Buku sesuai SOP Washing Coal/ROM)`;
+          break;
+        }
+
+        case 'GREASING_SMALL':
+        case 'AIR_CLEANER_COAL': {
+          // Aturan 2: Maksimal 1 hari
+          if (shiftNum === 1) {
+            // S1 Non ACH -> PENDING ke Shift 2
+            job.shift = 2;
+            job.status = 'pending';
+            job.isPending = true;
+            job.pendingFromShift = 1;
+            job.waktu = '17:45 s/d 04:45';
+            job.keterangan = `Pending Shift 1: ${kategori} (${alasan}) -> Dialihkan ke Shift 2`;
+            msg = `Unit ${job.noLambung} dialihkan ke PENDING Shift 2 (Batas pengerjaan 1 hari)`;
+          } else {
+            // S2 Non ACH -> Tutup Buku Non ACH
+            job.status = 'non_ach';
+            job.isPending = false;
+            job.keterangan = `[TUTUP BUKU] Non ACH Shift 2: ${kategori} (${alasan}) - Batas 1 hari berakhir`;
+            isClosed = true;
+            msg = `Unit ${job.noLambung} mencapai batas harian Shift 2 -> Tutup Buku (Non ACH)`;
+          }
+          break;
+        }
+
+        case 'BIG_DIGGER': {
+          // Aturan 3: Siklus 3 hari, batas rollover H+1
+          const carry = Number(job.carryCount || 0);
+          if (shiftNum === 1) {
+            // S1 Non ACH -> PENDING ke Shift 2
+            job.shift = 2;
+            job.status = 'pending';
+            job.isPending = true;
+            job.pendingFromShift = 1;
+            job.waktu = '17:45 s/d 04:45';
+            job.keterangan = `Pending Shift 1: ${kategori} (${alasan}) -> Dialihkan ke Shift 2`;
+            msg = `Big Digger ${job.noLambung} dialihkan ke PENDING Shift 2`;
+          } else {
+            // S2 Non ACH
+            if (carry === 0) {
+              // Hari H S2 -> Rollover ke Shift 1 H+1
+              job.originalDate = job.originalDate || (job.tanggal || actionDate);
+              job.tanggal = addDaysToDateStr(job.originalDate, 1);
+              job.shift = 1;
+              job.status = 'pending';
+              job.isPending = true;
+              job.carryCount = 1;
+              job.waktu = '07:00 s/d 07:15';
+              job.keterangan = `Pending Big Digger (Rollover H+1 dari ${job.originalDate}): ${kategori} (${alasan})`;
+              msg = `Big Digger ${job.noLambung} di-rollover ke PENDING Shift 1 (H+1: ${job.tanggal})`;
+            } else {
+              // Sudah H+1 S2 -> Tutup Buku Non ACH
+              job.status = 'non_ach';
+              job.isPending = false;
+              job.keterangan = `[TUTUP BUKU] Non ACH: Melewati batas maksimal H+1 Big Digger (Asal: ${job.originalDate || job.tanggal}) - ${kategori} (${alasan})`;
+              isClosed = true;
+              msg = `Big Digger ${job.noLambung} mencapai batas maksimal H+1 -> Tutup Buku (Non ACH)`;
+            }
+          }
+          break;
+        }
+
+        case 'AIR_CLEANER_NON_COAL':
+        case 'TOP_UP_OIL':
+        case 'WASHING_NON_COAL': {
+          // Aturan 4: Rolling harian akumulatif sepanjang minggu berjalan (Minggu s/d Sabtu)
+          if (shiftNum === 1) {
+            // S1 Non ACH -> PENDING ke Shift 2
+            job.shift = 2;
+            job.status = 'pending';
+            job.isPending = true;
+            job.pendingFromShift = 1;
+            job.waktu = '17:45 s/d 04:45';
+            job.keterangan = `Pending Shift 1: ${kategori} (${alasan}) -> Dialihkan ke Shift 2`;
+            msg = `Unit ${job.noLambung} dialihkan ke PENDING Shift 2`;
+          } else {
+            // S2 Non ACH
+            const origDate = job.originalDate || (job.tanggal || actionDate);
+            const dObj = parseDateString(job.tanggal || actionDate);
+            const isSaturday = (dObj.getDay() === 6);
+
+            if (!isSaturday) {
+              // Belum hari Sabtu -> Rollover ke hari berikutnya di Shift 1
+              job.originalDate = origDate;
+              job.tanggal = addDaysToDateStr(job.tanggal || actionDate, 1);
+              job.shift = 1;
+              job.status = 'pending';
+              job.isPending = true;
+              job.carryCount = (Number(job.carryCount || 0)) + 1;
+              job.waktu = '07:00 s/d 07:15';
+              job.keterangan = `Pending Rolling Mingguan (${job.originalDate} s/d Sabtu): ${kategori} (${alasan})`;
+              msg = `Unit ${job.noLambung} di-rollover ke PENDING Shift 1 (${job.tanggal})`;
+            } else {
+              // Sabtu malam -> Tutup Buku Non ACH
+              job.status = 'non_ach';
+              job.isPending = false;
+              job.keterangan = `[TUTUP BUKU] Non ACH: Batas akhir siklus mingguan (Sabtu malam) - ${kategori} (${alasan})`;
+              isClosed = true;
+              msg = `Unit ${job.noLambung} mencapai akhir siklus mingguan (Sabtu) -> Tutup Buku (Non ACH)`;
+            }
+          }
+          break;
+        }
+
+        default: {
+          // Fallback umum
+          if (shiftNum === 1) {
+            job.shift = 2;
+            job.status = 'pending';
+            job.isPending = true;
+            job.pendingFromShift = 1;
+            job.waktu = '17:45 s/d 04:45';
+            job.keterangan = `Pending Shift 1: ${kategori} (${alasan}) -> Dialihkan ke Shift 2`;
+            msg = `Unit ${job.noLambung} dialihkan ke PENDING Shift 2`;
+          } else {
+            job.status = 'non_ach';
+            job.isPending = false;
+            job.keterangan = `[TUTUP BUKU] Non ACH: ${kategori} (${alasan})`;
+            isClosed = true;
+            msg = `Unit ${job.noLambung} ditutup sebagai Non ACH`;
+          }
+          break;
+        }
+      }
+
+      // Jika Tutup Buku, kunci ke snapshot riwayat pekerjaan permanen
+      if (isClosed && typeof lockJobHistorySnapshot === 'function') {
+        lockJobHistorySnapshot(job, 'NON_ACH', job.keterangan);
+      }
+
+      // Sinkronisasi ke Supabase
+      if (state.supabaseClient && typeof syncJobToSupabase === 'function') {
+        syncJobToSupabase(job);
+      }
+
+      saveDatabaseSync();
+      return { isClosed, message: msg };
+    }
+    window.processNonAchByRoles = processNonAchByRoles;
+
+    /**
+     * Helper render tombol Aksi vs Badge Status pada seluruh tabel operasional
+     * Jika job masih aktif (scheduled / pending) -> Tampilkan Tombol ACTION
+     * Jika job sudah selesai (ACH / NON ACH) -> Tampilkan Badge Status
+     */
+    function renderJobActionCell(job) {
+      if (!job) return '<span class="text-slate-400 font-bold text-xs">-</span>';
+      const s = (job.status || '').toLowerCase();
+      if (s === 'ach' || s === 'achieved' || s === 'done' || s === 'non_ach' || s === 'non-ach' || s === 'cancel' || s === 'cancelled' || s === 'service' || s === 'bd') {
+        return `<div class="flex items-center justify-center">${getJobStatusBadge(job)}</div>`;
+      }
+
+      const isPending = (s === 'pending' || job.isPending);
+      return `
+        <div class="flex flex-col items-center justify-center gap-0.5">
+          <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95">
+            ACTION
+          </button>
+          ${isPending ? '<span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">PENDING</span>' : ''}
+        </div>
+      `;
+    }
+    window.renderJobActionCell = renderJobActionCell;
+
     function submitNonAchAction(e) {
       if (e && e.preventDefault) e.preventDefault();
       const job = findJobById(state.currentActionJobId);
@@ -14343,16 +14998,12 @@
       const kategori = document.getElementById('nonach-kategori')?.value || 'Lain-lain';
       const alasan = document.getElementById('nonach-alasan')?.value || '-';
 
-      job.status = 'non_ach';
-      job.pica = true;
-      job.keterangan = `${kategori}: ${alasan}`;
-      job.jamEnd = new Date().toTimeString().slice(0, 5);
-      const actionDateNonAch = getEffectiveTodayString();
-      job.tanggalRealisasi = actionDateNonAch;
-      if (!job.tanggal) job.tanggal = actionDateNonAch;
+      // Evaluasi alur Non ACH sesuai roles bisnis (Pending vs Tutup Buku)
+      const res = processNonAchByRoles(job, kategori, alasan);
 
       toggleModal('modal-non-ach-form', false);
-      showToast('Laporan NON ACH berhasil disimpan!', 'success');
+      showToast(res.message || 'Laporan NON ACH berhasil diproses!', res.isClosed ? 'info' : 'warning');
+      refreshActiveTable();
       notifyDataChanged({ source: 'non_ach_action', jobId: job.id });
     }
 
@@ -15267,7 +15918,7 @@
       
       // 1. Update data master unit di local state
       if (!state.masterUnits) state.masterUnits = [];
-      const unitIdx = state.masterUnits.findIndex(u => (u.lambung || '').toUpperCase() === cleanLambung);
+      const unitIdx = state.masterUnits.findIndex(u => (u.lambung || u.no_lambung || '').toUpperCase() === cleanLambung);
       if (unitIdx !== -1) {
         if (newCluster) state.masterUnits[unitIdx].cluster = newCluster;
         if (newLokasi) state.masterUnits[unitIdx].lokasi = newLokasi;
@@ -15276,7 +15927,9 @@
         state.masterUnits.push({
           id: 'UNIT-' + cleanLambung,
           lambung: cleanLambung,
-          type: getUnitTypeFromMaster(cleanLambung, 'Excavator'),
+          no_lambung: cleanLambung,
+          type: getUnitTypeFromMaster(cleanLambung, 'Unit'),
+          type_model: getUnitTypeFromMaster(cleanLambung, 'Unit'),
           kategori: 'coal',
           cluster: newCluster || 'Selatan',
           lokasi: newLokasi || 'Pit Area',
@@ -15285,7 +15938,7 @@
       }
       safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
 
-      // 2. Sinkronkan langsung ke Supabase tabel master_units jika online
+      // 2. Sinkronkan langsung ke Supabase tabel master_units secara realtime
       if (state.supabaseClient) {
         try {
           const updateData = { updated_at: new Date().toISOString() };
@@ -15300,14 +15953,21 @@
           if (error) {
             console.warn('[Sync Master Unit Location Error]', error.message);
           } else {
-            console.log(`[Sync Master Unit Location OK] Unit ${cleanLambung} -> Cluster: ${newCluster}, Lokasi: ${newLokasi}`);
+            console.log(`[Sync Master Unit Location OK] Realtime Master Unit ${cleanLambung} -> Cluster: ${newCluster}, Lokasi: ${newLokasi}`);
           }
         } catch (err) {
           console.warn('[Sync Master Unit Location Exception]', err);
         }
       }
 
-      // 3. Re-render tabel master unit jika section master unit sedang aktif
+      // 3. Broadcast notifikasi pembaruan lokasi ke seluruh client via realtime
+      try {
+        if (typeof notifyDataChanged === 'function') {
+          notifyDataChanged({ source: 'master_unit_location_sync', lambung: cleanLambung, cluster: newCluster, lokasi: newLokasi });
+        }
+      } catch (e) { }
+
+      // 4. Re-render tabel master unit jika section master unit sedang aktif
       if (state.masterActiveSection === 'units' && typeof renderMasterUnitsTable === 'function') {
         renderMasterUnitsTable();
       }
@@ -15629,6 +16289,14 @@
 
     function handleCatChangeInAddModal(val) {
       const waktuInp = document.getElementById('add-job-waktu');
+      const patternContainer = document.getElementById('add-job-pattern-container');
+
+      // Tampilkan pilihan pola 3 hari jika kategori Big Digger
+      if (patternContainer) {
+        if (val === 'digger') patternContainer.classList.remove('hidden');
+        else patternContainer.classList.add('hidden');
+      }
+
       if (!waktuInp) return;
       if (!val) {
         waktuInp.placeholder = 'Contoh: 07:00 s/d 07:15';
@@ -15755,6 +16423,8 @@
       const keterangan = document.getElementById('add-job-keterangan')?.value?.trim() || '';
       const typeUnit = document.getElementById('add-job-type')?.value || getUnitTypeFromMaster(noLambung, 'Unit');
       const washingRound = parseInt(document.getElementById('add-job-washing-round')?.value || '1', 10);
+      const shouldGenerateMonth = document.getElementById('add-job-generate-month')?.checked !== false;
+      const selectedPattern = document.getElementById('add-job-pattern')?.value || 'AUTO';
 
       if (!noLambung || !lokasi) {
         showToast('Nomor lambung dan lokasi pit wajib diisi!', 'warning');
@@ -15764,8 +16434,7 @@
       const isWt = (targetType === 'WT');
       const targetDate = (isWt ? state.watertruckState.filterDate : state.lubetruckState.filterDate) || getEffectiveTodayString();
 
-      const newJob = {
-        id: (isWt ? 'WT-SCH-' : 'LT-SCH-') + String(Date.now()).slice(-6),
+      const baseJob = {
         shift,
         tanggal: targetDate,
         tanggalRealisasi: targetDate,
@@ -15776,25 +16445,25 @@
         typeUnit,
         lokasi,
         ltUnit,
+        armada: ltUnit,
         opt,
         mp1,
         mp2,
-        status: 'pending',
+        status: 'scheduled',
         keterangan,
         isPending: false,
+        pattern: selectedPattern,
+        targetType: isWt ? 'WT' : 'LT',
         jamStart: '',
         jamEnd: '',
         fotos: []
       };
 
       if (isWt) {
-        newJob.washingRound = washingRound;
-        newJob.adaOperator = 'Ya';
-        newJob.unitTurun = 'Ya';
-        newJob.unitSwing = 'Tidak';
-        state.watertruckState.jobs.push(newJob);
-      } else {
-        state.lubetruckState.jobs.push(newJob);
+        baseJob.washingRound = washingRound;
+        baseJob.adaOperator = 'Ya';
+        baseJob.unitTurun = 'Ya';
+        baseJob.unitSwing = 'Tidak';
       }
 
       // Pastikan unit produksi otomatis terdaftar & sinkron ke Supabase master_units
@@ -15806,6 +16475,46 @@
           lokasi: lokasi,
           kategori: (cat === 'coal' || cat === 'rom') ? 'coal' : 'non_coal'
         });
+      }
+
+      // 1. Auto-Generate Jadwal 1 Bulan Penuh jika toggle aktif
+      if (shouldGenerateMonth && typeof generateMonthlySchedule === 'function') {
+        const monthKey = targetDate.slice(0, 7);
+        const monthlyJobs = generateMonthlySchedule(baseJob, monthKey, state.masterUnits);
+
+        if (monthlyJobs.length > 0) {
+          const targetArray = isWt ? state.watertruckState.jobs : state.lubetruckState.jobs;
+          // Filter out existing job with same id to prevent duplicate
+          const existingIds = new Set(targetArray.map(j => j.id));
+          monthlyJobs.forEach(nj => {
+            if (existingIds.has(nj.id)) {
+              const idx = targetArray.findIndex(item => item.id === nj.id);
+              if (idx !== -1) targetArray[idx] = nj;
+            } else {
+              targetArray.push(nj);
+            }
+            if (state.supabaseClient && typeof syncJobToSupabase === 'function') {
+              syncJobToSupabase(nj);
+            }
+          });
+
+          saveDatabaseSync();
+          toggleModal('modal-add-job', false);
+          showToast(`Jadwal 1 bulan penuh (${monthlyJobs.length} hari penugasan) berhasil dibentuk untuk unit ${noLambung}!`, 'success');
+          refreshActiveTable();
+          return;
+        }
+      }
+
+      // 2. Single Day Job (Fallback jika toggle dimatikan)
+      baseJob.id = (isWt ? 'WT-SCH-' : 'LT-SCH-') + String(Date.now()).slice(-6);
+      if (isWt) {
+        state.watertruckState.jobs.push(baseJob);
+      } else {
+        state.lubetruckState.jobs.push(baseJob);
+      }
+      if (state.supabaseClient && typeof syncJobToSupabase === 'function') {
+        syncJobToSupabase(baseJob);
       }
 
       saveDatabaseSync();
@@ -16304,22 +17013,25 @@
       const cat = state.completedCategory;
 
       const canViewAll = (isAdmin || userRole === 'basecontrol');
+      const isCompletedFilter = j => {
+        const s = String(j.status || '').toLowerCase();
+        return s === 'ach' || s === 'achieved' || s === 'done' || s === 'service' || s === 'bd' || s === 'non_ach' || s === 'non-ach' || j.status_final !== undefined;
+      };
+
       let allCompleted = [];
       if (canViewAll) {
         allCompleted = [
-          ...(state.lubetruckState?.jobs || []).filter(j => j.status === 'ach' || j.status === 'done' || j.status === 'service' || j.status === 'bd' || j.status === 'non_ach'),
-          ...(state.unscheduledLtJobs || []).filter(j => j.status === 'ach' || j.status === 'done' || j.status === 'service' || j.status === 'bd' || j.status === 'non_ach'),
-          ...(state.watertruckState?.jobs || []).filter(j => j.status === 'ach' || j.status === 'done' || j.status === 'service' || j.status === 'bd' || j.status === 'non_ach'),
-          ...(state.unscheduledWtJobs || []).filter(j => j.status === 'ach' || j.status === 'done' || j.status === 'service' || j.status === 'bd' || j.status === 'non_ach')
+          ...(state.lubetruckState?.jobs || []).filter(isCompletedFilter),
+          ...(state.unscheduledLtJobs || []).filter(isCompletedFilter),
+          ...(state.watertruckState?.jobs || []).filter(isCompletedFilter),
+          ...(state.unscheduledWtJobs || []).filter(isCompletedFilter)
         ];
       } else if (isWt) {
         allCompleted = [
-          ...(state.watertruckState?.jobs || []).filter(j => j.status === 'ach' || j.status === 'done' || j.status === 'service' || j.status === 'bd' || j.status === 'non_ach'),
-          ...(state.unscheduledWtJobs || []).filter(j => j.status === 'ach' || j.status === 'done' || j.status === 'service' || j.status === 'bd' || j.status === 'non_ach')
+          ...(state.watertruckState?.jobs || []).filter(isCompletedFilter),
+          ...(state.unscheduledWtJobs || []).filter(isCompletedFilter)
         ];
       } else if (userRole === 'user') {
-        // AKSES KHUSUS USER: Tampilkan seluruh riwayat order yang dibuat user (baik pending maupun selesai),
-        // ditambah pekerjaan umum yang sudah berstatus ACH/DONE
         const currentNrp = state.currentUser?.nrp || '';
         const currentNama = (state.currentUser?.nama || '').toLowerCase();
 
@@ -16333,8 +17045,8 @@
           (j.createdByNrp && j.createdByNrp === currentNrp) ||
           (j.namaPemesan && currentNama && j.namaPemesan.toLowerCase().includes(currentNama))
         );
-        const doneLtJobs = (state.lubetruckState?.jobs || []).filter(j => j.status === 'ach' || j.status === 'done');
-        const doneWtJobs = (state.watertruckState?.jobs || []).filter(j => j.status === 'ach' || j.status === 'done');
+        const doneLtJobs = (state.lubetruckState?.jobs || []).filter(isCompletedFilter);
+        const doneWtJobs = (state.watertruckState?.jobs || []).filter(isCompletedFilter);
 
         allCompleted = [
           ...myLtOrders,
@@ -16344,9 +17056,44 @@
         ];
       } else {
         allCompleted = [
-          ...(state.lubetruckState?.jobs || []).filter(j => j.status === 'ach' || j.status === 'done' || j.status === 'service' || j.status === 'bd' || j.status === 'non_ach'),
-          ...(state.unscheduledLtJobs || []).filter(j => j.status === 'ach' || j.status === 'done' || j.status === 'service' || j.status === 'bd' || j.status === 'non_ach')
+          ...(state.lubetruckState?.jobs || []).filter(isCompletedFilter),
+          ...(state.unscheduledLtJobs || []).filter(isCompletedFilter)
         ];
+      }
+
+      // Gabungkan rekaman riwayat snapshot terkunci dari state.jobHistory
+      if (Array.isArray(state.jobHistory) && state.jobHistory.length > 0) {
+        const existingJobIds = new Set(allCompleted.map(j => String(j.id || '')));
+        state.jobHistory.forEach(h => {
+          if (!existingJobIds.has(String(h.job_id || ''))) {
+            allCompleted.push({
+              id: h.job_id,
+              noLambung: h.no_lambung,
+              typeUnit: h.type_unit,
+              cat: h.cat,
+              tanggal: h.tanggal_rencana,
+              tanggalRealisasi: h.tanggal_eksekusi,
+              shift: h.shift_rencana,
+              waktu: h.waktu_rencana,
+              cluster: h.cluster,
+              lokasi: h.lokasi,
+              armada: h.armada_unit,
+              ltUnit: h.armada_unit,
+              opt: h.opt_name,
+              mp1: h.mp1,
+              mp2: h.mp2,
+              jamStart: h.jam_start,
+              jamEnd: h.jam_end,
+              durasi: h.durasi,
+              status: String(h.status_final || '').toLowerCase(),
+              status_final: h.status_final,
+              keterangan: h.keterangan,
+              alasanNonAch: h.non_ach_reason,
+              fotos: []
+            });
+            existingJobIds.add(String(h.job_id || ''));
+          }
+        });
       }
 
       // Pastikan fallback tanggalRealisasi ada jika belum terisi
@@ -16508,10 +17255,10 @@
 
           <!-- KOLOM 9: STATUS -->
           <td class="py-2.5 px-2.5 text-center">
-            ${job.status === 'ach'
+            ${['ach', 'achieved', 'done'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'ACHIEVED'
             ? `<span class="inline-block px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] tracking-wide uppercase">ACH</span>`
-            : (job.status === 'non_ach'
-              ? `<span class="inline-block px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 font-extrabold text-[10px] tracking-wide uppercase" title="${job.alasanNonAch || '-'}">NON-ACH</span>`
+            : (['non_ach', 'non-ach'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'NON_ACH'
+              ? `<span class="inline-block px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 font-extrabold text-[10px] tracking-wide uppercase" title="${job.alasanNonAch || job.keterangan || '-'}">NON-ACH</span>`
               : `<span class="inline-block px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-extrabold text-[10px] tracking-wide uppercase">${job.status || 'DONE'}</span>`)}
           </td>
         `;
@@ -16565,10 +17312,7 @@
     window.switchMasterSubtab = switchMasterSubtab;
 
     function openActionDecision(jobId) {
-      if (state.currentUser?.role === 'admin') {
-        showToast('Admin hanya dapat memantau status job. Tombol aksi hanya untuk personil MP di lapangan.', 'warning');
-        return;
-      }
+      // Admin maupun MP dapat membuka modal aksi tindakan
       state.currentActionJobId = jobId;
       const job = (typeof findJobById === 'function') ? findJobById(jobId) : null;
       if (!job) {
@@ -16911,6 +17655,17 @@
       const unitType = getUnitTypeFromMaster(job.noLambung, job.typeUnit || 'Unit');
 
       if (unitLabel) unitLabel.textContent = `Unit: ${job.noLambung} (${unitType}) • ${job.lokasi} ${isJobRequest ? '• [Job Request]' : ''}`;
+
+      // Prefill Lokasi & Cluster Aktual untuk MP di lapangan
+      const achClusterSel = document.getElementById('ach-cluster');
+      const achLokasiInp = document.getElementById('ach-lokasi');
+      if (achClusterSel) {
+        achClusterSel.value = job.cluster || 'Selatan';
+        if (!achClusterSel.value) achClusterSel.value = getParentCluster(job.cluster);
+      }
+      if (achLokasiInp) {
+        achLokasiInp.value = job.lokasi || '';
+      }
       if (formTitle) formTitle.textContent = isJobRequest ? 'Form Penyelesaian Job Request (DONE)' : 'Form Penyelesaian';
       if (submitBtn && isJobRequest) submitBtn.textContent = 'SIMPAN DONE';
 
@@ -17167,6 +17922,17 @@
         job.unitSwing = document.getElementById('ach-wash-swing')?.value || 'Tidak';
       }
 
+      // Prioritas Manpower (MP): Perbarui lokasi & cluster aktual langsung ke Master Unit & Jadwal
+      const newCluster = document.getElementById('ach-cluster')?.value || job.cluster;
+      const newLokasi = (document.getElementById('ach-lokasi')?.value || job.lokasi || '').trim().toUpperCase();
+      if (newCluster && (newCluster !== job.cluster || newLokasi !== job.lokasi)) {
+        job.cluster = newCluster;
+        job.lokasi = newLokasi || job.lokasi;
+        if (typeof syncMasterUnitLocation === 'function' && job.noLambung) {
+          syncMasterUnitLocation(job.noLambung, newCluster, newLokasi);
+        }
+      }
+
       job.status = isJobRequest ? 'done' : 'ach';
       job.isPending = false;
       job.ltUnit = ltValue;
@@ -17180,6 +17946,11 @@
       if (!job.tanggal) job.tanggal = actionDate;
       job.keterangan = ket;
       job.fotos = [...uploadedPhotos];
+
+      // Kunci snapshot data historis ke tabel job_history
+      if (typeof lockJobHistorySnapshot === 'function') {
+        lockJobHistorySnapshot(job, 'ACHIEVED', ket);
+      }
 
       toggleModal('modal-ach-form', false);
       showToast(isJobRequest ? `Job Request unit ${job.noLambung} selesai (DONE)!` : `Unit ${job.noLambung} selesai (ACH) & dipindahkan ke menu Riwayat!`, 'success');
