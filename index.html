@@ -6350,6 +6350,7 @@
         <div id="detail-modal-evidence-container">
           <div class="flex items-center justify-between mb-1.5">
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dokumentasi Foto Pekerjaan (4 Foto Evidence)</span>
+            <div id="detail-modal-sync-container"></div>
           </div>
           <div id="detail-modal-fotos" class="grid grid-cols-4 gap-2">
             <!-- Dynamically populated via openJobDetailModal() -->
@@ -6758,7 +6759,7 @@
         </div>
 
         <div>
-          <input type="url" id="input-apps-script-url" value="https://script.google.com/macros/s/AKfycby26aOQG3bozBWIesXlUiAYSV-mLFwl8wVyRkLBH_52-z_63S-4d6ILnb8TiZizDlHi/exec" placeholder="https://script.google.com/macros/s/.../exec"
+          <input type="url" id="input-apps-script-url" value="https://script.google.com/macros/s/AKfycbzWgOoBvQFDrOakBOcpYqlA9YxcLAX_CGdcgM4sRQK5R2Wmilkpiv2InxE77h8sffmF/exec" placeholder="https://script.google.com/macros/s/.../exec"
             class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition bg-white">
           <span class="text-[9.5px] text-slate-400 block mt-1">Tempelkan Web App URL hasil Deploy dari file Code.gs</span>
         </div>
@@ -7763,20 +7764,6 @@
     // KONFIGURASI API LANGSUNG (SUPABASE & GOOGLE APPS SCRIPT)
     // Silakan isi langsung Project URL, Anon Key, dan Endpoint Apps Script Anda di sini:
     // ========================================================================
-    const SUPABASE_CONFIG = {
-      url: 'https://wgabhjvjbvmgxebuusmv.supabase.co',
-      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnYWJoanZqYnZtZ3hlYnV1c212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNTc4ODksImV4cCI6MjEwNjgzMzg4OX0.Il80MkiPYkPtoZIt-VnfYZ8mB09YJdO4dNnvq28Q-xU',
-      publishableKey: 'sb_publishable_J2C5_w5qCkSeg0erRISNSg_m7sZjAws'
-    };
-
-    const APPS_SCRIPT_CONFIG = {
-      uploadEndpointUrl: safeStorage.getItem('SE_APPS_SCRIPT_URL') || 'https://script.google.com/macros/s/AKfycby26aOQG3bozBWIesXlUiAYSV-mLFwl8wVyRkLBH_52-z_63S-4d6ILnb8TiZizDlHi/exec', // Langsung terhubung ke Web App Apps Script pengguna
-      spreadsheetId: '1zoDx6VZQkfwZ_rZ97qV3d-WVYC8KGBC7RN0c8aLQRSY',
-      spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/1zoDx6VZQkfwZ_rZ97qV3d-WVYC8KGBC7RN0c8aLQRSY/edit?gid=0#gid=0',
-      driveFolderId: '11EQ_NsZYeMmEKURpibXCRtyrQw5kKkh3',
-      driveFolderUrl: 'https://drive.google.com/drive/folders/11EQ_NsZYeMmEKURpibXCRtyrQw5kKkh3?usp=drive_link'
-    };
-
     // Safe storage fallback if localStorage is sandboxed in iframe
     const _memoryStorage = {};
     const safeStorage = {
@@ -7801,6 +7788,20 @@
           delete _memoryStorage[key];
         }
       }
+    };
+
+    const SUPABASE_CONFIG = {
+      url: 'https://wgabhjvjbvmgxebuusmv.supabase.co',
+      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnYWJoanZqYnZtZ3hlYnV1c212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNTc4ODksImV4cCI6MjEwNjgzMzg4OX0.Il80MkiPYkPtoZIt-VnfYZ8mB09YJdO4dNnvq28Q-xU',
+      publishableKey: 'sb_publishable_J2C5_w5qCkSeg0erRISNSg_m7sZjAws'
+    };
+
+    const APPS_SCRIPT_CONFIG = {
+      uploadEndpointUrl: safeStorage.getItem('SE_APPS_SCRIPT_URL') || 'https://script.google.com/macros/s/AKfycbzWgOoBvQFDrOakBOcpYqlA9YxcLAX_CGdcgM4sRQK5R2Wmilkpiv2InxE77h8sffmF/exec', // Langsung terhubung ke Web App Apps Script pengguna
+      spreadsheetId: '1zoDx6VZQkfwZ_rZ97qV3d-WVYC8KGBC7RN0c8aLQRSY',
+      spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/1zoDx6VZQkfwZ_rZ97qV3d-WVYC8KGBC7RN0c8aLQRSY/edit?gid=0#gid=0',
+      driveFolderId: '11EQ_NsZYeMmEKURpibXCRtyrQw5kKkh3',
+      driveFolderUrl: 'https://drive.google.com/drive/folders/11EQ_NsZYeMmEKURpibXCRtyrQw5kKkh3?usp=drive_link'
     };
 
     // PURGE LOCAL CACHE JOBS SECARA MUTLAK:
@@ -7877,9 +7878,12 @@
         }
 
         // Muat URL Google Apps Script yang tersimpan atau default deploy dari pengguna
-        const defaultAppsUrl = 'https://script.google.com/macros/s/AKfycby26aOQG3bozBWIesXlUiAYSV-mLFwl8wVyRkLBH_52-z_63S-4d6ILnb8TiZizDlHi/exec';
+        const defaultAppsUrl = 'https://script.google.com/macros/s/AKfycbzWgOoBvQFDrOakBOcpYqlA9YxcLAX_CGdcgM4sRQK5R2Wmilkpiv2InxE77h8sffmF/exec';
         const savedAppsUrl = safeStorage.getItem('SE_APPS_SCRIPT_URL');
-        if (savedAppsUrl && savedAppsUrl.trim().startsWith('http')) {
+        if (!savedAppsUrl || savedAppsUrl.includes('AKfycby26aOQG3bozBWIesXlUiAYSV-mLFwl8wVyRkLBH_52-z_63S-4d6ILnb8TiZizDlHi')) {
+          safeStorage.setItem('SE_APPS_SCRIPT_URL', defaultAppsUrl);
+          APPS_SCRIPT_CONFIG.uploadEndpointUrl = defaultAppsUrl;
+        } else if (savedAppsUrl.trim().startsWith('http')) {
           APPS_SCRIPT_CONFIG.uploadEndpointUrl = savedAppsUrl.trim();
         } else {
           safeStorage.setItem('SE_APPS_SCRIPT_URL', defaultAppsUrl);
@@ -9333,9 +9337,7 @@
       }
 
       // ANIMASI PROSES MASUK: Logo/Spinner berputar di tombol Sign In
-      let originalBtnContent = '';
       if (btnSignIn) {
-        originalBtnContent = btnSignIn.innerHTML;
         btnSignIn.disabled = true;
         btnSignIn.innerHTML = `
           <svg class="animate-spin w-4 h-4 text-[#065F46]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -9346,100 +9348,120 @@
         `;
       }
 
-      // Berikan jeda animasi singkat (350ms) agar pengguna melihat indikator proses
-      await new Promise(resolve => setTimeout(resolve, 350));
+      try {
+        // Berikan jeda animasi singkat (350ms) agar pengguna melihat indikator proses
+        await new Promise(resolve => setTimeout(resolve, 350));
 
-      let user = null;
-      const nrpLower = nrp.toLowerCase();
-      const passLower = password.toLowerCase();
+        let user = null;
+        const nrpLower = nrp.toLowerCase();
+        const passLower = password.toLowerCase();
 
-      // 1. CEK GABUNGAN MOCK_USERS + MASTER_USERS (Super Cepat & Instan 100% untuk akun resmi)
-      const userPool = [...MOCK_USERS, ...(state.masterUsers || [])];
-      user = userPool.find(u => {
-        const uNrpLower = (u.nrp || '').toLowerCase();
-        const uPass = String(u.password || '').toLowerCase();
+        // 1. CEK GABUNGAN MOCK_USERS + MASTER_USERS (Super Cepat & Instan 100% untuk akun resmi)
+        const activeMockUsers = (typeof MOCK_USERS !== 'undefined' && Array.isArray(MOCK_USERS)) ? MOCK_USERS : [];
+        const activeMasterUsers = (typeof state !== 'undefined' && Array.isArray(state?.masterUsers)) ? state.masterUsers : [];
+        const userPool = [...activeMockUsers, ...activeMasterUsers];
 
-        const matchNrp = (uNrpLower === nrpLower) ||
-          (nrpLower === 'admin' && (uNrpLower === 'admin' || uNrpLower === 'admin01')) ||
-          (nrpLower === 'admin01' && (uNrpLower === 'admin' || uNrpLower === 'admin01')) ||
-          (nrpLower === 'user' && (uNrpLower === 'user' || uNrpLower === 'user01')) ||
-          (nrpLower === 'user01' && (uNrpLower === 'user' || uNrpLower === 'user01')) ||
-          (nrpLower === 'om' && (uNrpLower === 'om' || uNrpLower === 'om1001')) ||
-          (nrpLower === 'om1001' && (uNrpLower === 'om' || uNrpLower === 'om1001')) ||
-          (nrpLower === 'wm' && (uNrpLower === 'wm' || uNrpLower === 'wm2001')) ||
-          (nrpLower === 'wm2001' && (uNrpLower === 'wm' || uNrpLower === 'wm2001')) ||
-          (nrpLower === 'bsc' && (uNrpLower === 'bsc' || uNrpLower === 'bc01' || uNrpLower === 'basecontrol')) ||
-          (nrpLower === 'bc01' && (uNrpLower === 'bsc' || uNrpLower === 'bc01' || uNrpLower === 'basecontrol')) ||
-          (nrpLower === 'basecontrol' && (uNrpLower === 'bsc' || uNrpLower === 'bc01' || uNrpLower === 'basecontrol'));
+        user = userPool.find(u => {
+          if (!u) return false;
+          const uNrpLower = (u.nrp || '').toLowerCase();
+          const uPass = String(u.password || '').toLowerCase();
 
-        if (!matchNrp) return false;
+          const matchNrp = (uNrpLower === nrpLower) ||
+            (nrpLower === 'admin' && (uNrpLower === 'admin' || uNrpLower === 'admin01')) ||
+            (nrpLower === 'admin01' && (uNrpLower === 'admin' || uNrpLower === 'admin01')) ||
+            (nrpLower === 'user' && (uNrpLower === 'user' || uNrpLower === 'user01')) ||
+            (nrpLower === 'user01' && (uNrpLower === 'user' || uNrpLower === 'user01')) ||
+            (nrpLower === 'om' && (uNrpLower === 'om' || uNrpLower === 'om1001')) ||
+            (nrpLower === 'om1001' && (uNrpLower === 'om' || uNrpLower === 'om1001')) ||
+            (nrpLower === 'wm' && (uNrpLower === 'wm' || uNrpLower === 'wm2001')) ||
+            (nrpLower === 'wm2001' && (uNrpLower === 'wm' || uNrpLower === 'wm2001')) ||
+            (nrpLower === 'bsc' && (uNrpLower === 'bsc' || uNrpLower === 'bc01' || uNrpLower === 'basecontrol')) ||
+            (nrpLower === 'bc01' && (uNrpLower === 'bsc' || uNrpLower === 'bc01' || uNrpLower === 'basecontrol')) ||
+            (nrpLower === 'basecontrol' && (uNrpLower === 'bsc' || uNrpLower === 'bc01' || uNrpLower === 'basecontrol'));
 
-        const matchPass = (uPass === passLower) ||
-          (nrpLower === 'admin' && password === 'admin123') ||
-          (nrpLower === 'admin01' && password === 'admin123') ||
-          (nrpLower === 'user' && password === 'user123') ||
-          (nrpLower === 'user01' && password === 'user123') ||
-          (nrpLower === 'om' && password === 'om123') ||
-          (nrpLower === 'om1001' && password === 'om123') ||
-          (nrpLower === 'wm' && password === 'wm123') ||
-          (nrpLower === 'wm2001' && password === 'wm123') ||
-          (nrpLower === 'bsc' && password === 'bsc123') ||
-          (nrpLower === 'bc01' && password === 'bsc123') ||
-          (password.toLowerCase() === uNrpLower) ||
-          (password.toLowerCase() === nrpLower);
+          if (!matchNrp) return false;
 
-        return matchPass;
-      });
+          const matchPass = (uPass === passLower) ||
+            (nrpLower === 'admin' && password === 'admin123') ||
+            (nrpLower === 'admin01' && password === 'admin123') ||
+            (nrpLower === 'user' && password === 'user123') ||
+            (nrpLower === 'user01' && password === 'user123') ||
+            (nrpLower === 'om' && password === 'om123') ||
+            (nrpLower === 'om1001' && password === 'om123') ||
+            (nrpLower === 'wm' && password === 'wm123') ||
+            (nrpLower === 'wm2001' && password === 'wm123') ||
+            (nrpLower === 'bsc' && password === 'bsc123') ||
+            (nrpLower === 'bc01' && password === 'bsc123') ||
+            (password.toLowerCase() === uNrpLower) ||
+            (password.toLowerCase() === nrpLower);
 
-      // 2. JIKA BELUM KETEMU DI LOCAL, QUERY KE SUPABASE DENGAN TIMEOUT 2 DETIK
-      if (!user && state.supabaseClient) {
-        try {
-          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000));
-          const queryPromise = state.supabaseClient
-            .from('users')
-            .select('*')
-            .ilike('nrp', nrp)
-            .eq('password', password)
-            .single();
+          return matchPass;
+        });
 
-          const result = await Promise.race([queryPromise, timeoutPromise]);
-          if (result && !result.error && result.data) user = result.data;
-        } catch (e) {
-          console.warn('[Auth] Supabase query skip/timeout:', e.message);
+        // 2. JIKA BELUM KETEMU DI LOCAL, QUERY KE SUPABASE DENGAN TIMEOUT 2 DETIK
+        if (!user && typeof state !== 'undefined' && state.supabaseClient) {
+          try {
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000));
+            const queryPromise = state.supabaseClient
+              .from('users')
+              .select('*')
+              .ilike('nrp', nrp)
+              .eq('password', password)
+              .single();
+
+            const result = await Promise.race([queryPromise, timeoutPromise]);
+            if (result && !result.error && result.data) user = result.data;
+          } catch (e) {
+            console.warn('[Auth] Supabase query skip/timeout:', e.message);
+          }
         }
-      }
 
-      if (user) {
-        // Normalisasi role antara DB (oilman/washingman) dan Frontend (mp_lt/mp_wt)
-        if (user.role === 'oilman') user.role = 'mp_lt';
-        if (user.role === 'washingman') user.role = 'mp_wt';
-        state.currentUser = user;
-        safeStorage.setItem('SE_SESSION_USER', JSON.stringify(user));
+        if (user) {
+          // Normalisasi role antara DB (oilman/washingman) dan Frontend (mp_lt/mp_wt)
+          if (user.role === 'oilman') user.role = 'mp_lt';
+          if (user.role === 'washingman') user.role = 'mp_wt';
+          if (typeof state !== 'undefined') state.currentUser = user;
+          if (typeof safeStorage !== 'undefined') {
+            safeStorage.setItem('SE_SESSION_USER', JSON.stringify(user));
+          }
 
-        // Reset tombol login segera ke kondisi normal agar saat logout nanti tombol sudah siap normal
-        if (typeof resetLoginButtonState === 'function') resetLoginButtonState();
-        else if (typeof window.resetLoginButtonState === 'function') window.resetLoginButtonState();
+          // Reset tombol login segera ke kondisi normal agar saat logout nanti tombol sudah siap normal
+          if (typeof window.resetLoginButtonState === 'function') window.resetLoginButtonState();
+          else if (typeof resetLoginButtonState === 'function') resetLoginButtonState();
 
-        showToast(`Login berhasil! Selamat bertugas, ${user.nama}`, 'success');
-        try {
-          renderAppForUser(user);
-        } catch (err) {
-          console.error('[Login] Error saat renderAppForUser:', err);
+          if (typeof showToast === 'function') {
+            showToast(`Login berhasil! Selamat bertugas, ${user.nama}`, 'success');
+          }
+          try {
+            renderAppForUser(user);
+          } catch (err) {
+            console.error('[Login] Error saat renderAppForUser:', err);
+          }
+        } else {
+          // Kembalikan tombol ke keadaan normal jika login gagal
+          if (typeof window.resetLoginButtonState === 'function') window.resetLoginButtonState();
+          else if (typeof resetLoginButtonState === 'function') resetLoginButtonState();
+
+          // Tampilkan error inline di bawah kolom password
+          if (loginErrEl && loginErrText) {
+            loginErrText.textContent = 'NRP atau Password salah!';
+            loginErrEl.classList.remove('hidden');
+          }
+          if (passInput) {
+            passInput.focus();
+          }
         }
-      } else {
-        // Kembalikan tombol ke keadaan normal jika login gagal
-        if (typeof resetLoginButtonState === 'function') resetLoginButtonState();
-        else if (typeof window.resetLoginButtonState === 'function') window.resetLoginButtonState();
+      } catch (err) {
+        console.error('[Login] Exception tak terduga saat login:', err);
+        if (typeof window.resetLoginButtonState === 'function') window.resetLoginButtonState();
+        else if (typeof resetLoginButtonState === 'function') resetLoginButtonState();
 
-        // Tampilkan error inline di bawah kolom password (bukan di ujung kanan bawah)
-        const loginErrEl = document.getElementById('login-error-msg');
-        const loginErrText = document.getElementById('login-error-text');
         if (loginErrEl && loginErrText) {
-          loginErrText.textContent = 'NRP atau Password salah!';
+          loginErrText.textContent = 'Terjadi kesalahan sistem, silakan coba lagi.';
           loginErrEl.classList.remove('hidden');
         }
-        if (passInput) {
-          passInput.focus();
+        if (typeof showToast === 'function') {
+          showToast('Gagal memproses login: ' + (err.message || 'Kesalahan sistem'), 'error');
         }
       }
     }
@@ -15542,7 +15564,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         }
       }
 
-      const csvContent = [headers, ...sampleData].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+      const csvContent = [headers, ...sampleData].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
       triggerUniversalDownload({
         fileName: 'TEMPLATE_NO_OPT_PRODUKSI_SE_MANAGEMENT.xlsx',
         staticPath: './TEMPLATE_NO_OPT_PRODUKSI_SE_MANAGEMENT.xlsx',
@@ -17323,13 +17345,48 @@ Oilman 1 & 2 : ${oilman}`;
               } catch (e) {}
             }
 
+            const hasLocalBase64 = fotosArray.some(f => f && typeof f === 'string' && f.startsWith('data:image/'));
+            const syncCont = document.getElementById('detail-modal-sync-container');
+            if (syncCont) {
+              if (hasLocalBase64) {
+                syncCont.innerHTML = `
+                  <button type="button" onclick="syncDetailJobPhotosToGoogleDrive('${job.id}')" id="btn-sync-detail-photos"
+                    class="flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold shadow-xs transition cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <span>Upload ke Google Drive</span>
+                  </button>
+                `;
+                // Sinkronkan otomatis ke Drive setelah jeda singkat
+                setTimeout(() => {
+                  if (state.currentDetailJobId === job.id) syncDetailJobPhotosToGoogleDrive(job.id);
+                }, 600);
+              } else if (fotosArray.some(f => f && typeof f === 'string' && f.trim() !== '')) {
+                syncCont.innerHTML = `
+                  <span class="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center space-x-1">
+                    <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    <span>Tersimpan di Drive</span>
+                  </span>
+                `;
+              } else {
+                syncCont.innerHTML = '';
+              }
+            }
+
             fotosEl.innerHTML = [0, 1, 2, 3].map(i => {
               const src = fotosArray[i];
               const label = photoLabels[i] || `Foto ${i + 1}`;
               if (src && typeof src === 'string' && src.trim() !== '') {
+                const isLocal = src.startsWith('data:image/');
+                const badgeHtml = isLocal
+                  ? `<span class="absolute top-1 left-1 bg-amber-500 text-white text-[7.5px] font-black px-1.5 py-0.5 rounded-md shadow-xs flex items-center gap-0.5 z-10"><span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>Lokal</span>`
+                  : `<span class="absolute top-1 left-1 bg-emerald-600 text-white text-[7.5px] font-black px-1.5 py-0.5 rounded-md shadow-xs z-10 flex items-center gap-0.5">dY' Drive</span>`;
+
                 return `
                   <div onclick="openPhotoPreview('${src}', 'Evidence ${label} - ${job.noLambung || ''}')"
                     class="group relative aspect-square rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 cursor-pointer shadow-2xs hover:shadow-md transition">
+                    ${badgeHtml}
                     <img src="${src}" alt="${label}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200">
                     <div class="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition p-1 text-center">
                       <svg class="w-5 h-5 text-white mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18135,7 +18192,7 @@ Oilman 1 & 2 : ${oilman}`;
           }
         }
 
-        const csvContent = allRows.slice(1).map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n');
+        const csvContent = allRows.slice(1).map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
 
         const success = triggerUniversalDownload({
           fileName: fileName,
@@ -19338,6 +19395,147 @@ Oilman 1 & 2 : ${oilman}`;
       });
     }
 
+    // HELPER: Upload satu foto Base64 ke Google Drive via Google Apps Script
+    async function uploadBase64PhotoToDrive(photoDataUrl, unit, category, slotIdx, jobId) {
+      const endpointUrl = APPS_SCRIPT_CONFIG.uploadEndpointUrl || safeStorage.getItem('SE_APPS_SCRIPT_URL') || '';
+      if (!endpointUrl || !endpointUrl.trim().startsWith('http')) {
+        throw new Error('URL Google Apps Script belum terpasang.');
+      }
+
+      const payload = {
+        base64: photoDataUrl,
+        unit: unit || 'UNIT',
+        category: category || 'ACH',
+        slot: (typeof slotIdx === 'number' ? slotIdx + 1 : 1),
+        jobId: jobId || ''
+      };
+
+      const res = await fetch(endpointUrl, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+
+      const resData = await res.json();
+      if (resData && (resData.status === 'success' || resData.url || resData.directUrl)) {
+        return resData.url || resData.directUrl;
+      }
+      throw new Error(resData?.message || 'Gagal menyimpan foto ke Google Drive');
+    }
+    window.uploadBase64PhotoToDrive = uploadBase64PhotoToDrive;
+
+    // SINKRONISASI FOTO DETAIL MODAL: Unggah foto lokal (base64) yang belum masuk Drive
+    async function syncDetailJobPhotosToGoogleDrive(jobId) {
+      const targetId = jobId || state.currentDetailJobId;
+      const job = findJobById(targetId);
+      if (!job) return;
+
+      let fotosArray = Array.isArray(job.fotos) ? [...job.fotos] : [];
+      const savedKey = 'SE_JOB_FOTOS_' + job.id;
+      const saved = safeStorage.getItem(savedKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) fotosArray = parsed;
+        } catch (e) {}
+      }
+
+      const btnSync = document.getElementById('btn-sync-detail-photos');
+      if (btnSync) {
+        btnSync.disabled = true;
+        btnSync.innerHTML = `
+          <svg class="animate-spin w-3 h-3 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <span>Mengunggah ke Drive...</span>
+        `;
+      }
+
+      let uploadSuccessCount = 0;
+      try {
+        for (let i = 0; i < fotosArray.length; i++) {
+          const src = fotosArray[i];
+          if (src && typeof src === 'string' && src.startsWith('data:image/')) {
+            showToast(`Mengunggah Foto ${i + 1} (${job.noLambung || ''}) ke Google Drive...`, 'info');
+            const driveUrl = await uploadBase64PhotoToDrive(src, job.noLambung, job.cat, i, job.id);
+            if (driveUrl) {
+              fotosArray[i] = driveUrl;
+              uploadSuccessCount++;
+            }
+          }
+        }
+
+        job.fotos = fotosArray;
+        safeStorage.setItem(savedKey, JSON.stringify(fotosArray));
+
+        if (uploadSuccessCount > 0) {
+          showToast(`${uploadSuccessCount} foto berhasil masuk ke Google Drive!`, 'success');
+        } else {
+          showToast('Seluruh foto sudah tersimpan di Google Drive.', 'info');
+        }
+      } catch (err) {
+        console.error('[Sync Detail Photos Error]', err);
+        showToast('Gagal sinkronisasi foto: ' + (err.message || 'Error jaringan'), 'error');
+      } finally {
+        if (state.currentDetailJobId === targetId) {
+          openJobDetailModal(targetId);
+        }
+      }
+    }
+    window.syncDetailJobPhotosToGoogleDrive = syncDetailJobPhotosToGoogleDrive;
+
+    // SINKRONISASI OTOMATIS BACKGROUND: Menelusuri seluruh foto base64 lokal di cache
+    async function syncAllPendingLocalPhotosToGoogleDrive() {
+      const endpointUrl = APPS_SCRIPT_CONFIG.uploadEndpointUrl || safeStorage.getItem('SE_APPS_SCRIPT_URL') || '';
+      if (!endpointUrl || !endpointUrl.trim().startsWith('http')) return;
+
+      const allJobs = [
+        ...(state.lubetruckState?.jobs || []),
+        ...(state.watertruckState?.jobs || []),
+        ...(state.unscheduledLtJobs || []),
+        ...(state.unscheduledWtJobs || [])
+      ];
+
+      for (const job of allJobs) {
+        if (!job || !job.id) continue;
+        const savedKey = 'SE_JOB_FOTOS_' + job.id;
+        let fotos = Array.isArray(job.fotos) ? [...job.fotos] : [];
+        const saved = safeStorage.getItem(savedKey);
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) fotos = parsed;
+          } catch (e) {}
+        }
+
+        let hasPending = fotos.some(f => f && typeof f === 'string' && f.startsWith('data:image/'));
+        if (hasPending) {
+          let updated = false;
+          for (let i = 0; i < fotos.length; i++) {
+            const photo = fotos[i];
+            if (photo && typeof photo === 'string' && photo.startsWith('data:image/')) {
+              try {
+                const driveUrl = await uploadBase64PhotoToDrive(photo, job.noLambung, job.cat, i, job.id);
+                if (driveUrl) {
+                  fotos[i] = driveUrl;
+                  updated = true;
+                }
+              } catch (e) {
+                console.warn('[Auto-Sync Drive Warning]', e.message);
+              }
+            }
+          }
+          if (updated) {
+            job.fotos = fotos;
+            safeStorage.setItem(savedKey, JSON.stringify(fotos));
+            if (state.currentDetailJobId === job.id) {
+              openJobDetailModal(job.id);
+            }
+          }
+        }
+      }
+    }
+    window.syncAllPendingLocalPhotosToGoogleDrive = syncAllPendingLocalPhotosToGoogleDrive;
+
     async function handleAchPhotoUpload(event, slotIdx) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
@@ -19391,25 +19589,14 @@ Oilman 1 & 2 : ${oilman}`;
                 jobId: state.currentActionJobId || ''
               };
 
-              const res = await fetch(endpointUrl, {
-                method: 'POST',
-                mode: 'cors',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(payload)
-              });
-
-              const resData = await res.json();
-              if (resData && (resData.status === 'success' || resData.url)) {
-                const directUrl = resData.url || resData.directUrl;
+              const directUrl = await uploadBase64PhotoToDrive(photoDataUrl, job ? job.noLambung : 'UNIT', job ? (job.cat || 'ACH') : 'ACH', slotIdx, state.currentActionJobId);
+              if (directUrl) {
                 state.currentAchPhotos[slotIdx] = directUrl;
                 renderAchPhotoSlots();
                 if (state.currentActionJobId) {
                   safeStorage.setItem('SE_JOB_FOTOS_' + state.currentActionJobId, JSON.stringify(state.currentAchPhotos));
                 }
                 showToast(`Foto ${slotIdx + 1} berhasil masuk Google Drive!`, 'success');
-              } else {
-                console.warn('[Drive Upload] Respon bukan success:', resData);
-                showToast(`Foto ${slotIdx + 1} tersimpan lokal: ` + (resData?.message || 'Menunggu upload'), 'info');
               }
             } catch (err) {
               console.warn('[Drive Upload] Error kirim foto ke Google Drive:', err);
@@ -21209,7 +21396,7 @@ Oilman 1 & 2 : ${oilman}`;
         }
       }
 
-      const csvContent = [headers, ...sampleData].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+      const csvContent = [headers, ...sampleData].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
       triggerUniversalDownload({
         fileName: 'TEMPLATE_DATA_MASTER_ARMADA.xlsx',
         staticPath: './TEMPLATE_DATA_MASTER_ARMADA.xlsx',
@@ -23296,7 +23483,7 @@ Oilman 1 & 2 : ${oilman}`;
         }
       }
 
-      const csvContent = [headers, ...sampleData].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+      const csvContent = [headers, ...sampleData].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
       triggerUniversalDownload({
         fileName: 'TEMPLATE_POPULASI_UNIT_SE_MANAGEMENT.xlsx',
         staticPath: './TEMPLATE_POPULASI_UNIT_SE_MANAGEMENT.xlsx',
@@ -23561,7 +23748,7 @@ Oilman 1 & 2 : ${oilman}`;
         }
       }
 
-      const csvContent = [headers, ...sampleData].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+      const csvContent = [headers, ...sampleData].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
       triggerUniversalDownload({
         fileName: 'TEMPLATE_AKUN_PEGAWAI_SE_MANAGEMENT.xlsx',
         staticPath: './TEMPLATE_AKUN_PEGAWAI_SE_MANAGEMENT.xlsx',
