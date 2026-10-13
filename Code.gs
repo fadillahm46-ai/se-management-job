@@ -1,103 +1,44 @@
 /**
  * ==============================================================================
  * GOOGLE APPS SCRIPT: UPLOAD FOTO OPERASIONAL KE GOOGLE DRIVE & SPREADSHEET
- * SE MANAGEMENT JOB - MINE OPERATIONS
+ * SE MANAGEMENT JOB - MINE OPERATIONS (LUBETRUCK & WATER TRUCK)
  * ==============================================================================
- * Target Folder ID   : 11EQ_NsZYeMmEKURpibXCRtyrQw5kKkh3
- * Target Folder URL  : https://drive.google.com/drive/folders/11EQ_NsZYeMmEKURpibXCRtyrQw5kKkh3?usp=drive_link
- * Target Spreadsheet : Otomatis dibuat & dicatat di dalam folder yang sama
+ * Target Spreadsheet : https://docs.google.com/spreadsheets/d/1zoDx6VZQkfwZ_rZ97qV3d-WVYC8KGBC7RN0c8aLQRSY/edit?gid=0#gid=0
+ * Spreadsheet ID     : 1zoDx6VZQkfwZ_rZ97qV3d-WVYC8KGBC7RN0c8aLQRSY
+ * Target Folder ID   : 11EQ_NsZYeMmEKURpibXCRtyrQw5kKkh3 (Fallback otomatis ke folder tempat Spreadsheet berada)
  *
- * CARA MENGUJI (TEST) DI GOOGLE APPS SCRIPT:
+ * PANDUAN DEPLOY SEBAGAI WEB APP DI SPREADSHEET INI:
  * ------------------------------------------------------------------------------
- * 1. Di bagian atas editor Apps Script, pada dropdown fungsi (di sebelah tombol "Debug"),
- *    pilih fungsi "testUploadFoto" atau "testKoneksiDriveDanSpreadsheet".
- * 2. Klik tombol "Jalankan" (Run).
- * 3. Buka tab "Log eksekusi" di bawah untuk melihat hasil sukses, tautan Drive, dan Spreadsheet!
- *
- * PANDUAN DEPLOY SEBAGAI WEB APP:
- * ------------------------------------------------------------------------------
- * 1. Klik tombol biru "Deploy" (Terapkan) di kanan atas -> pilih "New deployment".
- * 2. Klik ikon roda gigi ⚙️ di samping "Select type" -> pilih "Web app".
- * 3. Atur konfigurasi:
- *    - Description   : SE Management Job Photo Upload API
- *    - Execute as    : Me (akun Google Anda)
- *    - Who has access: Anyone (Siapa saja)  <-- WAJIB PILIH INI agar web app bisa upload tanpa login
- * 4. Klik tombol "Deploy", lalu klik "Authorize access" dan izinkan akses.
- * 5. Salin "Web app URL" (berakhiran /exec).
- * 6. Tempelkan URL tersebut ke APPS_SCRIPT_CONFIG.uploadEndpointUrl di index.html.
+ * 1. Di Google Spreadsheet Anda (https://docs.google.com/spreadsheets/d/1zoDx6VZQkfwZ_rZ97qV3d-WVYC8KGBC7RN0c8aLQRSY),
+ *    klik menu "Ekstensi" (Extensions) -> pilih "Apps Script".
+ * 2. Hapus semua kode lama di editor Apps Script, lalu salin dan tempelkan seluruh isi file Code.gs ini.
+ * 3. Klik tombol Simpan (ikon disket 💾 atau Ctrl+S).
+ * 4. Klik tombol biru "Deploy" (Terapkan) di pojok kanan atas -> pilih "New deployment" (Deployment baru).
+ *    *(Jika sudah pernah deploy sebelumnya, pilih "Manage deployments" -> klik ikon pensil ✏️ -> pilih Version: "New version")*
+ * 5. Klik ikon roda gigi ⚙️ di sebelah "Select type" -> pilih "Web app".
+ * 6. Atur konfigurasi wajib berikut:
+ *    - Description   : SE Management Job Photo Upload API v2
+ *    - Execute as    : Me (email Google akun Anda)
+ *    - Who has access: Anyone (Siapa saja)  <-- WAJIB: agar web app bisa upload foto tanpa login
+ * 7. Klik tombol "Deploy", lalu klik "Authorize access" dan berikan izin akses Google Drive & Spreadsheet.
+ * 8. Salin "Web app URL" yang muncul (URL berakhiran /exec).
+ * 9. Tempelkan URL tersebut ke web: buka menu Pengaturan Profil (Ikon Gir/Profil di web) ->
+ *    masukkan URL pada kolom "Upload Foto Google Drive" -> klik "Simpan URL" dan "Tes Koneksi".
  * ==============================================================================
  */
 
-// ID Folder Google Drive Tujuan
+// ID Google Spreadsheet Target (Sesuai dengan spreadsheet yang Anda gunakan)
+const SPREADSHEET_ID = '1zoDx6VZQkfwZ_rZ97qV3d-WVYC8KGBC7RN0c8aLQRSY';
+
+// ID Folder Google Drive Tujuan (Jika tidak dapat diakses, otomatis menyimpan di folder yang sama dengan Spreadsheet)
 const TARGET_FOLDER_ID = '11EQ_NsZYeMmEKURpibXCRtyrQw5kKkh3';
 
-// Nama File Google Spreadsheet untuk Log Riwayat Foto
-const SPREADSHEET_LOG_NAME = 'LOG_FOTO_SE_MANAGEMENT_JOB';
+// Nama Tab Sheet untuk Log Riwayat Foto
+const SHEET_TAB_NAME = 'Log Foto Operasional';
 
 /**
  * ==============================================================================
- * FUNGSI TESTING 1: Menguji Upload Foto ke Google Drive & Catat ke Spreadsheet
- * (Pilih fungsi ini di dropdown atas lalu klik tombol "Jalankan")
- * ==============================================================================
- */
-function testUploadFoto() {
-  Logger.log('🚀 Memulai pengujian upload foto ke Google Drive & Spreadsheet...');
-
-  // Gambar contoh PNG 1x1 pixel transparan berformat Base64 untuk pengetesan aman
-  const sampleBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-
-  const mockPayload = {
-    base64: sampleBase64,
-    unit: 'TEST-E2168',
-    category: 'TEST_ACH',
-    slot: 1,
-    jobId: 'TEST-JOB-' + Math.floor(1000 + Math.random() * 9000),
-    filename: 'TEST_PHOTO_' + Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyyMMdd_HHmmss') + '.png'
-  };
-
-  const result = processUploadAndSave(mockPayload);
-
-  Logger.log('================================================================');
-  if (result.status === 'success') {
-    Logger.log('✅ TEST BERHASIL 100%!');
-    Logger.log('📁 File ID Drive   : ' + result.fileId);
-    Logger.log('🖼️ Nama File       : ' + result.fileName);
-    Logger.log('🔗 Link Direct Foto: ' + result.directUrl);
-    Logger.log('📂 Link Buka Drive : ' + result.driveViewUrl);
-    Logger.log('📊 Spreadsheet Log : ' + (result.spreadsheetUrl || 'Tercatat di ' + SPREADSHEET_LOG_NAME));
-    Logger.log('Silakan buka folder Google Drive Anda dan Spreadsheet untuk melihat foto & log yang baru masuk!');
-  } else {
-    Logger.log('❌ TEST GAGAL: ' + result.message);
-  }
-  Logger.log('================================================================');
-
-  return createJsonResponse(result);
-}
-
-/**
- * ==============================================================================
- * FUNGSI TESTING 2: Menguji Akses Folder Drive & Spreadsheet Log
- * ==============================================================================
- */
-function testKoneksiDriveDanSpreadsheet() {
-  Logger.log('🔍 Menguji koneksi ke Google Drive folder ID: ' + TARGET_FOLDER_ID);
-  try {
-    const folder = DriveApp.getFolderById(TARGET_FOLDER_ID);
-    Logger.log('✅ Folder Drive Terkoneksi: ' + folder.getName());
-    Logger.log('🔗 URL Folder: ' + folder.getUrl());
-
-    const sheet = getOrCreateLogSpreadsheet(folder);
-    Logger.log('✅ Spreadsheet Log Terkoneksi: ' + sheet.getName());
-    Logger.log('📊 URL Spreadsheet: ' + sheet.getUrl());
-    Logger.log('🎉 SEMUA KONEKSI SIAP DIGUNAKAN!');
-  } catch (err) {
-    Logger.log('❌ Gagal mengakses Google Drive: ' + err.toString());
-  }
-}
-
-/**
- * ==============================================================================
- * ENDPOINT UTAMA: Menerima POST request dari aplikasi Web (index.html)
+ * ENDPOINT UTAMA POST: Menerima unggahan foto dari aplikasi Web (index.html)
  * ==============================================================================
  */
 function doPost(e) {
@@ -134,24 +75,30 @@ function doPost(e) {
 
 /**
  * ==============================================================================
- * ENDPOINT GET: Health Check
+ * ENDPOINT GET: Health Check & Tes Koneksi dari Web
  * ==============================================================================
  */
 function doGet(e) {
   try {
-    const targetFolder = DriveApp.getFolderById(TARGET_FOLDER_ID);
+    const ss = getTargetSpreadsheet();
+    const folder = getTargetFolder(ss);
+
     return createJsonResponse({
       status: 'ok',
-      service: 'SE Management Job - Google Drive & Spreadsheet Photo Upload API',
-      folderId: TARGET_FOLDER_ID,
-      folderName: targetFolder.getName(),
-      folderUrl: targetFolder.getUrl(),
+      service: 'SE Management Job - Google Drive & Spreadsheet Photo Upload API v2',
+      spreadsheetId: SPREADSHEET_ID,
+      spreadsheetName: ss ? ss.getName() : 'Google Spreadsheet Terhubung',
+      spreadsheetUrl: ss ? ss.getUrl() : ('https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/edit'),
+      folderId: folder.getId(),
+      folderName: folder.getName(),
+      folderUrl: folder.getUrl(),
       timestamp: new Date().toISOString()
     });
   } catch (err) {
     return createJsonResponse({
       status: 'error',
-      message: 'Folder Google Drive tidak dapat diakses: ' + err.toString(),
+      message: 'Koneksi error: ' + err.toString(),
+      spreadsheetId: SPREADSHEET_ID,
       folderId: TARGET_FOLDER_ID
     });
   }
@@ -197,15 +144,14 @@ function processUploadAndSave(payload) {
   const decodedBytes = Utilities.base64Decode(cleanBase64);
   const blob = Utilities.newBlob(decodedBytes, mimeType, fileName);
 
-  // Simpan berkas ke Google Drive Folder
-  const targetFolder = DriveApp.getFolderById(TARGET_FOLDER_ID);
-  if (!targetFolder) {
-    throw new Error('Folder Google Drive ID ' + TARGET_FOLDER_ID + ' tidak ditemukan!');
-  }
+  // Dapatkan target folder (folder ID khusus atau folder tempat spreadsheet berada)
+  const ss = getTargetSpreadsheet();
+  const targetFolder = getTargetFolder(ss);
 
+  // Simpan berkas gambar ke Drive
   const createdFile = targetFolder.createFile(blob);
 
-  // Set izin akses siap pakai untuk tampilan web
+  // Set izin akses publik siap pakai agar gambar langsung tampil di web
   try {
     createdFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   } catch (permErr) {
@@ -214,26 +160,28 @@ function processUploadAndSave(payload) {
 
   const fileId = createdFile.getId();
   const directImageUrl = 'https://lh3.googleusercontent.com/d/' + fileId;
+  const driveThumbnailUrl = 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1000';
   const driveViewUrl = createdFile.getUrl();
   const driveDownloadUrl = 'https://drive.google.com/uc?export=view&id=' + fileId;
 
-  // Catat riwayat unggahan ke Google Spreadsheet
+  // Catat riwayat unggahan ke Google Spreadsheet target
   let spreadsheetUrl = '';
   try {
-    const ss = getOrCreateLogSpreadsheet(targetFolder);
-    spreadsheetUrl = ss.getUrl();
-    appendLogRow(ss, {
-      unit: unitNo,
-      category: category,
-      slot: slotIdx,
-      jobId: payload.jobId || '-',
-      fileName: fileName,
-      fileId: fileId,
-      directUrl: directImageUrl,
-      driveViewUrl: driveViewUrl
-    });
+    if (ss) {
+      spreadsheetUrl = ss.getUrl();
+      appendLogRow(ss, {
+        unit: unitNo,
+        category: category,
+        slot: slotIdx,
+        jobId: payload.jobId || '-',
+        fileName: fileName,
+        fileId: fileId,
+        directUrl: directImageUrl,
+        driveViewUrl: driveViewUrl
+      });
+    }
   } catch (sheetErr) {
-    Logger.log('Peringatan saat mencatat ke Spreadsheet: ' + sheetErr.toString());
+    Logger.log('Peringatan saat mencatat ke Spreadsheet (tidak menghentikan proses): ' + sheetErr.toString());
   }
 
   return {
@@ -243,36 +191,90 @@ function processUploadAndSave(payload) {
     fileName: fileName,
     url: directImageUrl,          // URL utama untuk <img src="...">
     directUrl: directImageUrl,
+    thumbnailUrl: driveThumbnailUrl,
     driveViewUrl: driveViewUrl,
     driveDownloadUrl: driveDownloadUrl,
-    spreadsheetUrl: spreadsheetUrl,
-    folderId: TARGET_FOLDER_ID,
+    spreadsheetUrl: spreadsheetUrl || ('https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID + '/edit'),
+    folderId: targetFolder.getId(),
+    folderName: targetFolder.getName(),
     uploadedAt: new Date().toISOString()
   };
 }
 
 /**
  * ==============================================================================
- * HELPER SPREADSHEET: Ambil atau Buat Spreadsheet Log di dalam Folder Drive
+ * HELPER SPREADSHEET: Ambil Spreadsheet Aktif atau Buka Berdasarkan ID
  * ==============================================================================
  */
-function getOrCreateLogSpreadsheet(folder) {
-  const files = folder.getFilesByName(SPREADSHEET_LOG_NAME);
-  let ss = null;
+function getTargetSpreadsheet() {
+  try {
+    const active = SpreadsheetApp.getActiveSpreadsheet();
+    if (active) return active;
+  } catch (e) {}
 
-  if (files.hasNext()) {
-    const file = files.next();
-    ss = SpreadsheetApp.openById(file.getId());
-  } else {
-    // Buat Google Spreadsheet baru di folder target
-    ss = SpreadsheetApp.create(SPREADSHEET_LOG_NAME);
-    const ssFile = DriveApp.getFileById(ss.getId());
-    folder.addFile(ssFile);
-    DriveApp.getRootFolder().removeFile(ssFile); // Hapus dari root agar tersimpan rapi hanya di folder target
+  try {
+    return SpreadsheetApp.openById(SPREADSHEET_ID);
+  } catch (err) {
+    Logger.log('Gagal membuka spreadsheet ID ' + SPREADSHEET_ID + ': ' + err.toString());
+    return null;
+  }
+}
 
-    // Format Header Sheet
-    const sheet = ss.getActiveSheet();
-    sheet.setName('Log Foto Operasional');
+/**
+ * ==============================================================================
+ * HELPER FOLDER: Ambil Folder Google Drive Tujuan
+ * (Folder ID Khusus -> Folder Induk Spreadsheet -> Root Drive)
+ * ==============================================================================
+ */
+function getTargetFolder(ss) {
+  // 1. Coba Folder ID spesifik
+  try {
+    if (TARGET_FOLDER_ID && TARGET_FOLDER_ID.trim() !== '') {
+      return DriveApp.getFolderById(TARGET_FOLDER_ID);
+    }
+  } catch (e) {
+    Logger.log('Folder ID spesifik tidak ditemukan/error: ' + e.toString());
+  }
+
+  // 2. Jika gagal atau belum disetel, gunakan folder tempat Spreadsheet berada
+  try {
+    if (ss) {
+      const ssFile = DriveApp.getFileById(ss.getId());
+      const parents = ssFile.getParents();
+      if (parents.hasNext()) {
+        return parents.next();
+      }
+    }
+  } catch (e) {
+    Logger.log('Gagal mendapatkan folder induk spreadsheet: ' + e.toString());
+  }
+
+  // 3. Fallback terakhir ke Root Drive
+  return DriveApp.getRootFolder();
+}
+
+/**
+ * ==============================================================================
+ * HELPER SHEET: Ambil atau Inisialisasi Sheet Tab Log di dalam Spreadsheet
+ * ==============================================================================
+ */
+function getOrCreateLogSheet(spreadsheet) {
+  if (!spreadsheet) return null;
+
+  let sheet = spreadsheet.getSheetByName(SHEET_TAB_NAME);
+
+  if (!sheet) {
+    // Periksa apakah sheet pertama kosong sehingga bisa langsung digunakan
+    const sheets = spreadsheet.getSheets();
+    if (sheets.length > 0 && sheets[0].getLastRow() <= 1 && sheets[0].getLastColumn() <= 1) {
+      sheet = sheets[0];
+      sheet.setName(SHEET_TAB_NAME);
+    } else {
+      // Buat tab sheet baru
+      sheet = spreadsheet.insertSheet(SHEET_TAB_NAME);
+    }
+
+    // Format Baris Header
     sheet.appendRow([
       'No',
       'Waktu Upload (WITA)',
@@ -282,7 +284,7 @@ function getOrCreateLogSpreadsheet(folder) {
       'Job ID',
       'Nama File',
       'ID File Google Drive',
-      'Preview Thumbnail',
+      'Pratinjau Foto',
       'Direct URL Gambar',
       'Link Buka di Google Drive',
       'Status'
@@ -295,9 +297,25 @@ function getOrCreateLogSpreadsheet(folder) {
     headerRange.setFontWeight('bold');
     headerRange.setHorizontalAlignment('center');
     sheet.setFrozenRows(1);
+
+    // Atur lebar kolom yang nyaman
+    try {
+      sheet.setColumnWidth(1, 50);   // No
+      sheet.setColumnWidth(2, 150);  // Waktu
+      sheet.setColumnWidth(3, 110);  // Unit
+      sheet.setColumnWidth(4, 130);  // Kategori
+      sheet.setColumnWidth(5, 80);   // Slot
+      sheet.setColumnWidth(6, 120);  // Job ID
+      sheet.setColumnWidth(7, 220);  // Nama File
+      sheet.setColumnWidth(8, 220);  // File ID
+      sheet.setColumnWidth(9, 100);  // Pratinjau
+      sheet.setColumnWidth(10, 250); // Direct URL
+      sheet.setColumnWidth(11, 200); // Drive Link
+      sheet.setColumnWidth(12, 80);  // Status
+    } catch (cwErr) {}
   }
 
-  return ss;
+  return sheet;
 }
 
 /**
@@ -306,12 +324,15 @@ function getOrCreateLogSpreadsheet(folder) {
  * ==============================================================================
  */
 function appendLogRow(spreadsheet, info) {
-  const sheet = spreadsheet.getSheetByName('Log Foto Operasional') || spreadsheet.getActiveSheet();
+  if (!spreadsheet) return;
+  const sheet = getOrCreateLogSheet(spreadsheet);
+  if (!sheet) return;
+
   const lastRow = sheet.getLastRow();
-  const noUrut = lastRow; // karena baris 1 adalah header
+  const noUrut = Math.max(1, lastRow); // Baris 1 adalah header
   const waktuStr = Utilities.formatDate(new Date(), 'Asia/Makassar', 'dd/MM/yyyy HH:mm:ss');
 
-  // Gunakan formula IMAGE agar thumbnail foto langsung muncul di sel spreadsheet
+  // Formula IMAGE untuk menampilkan pratinjau thumbnail langsung di sel spreadsheet
   const imageFormula = '=IMAGE("' + info.directUrl + '")';
 
   sheet.appendRow([
@@ -329,9 +350,8 @@ function appendLogRow(spreadsheet, info) {
     'SUKSES'
   ]);
 
-  // Sesuaikan tinggi baris agar gambar thumbnail terlihat jelas
   try {
-    sheet.setRowHeight(sheet.getLastRow(), 45);
+    sheet.setRowHeight(sheet.getLastRow(), 50);
   } catch (e) {}
 }
 
@@ -344,4 +364,51 @@ function createJsonResponse(dataObject) {
   const output = ContentService.createTextOutput(JSON.stringify(dataObject));
   output.setMimeType(ContentService.MimeType.JSON);
   return output;
+}
+
+/**
+ * ==============================================================================
+ * FUNGSI TESTING: Uji Langsung dari Editor Apps Script
+ * ==============================================================================
+ */
+function testUploadFoto() {
+  Logger.log('🚀 Memulai pengujian upload foto ke Google Drive & Spreadsheet...');
+
+  const sampleBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+  const mockPayload = {
+    base64: sampleBase64,
+    unit: 'TEST-E2168',
+    category: 'TEST_ACH',
+    slot: 1,
+    jobId: 'TEST-JOB-' + Math.floor(1000 + Math.random() * 9000),
+    filename: 'TEST_PHOTO_' + Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyyMMdd_HHmmss') + '.png'
+  };
+
+  const result = processUploadAndSave(mockPayload);
+  Logger.log('================================================================');
+  Logger.log('Hasil Test: ' + JSON.stringify(result));
+  Logger.log('================================================================');
+  return createJsonResponse(result);
+}
+
+function testKoneksiDriveDanSpreadsheet() {
+  Logger.log('🔍 Menguji koneksi Spreadsheet ID: ' + SPREADSHEET_ID);
+  try {
+    const ss = getTargetSpreadsheet();
+    if (ss) {
+      Logger.log('✅ Spreadsheet Terkoneksi: ' + ss.getName());
+      Logger.log('📊 URL Spreadsheet: ' + ss.getUrl());
+    } else {
+      Logger.log('❌ Gagal membuka spreadsheet');
+    }
+
+    const folder = getTargetFolder(ss);
+    Logger.log('✅ Folder Drive Terkoneksi: ' + folder.getName());
+    Logger.log('🔗 URL Folder: ' + folder.getUrl());
+
+    Logger.log('🎉 SEMUA KONEKSI SIAP DIGUNAKAN!');
+  } catch (err) {
+    Logger.log('❌ Gagal mengakses Google Drive / Spreadsheet: ' + err.toString());
+  }
 }
