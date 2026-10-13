@@ -8049,14 +8049,25 @@
     // Global Reactive Application State (Siap Uji Coba Data Riil)
 
     const DEFAULT_MASTER_UNITS = [
-      { id: 'UNIT-EX2168', lambung: 'EX2168', type: 'PC210-10M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
-      { id: 'UNIT-EX2169', lambung: 'EX2169', type: 'PC210-10M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'SIM E', statusAktif: true },
-      { id: 'UNIT-DZ8589', lambung: 'DZ8589', type: 'D85ESS-2', kategori: 'non_coal', cluster: 'Tengah', lokasi: 'FRONT RAJAWALI', statusAktif: true },
-      { id: 'UNIT-EX8501', lambung: 'EX8501', type: 'PC850-8R1', kategori: 'coal', cluster: 'Utara', lokasi: 'PIT UTARA', statusAktif: true },
-      { id: 'UNIT-EX001', lambung: 'EX001', type: 'PC200-8M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
-      { id: 'UNIT-EX002', lambung: 'EX002', type: 'PC300SE-8M0', kategori: 'coal', cluster: 'Tengah', lokasi: 'SIM E', statusAktif: true },
-      { id: 'UNIT-DZ001', lambung: 'DZ001', type: 'D85ESS-2', kategori: 'non_coal', cluster: 'Utara', lokasi: 'PIT 1 UTARA', statusAktif: true },
-      { id: 'UNIT-DZ155', lambung: 'DZ155', type: 'D155A-6', kategori: 'non_coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true }
+      { id: 'UNIT-E2008', lambung: 'E2008', type: 'PPA_PC 2000-8', kategori: 'coal', cluster: 'Utara', lokasi: 'PIT UTARA', statusAktif: true },
+      { id: 'UNIT-E2009', lambung: 'E2009', type: 'PPA_PC 2000-8', kategori: 'coal', cluster: 'Utara', lokasi: 'FRONT UTARA', statusAktif: true },
+      { id: 'UNIT-D85161', lambung: 'D85161', type: 'PPA_D85ESS-2', kategori: 'non_coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
+      { id: 'UNIT-D85183', lambung: 'D85183', type: 'PPA_D85ESS-2', kategori: 'non_coal', cluster: 'Tengah', lokasi: 'SIM E', statusAktif: true },
+      { id: 'UNIT-E347', lambung: 'E347', type: 'PPA_PC300SE-8M0', kategori: 'coal', cluster: 'Tengah', lokasi: 'SIM E', statusAktif: true },
+      { id: 'UNIT-E345', lambung: 'E345', type: 'PPA_PC300SE-8M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
+      { id: 'UNIT-E2180', lambung: 'E2180', type: 'PPA_PC210-10M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
+      { id: 'UNIT-E1225', lambung: 'E1225', type: 'PPA_PC 1250-8R', kategori: 'coal', cluster: 'Utara', lokasi: 'PIT UTARA', statusAktif: true },
+      { id: 'UNIT-E1237', lambung: 'E1237', type: 'PPA_PC 1250SP-11R', kategori: 'coal', cluster: 'Utara', lokasi: 'PIT UTARA', statusAktif: true },
+      { id: 'UNIT-DM04', lambung: 'DM04', type: 'PPA_D245S', kategori: 'non_coal', cluster: 'Utara', lokasi: 'PIT UTARA', statusAktif: true },
+      { id: 'UNIT-DM06', lambung: 'DM06', type: 'PPA_D245S', kategori: 'non_coal', cluster: 'Utara', lokasi: 'PIT UTARA', statusAktif: true },
+      { id: 'UNIT-EX2168', lambung: 'EX2168', type: 'PPA_PC210-10M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
+      { id: 'UNIT-EX2169', lambung: 'EX2169', type: 'PPA_PC210-10M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'SIM E', statusAktif: true },
+      { id: 'UNIT-DZ8589', lambung: 'DZ8589', type: 'PPA_D85ESS-2', kategori: 'non_coal', cluster: 'Tengah', lokasi: 'FRONT RAJAWALI', statusAktif: true },
+      { id: 'UNIT-EX8501', lambung: 'EX8501', type: 'PPA_PC850-8R1', kategori: 'coal', cluster: 'Utara', lokasi: 'PIT UTARA', statusAktif: true },
+      { id: 'UNIT-EX001', lambung: 'EX001', type: 'PPA_PC200-8M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
+      { id: 'UNIT-EX002', lambung: 'EX002', type: 'PPA_PC300SE-8M0', kategori: 'coal', cluster: 'Tengah', lokasi: 'SIM E', statusAktif: true },
+      { id: 'UNIT-DZ001', lambung: 'DZ001', type: 'PPA_D85ESS-2', kategori: 'non_coal', cluster: 'Utara', lokasi: 'PIT 1 UTARA', statusAktif: true },
+      { id: 'UNIT-DZ155', lambung: 'DZ155', type: 'PPA_D155A-6', kategori: 'non_coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true }
     ];
 
     const DEFAULT_MASTER_ARMADA = [
@@ -9832,17 +9843,65 @@
     }
 
     function getUnitTypeFromMaster(lambung, defaultType = 'Unit') {
-      if (!lambung) return defaultType;
+      const cleanDefault = (defaultType && typeof defaultType === 'string') ? defaultType.trim() : '';
+      const isGenericDefault = !cleanDefault || ['UNIT', 'EXCAVATOR', 'BULLDOZER', '-', 'UNDEFINED', 'NULL'].includes(cleanDefault.toUpperCase());
+
+      if (!lambung) {
+        return !isGenericDefault ? cleanDefault : 'Unit';
+      }
+
       const clean = lambung.trim().toUpperCase();
-      const u = (state.masterUnits || []).find(item => item.lambung.toUpperCase() === clean);
-      if (u && u.type) return u.type;
-      if (clean.startsWith('E2') || clean.startsWith('E3') || clean.startsWith('E5') || clean.startsWith('EX')) return 'Excavator';
-      if (clean.startsWith('D8') || clean.startsWith('D1') || clean.startsWith('D5')) return 'Bulldozer';
-      if (clean.startsWith('WT')) return 'Water Truck';
-      if (clean.startsWith('LT')) return 'Lubetruck';
-      if (clean.startsWith('DT')) return 'Haul Truck';
-      if (clean.startsWith('DR')) return 'Drilling Fleet';
-      return defaultType;
+
+      // 1. Prioritas Utama: Ambil langsung dari Data Master (state.masterUnits)
+      if (Array.isArray(state.masterUnits) && state.masterUnits.length > 0) {
+        const u = state.masterUnits.find(item => {
+          if (!item) return false;
+          const l = (item.lambung || item.no_lambung || '').trim().toUpperCase();
+          return l === clean;
+        });
+        if (u) {
+          const mType = (u.type || u.type_model || '').trim();
+          if (mType && !['EXCAVATOR', 'BULLDOZER', 'UNIT'].includes(mType.toUpperCase())) {
+            return mType;
+          }
+        }
+      }
+
+      // 2. Prioritas Kedua: Gunakan defaultType jika defaultType sudah merupakan tipe model spesifik
+      if (!isGenericDefault) {
+        return cleanDefault;
+      }
+
+      // 3. Prioritas Ketiga: Pemetaan cerdas prefix nomor lambung ke tipe model spesifik dari Data Master
+      // (JANGAN PERNAH mengembalikan generic "Excavator" atau "Bulldozer"!)
+      if (clean.startsWith('E20')) return 'PPA_PC 2000-8';
+      if (clean.startsWith('E21') || clean.startsWith('E25') || clean.startsWith('E28')) return 'PPA_PC210-10M0';
+      if (clean.startsWith('E2')) return 'PPA_PC 2000-8';
+      if (clean.startsWith('E3')) return 'PPA_PC300SE-8M0';
+      if (clean.startsWith('E512') || clean.startsWith('E12')) return 'PPA_PC 1250-8R';
+      if (clean.startsWith('E531')) return 'PPA_PC300SE-8M0';
+      if (clean.startsWith('E5')) return 'PPA_PC500LC-10R';
+      if (clean.startsWith('E85')) return 'PPA_PC850-8R1';
+      if (clean.startsWith('EX21')) return 'PPA_PC210-10M0';
+      if (clean.startsWith('EX85')) return 'PPA_PC850-8R1';
+      if (clean.startsWith('EX001')) return 'PPA_PC200-8M0';
+      if (clean.startsWith('EX002') || clean.startsWith('EX3')) return 'PPA_PC300SE-8M0';
+      if (clean.startsWith('EX')) return 'PPA_PC300SE-8M0';
+
+      if (clean.startsWith('D85') || clean.startsWith('DZ85') || clean.startsWith('D8')) return 'PPA_D85ESS-2';
+      if (clean.startsWith('D15') || clean.startsWith('DZ15') || clean.startsWith('D1')) return 'PPA_D155A-6';
+      if (clean.startsWith('D24') || clean.startsWith('DM') || clean.startsWith('D5')) return 'PPA_D245S';
+      if (clean.startsWith('DZ')) return 'PPA_D85ESS-2';
+
+      if (clean.startsWith('SRT')) return 'PPA_SRT100S';
+      if (clean.startsWith('HD78')) return 'PPA_HD785-7';
+      if (clean.startsWith('H54') || clean.startsWith('HD46')) return 'PPA_HD465-7R';
+      if (clean.startsWith('DT') || clean.startsWith('F54') || clean.startsWith('DA54')) return 'PPA_FMX400';
+      if (clean.startsWith('WT')) return 'PPA_FM260JD';
+      if (clean.startsWith('LT')) return 'PPA_AXOR 2528 CH';
+      if (clean.startsWith('SV') || clean.startsWith('VS')) return 'PPA_SV526D';
+
+      return !isGenericDefault ? cleanDefault : 'PPA_PC 2000-8';
     }
 
     function toggleSubmenu(id) {
@@ -14590,10 +14649,17 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         }
       }
 
-      // Hitung persentase ACH per Tipe Unit untuk grafik
+      // Hitung persentase ACH per Tipe Unit untuk grafik (Tipe model spesifik dari Data Master)
       const unitTypesMap = {};
       targetJobs.forEach(j => {
-        const t = getUnitTypeFromMaster(j.noLambung, j.typeUnit || 'Unit');
+        let t = getUnitTypeFromMaster(j.noLambung, j.typeUnit || 'Unit');
+        if (!t || ['EXCAVATOR', 'BULLDOZER', 'UNIT'].includes(t.toUpperCase())) {
+          if (j.typeUnit && !['EXCAVATOR', 'BULLDOZER', 'UNIT'].includes(j.typeUnit.toUpperCase())) {
+            t = j.typeUnit;
+          } else {
+            t = getUnitTypeFromMaster(j.noLambung, 'PPA_PC 2000-8');
+          }
+        }
         if (!unitTypesMap[t]) {
           unitTypesMap[t] = { total: 0, ach: 0 };
         }
@@ -14603,7 +14669,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       let typeLabels = Object.keys(unitTypesMap);
       if (typeLabels.length === 0) {
-        typeLabels = ['PC210-10M0', 'PC300SE-8M0', 'D85ESS-2', 'PC200-8M0', 'PC500LC-10R'];
+        typeLabels = ['PPA_PC 2000-8', 'PPA_D85ESS-2', 'PPA_PC300SE-8M0', 'PPA_PC210-10M0', 'PPA_D245S'];
       }
 
       const typeAchRates = typeLabels.map(t => {
@@ -22926,6 +22992,9 @@ Oilman 1 & 2 : ${oilman}`;
           if (state.masterActiveSection === 'roster' && typeof renderDatabaseRosterTable === 'function') {
             renderDatabaseRosterTable();
           }
+          if (state.activeTab === 'dashboard' && typeof refreshDashboardData === 'function') {
+            refreshDashboardData();
+          }
         } catch (e) {
           console.warn('[Supabase] Init gagal, menggunakan local fallback:', e);
         }
@@ -23194,6 +23263,9 @@ Oilman 1 & 2 : ${oilman}`;
           safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
           if (state.masterActiveSection === 'units' && typeof renderMasterUnitsTable === 'function') {
             renderMasterUnitsTable();
+          }
+          if (state.activeTab === 'dashboard' && typeof renderDashboardAchievementChart === 'function') {
+            renderDashboardAchievementChart(state.dashboardSelectedCategory || 'ALL');
           }
           console.log('[Supabase Sync] Populasi Unit tersinkronisasi lengkap:', supaUnits.length, 'unit');
         } else {
