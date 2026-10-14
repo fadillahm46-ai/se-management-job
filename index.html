@@ -294,12 +294,14 @@
     /* Haptic Feedback & Tactile Touch untuk Mobile Bottom Navigation */
     #mobile-bottom-nav {
       -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
       user-select: none;
       -webkit-user-select: none;
     }
 
     .mob-nav-btn {
       -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
       touch-action: manipulation;
       user-select: none;
       -webkit-user-select: none;
@@ -5250,7 +5252,7 @@
 
           <!-- Lampiran Foto -->
           <div id="ach-photo-container">
-            <label class="block text-slate-700 font-semibold text-xs mb-1">Lampiran Foto</label>
+            <label class="block text-slate-700 font-semibold text-xs mb-1">Lampiran Foto <span class="text-[10px] font-normal text-slate-500">(Foto 1 & 2 <span class="text-rose-500 font-bold">Wajib</span>, Foto 3 & 4 <span class="text-slate-400">Opsional</span>)</span></label>
             <div id="ach-photo-slots" class="grid grid-cols-2 gap-2">
               <!-- Dynamically populated via renderAchPhotoSlots() -->
             </div>
@@ -7788,9 +7790,9 @@
     </div>
   </div>
 
-  <!-- TOAST NOTIFICATION POPUP (No alerts!) -->
+  <!-- TOAST NOTIFICATION POPUP (Atas Tengah di Mode HP, Kanan Bawah di Desktop) -->
   <div id="toast"
-    class="fixed bottom-6 right-6 z-50 max-w-sm px-4 py-3 rounded-2xl shadow-xl border text-xs font-bold transition-all duration-300 transform translate-y-24 opacity-0 pointer-events-none flex items-center space-x-2">
+    class="fixed z-[60] top-4 left-1/2 -translate-x-1/2 w-[92vw] max-w-sm md:top-auto md:bottom-6 md:right-6 md:left-auto md:translate-x-0 md:w-auto px-4 py-3 rounded-2xl shadow-xl border text-xs font-bold transition-all duration-300 transform -translate-y-12 md:translate-y-24 opacity-0 pointer-events-none flex items-center space-x-2.5">
     <span id="toast-icon">✓</span>
     <span id="toast-msg">Notifikasi</span>
   </div>
@@ -9980,6 +9982,10 @@
 
     function syncAllDateFiltersToToday() {
       const today = getEffectiveTodayString();
+      const defWeekRange = (typeof getMiningWeekRange === 'function')
+        ? getMiningWeekRange(new Date())
+        : { startDate: '2026-10-11', endDate: '2026-10-17' };
+
       const ltDate = document.getElementById('lt-filter-date');
       const wtDate = document.getElementById('wt-filter-date');
       const compStartDate = document.getElementById('comp-filter-start-date');
@@ -9991,10 +9997,6 @@
       state.picaFilterStartDate = defWeekRange.startDate;
       state.picaFilterEndDate = defWeekRange.endDate;
       const orderDate = document.getElementById('order-tanggal');
-
-      const defWeekRange = (typeof getMiningWeekRange === 'function')
-        ? getMiningWeekRange(new Date())
-        : { startDate: '2026-10-11', endDate: '2026-10-17' };
 
       if (ltDate) ltDate.value = today;
       if (wtDate) wtDate.value = today;
@@ -10922,11 +10924,11 @@
     let _lastBottomNavHaptic = 0;
     function triggerHaptic(pattern = 15) {
       const now = Date.now();
-      if (now - _lastBottomNavHaptic < 70) return; // Mencegah getaran ganda akibat touchstart/pointerdown + click
+      if (now - _lastBottomNavHaptic < 350) return; // Mencegah getaran ganda / berulang
       _lastBottomNavHaptic = now;
       try {
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator && typeof navigator.vibrate === 'function') {
-          // Standard Web Vibration API (15ms untuk getaran sentuhan tactile yang halus & responsif)
+          // Standard Web Vibration API (15ms getaran tactile tunggal saat menu diklik)
           navigator.vibrate(pattern);
         }
       } catch (e) {
@@ -10939,17 +10941,12 @@
       const nav = document.getElementById('mobile-bottom-nav');
       if (!nav) return;
 
-      const onHapticInteraction = (e) => {
-        const btn = e.target.closest('.mob-nav-btn');
-        if (btn) {
-          triggerHaptic(15);
+      // Cegah getaran bawaan OS saat tombol bottom bar ditekan lama (di-rendam)
+      nav.addEventListener('contextmenu', (e) => {
+        if (e.target.closest('.mob-nav-btn')) {
+          e.preventDefault();
         }
-      };
-
-      // Respon getaran instan tanpa lag saat jari menyentuh bottom bar di layar HP
-      nav.addEventListener('pointerdown', onHapticInteraction, { passive: true });
-      nav.addEventListener('touchstart', onHapticInteraction, { passive: true });
-      nav.addEventListener('click', onHapticInteraction, { passive: true });
+      });
     }
     window.initMobileBottomNavHaptic = initMobileBottomNavHaptic;
     if (document.readyState !== 'loading') {
@@ -11039,10 +11036,18 @@
           renderManpowerDashboard();
         }
       } else if (tabKey === 'lt-schedule') {
+        const today = getEffectiveTodayString();
+        const ltDate = document.getElementById('lt-filter-date');
+        if (ltDate && !ltDate.value) ltDate.value = today;
+        if (state.lubetruckState && !state.lubetruckState.filterDate) state.lubetruckState.filterDate = today;
         renderLtScheduleTable();
       } else if (tabKey === 'lt-unschedule') {
         renderLtUnscheduleTable();
       } else if (tabKey === 'wt-schedule') {
+        const today = getEffectiveTodayString();
+        const wtDate = document.getElementById('wt-filter-date');
+        if (wtDate && !wtDate.value) wtDate.value = today;
+        if (state.watertruckState && !state.watertruckState.filterDate) state.watertruckState.filterDate = today;
         renderWtScheduleTable();
       } else if (tabKey === 'wt-unschedule') {
         renderWtUnscheduleTable();
@@ -11236,7 +11241,8 @@
       if (!toast || !toastMsg) return;
 
       toastMsg.textContent = msg;
-      toast.className = 'fixed bottom-6 right-6 z-50 max-w-sm px-4 py-3 rounded-2xl shadow-xl border text-xs font-bold transition-all duration-300 transform pointer-events-none flex items-center space-x-2';
+      // Posisi: Atas Tengah di Mode HP, Kanan Bawah di Desktop
+      toast.className = 'fixed z-[60] top-4 left-1/2 -translate-x-1/2 w-[92vw] max-w-sm md:top-auto md:bottom-6 md:right-6 md:left-auto md:translate-x-0 md:w-auto px-4 py-3 rounded-2xl shadow-xl border text-xs font-bold transition-all duration-300 transform pointer-events-none flex items-center space-x-2.5';
 
       if (type === 'success') {
         toast.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
@@ -11252,13 +11258,13 @@
         if (toastIcon) toastIcon.textContent = 'ℹ';
       }
 
-      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.remove('-translate-y-12', 'md:translate-y-24', 'opacity-0');
       toast.classList.add('translate-y-0', 'opacity-100');
 
       if (window._toastTimeout) clearTimeout(window._toastTimeout);
       window._toastTimeout = setTimeout(() => {
         toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-24', 'opacity-0');
+        toast.classList.add('-translate-y-12', 'md:translate-y-24', 'opacity-0');
       }, 3500);
     }
 
@@ -12737,10 +12743,13 @@
       const isMp = !isAdmin;
       const maxDate = getEffectiveTodayString();
       const dateInput = document.getElementById('lt-filter-date');
+      if (dateInput && !dateInput.value) {
+        dateInput.value = maxDate;
+      }
       if (isMp && dateInput && dateInput.value > maxDate) {
         dateInput.value = maxDate;
       }
-      const selectedDate = dateInput?.value || state.lubetruckState.filterDate || '2026-09-27';
+      const selectedDate = dateInput?.value || state.lubetruckState.filterDate || maxDate;
       state.lubetruckState.filterDate = selectedDate;
       const isTanggalSatu = (selectedDate && (selectedDate.endsWith('-01') || (typeof parseDateString === 'function' && parseDateString(selectedDate).getDate() === 1)));
 
@@ -13159,10 +13168,13 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       const isMp = !isAdmin;
       const maxDate = getEffectiveTodayString();
       const dateInput = document.getElementById('wt-filter-date');
+      if (dateInput && !dateInput.value) {
+        dateInput.value = maxDate;
+      }
       if (isMp && dateInput && dateInput.value > maxDate) {
         dateInput.value = maxDate;
       }
-      const selectedDate = dateInput?.value || state.watertruckState.filterDate || '2026-09-27';
+      const selectedDate = dateInput?.value || state.watertruckState.filterDate || maxDate;
       state.watertruckState.filterDate = selectedDate;
       const isTanggalSatu = (selectedDate && (selectedDate.endsWith('-01') || (typeof parseDateString === 'function' && parseDateString(selectedDate).getDate() === 1)));
 
@@ -19609,7 +19621,7 @@ Oilman 1 & 2 : ${oilman}`;
       const unitType = (typeof getUnitTypeFromMaster === 'function') ? getUnitTypeFromMaster(job.noLambung, job.typeUnit || 'Unit') : (job.typeUnit || 'Unit');
 
       if (titleEl) titleEl.textContent = isJobRequest ? 'Pilih Status Job Request' : 'Pilih Hasil Tindakan';
-      if (subEl) subEl.textContent = `${job.noLambung} (${unitType}) â€¢ ${formatClusterLabel(job.cluster)} (${job.lokasi})`;
+      if (subEl) subEl.textContent = `${job.noLambung} (${unitType}) • ${formatClusterLabel(job.cluster)} (${job.lokasi})`;
 
       if (leftLabel) leftLabel.textContent = isJobRequest ? 'DONE' : 'ACH';
       if (rightLabel) rightLabel.textContent = isJobRequest ? 'CANCEL' : 'NON-ACH';
@@ -19639,7 +19651,7 @@ Oilman 1 & 2 : ${oilman}`;
       if (!job) return;
       const unitLabel = document.getElementById('cancel-jobreq-unit-label');
       const reasonInput = document.getElementById('cancel-jobreq-reason');
-      if (unitLabel) unitLabel.textContent = `Unit: ${job.noLambung} â€¢ ${formatClusterLabel(job.cluster)} (${job.lokasi})`;
+      if (unitLabel) unitLabel.textContent = `Unit: ${job.noLambung} • ${formatClusterLabel(job.cluster)} (${job.lokasi})`;
       if (reasonInput) reasonInput.value = '';
       toggleModal('modal-jobreq-cancel', true);
     }
@@ -19663,7 +19675,8 @@ Oilman 1 & 2 : ${oilman}`;
       container.innerHTML = '';
       (state.currentAchPhotos || ['', '', '', '']).forEach((photo, idx) => {
         const slot = document.createElement('div');
-        slot.className = 'relative border-2 border-dashed border-slate-200 rounded-xl p-2 flex flex-col items-center justify-center bg-slate-50 min-h-[90px] overflow-hidden';
+        const isRequired = (idx === 0 || idx === 1);
+        slot.className = 'relative border-2 border-dashed ' + (isRequired && !photo ? 'border-amber-300 bg-amber-50/20' : 'border-slate-200 bg-slate-50') + ' rounded-xl p-2 flex flex-col items-center justify-center min-h-[90px] overflow-hidden transition';
         if (photo) {
           slot.innerHTML = `
             <img src="${photo}" class="w-full h-20 object-cover rounded-lg">
@@ -19671,11 +19684,11 @@ Oilman 1 & 2 : ${oilman}`;
           `;
         } else {
           slot.innerHTML = `
-            <label class="cursor-pointer flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-slate-600">
-              <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <label class="cursor-pointer flex flex-col items-center justify-center w-full h-full ${isRequired ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-slate-600'}">
+              <svg class="w-6 h-6 mb-1 ${isRequired ? 'text-amber-500' : 'text-slate-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
               </svg>
-              <span class="text-[10px] font-semibold">Foto ${idx + 1}</span>
+              <span class="text-[10px] font-bold">Foto ${idx + 1} ${isRequired ? '<span class="text-rose-500">* (Wajib)</span>' : '<span class="text-slate-400 font-normal">(Opsional)</span>'}</span>
               <input type="file" accept="image/*" class="hidden" onchange="handleAchPhotoUpload(event, ${idx})">
             </label>
           `;
@@ -20296,7 +20309,11 @@ Oilman 1 & 2 : ${oilman}`;
 
       if (!isJobRequest) {
         if (!state.currentAchPhotos[0] || state.currentAchPhotos[0].trim() === '') {
-          showToast('Foto No Lambung Unit (Wajib) harus dilampirkan!', 'warning');
+          showToast('Foto 1 (Wajib) harus dilampirkan!', 'warning');
+          return;
+        }
+        if (!state.currentAchPhotos[1] || state.currentAchPhotos[1].trim() === '') {
+          showToast('Foto 2 (Wajib) harus dilampirkan!', 'warning');
           return;
         }
       }
