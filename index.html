@@ -2838,31 +2838,35 @@
                 </div>
               </div>
 
-              <!-- Baris 2: Cluster & Lokasi Pit -->
+              <!-- Baris 2: Cluster & Lokasi Pit (Otomatis dari Master Unit & Bebas Ketik Manual) -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-slate-700 mb-1.5">Cluster</label>
-                  <select id="order-cluster"
-                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 bg-white font-medium">
-                    <optgroup label="Cluster Utama">
-                      <option value="Selatan">KGU Selatan</option>
-                      <option value="Tengah">KGU Tengah</option>
-                      <option value="Utara">KGU Utara</option>
-                    </optgroup>
-                    <optgroup label="Cluster Tambahan">
-                      <option value="Outpit Selatan">Outpit Selatan</option>
-                      <option value="Outpit Tengah">Outpit Tengah</option>
-                      <option value="Outpit Utara">Outpit Utara</option>
-                      <option value="HRM Selatan">HRM Selatan</option>
-                      <option value="HRM Utara">HRM Utara</option>
-                      <option value="Workshop">Workshop</option>
-                    </optgroup>
-                  </select>
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-slate-700 font-medium">Cluster</label>
+                    <span class="text-[10px] text-slate-400 font-normal">Pilih atau ketik manual</span>
+                  </div>
+                  <input type="text" id="order-cluster" list="order-clusters-datalist" placeholder="Contoh: KGU Selatan" required
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 bg-white font-medium text-slate-900">
+                  <datalist id="order-clusters-datalist">
+                    <option value="KGU Selatan">KGU Selatan (Cluster Utama)</option>
+                    <option value="KGU Tengah">KGU Tengah (Cluster Utama)</option>
+                    <option value="KGU Utara">KGU Utara (Cluster Utama)</option>
+                    <option value="Outpit Selatan">Outpit Selatan</option>
+                    <option value="Outpit Tengah">Outpit Tengah</option>
+                    <option value="Outpit Utara">Outpit Utara</option>
+                    <option value="HRM Selatan">HRM Selatan</option>
+                    <option value="HRM Utara">HRM Utara</option>
+                    <option value="Workshop">Workshop</option>
+                    <option value="ROM Area">ROM Area</option>
+                  </datalist>
                 </div>
                 <div>
-                  <label class="block text-slate-700 mb-1.5">Lokasi Pit</label>
-                  <input type="text" id="order-lokasi" placeholder="Contoh: Rangkong" required
-                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 uppercase">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-slate-700 font-medium">Lokasi Pit</label>
+                    <span class="text-[10px] text-slate-400 font-normal">Pilih unit atau ketik manual</span>
+                  </div>
+                  <input type="text" id="order-lokasi" placeholder="Contoh: BALANAI / PIT UTARA" required
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 uppercase font-medium bg-white text-slate-900">
                 </div>
               </div>
 
@@ -8040,6 +8044,7 @@
       } catch (err) {
         console.warn('[Sync] Gagal menyimpan data via notifyDataChanged:', err);
       }
+      if (typeof populateOrderUnitsDatalist === 'function') populateOrderUnitsDatalist();
       refreshActiveTable();
       if (state.activeTab !== 'dashboard') {
         try {
@@ -11066,13 +11071,12 @@
         renderAirCleanerMonitorTable();
       } else if (tabKey === 'orders') {
         if (typeof populateOrderUnitsDatalist === 'function') populateOrderUnitsDatalist();
-      } else if (tabKey === 'more') {
-        renderFullMoreMenu();
-      } else if (tabKey === 'orders') {
         const orderDateInput = document.getElementById('order-tanggal');
         if (orderDateInput && !orderDateInput.value) {
           orderDateInput.value = getEffectiveTodayString();
         }
+      } else if (tabKey === 'more') {
+        renderFullMoreMenu();
       }
     }
 
@@ -22334,6 +22338,7 @@ Oilman 1 & 2 : ${oilman}`;
       }
 
       toggleModal('modal-import-units', false);
+      if (typeof populateOrderUnitsDatalist === 'function') populateOrderUnitsDatalist();
       showToast(`Sukses! ${newCount} unit baru & ${updateCount} unit terupdate tersimpan di sistem & Cloud Supabase!`, 'success');
       if (saveBtn) {
         saveBtn.disabled = false;
@@ -23245,58 +23250,173 @@ Oilman 1 & 2 : ${oilman}`;
     // ORDER LAPANGAN, MASTER UNITS, MASTER ACCOUNTS & SIMULASI CONTROLLERS
     // ========================================================================
     /**
+     * Mengambil lookup komprehensif seluruh Unit Produksi dari Data Master, safeStorage, dan Schedule aktif
+     */
+    function getAllMasterUnitsComprehensive() {
+      const unitMap = new Map();
+
+      // 1. Ambil dari memory state.masterUnits
+      let sourceUnits = [];
+      if (Array.isArray(state.masterUnits) && state.masterUnits.length > 0) {
+        sourceUnits = state.masterUnits;
+      } else {
+        try {
+          const saved = safeStorage.getItem('SE_MASTER_UNITS');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              sourceUnits = parsed;
+              state.masterUnits = parsed;
+            }
+          }
+        } catch (e) {}
+        if (sourceUnits.length === 0 && Array.isArray(DEFAULT_MASTER_UNITS)) {
+          sourceUnits = DEFAULT_MASTER_UNITS;
+        }
+      }
+
+      // 2. Masukkan seluruh unit dari data master terlebih dahulu (prioritas utama)
+      sourceUnits.forEach(u => {
+        const lb = (u.lambung || u.no_lambung || u.unit || '').trim();
+        if (!lb) return;
+        const key = lb.toUpperCase();
+        unitMap.set(key, {
+          id: u.id || ('UNIT-' + lb),
+          lambung: lb,
+          type: u.type || u.type_model || u.typeUnit || '',
+          kategori: u.kategori || 'coal',
+          cluster: u.cluster || 'Selatan',
+          lokasi: (u.lokasi && u.lokasi !== '-') ? u.lokasi : '',
+          statusAktif: u.statusAktif !== false
+        });
+      });
+
+      // 3. Fallback: masukkan juga unit yang tercantum di antrean schedule aktif jika belum ada di master
+      const appendFromJobPool = (jobs) => {
+        if (!Array.isArray(jobs)) return;
+        jobs.forEach(j => {
+          const lb = (j.noLambung || j.lambung || '').trim();
+          if (!lb) return;
+          const key = lb.toUpperCase();
+          if (!unitMap.has(key)) {
+            unitMap.set(key, {
+              id: 'UNIT-' + lb,
+              lambung: lb,
+              type: j.typeUnit || j.type || '',
+              kategori: j.kategori || 'coal',
+              cluster: j.cluster || 'Selatan',
+              lokasi: (j.lokasi && j.lokasi !== '-') ? j.lokasi : '',
+              statusAktif: true
+            });
+          } else {
+            // Lengkapi data lokasi/cluster jika di master masih kosong
+            const existing = unitMap.get(key);
+            if (!existing.lokasi && j.lokasi && j.lokasi !== '-') existing.lokasi = j.lokasi;
+            if (!existing.cluster && j.cluster) existing.cluster = j.cluster;
+            if (!existing.type && (j.typeUnit || j.type)) existing.type = j.typeUnit || j.type;
+          }
+        });
+      };
+      if (state.lubetruckState?.jobs) appendFromJobPool(state.lubetruckState.jobs);
+      if (state.watertruckState?.jobs) appendFromJobPool(state.watertruckState.jobs);
+      if (state.unscheduledLtJobs) appendFromJobPool(state.unscheduledLtJobs);
+      if (state.unscheduledWtJobs) appendFromJobPool(state.unscheduledWtJobs);
+
+      return Array.from(unitMap.values());
+    }
+    window.getAllMasterUnitsComprehensive = getAllMasterUnitsComprehensive;
+
+    /**
      * Populasi datalist unit produksi pada Form Permintaan Lapangan (Order)
+     * Selalu sinkron dengan Data Master terbaru, diurutkan alfabetis A-Z
      */
     function populateOrderUnitsDatalist() {
       const dl = document.getElementById('order-units-datalist');
       if (!dl) return;
-      const units = state.masterUnits || [];
+
+      const units = getAllMasterUnitsComprehensive().sort((a, b) => 
+        a.lambung.localeCompare(b.lambung, undefined, { numeric: true, sensitivity: 'base' })
+      );
+
       dl.innerHTML = units.map(u => {
-        const lb = (u.lambung || u.no_lambung || '').trim();
-        const cl = u.cluster ? ` • KGU ${u.cluster}` : '';
-        const loc = (u.lokasi && u.lokasi !== '-') ? ` • ${u.lokasi}` : '';
+        const lb = u.lambung;
         const tp = u.type ? ` (${u.type})` : '';
+        const cl = u.cluster ? ` • ${typeof formatClusterLabel === 'function' ? formatClusterLabel(u.cluster) : u.cluster}` : '';
+        const loc = u.lokasi ? ` • ${u.lokasi}` : '';
         return `<option value="${lb}">${lb}${tp}${cl}${loc}</option>`;
       }).join('');
     }
     window.populateOrderUnitsDatalist = populateOrderUnitsDatalist;
 
     /**
-     * Otomatis isi Cluster dan Lokasi Pit saat memilih/mengetik unit produksi (tetap bisa diedit manual jika tidak sesuai)
+     * Otomatis isi Cluster dan Lokasi Pit saat memilih/mengetik unit produksi (tetap bisa diedit/diketik manual jika tidak sesuai)
      */
     function triggerAutoFillForOrder(val) {
       if (!val) return;
-      const clean = val.trim().toUpperCase();
-      const units = state.masterUnits || [];
-      const u = units.find(item => (item.lambung || item.no_lambung || '').toUpperCase() === clean);
-      if (!u) return;
+      const rawVal = String(val).trim();
+      if (!rawVal) return;
 
-      const lokasiInp = document.getElementById('order-lokasi');
-      const clusterSel = document.getElementById('order-cluster');
+      const units = getAllMasterUnitsComprehensive();
+      let matchedUnit = null;
 
-      // 1. Lokasi Pit otomatis terisi dari Master Unit Produksi (tetap bisa diedit jika tidak sesuai)
-      if (lokasiInp && u.lokasi && u.lokasi !== '-') {
-        lokasiInp.value = u.lokasi;
+      // 1. Coba exact match nomor lambung
+      const upper = rawVal.toUpperCase();
+      matchedUnit = units.find(u => (u.lambung || '').toUpperCase() === upper);
+
+      // 2. Jika input berisi teks panjang dari datalist (contoh: "DZ155 (D155A-6) • KGU Selatan • BALANAI")
+      if (!matchedUnit) {
+        const token = upper.split(/[\s(•\-]/)[0].trim();
+        if (token) {
+          matchedUnit = units.find(u => (u.lambung || '').toUpperCase() === token);
+        }
       }
 
-      // 2. Cluster otomatis terpilih dari Master Unit Produksi (tetap bisa diedit jika tidak sesuai)
-      if (clusterSel && u.cluster) {
-        const rawCluster = String(u.cluster).trim();
-        const cleanCluster = rawCluster.replace(/^KGU\s+/i, '').trim().toLowerCase();
+      // 3. Cek apakah ada nomor lambung yang match di awal string
+      if (!matchedUnit) {
+        matchedUnit = units.find(u => {
+          const lb = (u.lambung || '').toUpperCase();
+          return lb && upper.startsWith(lb);
+        });
+      }
 
-        let matched = false;
-        for (let i = 0; i < clusterSel.options.length; i++) {
-          const optVal = clusterSel.options[i].value.toLowerCase();
-          const optText = clusterSel.options[i].text.toLowerCase();
-          if (optVal === cleanCluster || optVal === rawCluster.toLowerCase() || optText.includes(cleanCluster)) {
-            clusterSel.selectedIndex = i;
-            matched = true;
-            break;
+      if (!matchedUnit) return;
+
+      // Rapikan input nomor lambung jika sebelumnya berisi teks panjang
+      const lambungInp = document.getElementById('order-no-lambung');
+      if (lambungInp && lambungInp.value !== matchedUnit.lambung) {
+        lambungInp.value = matchedUnit.lambung;
+      }
+
+      // 1. Lokasi Pit otomatis terisi dari Master Unit (tetap bebas diedit manual jika berbeda)
+      const lokasiInp = document.getElementById('order-lokasi');
+      if (lokasiInp && matchedUnit.lokasi && matchedUnit.lokasi !== '-') {
+        lokasiInp.value = matchedUnit.lokasi;
+      }
+
+      // 2. Cluster otomatis terisi dari Master Unit (tetap bebas diedit / dipilih manual jika berbeda)
+      const clusterEl = document.getElementById('order-cluster');
+      if (clusterEl && matchedUnit.cluster) {
+        const clusterLabel = typeof formatClusterLabel === 'function' ? formatClusterLabel(matchedUnit.cluster) : matchedUnit.cluster;
+        if (clusterEl.tagName === 'SELECT') {
+          const rawCluster = String(matchedUnit.cluster).trim();
+          const cleanCluster = rawCluster.replace(/^KGU\s+/i, '').trim().toLowerCase();
+          let matched = false;
+          for (let i = 0; i < clusterEl.options.length; i++) {
+            const optVal = clusterEl.options[i].value.toLowerCase();
+            const optText = clusterEl.options[i].text.toLowerCase();
+            if (optVal === cleanCluster || optVal === rawCluster.toLowerCase() || optText.includes(cleanCluster)) {
+              clusterEl.selectedIndex = i;
+              matched = true;
+              break;
+            }
           }
-        }
-        if (!matched) {
-          const newOpt = new Option('KGU ' + u.cluster, u.cluster, true, true);
-          clusterSel.add(newOpt);
+          if (!matched) {
+            const newOpt = new Option(clusterLabel, matchedUnit.cluster, true, true);
+            clusterEl.add(newOpt);
+          }
+        } else {
+          // Input text dengan datalist (bisa diketik manual)
+          clusterEl.value = clusterLabel;
         }
       }
     }
@@ -23381,6 +23501,7 @@ Oilman 1 & 2 : ${oilman}`;
       // Reset form
       if (document.getElementById('order-nama-pemesan')) document.getElementById('order-nama-pemesan').value = '';
       if (document.getElementById('order-no-lambung')) document.getElementById('order-no-lambung').value = '';
+      if (document.getElementById('order-cluster')) document.getElementById('order-cluster').value = '';
       if (document.getElementById('order-lokasi')) document.getElementById('order-lokasi').value = '';
       if (document.getElementById('order-deskripsi')) document.getElementById('order-deskripsi').value = '';
 
@@ -23507,6 +23628,7 @@ Oilman 1 & 2 : ${oilman}`;
           if (state.activeTab === 'dashboard' && typeof renderDashboardAchievementChart === 'function') {
             renderDashboardAchievementChart(state.dashboardSelectedCategory || 'ALL');
           }
+          if (typeof populateOrderUnitsDatalist === 'function') populateOrderUnitsDatalist();
           console.log('[Supabase Sync] Populasi Unit tersinkronisasi lengkap:', supaUnits.length, 'unit');
         } else {
           // Jika di Cloud Supabase tabel master_units masih kosong, inisialisasi & sinkronkan
@@ -23767,6 +23889,7 @@ Oilman 1 & 2 : ${oilman}`;
       }
 
       toggleModal('modal-unit-form', false);
+      if (typeof populateOrderUnitsDatalist === 'function') populateOrderUnitsDatalist();
       if (typeof notifyDataChanged === 'function') notifyDataChanged();
       if (typeof renderMasterUnitsTable === 'function') renderMasterUnitsTable();
     }
