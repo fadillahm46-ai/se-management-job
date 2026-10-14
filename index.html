@@ -386,11 +386,11 @@
   <!-- 1. FULL-SCREEN WEB LOGIN VIEW (Sesuai Foto 1 dengan Tambahan Permintaan) -->
   <!-- ======================================================================== -->
   <div id="view-login"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-[#F1F5F9] overflow-y-auto p-4 select-none">
+    class="fixed inset-0 z-50 flex items-center justify-center bg-white md:bg-[#F1F5F9] overflow-y-auto p-4 md:p-4 select-none">
 
     <!-- Card Autentikasi In-Card Tunggal (Login / Lupa Password / Daftar Akun Tanpa Pop-up) -->
     <div
-      class="relative w-full max-w-[276px] min-h-[404px] bg-white rounded-[28px] shadow-xl p-5 sm:p-6 z-10 border border-slate-200/80 flex flex-col justify-between transition-all duration-200">
+      class="relative w-full max-w-[320px] md:max-w-[276px] min-h-[404px] bg-white rounded-none md:rounded-[28px] shadow-none md:shadow-xl p-4 sm:p-6 md:p-5 z-10 border-0 md:border md:border-slate-200/80 flex flex-col justify-between transition-all duration-200">
 
       <!-- ==================================================================== -->
       <!-- PANEL 1: LOGIN (Spasi Simetris, Renggang Seimbang & Rapi)              -->
@@ -2470,7 +2470,7 @@
             <div class="flex items-center space-x-2 shrink-0">
               <button type="button" onclick="downloadExcelData('LT')"
                 title="Unduh data tabel dalam format Excel (.xlsx)"
-                class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer">
+                class="btn-export-excel px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
@@ -2619,7 +2619,7 @@
             <div class="flex items-center space-x-2 shrink-0">
               <button type="button" onclick="downloadExcelData('WT')"
                 title="Unduh data tabel dalam format Excel (.xlsx)"
-                class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer">
+                class="btn-export-excel px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
@@ -2944,35 +2944,106 @@
             </div>
           </div>
 
-          <!-- Kategori Sub-tabs: Dipisah Per Jadwal Oilman & Washingman -->
+          <!-- Filter Bar PICA: Search, Tanggal, Shift, Cluster, Dropdown Kategori Kendala & Unduh di Ujung Kanan -->
           <div
-            class="sticky top-11 md:top-12 z-20 flex flex-wrap items-center justify-between gap-2.5 bg-white p-2.5 md:p-3 rounded-2xl border border-slate-200/80 shadow-xs backdrop-blur-md">
-            <div id="pica-category-buttons" class="flex flex-wrap items-center gap-1.5">
-              <button type="button" onclick="switchPicaCategory('ALL')" id="btn-pica-cat-ALL"
-                class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-brand-200 text-brand-800 shadow-2xs cursor-pointer">
-                All Kendala
-              </button>
-              <button type="button" onclick="switchPicaCategory('greasing')" id="btn-pica-cat-greasing"
-                class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer">
-                Greasing (Small &amp; Big Digger)
-              </button>
-              <button type="button" onclick="switchPicaCategory('aircleaner')" id="btn-pica-cat-aircleaner"
-                class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer">
-                Clean Air Cleaner
-              </button>
-              <button type="button" onclick="switchPicaCategory('topup')" id="btn-pica-cat-topup"
-                class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer">
-                Top Up Oil
-              </button>
-              <button type="button" onclick="switchPicaCategory('washing_coal')" id="btn-pica-cat-washing_coal"
-                class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer">
-                Washing Coal (Coal &amp; ROM)
-              </button>
-              <button type="button" onclick="switchPicaCategory('washing_non_coal')" id="btn-pica-cat-washing_non_coal"
-                class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer">
-                Washing Non Coal
-              </button>
-            </div>
+            class="sticky top-11 md:top-12 z-20 flex flex-col md:flex-row md:flex-wrap md:items-center gap-2 bg-white p-2.5 md:p-3 rounded-2xl border border-slate-200/80 shadow-xs backdrop-blur-md mb-3 text-xs">
+              
+              <!-- SEARCH BAR REALTIME PICA -->
+              <div class="order-3 md:order-1 relative w-full md:w-48 lg:w-56">
+                <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                </span>
+                <input type="text" id="pica-search-input" oninput="renderPicaTable()"
+                  placeholder="Cari unit / lokasi / OPT..."
+                  class="w-full pl-8 pr-2.5 py-1.5 sm:py-2 rounded-xl border border-slate-200 font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-xs transition">
+              </div>
+
+              <!-- FILTER TANGGAL (DARI, KE, RESET) -->
+              <div class="order-1 md:order-2 flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
+                <!-- Pill Dari: Tanggal Awal -->
+                <label
+                  class="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs hover:border-slate-300 transition cursor-pointer text-xs flex-1 sm:flex-initial">
+                  <span class="text-slate-500 font-medium text-[11px]">Dari:</span>
+                  <input type="date" id="pica-filter-start-date" value="" onchange="renderPicaTable()"
+                    class="bg-transparent font-bold font-mono text-slate-800 focus:outline-none cursor-pointer text-[11px] w-full sm:w-auto"
+                    title="Filter kendala PICA dari tanggal">
+                </label>
+
+                <!-- Pill Ke: Tanggal Akhir -->
+                <label
+                  class="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs hover:border-slate-300 transition cursor-pointer text-xs flex-1 sm:flex-initial">
+                  <span class="text-slate-500 font-medium text-[11px]">Ke:</span>
+                  <input type="date" id="pica-filter-end-date" value="" onchange="renderPicaTable()"
+                    class="bg-transparent font-bold font-mono text-slate-800 focus:outline-none cursor-pointer text-[11px] w-full sm:w-auto"
+                    title="Filter kendala PICA sampai tanggal">
+                </label>
+
+                <!-- Tombol Reset Lingkaran 🔄 -->
+                <button type="button" onclick="resetPicaMiningWeekFilter()"
+                  class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-full bg-white border border-slate-200 shadow-2xs hover:bg-slate-50 active:scale-95 text-slate-600 flex items-center justify-center transition cursor-pointer"
+                  title="Reset ke Mining Week Hari Ini (Minggu - Sabtu)" aria-label="Reset Filter Tanggal">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                    </path>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- FILTER SHIFT, CLUSTER, DAN DROPDOWN KATEGORI KENDALA -->
+              <div class="order-2 md:order-3 grid grid-cols-3 gap-1.5 md:flex md:items-center md:gap-2">
+                <select id="pica-filter-shift" onchange="renderPicaTable()"
+                  class="w-full md:w-auto px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs">
+                  <option value="ALL">All Shift</option>
+                  <option value="1">Shift 1 (DWS)</option>
+                  <option value="2">Shift 2 (NWS)</option>
+                </select>
+                <select id="pica-filter-cluster" onchange="renderPicaTable()"
+                  class="w-full md:w-auto px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs">
+                  <option value="ALL">All Cluster</option>
+                  <optgroup label="Cluster Utama">
+                    <option value="Selatan">KGU Selatan</option>
+                    <option value="Tengah">KGU Tengah</option>
+                    <option value="Utara">KGU Utara</option>
+                  </optgroup>
+                  <optgroup label="Cluster Tambahan">
+                    <option value="Outpit Selatan">Outpit Selatan</option>
+                    <option value="Outpit Tengah">Outpit Tengah</option>
+                    <option value="Outpit Utara">Outpit Utara</option>
+                    <option value="HRM Selatan">HRM Selatan</option>
+                    <option value="HRM Utara">HRM Utara</option>
+                    <option value="Workshop">Workshop</option>
+                  </optgroup>
+                </select>
+                <!-- Dropdown Kategori Kendala PICA -->
+                <select id="pica-filter-category" onchange="handlePicaCategoryChange()"
+                  class="w-full md:w-auto px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500 cursor-pointer shadow-2xs text-[11px] sm:text-xs"
+                  title="Pilih Kategori Kendala PICA">
+                  <option value="ALL">All Kendala</option>
+                  <option value="greasing">Greasing (Small &amp; Big Digger)</option>
+                  <option value="aircleaner">Clean Air Cleaner</option>
+                  <option value="topup">Top Up Oil</option>
+                  <option value="washing_coal">Washing Coal (Coal &amp; ROM)</option>
+                  <option value="washing_non_coal">Washing Non Coal</option>
+                </select>
+              </div>
+
+              <!-- TOMBOL UNDUH EXCEL DI UJUNG KANAN -->
+              <div class="order-4 md:order-4 md:ml-auto flex items-center justify-end shrink-0">
+                <button type="button" onclick="downloadExcelData('PICA')"
+                  title="Unduh log kendala PICA dalam format Excel (.xlsx)"
+                  class="btn-export-excel px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
+                  </svg>
+                  <span>Unduh</span>
+                </button>
+              </div>
           </div>
 
           <!-- Tabel Log PICA (Responsif: Full Kolom di Web Desktop, 4 Kolom di Mode HP) -->
@@ -3857,49 +3928,83 @@
 
         </div>
         <div id="tab-completed" class="tab-pane hidden space-y-3.5">
-          <!-- Header Banner Riwayat -->
+          <!-- Filter Bar Riwayat Pekerjaan Selesai (Header Riwayat Ditiadakan, Tata Letak HP Bersih & Rapi) -->
           <div
-            class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center space-x-3">
-              <div
-                class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-lg shadow-xs">
-                <svg class="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-sm font-extrabold text-slate-900 tracking-tight">Riwayat Pekerjaan Selesai</h3>
-              </div>
-            </div>
-            <div class="flex items-center space-x-2">
-              <button onclick="downloadExcelData('RIWAYAT')" class="btn-export-excel type="button"
-                title="Unduh riwayat pekerjaan dalam format Excel (.xlsx)"
-                class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                  </path>
-                </svg>
-                <span>Unduh</span>
-              </button>
-              <button type="button" id="btn-toggle-select-comp" onclick="toggleCompletedSelectMode()"
-                title="Pilih dan Hapus Masal Riwayat"
-                class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-200 text-slate-700 font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                  </path>
-                </svg>
-                <span id="btn-toggle-select-comp-text">Pilih & Hapus Masal</span>
-              </button>
-            </div>
-          </div>
+            class="sticky top-11 md:top-12 z-20 flex flex-col md:flex-row md:flex-wrap md:items-center gap-2 bg-white p-2.5 md:p-3 rounded-2xl border border-slate-200/80 shadow-xs backdrop-blur-md mb-3 text-xs">
+              <!-- BARIS 1 DI HP / ELEMEN 2 DI DESKTOP: FILTER TANGGAL (DARI, KE, RESET) -->
+              <div class="order-1 md:order-2 flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
+                <!-- Pill Dari: Tanggal Awal -->
+                <label
+                  class="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs hover:border-slate-300 transition cursor-pointer text-xs flex-1 sm:flex-initial">
+                  <span class="text-slate-500 font-medium text-[11px]">Dari:</span>
+                  <input type="date" id="comp-filter-start-date" value="" onchange="handleCompDateRangeChange()"
+                    class="bg-transparent font-bold font-mono text-slate-800 focus:outline-none cursor-pointer text-[11px] w-full sm:w-auto"
+                    title="Filter riwayat dari tanggal">
+                </label>
 
-          <!-- Filter Bar: Search, Tanggal, Shift, Cluster & Dropdown Kategori -->
-          <div
-            class="sticky top-11 md:top-12 z-20 flex flex-wrap items-center gap-2 bg-white p-2.5 md:p-3 rounded-2xl border border-slate-200/80 shadow-xs backdrop-blur-md mb-3 text-xs">
-              <!-- Search Bar Realtime Riwayat MP -->
-              <div class="relative w-36 sm:w-44 md:w-52">
+                <!-- Pill Ke: Tanggal Akhir -->
+                <label
+                  class="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs hover:border-slate-300 transition cursor-pointer text-xs flex-1 sm:flex-initial">
+                  <span class="text-slate-500 font-medium text-[11px]">Ke:</span>
+                  <input type="date" id="comp-filter-end-date" value="" onchange="handleCompDateRangeChange()"
+                    class="bg-transparent font-bold font-mono text-slate-800 focus:outline-none cursor-pointer text-[11px] w-full sm:w-auto"
+                    title="Filter riwayat sampai tanggal">
+                </label>
+
+                <!-- Tombol Reset Lingkaran 🔄 -->
+                <button type="button" onclick="resetCompMiningWeekFilter()"
+                  class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-full bg-white border border-slate-200 shadow-2xs hover:bg-slate-50 active:scale-95 text-slate-600 flex items-center justify-center transition cursor-pointer"
+                  title="Reset ke Mining Week Hari Ini (Minggu - Sabtu)" aria-label="Reset Filter Tanggal">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                    </path>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- BARIS 2 DI HP / ELEMEN 3 DI DESKTOP: FILTER SHIFT, CLUSTER, DAN RIWAYAT -->
+              <div class="order-2 md:order-3 grid grid-cols-3 gap-1.5 md:flex md:items-center md:gap-2">
+                <select id="comp-filter-shift" onchange="renderCompletedTable()"
+                  class="w-full md:w-auto px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs">
+                  <option value="ALL">All Shift</option>
+                  <option value="1">Shift 1 (DWS)</option>
+                  <option value="2">Shift 2 (NWS)</option>
+                </select>
+                <select id="comp-filter-cluster" onchange="renderCompletedTable()"
+                  class="w-full md:w-auto px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs">
+                  <option value="ALL">All Cluster</option>
+                  <optgroup label="Cluster Utama">
+                    <option value="Selatan">KGU Selatan</option>
+                    <option value="Tengah">KGU Tengah</option>
+                    <option value="Utara">KGU Utara</option>
+                  </optgroup>
+                  <optgroup label="Cluster Tambahan">
+                    <option value="Outpit Selatan">Outpit Selatan</option>
+                    <option value="Outpit Tengah">Outpit Tengah</option>
+                    <option value="Outpit Utara">Outpit Utara</option>
+                    <option value="HRM Selatan">HRM Selatan</option>
+                    <option value="HRM Utara">HRM Utara</option>
+                    <option value="Workshop">Workshop</option>
+                  </optgroup>
+                </select>
+                <select id="comp-filter-category" onchange="handleCompCategoryChange()"
+                  class="w-full md:w-auto px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500 cursor-pointer shadow-2xs text-[11px] sm:text-xs"
+                  title="Pilih Kategori Riwayat Pekerjaan">
+                  <option value="all">Semua Riwayat</option>
+                  <option value="small">Greasing Small</option>
+                  <option value="digger">Big Digger</option>
+                  <option value="aircleaner">Air Cleaner</option>
+                  <option value="topup">Top Up Oil</option>
+                  <option value="coal">Washing Coal</option>
+                  <option value="rom">Washing ROM</option>
+                  <option value="non_coal">Washing Non-Coal</option>
+                  <option value="unscheduled">Job Request</option>
+                </select>
+              </div>
+
+              <!-- BARIS 3 DI HP / ELEMEN 1 DI DESKTOP: SEARCH BAR REALTIME RIWAYAT -->
+              <div class="order-3 md:order-1 relative w-full md:w-48 lg:w-56">
                 <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -3908,77 +4013,34 @@
                 </span>
                 <input type="text" id="comp-search-input" oninput="renderCompletedTable()"
                   placeholder="Cari unit / lokasi / OPT..."
-                  class="w-full pl-8 pr-2.5 py-2 rounded-xl border border-slate-200 font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-xs transition">
+                  class="w-full pl-8 pr-2.5 py-1.5 sm:py-2 rounded-xl border border-slate-200 font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-xs transition">
               </div>
-              <!-- Pill Dari: Tanggal Awal (Sesuai Desain Foto 1) -->
-              <label
-                class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs hover:border-slate-300 transition cursor-pointer text-xs">
-                <span class="text-slate-500 font-medium text-[11px]">Dari:</span>
-                <input type="date" id="comp-filter-start-date" value="" onchange="handleCompDateRangeChange()"
-                  class="bg-transparent font-bold font-mono text-slate-800 focus:outline-none cursor-pointer text-[11px]"
-                  title="Filter riwayat dari tanggal">
-              </label>
 
-              <!-- Pill Ke: Tanggal Akhir (Sesuai Desain Foto 1) -->
-              <label
-                class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs hover:border-slate-300 transition cursor-pointer text-xs">
-                <span class="text-slate-500 font-medium text-[11px]">Ke:</span>
-                <input type="date" id="comp-filter-end-date" value="" onchange="handleCompDateRangeChange()"
-                  class="bg-transparent font-bold font-mono text-slate-800 focus:outline-none cursor-pointer text-[11px]"
-                  title="Filter riwayat sampai tanggal">
-              </label>
-
-              <!-- Tombol Reset Lingkaran ↻ (Sesuai Desain Foto 1) -->
-              <button type="button" onclick="resetCompMiningWeekFilter()"
-                class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border border-slate-200 shadow-2xs hover:bg-slate-50 active:scale-95 text-slate-600 flex items-center justify-center transition cursor-pointer"
-                title="Reset ke Mining Week Hari Ini (Minggu - Sabtu)" aria-label="Reset Filter Tanggal">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                  </path>
-                </svg>
-              </button>
-              <select id="comp-filter-shift" onchange="renderCompletedTable()"
-                class="px-3 py-2 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500">
-                <option value="ALL">All Shift</option>
-                <option value="1">Shift 1 (DWS)</option>
-                <option value="2">Shift 2 (NWS)</option>
-              </select>
-              <select id="comp-filter-cluster" onchange="renderCompletedTable()"
-                class="px-3 py-2 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500">
-                <option value="ALL">All Cluster</option>
-                <optgroup label="Cluster Utama">
-                  <option value="Selatan">KGU Selatan</option>
-                  <option value="Tengah">KGU Tengah</option>
-                  <option value="Utara">KGU Utara</option>
-                </optgroup>
-                <optgroup label="Cluster Tambahan">
-                  <option value="Outpit Selatan">Outpit Selatan</option>
-                  <option value="Outpit Tengah">Outpit Tengah</option>
-                  <option value="Outpit Utara">Outpit Utara</option>
-                  <option value="HRM Selatan">HRM Selatan</option>
-                  <option value="HRM Utara">HRM Utara</option>
-                  <option value="Workshop">Workshop</option>
-                </optgroup>
-              </select>
-
-              <!-- Dropdown Kategori Riwayat Selesai (Di sebelah All Cluster Sesuai Permintaan) -->
-              <select id="comp-filter-category" onchange="handleCompCategoryChange()"
-                class="px-3 py-2 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500 cursor-pointer shadow-2xs"
-                title="Pilih Kategori Riwayat Pekerjaan">
-                <option value="all">Semua Riwayat</option>
-                <option value="small">Greasing Small</option>
-                <option value="digger">Big Digger</option>
-                <option value="aircleaner">Air Cleaner</option>
-                <option value="topup">Top Up Oil</option>
-                <option value="coal">Washing Coal</option>
-                <option value="rom">Washing ROM</option>
-                <option value="non_coal">Washing Non-Coal</option>
-                <option value="unscheduled">Job Request</option>
-              </select>
+              <!-- BARIS 4 DI HP / ELEMEN 4 DI DESKTOP: TOMBOL AKSI UNDUH & HAPUS MASAL (KHUSUS ADMIN/BASECONTROL) -->
+              <div class="order-4 md:order-4 md:ml-auto flex items-center justify-end gap-1.5 sm:gap-2">
+                <button type="button" onclick="downloadExcelData('RIWAYAT')"
+                  title="Unduh riwayat pekerjaan dalam format Excel (.xlsx)"
+                  class="btn-export-excel px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
+                  </svg>
+                  <span>Unduh</span>
+                </button>
+                <button type="button" id="btn-toggle-select-comp" onclick="toggleCompletedSelectMode()"
+                  title="Pilih dan Hapus Masal Riwayat"
+                  class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-200 text-slate-700 font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                    </path>
+                  </svg>
+                  <span id="btn-toggle-select-comp-text">Pilih & Hapus Masal</span>
+                </button>
+              </div>
           </div>
 
-          <!-- Bar Aksi Masal Riwayat (Muncul saat Mode Pilih Aktif) -->
           <div id="comp-bulk-actions-bar"
             class="hidden p-2.5 md:p-3 rounded-2xl bg-rose-50 border border-rose-200 flex flex-wrap items-center justify-between gap-2.5 text-xs mb-3 shadow-2xs">
             <div class="flex items-center space-x-2">
@@ -4175,7 +4237,6 @@
             </div>
             <div>
               <h4 class="text-xs font-black text-slate-900 leading-tight">Profil Saya</h4>
-              <p class="text-[10px] text-slate-400 font-medium mt-0.5">Identitas & password</p>
             </div>
           </div>
 
@@ -4191,7 +4252,6 @@
             </div>
             <div>
               <h4 class="text-xs font-black text-slate-900 leading-tight">Riwayat Selesai</h4>
-              <p class="text-[10px] text-slate-400 font-medium mt-0.5">Arsip & unduh</p>
             </div>
           </div>
 
@@ -4208,7 +4268,6 @@
             </div>
             <div>
               <h4 class="text-xs font-black text-slate-900 leading-tight">Order Lapangan</h4>
-              <p class="text-[10px] text-slate-400 font-medium mt-0.5">Input request & fuel</p>
             </div>
           </div>
 
@@ -4225,7 +4284,6 @@
             </div>
             <div>
               <h4 class="text-xs font-black text-slate-900 leading-tight">Log PICA Kendala</h4>
-              <p class="text-[10px] text-slate-400 font-medium mt-0.5">Catatan pending & BD</p>
             </div>
           </div>
 
@@ -4242,7 +4300,6 @@
             </div>
             <div>
               <h4 class="text-xs font-black text-slate-900 leading-tight">Data Master</h4>
-              <p class="text-[10px] text-slate-400 font-medium mt-0.5">Unit, OPT & Roster</p>
             </div>
           </div>
 
@@ -4259,7 +4316,6 @@
             </div>
             <div>
               <h4 class="text-xs font-black text-slate-900 leading-tight">Clean Air Cleaner</h4>
-              <p class="text-[10px] text-slate-400 font-medium mt-0.5">Monitoring semprot</p>
             </div>
           </div>
 
@@ -4282,7 +4338,6 @@
                     d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                 </svg>
               </h4>
-              <p class="text-[10px] text-slate-400 font-medium mt-0.5">Buka sounding-fm</p>
             </div>
           </a>
         </div>
@@ -4301,7 +4356,6 @@
             </div>
             <div>
               <h4 class="text-xs font-black text-slate-900 leading-tight">Profil Saya</h4>
-              <p class="text-[10px] text-slate-400 font-medium mt-0.5">Identitas & password</p>
             </div>
           </div>
 
@@ -4318,7 +4372,6 @@
             </div>
             <div>
               <h4 class="text-xs font-black text-slate-900 leading-tight">Kontak Pro</h4>
-              <p class="text-[10px] text-slate-400 font-medium mt-0.5">Daftar kontak OPT & Pengawas</p>
             </div>
           </div>
 
@@ -4335,7 +4388,6 @@
             </div>
             <div>
               <h4 class="text-xs font-black text-slate-900 leading-tight">Clean Air Cleaner</h4>
-              <p class="text-[10px] text-slate-400 font-medium mt-0.5">Tabel riwayat & semprot</p>
             </div>
           </div>
 
@@ -4359,7 +4411,6 @@
                     d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                 </svg>
               </h4>
-              <p class="text-[10px] text-slate-400 font-medium mt-0.5">Buka sounding-fm</p>
             </div>
           </a>
 
@@ -4383,7 +4434,6 @@
                     d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                 </svg>
               </h4>
-              <p class="text-[10px] text-slate-400 font-medium mt-0.5">Buka ceklist washing</p>
             </div>
           </a>
         </div>
@@ -4436,7 +4486,7 @@
               <thead
                 class="bg-slate-50 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-100 font-bold">
                 <tr>
-                  <th class="py-3 px-4 text-center w-14">NO</th>
+                  <th class="py-3 px-4 text-center w-14 hidden md:table-cell">NO</th>
                   <th class="py-3 px-4 w-32">NRP</th>
                   <th class="py-3 px-4">NAMA OPERATOR</th>
                   <th class="py-3 px-4 w-44">NO WA / TELEPON</th>
@@ -4714,7 +4764,6 @@
             </svg>
           </div>
           <span class="font-extrabold text-slate-900 text-xs">Profil Pengguna</span>
-          <span class="text-[9.5px] text-slate-400 mt-0.5">Identitas & password</span>
         </button>
 
         <!-- 2. Order Lapangan -->
@@ -4729,7 +4778,6 @@
             </svg>
           </div>
           <span class="font-extrabold text-slate-900 text-xs">Order Lapangan</span>
-          <span class="text-[9.5px] text-slate-400 mt-0.5">Input order unit pit</span>
         </button>
 
         <!-- 3. Log PICA Kendala -->
@@ -4744,7 +4792,6 @@
             </svg>
           </div>
           <span class="font-extrabold text-slate-900 text-xs">Log PICA</span>
-          <span class="text-[9.5px] text-slate-400 mt-0.5">Kendala operasional</span>
         </button>
 
         <!-- 4. Data Master -->
@@ -4759,7 +4806,6 @@
             </svg>
           </div>
           <span class="font-extrabold text-slate-900 text-xs">Data Master</span>
-          <span class="text-[9.5px] text-slate-400 mt-0.5">Roster, unit & akun</span>
         </button>
 
         <!-- Monitoring Clean Air Cleaner Admin -->
@@ -4773,7 +4819,6 @@
             </svg>
           </div>
           <span class="font-extrabold text-slate-900 text-xs">Monitoring Clean Air Cleaner</span>
-          <span class="text-[9.5px] text-slate-400 mt-0.5">Tabel riwayat & kepatuhan semprot filter</span>
         </button>
 
         <!-- 5. Flow Meter Sounding App Link -->
@@ -4794,7 +4839,6 @@
                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
             </svg>
           </span>
-          <span class="text-[9.5px] text-slate-400 mt-0.5">Buka aplikasi sounding-fm.vercel.app</span>
         </a>
       </div>
 
@@ -4811,7 +4855,6 @@
             </svg>
           </div>
           <span class="font-extrabold text-slate-900 text-xs">Profil Pengguna</span>
-          <span class="text-[9.5px] text-slate-400 mt-0.5">Identitas & password</span>
         </button>
 
         <!-- 2. Kontak Pro -->
@@ -4826,7 +4869,6 @@
             </svg>
           </div>
           <span class="font-extrabold text-slate-900 text-xs">Kontak Pro</span>
-          <span class="text-[9.5px] text-slate-400 mt-0.5">Kontak Produksi & WhatsApp</span>
         </button>
 
         <!-- Monitoring Clean Air Cleaner MP (Oilman Only) -->
@@ -4840,7 +4882,6 @@
             </svg>
           </div>
           <span class="font-extrabold text-slate-900 text-xs">Monitoring Clean Air Cleaner</span>
-          <span class="text-[9.5px] text-slate-400 mt-0.5">Tabel riwayat & kepatuhan semprot filter</span>
         </button>
 
         <!-- 3. Sounding Flow Meter (Hanya Tampil untuk MP Oilman, Disembunyikan untuk MP Washingman) -->
@@ -4861,7 +4902,6 @@
                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
             </svg>
           </span>
-          <span class="text-[9.5px] text-slate-400 mt-0.5">Buka aplikasi sounding-fm.vercel.app</span>
         </a>
 
         <!-- Input Ceklist Washing (Khusus Washingman) -->
@@ -4883,7 +4923,6 @@
                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
             </svg>
           </span>
-          <span class="text-[9.5px] text-slate-400 mt-0.5">Buka web plant.ppabib.com/pems/wash</span>
         </a>
       </div>
 
@@ -6740,7 +6779,7 @@
       </div>
 
       <!-- KONEKSI GOOGLE APPS SCRIPT & GOOGLE DRIVE -->
-      <div class="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 shadow-2xs space-y-3 select-none mb-3">
+      <div id="card-apps-script-setting" class="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 shadow-2xs space-y-3 select-none mb-3">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-2">
             <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
@@ -9485,6 +9524,36 @@
         else el.classList.add('hidden');
       });
 
+      // KONTROL AKSES FITUR EDIT / HAPUS MASAL (SCHEDULE & RIWAYAT): HANYA ADA DI AKSES ADMIN
+      const isAdminRole = (user.role === 'admin');
+      const bulkSelectBtns = [
+        document.getElementById('btn-toggle-select-lt-sched'),
+        document.getElementById('btn-toggle-select-wt-sched'),
+        document.getElementById('btn-toggle-select-comp')
+      ];
+      bulkSelectBtns.forEach(btn => {
+        if (btn) {
+          if (isAdminRole) btn.classList.remove('hidden');
+          else btn.classList.add('hidden');
+        }
+      });
+
+      // Batalkan mode select jika bukan admin
+      if (!isAdminRole) {
+        if (typeof state !== 'undefined') {
+          if (state.isLtSchedSelectMode && typeof cancelLtScheduleSelectMode === 'function') cancelLtScheduleSelectMode();
+          if (state.isWtSchedSelectMode && typeof cancelWtScheduleSelectMode === 'function') cancelWtScheduleSelectMode();
+          if (state.isCompSelectMode && typeof cancelCompletedSelectMode === 'function') cancelCompletedSelectMode();
+        }
+      }
+
+      // KONTROL AKSES UPLOAD FOTO GOOGLE DRIVE: HANYA ADA DI AKSES ADMIN
+      const cardAppsScript = document.getElementById('card-apps-script-setting');
+      if (cardAppsScript) {
+        if (isAdminRole) cardAppsScript.classList.remove('hidden');
+        else cardAppsScript.classList.add('hidden');
+      }
+
       // KONTROL TOMBOL KELUAR DI TAB PROFIL:
       // Khusus akses User, tombol keluar aktif di dalam menu Profil
       const profileLogoutBtn = document.getElementById('profile-card-logout-btn');
@@ -9915,6 +9984,12 @@
       const wtDate = document.getElementById('wt-filter-date');
       const compStartDate = document.getElementById('comp-filter-start-date');
       const compEndDate = document.getElementById('comp-filter-end-date');
+      const picaStartDate = document.getElementById('pica-filter-start-date');
+      const picaEndDate = document.getElementById('pica-filter-end-date');
+      if (picaStartDate) picaStartDate.value = defWeekRange.startDate;
+      if (picaEndDate) picaEndDate.value = defWeekRange.endDate;
+      state.picaFilterStartDate = defWeekRange.startDate;
+      state.picaFilterEndDate = defWeekRange.endDate;
       const orderDate = document.getElementById('order-tanggal');
 
       const defWeekRange = (typeof getMiningWeekRange === 'function')
@@ -10469,6 +10544,16 @@
         appsInput.value = APPS_SCRIPT_CONFIG.uploadEndpointUrl || safeStorage.getItem('SE_APPS_SCRIPT_URL') || '';
       }
       updateAppsScriptStatusBadge();
+
+      // Kontrol Hak Akses Upload Foto Google Drive: Hanya Admin
+      const cardAppsScriptModal = document.getElementById('card-apps-script-setting');
+      if (cardAppsScriptModal) {
+        if (state.currentUser && state.currentUser.role === 'admin') {
+          cardAppsScriptModal.classList.remove('hidden');
+        } else {
+          cardAppsScriptModal.classList.add('hidden');
+        }
+      }
 
       toggleModal('modal-profile-settings', true);
     }
@@ -12094,55 +12179,160 @@
       `;
     }
 
-    function switchPicaCategory(cat) {
+    function handlePicaCategoryChange() {
+      const selectEl = document.getElementById('pica-filter-category');
+      const cat = selectEl ? selectEl.value : 'ALL';
       state.picaCategory = cat;
-      const cats = ['ALL', 'greasing', 'aircleaner', 'topup', 'washing_coal', 'washing_non_coal'];
-      cats.forEach(c => {
-        const btn = document.getElementById(`btn-pica-cat-${c}`);
-        if (btn) {
-          if (c === cat) {
-            btn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition bg-brand-200 text-brand-800 shadow-2xs cursor-pointer';
-          } else {
-            btn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer';
-          }
-        }
-      });
       renderPicaTable();
     }
+    window.handlePicaCategoryChange = handlePicaCategoryChange;
+
+    function switchPicaCategory(cat) {
+      state.picaCategory = cat;
+      const selectEl = document.getElementById('pica-filter-category');
+      if (selectEl && selectEl.value !== cat) {
+        selectEl.value = cat;
+      }
+      renderPicaTable();
+    }
+    window.switchPicaCategory = switchPicaCategory;
+
+    function resetPicaMiningWeekFilter() {
+      const startEl = document.getElementById('pica-filter-start-date');
+      const endEl = document.getElementById('pica-filter-end-date');
+      const weekRange = (typeof getMiningWeekRange === 'function')
+        ? getMiningWeekRange(new Date())
+        : { startDate: '2026-10-11', endDate: '2026-10-17' };
+
+      if (startEl) startEl.value = weekRange.startDate;
+      if (endEl) endEl.value = weekRange.endDate;
+      state.picaFilterStartDate = weekRange.startDate;
+      state.picaFilterEndDate = weekRange.endDate;
+      renderPicaTable();
+
+      const dispStart = (typeof formatDisplayDate === 'function') ? formatDisplayDate(weekRange.startDate) : weekRange.startDate;
+      const dispEnd = (typeof formatDisplayDate === 'function') ? formatDisplayDate(weekRange.endDate) : weekRange.endDate;
+      if (typeof showToast === 'function') {
+        showToast(`Filter PICA di-reset ke Mining Week hari ini (${dispStart} - ${dispEnd})`, 'info');
+      }
+    }
+    window.resetPicaMiningWeekFilter = resetPicaMiningWeekFilter;
+
+    function getFilteredPicaJobs() {
+      const categorySelect = document.getElementById('pica-filter-category');
+      const activeCat = categorySelect ? categorySelect.value : (state.picaCategory || 'ALL');
+      const shiftFilter = document.getElementById('pica-filter-shift')?.value || 'ALL';
+      const clusterFilter = document.getElementById('pica-filter-cluster')?.value || 'ALL';
+      const searchVal = (document.getElementById('pica-search-input')?.value || '').toLowerCase().trim();
+      const startDate = document.getElementById('pica-filter-start-date')?.value || state.picaFilterStartDate || '';
+      const endDate = document.getElementById('pica-filter-end-date')?.value || state.picaFilterEndDate || '';
+
+      const isNonAch = j => {
+        const st = String(j.status || j.status_final || '').toLowerCase();
+        return st === 'non_ach' || st === 'non-ach';
+      };
+
+      let pool = [
+        ...(state.lubetruckState?.jobs || []).filter(isNonAch),
+        ...(state.watertruckState?.jobs || []).filter(isNonAch),
+        ...(state.unscheduledLtJobs || []).filter(isNonAch),
+        ...(state.unscheduledWtJobs || []).filter(isNonAch)
+      ];
+
+      if (Array.isArray(state.jobHistory) && state.jobHistory.length > 0) {
+        const existingIds = new Set(pool.map(j => String(j.id || '')));
+        state.jobHistory.forEach(h => {
+          if (isNonAch(h) && !existingIds.has(String(h.job_id || ''))) {
+            pool.push({
+              id: h.job_id,
+              noLambung: h.no_lambung,
+              typeUnit: h.type_unit,
+              cat: h.cat,
+              tanggal: h.tanggal_rencana || h.tanggal_eksekusi,
+              tanggalRealisasi: h.tanggal_eksekusi,
+              shift: h.shift_rencana,
+              waktu: h.waktu_rencana,
+              cluster: h.cluster,
+              lokasi: h.lokasi,
+              armada: h.armada_unit,
+              ltUnit: h.armada_unit,
+              opt: h.opt_name,
+              mp1: h.mp1,
+              mp2: h.mp2,
+              jamStart: h.jam_start,
+              jamEnd: h.jam_end,
+              durasi: h.durasi,
+              status: 'non_ach',
+              keterangan: h.keterangan || h.non_ach_reason,
+              alasanNonAch: h.non_ach_reason,
+              fotos: (Array.isArray(h.fotos) && h.fotos.length > 0) ? h.fotos : (JSON.parse(safeStorage.getItem('SE_JOB_FOTOS_' + h.job_id) || '[]'))
+            });
+            existingIds.add(String(h.job_id || ''));
+          }
+        });
+      }
+
+      // 1. Filter Kategori PICA
+      if (activeCat !== 'ALL') {
+        pool = pool.filter(j => {
+          const req = (j.requestedJob || '').toLowerCase();
+          if (activeCat === 'greasing') {
+            return j.cat === 'small' || j.cat === 'digger' || req.includes('greas');
+          } else if (activeCat === 'aircleaner') {
+            return j.cat === 'aircleaner' || req.includes('air');
+          } else if (activeCat === 'topup') {
+            return j.cat === 'topup' || req.includes('top');
+          } else if (activeCat === 'washing_coal') {
+            return j.cat === 'coal' || j.cat === 'rom' || req.includes('coal');
+          } else if (activeCat === 'washing_non_coal') {
+            return j.cat === 'non_coal' || req.includes('non coal');
+          }
+          return true;
+        });
+      }
+
+      // 2. Filter Rentang Tanggal
+      if (startDate || endDate) {
+        const normStart = startDate ? normalizeDateStr(startDate) : '';
+        const normEnd = endDate ? normalizeDateStr(endDate) : '';
+        pool = pool.filter(j => {
+          const jobDate = normalizeDateStr(j.tanggal || j.tanggalRealisasi || '');
+          if (!jobDate) return true;
+          if (normStart && normEnd) return jobDate >= normStart && jobDate <= normEnd;
+          if (normStart) return jobDate >= normStart;
+          if (normEnd) return jobDate <= normEnd;
+          return true;
+        });
+      }
+
+      // 3. Filter Shift
+      if (shiftFilter !== 'ALL') {
+        pool = pool.filter(j => String(j.shift) === String(shiftFilter));
+      }
+
+      // 4. Filter Cluster
+      if (clusterFilter !== 'ALL') {
+        pool = pool.filter(j => (typeof isClusterMatchFilter === 'function' ? isClusterMatchFilter(j.cluster, clusterFilter) : true));
+      }
+
+      // 5. Filter Search
+      if (searchVal) {
+        pool = pool.filter(j => {
+          const text = `${j.noLambung || ''} ${j.typeUnit || ''} ${j.lokasi || ''} ${j.cluster || ''} ${j.keterangan || ''} ${j.alasanNonAch || ''} ${j.opt || ''} ${j.mp1 || ''} ${j.mp2 || ''}`.toLowerCase();
+          return text.includes(searchVal);
+        });
+      }
+
+      return pool;
+    }
+    window.getFilteredPicaJobs = getFilteredPicaJobs;
 
     function renderPicaTable() {
       const tbody = document.getElementById('pica-logs-tbody');
       const badge = document.getElementById('pica-count-badge');
       if (!tbody) return;
 
-      const activeCat = state.picaCategory || 'ALL';
-
-      let nonAchJobs = [
-        ...state.lubetruckState.jobs.filter(j => j.status === 'non_ach'),
-        ...state.watertruckState.jobs.filter(j => j.status === 'non_ach'),
-        ...state.unscheduledLtJobs.filter(j => j.status === 'non_ach'),
-        ...state.unscheduledWtJobs.filter(j => j.status === 'non_ach')
-      ];
-
-      // Tidak menyuntikkan data dummy ke PICA
-
-      // Filter berdasarkan kategori sub-menu PICA yang dipilih
-      if (activeCat !== 'ALL') {
-        nonAchJobs = nonAchJobs.filter(j => {
-          if (activeCat === 'greasing') {
-            return j.cat === 'small' || j.cat === 'digger' || (j.requestedJob && j.requestedJob.toLowerCase().includes('greas'));
-          } else if (activeCat === 'aircleaner') {
-            return j.cat === 'aircleaner' || (j.requestedJob && j.requestedJob.toLowerCase().includes('air'));
-          } else if (activeCat === 'topup') {
-            return j.cat === 'topup' || (j.requestedJob && j.requestedJob.toLowerCase().includes('top'));
-          } else if (activeCat === 'washing_coal') {
-            return j.cat === 'coal' || j.cat === 'rom' || (j.requestedJob && j.requestedJob.toLowerCase().includes('coal'));
-          } else if (activeCat === 'washing_non_coal') {
-            return j.cat === 'non_coal' || (j.requestedJob && j.requestedJob.toLowerCase().includes('non coal'));
-          }
-          return true;
-        });
-      }
+      const nonAchJobs = getFilteredPicaJobs();
 
       if (badge) {
         badge.textContent = `Total Kendala: ${nonAchJobs.length} Unit`;
@@ -12153,7 +12343,7 @@
         tbody.innerHTML = `
           <tr>
             <td colspan="8" class="py-8 text-center text-slate-400 italic text-[11px]">
-              Tidak ada catatan kendala PICA untuk kategori jadwal ini.
+              Tidak ada catatan kendala PICA untuk kriteria pencarian / filter ini.
             </td>
           </tr>
         `;
@@ -12190,7 +12380,7 @@
             <span class="inline-block px-1.5 py-0.5 rounded bg-slate-100 font-mono font-bold text-slate-600">${job.fotos ? job.fotos.length : 0}/4</span>
           </td>
           <td class="hidden md:table-cell py-2.5 px-3 text-xs text-rose-700 font-semibold break-words">
-            ${job.keterangan || 'Kendala operasional di pit tambang'}
+            ${job.keterangan || job.alasanNonAch || 'Kendala operasional di pit tambang'}
           </td>
           <td class="py-2.5 px-3 text-center">
             <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs">NON-ACH</span>
@@ -18399,7 +18589,7 @@ Oilman 1 & 2 : ${oilman}`;
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition border-b border-slate-100 text-xs';
         tr.innerHTML = `
-          <td class="py-3 px-4 text-center font-mono text-slate-400 text-[11px] font-semibold">${rowNumber}</td>
+          <td class="py-3 px-4 text-center font-mono text-slate-400 text-[11px] font-semibold hidden md:table-cell">${rowNumber}</td>
           <td class="py-3 px-4 font-bold text-slate-900 font-mono text-[11px]">${op.nrp || '-'}</td>
           <td class="py-3 px-4 font-semibold text-slate-800">${op.nama || '-'}</td>
           <td class="py-3 px-4 font-mono text-slate-700 font-medium">
@@ -18602,29 +18792,57 @@ Oilman 1 & 2 : ${oilman}`;
     window.getJobSchLabel = getJobSchLabel;
 
     /**
-     * Mengembalikan tag HTML Badge untuk kolom SCH pada tabel Riwayat (tanpa awalan SCH)
+     * Mengembalikan singkatan kode resmi Type Job:
+     * - GRS: Greasing Small maupun Big Digger
+     * - CAC: Clean Air Cleaner
+     * - TUO: Top Up Oil
+     * - WSC: Washing Coal
+     * - WNC: Washing Non-Coal & ROM
+     * - REQ: Job Request (Form Order Lapangan)
+     */
+    function getJobTypeCode(j) {
+      if (!j) return '-';
+      if (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(j)) {
+        return 'REQ';
+      }
+      const cat = (j.cat || '').toLowerCase().trim();
+      if (cat === 'unscheduled' || cat === 'request' || j.isUnscheduled) return 'REQ';
+      if (cat === 'aircleaner' || cat.includes('aircleaner') || cat.includes('air_cleaner') || cat.includes('air cleaner')) return 'CAC';
+      if (cat === 'topup' || cat.includes('topup') || cat.includes('top_up') || cat.includes('top up')) return 'TUO';
+      if (cat === 'coal' || (cat.includes('coal') && !cat.includes('non'))) return 'WSC';
+      if (cat === 'non_coal' || cat === 'rom' || cat.includes('non_coal') || cat.includes('non-coal') || cat.includes('non coal') || cat.includes('rom')) return 'WNC';
+      if (cat === 'small' || cat === 'digger' || cat.includes('greas') || cat.includes('small') || cat.includes('digger')) return 'GRS';
+
+      // Fallback deteksi ID atau serviceType
+      if (j.id && String(j.id).includes('WT')) return 'WSC';
+      if (j.id && String(j.id).includes('LT')) return 'GRS';
+      return 'GRS';
+    }
+    window.getJobTypeCode = getJobTypeCode;
+
+    /**
+     * Mengembalikan tag HTML Badge Type Job dengan kode resmi & palet warna harmonis
      */
     function getJobSchBadgeHtml(j) {
-      const label = getJobSchLabel(j);
-      if (label === 'Request') {
-        return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">Request</span>';
+      const code = getJobTypeCode(j);
+      const fullLabel = getJobSchLabel(j);
+
+      switch (code) {
+        case 'GRS':
+          return `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-[10px] font-black font-mono tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs" title="${fullLabel} (Greasing)">GRS</span>`;
+        case 'CAC':
+          return `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-[10px] font-black font-mono tracking-wider bg-sky-50 text-sky-800 border border-sky-300 shadow-2xs" title="${fullLabel} (Clean Air Cleaner)">CAC</span>`;
+        case 'TUO':
+          return `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-[10px] font-black font-mono tracking-wider bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs" title="${fullLabel} (Top Up Oil)">TUO</span>`;
+        case 'WSC':
+          return `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-[10px] font-black font-mono tracking-wider bg-indigo-50 text-indigo-800 border border-indigo-300 shadow-2xs" title="${fullLabel} (Washing Coal)">WSC</span>`;
+        case 'WNC':
+          return `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-[10px] font-black font-mono tracking-wider bg-teal-50 text-teal-800 border border-teal-300 shadow-2xs" title="${fullLabel} (Washing Non-Coal)">WNC</span>`;
+        case 'REQ':
+          return `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-[10px] font-black font-mono tracking-wider bg-rose-50 text-rose-800 border border-rose-300 shadow-2xs" title="${fullLabel} (Job Request)">REQ</span>`;
+        default:
+          return `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-[10px] font-black font-mono tracking-wider bg-slate-100 text-slate-800 border border-slate-300 shadow-2xs" title="${fullLabel}">${code}</span>`;
       }
-      if (label === 'Greasing') {
-        return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-2xs">Greasing</span>';
-      }
-      if (label === 'Big Digger') {
-        return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase tracking-wider bg-orange-100 text-orange-900 border border-orange-300 shadow-2xs">Big Digger</span>';
-      }
-      if (label === 'Air Cleaner') {
-        return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase tracking-wider bg-teal-100 text-teal-900 border border-teal-300 shadow-2xs">Air Cleaner</span>';
-      }
-      if (label === 'Top Up') {
-        return '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase tracking-wider bg-purple-100 text-purple-900 border border-purple-300 shadow-2xs">Top Up</span>';
-      }
-      if (label.includes('Washing')) {
-        return `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase tracking-wider bg-cyan-100 text-cyan-900 border border-cyan-300 shadow-2xs">${label}</span>`;
-      }
-      return `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase tracking-wider bg-slate-100 text-slate-800 border border-slate-300 shadow-2xs">${label}</span>`;
     }
     window.getJobSchBadgeHtml = getJobSchBadgeHtml;
 
@@ -18879,6 +19097,7 @@ Oilman 1 & 2 : ${oilman}`;
       if (searchVal) {
         filtered = filtered.filter(j =>
           (typeof getJobSchLabel === 'function' && getJobSchLabel(j).toLowerCase().includes(searchVal)) ||
+          (typeof getJobTypeCode === 'function' && getJobTypeCode(j).toLowerCase().includes(searchVal)) ||
           (j.noLambung && j.noLambung.toLowerCase().includes(searchVal)) ||
           (j.lokasi && j.lokasi.toLowerCase().includes(searchVal)) ||
           (j.typeUnit && j.typeUnit.toLowerCase().includes(searchVal)) ||
@@ -18898,9 +19117,9 @@ Oilman 1 & 2 : ${oilman}`;
         filtered.sort((a, b) => {
           switch (sortCol) {
             case 'sch': {
-              const labelA = (typeof getJobSchLabel === 'function') ? getJobSchLabel(a) : (a.cat || '');
-              const labelB = (typeof getJobSchLabel === 'function') ? getJobSchLabel(b) : (b.cat || '');
-              return sortDir * labelA.localeCompare(labelB);
+              const codeA = (typeof getJobTypeCode === 'function') ? getJobTypeCode(a) : ((typeof getJobSchLabel === 'function') ? getJobSchLabel(a) : (a.cat || ''));
+              const codeB = (typeof getJobTypeCode === 'function') ? getJobTypeCode(b) : ((typeof getJobSchLabel === 'function') ? getJobSchLabel(b) : (b.cat || ''));
+              return sortDir * codeA.localeCompare(codeB);
             }
             case 'waktu': {
               const valA = (a.tanggal || '') + ' ' + (a.waktu || '');
@@ -18961,9 +19180,9 @@ Oilman 1 & 2 : ${oilman}`;
                       class="rounded text-rose-600 focus:ring-rose-500 cursor-pointer w-3.5 h-3.5">
                   </th>
                 ` : ''}
-                <th onclick="sortCompletedBy('sch')" class="hidden md:table-cell py-2.5 px-2 ${state.isCompSelectMode ? 'md:w-[10%]' : 'md:w-[11%]'} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Kategori SCH">
+                <th onclick="sortCompletedBy('sch')" class="hidden md:table-cell py-2.5 px-2 ${state.isCompSelectMode ? 'md:w-[10%]' : 'md:w-[11%]'} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Type Job">
                   <div class="flex items-center space-x-0.5">
-                    <span>SCH</span>
+                    <span>TYPE JOB</span>
                     ${renderCompletedSortIcon('sch')}
                   </div>
                 </th>
@@ -19151,6 +19370,10 @@ Oilman 1 & 2 : ${oilman}`;
     // CONTROLLER & LOGIKA HAPUS MASAL RIWAYAT PEKERJAAN SELESAI
     // ========================================================================
     function toggleCompletedSelectMode() {
+      if (state.currentUser?.role !== 'admin') {
+        if (typeof showToast === 'function') showToast('Fitur ini hanya dapat diakses oleh Administrator.', 'warning');
+        return;
+      }
       state.isCompSelectMode = !state.isCompSelectMode;
       const btn = document.getElementById("btn-toggle-select-comp");
       const btnText = document.getElementById("btn-toggle-select-comp-text");
@@ -24514,6 +24737,10 @@ Oilman 1 & 2 : ${oilman}`;
     // CONTROLLER MODE PILIH / HAPUS MASAL JADWAL (LT & WT)
     // ========================================================================
     function toggleLtScheduleSelectMode() {
+      if (state.currentUser?.role !== 'admin') {
+        if (typeof showToast === 'function') showToast('Fitur ini hanya dapat diakses oleh Administrator.', 'warning');
+        return;
+      }
       state.isLtSchedSelectMode = !state.isLtSchedSelectMode;
       const btnText = document.getElementById('btn-toggle-select-lt-sched-text');
       const btn = document.getElementById('btn-toggle-select-lt-sched');
@@ -24549,6 +24776,10 @@ Oilman 1 & 2 : ${oilman}`;
     window.cancelLtScheduleSelectMode = cancelLtScheduleSelectMode;
 
     function toggleWtScheduleSelectMode() {
+      if (state.currentUser?.role !== 'admin') {
+        if (typeof showToast === 'function') showToast('Fitur ini hanya dapat diakses oleh Administrator.', 'warning');
+        return;
+      }
       state.isWtSchedSelectMode = !state.isWtSchedSelectMode;
       const btnText = document.getElementById('btn-toggle-select-wt-sched-text');
       const btn = document.getElementById('btn-toggle-select-wt-sched');
@@ -24921,6 +25152,9 @@ Oilman 1 & 2 : ${oilman}`;
           }
           return true;
         });
+      } else if (sourceType === 'PICA') {
+        fileNamePrefix = 'Data_Log_PICA_Kendala';
+        jobs = (typeof getFilteredPicaJobs === 'function') ? getFilteredPicaJobs() : [];
       } else if (sourceType === 'RIWAYAT') {
         fileNamePrefix = 'Data_Riwayat_Selesai';
         const compStartDateInput = document.getElementById('comp-filter-start-date');
