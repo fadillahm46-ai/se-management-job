@@ -3762,8 +3762,10 @@
                   class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700">
                   <option value="ALL">All Role</option>
                   <option value="admin">Administrator / Planner</option>
-                  <option value="mp_lt">Oilman</option>
-                  <option value="mp_wt">Washingman</option>
+                  <option value="basecontrol">Operator Base Control</option>
+                  <option value="mp_lt">Oilman (MP LT)</option>
+                  <option value="mp_wt">Washingman (MP WT)</option>
+                  <option value="user">User Pemohon / Driver</option>
                 </select>
               </div>
               <div class="w-full sm:w-64">
@@ -5886,9 +5888,11 @@
             <label class="block text-slate-700 mb-1">Hak Akses (Role)</label>
             <select id="account-form-role" required
               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 bg-white">
-              <option value="admin">Administrator</option>
+              <option value="admin">Administrator / Planner</option>
+              <option value="basecontrol">Operator Base Control</option>
               <option value="mp_lt">Oilman (MP LT)</option>
               <option value="mp_wt">Washingman (MP WT)</option>
+              <option value="user">User Pemohon / Driver</option>
             </select>
           </div>
           <div>
@@ -24748,41 +24752,125 @@ Oilman 1 & 2 : ${oilman}`;
       renderMasterAccountsTable();
     }
 
+    // ========================================================================
+    // MANAJEMEN AKUN PEGAWAI: PENCARIAN, EDIT, HAPUS & BULK ACTIONS
+    // ========================================================================
+    function findMasterUser(identifier) {
+      if (!identifier) return null;
+      const str = String(identifier).trim().toLowerCase();
+      return (state.masterUsers || []).find(u => 
+        (u.nrp && String(u.nrp).toLowerCase() === str) ||
+        (u.id !== undefined && u.id !== null && String(u.id).toLowerCase() === str)
+      );
+    }
+
+    function updateBulkAccountToolbar(count) {
+      const bar = document.getElementById('bulk-account-bar');
+      const countEl = document.getElementById('selected-account-count');
+      if (countEl) countEl.textContent = count;
+      if (bar) {
+        if (count > 0) bar.classList.remove('hidden');
+        else bar.classList.add('hidden');
+      }
+    }
+
+    function handleAccountRowCheck(userKey, isChecked) {
+      if (!state.selectedAccountNrps) state.selectedAccountNrps = new Set();
+      if (isChecked) state.selectedAccountNrps.add(String(userKey));
+      else state.selectedAccountNrps.delete(String(userKey));
+      renderMasterAccountsTable();
+    }
+
+    function toggleSelectAllAccounts(checked) {
+      if (!state.selectedAccountNrps) state.selectedAccountNrps = new Set();
+      const roleFilter = document.getElementById('filter-account-role')?.value || 'ALL';
+      const search = (document.getElementById('search-account-input')?.value || '').toLowerCase().trim();
+      let list = Array.isArray(state.masterUsers) ? [...state.masterUsers] : [];
+      if (roleFilter !== 'ALL') list = list.filter(u => u.role === roleFilter);
+      if (search) list = list.filter(u => (u.nrp && u.nrp.toLowerCase().includes(search)) || (u.nama && u.nama.toLowerCase().includes(search)));
+
+      if (checked) {
+        list.forEach(u => state.selectedAccountNrps.add(String(u.nrp || u.id)));
+      } else {
+        list.forEach(u => state.selectedAccountNrps.delete(String(u.nrp || u.id)));
+      }
+      renderMasterAccountsTable();
+    }
+
+    function clearAccountSelection() {
+      if (state.selectedAccountNrps) state.selectedAccountNrps.clear();
+      const masterCheckbox = document.getElementById('check-all-accounts');
+      if (masterCheckbox) masterCheckbox.checked = false;
+      updateBulkAccountToolbar(0);
+      renderMasterAccountsTable();
+    }
+
     function renderMasterAccountsTable() {
       const tbody = document.getElementById('master-accounts-tbody');
       if (!tbody) return;
 
+      if (!state.selectedAccountNrps) {
+        state.selectedAccountNrps = new Set();
+      }
+
       const roleFilter = document.getElementById('filter-account-role')?.value || 'ALL';
       const search = (document.getElementById('search-account-input')?.value || '').toLowerCase().trim();
 
-      let list = state.masterUsers;
+      let list = Array.isArray(state.masterUsers) ? [...state.masterUsers] : [];
       if (roleFilter !== 'ALL') {
         list = list.filter(u => u.role === roleFilter);
       }
       if (search) {
-        list = list.filter(u => u.nrp.toLowerCase().includes(search) || u.nama.toLowerCase().includes(search));
+        list = list.filter(u => 
+          (u.nrp && u.nrp.toLowerCase().includes(search)) || 
+          (u.nama && u.nama.toLowerCase().includes(search))
+        );
       }
 
       tbody.innerHTML = '';
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400 italic text-[11px]">Tidak ada data akun pegawai</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400 italic text-[11px]">Tidak ada data akun pegawai yang sesuai</td></tr>`;
+        updateBulkAccountToolbar(0);
         return;
       }
 
       const roleLabels = {
         admin: 'Administrator',
+        basecontrol: 'Base Control',
         mp_lt: 'Oilman (MP LT)',
-        mp_wt: 'Washingman'
+        mp_wt: 'Washingman',
+        user: 'User Lapangan'
       };
 
+      const roleColors = {
+        admin: 'bg-purple-100 text-purple-800 border-purple-200/80',
+        basecontrol: 'bg-indigo-100 text-indigo-800 border-indigo-200/80',
+        mp_lt: 'bg-emerald-100 text-emerald-800 border-emerald-200/80',
+        mp_wt: 'bg-cyan-100 text-cyan-800 border-cyan-200/80',
+        user: 'bg-sky-100 text-sky-800 border-sky-200/80'
+      };
+
+      let allVisibleChecked = list.length > 0;
+
       list.forEach(u => {
+        const userKey = String(u.nrp || u.id);
+        const isChecked = state.selectedAccountNrps.has(userKey);
+        if (!isChecked) allVisibleChecked = false;
+
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50 transition align-middle font-medium text-[11px]';
+        tr.className = 'hover:bg-slate-50 transition align-middle font-medium text-[11px] ' + (isChecked ? 'bg-emerald-50/50' : '');
         tr.innerHTML = `
-          <td class="py-2.5 px-4 font-mono font-bold text-slate-900">${u.nrp}</td>
-          <td class="py-2.5 px-4 font-bold text-slate-900">${u.nama}</td>
+          <td class="py-2.5 px-3 text-center">
+            <input type="checkbox" 
+              value="${userKey}" 
+              class="rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+              onchange="handleAccountRowCheck('${userKey}', this.checked)"
+              ${isChecked ? 'checked' : ''}>
+          </td>
+          <td class="py-2.5 px-4 font-mono font-bold text-slate-900">${u.nrp || '-'}</td>
+          <td class="py-2.5 px-4 font-bold text-slate-900">${u.nama || '-'}</td>
           <td class="py-2.5 px-4">
-            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${u.role === 'admin' ? 'bg-purple-100 text-purple-800' : (u.role === 'mp_lt' ? 'bg-emerald-100 text-emerald-800' : 'bg-cyan-100 text-cyan-800')}">
+            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${roleColors[u.role] || 'bg-slate-100 text-slate-700 border-slate-200'}">
               ${roleLabels[u.role] || u.role}
             </span>
           </td>
@@ -24793,16 +24881,23 @@ Oilman 1 & 2 : ${oilman}`;
             </span>
           </td>
           <td class="py-2.5 px-4 text-center space-x-1.5">
-            <button type="button" onclick="openEditAccountModal('${u.id}')" class="p-1 rounded-lg text-slate-500 hover:text-brand-800 hover:bg-slate-100 transition inline-flex items-center justify-center cursor-pointer" title="Edit Akun">
+            <button type="button" onclick="openEditAccountModal('${userKey}')" class="p-1 rounded-lg text-slate-500 hover:text-brand-800 hover:bg-slate-100 transition inline-flex items-center justify-center cursor-pointer active:scale-95" title="Edit Akun">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
             </button>
-            <button type="button" onclick="deleteMasterAccount('${u.id}')" class="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition inline-flex items-center justify-center cursor-pointer" title="Hapus Akun">
+            <button type="button" onclick="promptDeleteMasterAccount('${userKey}')" class="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition inline-flex items-center justify-center cursor-pointer active:scale-95" title="Hapus Akun">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </button>
           </td>
         `;
         tbody.appendChild(tr);
       });
+
+      const masterCheckbox = document.getElementById('check-all-accounts');
+      if (masterCheckbox) {
+        masterCheckbox.checked = allVisibleChecked && list.length > 0;
+      }
+
+      updateBulkAccountToolbar(state.selectedAccountNrps.size);
     }
 
     function openAddAccountModal() {
@@ -24817,14 +24912,17 @@ Oilman 1 & 2 : ${oilman}`;
       toggleModal('modal-account-form', true);
     }
 
-    function openEditAccountModal(id) {
-      const u = state.masterUsers.find(item => item.id === id);
-      if (!u) return;
-      document.getElementById('account-form-id').value = u.id;
+    function openEditAccountModal(identifier) {
+      const u = findMasterUser(identifier);
+      if (!u) {
+        showToast('Data akun pengguna tidak ditemukan!', 'error');
+        return;
+      }
+      document.getElementById('account-form-id').value = u.nrp || u.id;
       document.getElementById('account-modal-title').textContent = 'Edit Akun Pegawai';
-      document.getElementById('account-form-nrp').value = u.nrp;
-      document.getElementById('account-form-nama').value = u.nama;
-      document.getElementById('account-form-role').value = u.role;
+      document.getElementById('account-form-nrp').value = u.nrp || '';
+      document.getElementById('account-form-nama').value = u.nama || '';
+      document.getElementById('account-form-role').value = u.role || 'user';
       document.getElementById('account-form-jabatan').value = u.jabatan || '';
       document.getElementById('account-form-password').value = u.password || '';
       document.getElementById('account-form-status').value = String(u.statusAktif !== false);
@@ -24837,7 +24935,7 @@ Oilman 1 & 2 : ${oilman}`;
         showToast('Akses ditolak: Hanya Admin yang dapat mengelola Akun Pengguna!', 'error');
         return;
       }
-      const id = document.getElementById('account-form-id')?.value;
+      const origId = document.getElementById('account-form-id')?.value;
       const nrp = document.getElementById('account-form-nrp')?.value?.trim().toUpperCase();
       const nama = document.getElementById('account-form-nama')?.value?.trim();
       const role = document.getElementById('account-form-role')?.value;
@@ -24851,13 +24949,13 @@ Oilman 1 & 2 : ${oilman}`;
       }
 
       let targetAccount = null;
-      if (id) {
-        const target = state.masterUsers.find(item => item.id === id);
+      if (origId) {
+        const target = findMasterUser(origId);
         if (target) {
           target.nrp = nrp;
           target.nama = nama;
           target.role = role;
-          target.jabatan = jabatan;
+          target.jabatan = jabatan || target.jabatan || 'Staff Operasional';
           if (pass) target.password = pass;
           target.statusAktif = statusAktif;
           targetAccount = target;
@@ -24869,7 +24967,7 @@ Oilman 1 & 2 : ${oilman}`;
           nrp,
           nama,
           role,
-          jabatan,
+          jabatan: jabatan || 'Staff Operasional',
           password: pass || nrp,
           statusAktif
         };
@@ -24877,6 +24975,8 @@ Oilman 1 & 2 : ${oilman}`;
         targetAccount = newAcc;
         showToast(`Akun baru ${nrp} berhasil dibuat!`, 'success');
       }
+
+      safeStorage.setItem('SE_MASTER_USERS', JSON.stringify(state.masterUsers));
 
       // Sinkronisasi Supabase jika online
       if (state.supabaseClient && targetAccount) {
@@ -24891,24 +24991,171 @@ Oilman 1 & 2 : ${oilman}`;
       }
 
       toggleModal('modal-account-form', false);
+      renderMasterAccountsTable();
       if (typeof notifyDataChanged === 'function') notifyDataChanged();
-      else renderMasterAccountsTable();
     }
 
-    function deleteMasterAccount(id) {
-      const u = state.masterUsers.find(item => item.id === id);
-      if (!u) return;
-      if (state.masterUsers.length <= 1) {
-        showToast('Tidak dapat menghapus akun terakhir!', 'warning');
+    let pendingDeleteAccountNrp = null;
+    let isBulkDeleteAccountMode = false;
+
+    function promptDeleteMasterAccount(identifier) {
+      const u = findMasterUser(identifier);
+      if (!u) {
+        showToast('Data akun tidak ditemukan!', 'error');
         return;
       }
-      state.masterUsers = state.masterUsers.filter(item => item.id !== id);
-      if (state.supabaseClient) {
-        state.supabaseClient.from('users').delete().eq('nrp', u.nrp).catch(() => {});
+      if (state.masterUsers.length <= 1) {
+        showToast('Tidak dapat menghapus akun terakhir di sistem!', 'warning');
+        return;
       }
-      showToast(`Akun ${u.nrp} berhasil dihapus!`, 'info');
+      if (state.currentUser && (String(state.currentUser.nrp).toLowerCase() === String(u.nrp).toLowerCase())) {
+        showToast('Anda tidak dapat menghapus akun yang sedang Anda gunakan!', 'warning');
+        return;
+      }
+
+      isBulkDeleteAccountMode = false;
+      pendingDeleteAccountNrp = u.nrp;
+      const titleEl = document.getElementById('confirm-delete-account-title');
+      const descEl = document.getElementById('confirm-delete-account-desc');
+      if (titleEl) titleEl.textContent = `Hapus Akun: ${u.nama}`;
+      if (descEl) descEl.textContent = `Apakah Anda yakin ingin menghapus akun ${u.nama} (${u.nrp})? Data akun ini akan dihapus permanen.`;
+      toggleModal('modal-confirm-delete-account', true);
+    }
+
+    function openBulkDeleteAccountsModal() {
+      if (!state.selectedAccountNrps || state.selectedAccountNrps.size === 0) {
+        showToast('Pilih minimal 1 akun terlebih dahulu!', 'warning');
+        return;
+      }
+      const count = state.selectedAccountNrps.size;
+      if (count >= state.masterUsers.length) {
+        showToast('Tidak dapat menghapus seluruh akun di sistem! Minimal harus tersisa 1 akun.', 'warning');
+        return;
+      }
+      isBulkDeleteAccountMode = true;
+      const titleEl = document.getElementById('confirm-delete-account-title');
+      const descEl = document.getElementById('confirm-delete-account-desc');
+      if (titleEl) titleEl.textContent = `Hapus Massal ${count} Akun Pegawai`;
+      if (descEl) descEl.textContent = `Apakah Anda yakin ingin menghapus ${count} akun pegawai terpilih secara permanen dari sistem?`;
+      toggleModal('modal-confirm-delete-account', true);
+    }
+
+    function executeDeleteAccountConfirmed() {
+      if (isBulkDeleteAccountMode) {
+        const toDeleteNrps = Array.from(state.selectedAccountNrps || []);
+        if (toDeleteNrps.length === 0) {
+          toggleModal('modal-confirm-delete-account', false);
+          return;
+        }
+        const currentNrp = state.currentUser?.nrp ? String(state.currentUser.nrp).toLowerCase() : '';
+        const filteredToDelete = toDeleteNrps.filter(nrp => String(nrp).toLowerCase() !== currentNrp);
+
+        state.masterUsers = (state.masterUsers || []).filter(u => !filteredToDelete.some(n => String(n).toLowerCase() === String(u.nrp).toLowerCase()));
+        safeStorage.setItem('SE_MASTER_USERS', JSON.stringify(state.masterUsers));
+
+        if (state.supabaseClient) {
+          state.supabaseClient.from('users').delete().in('nrp', filteredToDelete).catch(() => {});
+        }
+
+        toggleModal('modal-confirm-delete-account', false);
+        showToast(`Berhasil menghapus ${filteredToDelete.length} akun secara massal!`, 'success');
+        clearAccountSelection();
+        if (typeof notifyDataChanged === 'function') notifyDataChanged();
+        return;
+      }
+
+      if (!pendingDeleteAccountNrp) {
+        toggleModal('modal-confirm-delete-account', false);
+        return;
+      }
+      const u = findMasterUser(pendingDeleteAccountNrp);
+      if (!u) {
+        toggleModal('modal-confirm-delete-account', false);
+        return;
+      }
+
+      const targetNrp = u.nrp;
+      state.masterUsers = (state.masterUsers || []).filter(item => String(item.nrp).toLowerCase() !== String(targetNrp).toLowerCase());
+      safeStorage.setItem('SE_MASTER_USERS', JSON.stringify(state.masterUsers));
+
+      if (state.supabaseClient && targetNrp) {
+        state.supabaseClient.from('users').delete().eq('nrp', targetNrp).catch(() => {});
+      }
+
+      if (state.selectedAccountNrps) {
+        state.selectedAccountNrps.delete(targetNrp);
+      }
+
+      toggleModal('modal-confirm-delete-account', false);
+      showToast(`Akun ${u.nama} (${targetNrp}) berhasil dihapus!`, 'info');
+      pendingDeleteAccountNrp = null;
+      renderMasterAccountsTable();
       if (typeof notifyDataChanged === 'function') notifyDataChanged();
-      else renderMasterAccountsTable();
+    }
+
+    function openBulkEditAccountsModal() {
+      if (!state.selectedAccountNrps || state.selectedAccountNrps.size === 0) {
+        showToast('Pilih minimal 1 akun terlebih dahulu!', 'warning');
+        return;
+      }
+      const count = state.selectedAccountNrps.size;
+      const descEl = document.getElementById('bulk-edit-account-count-desc');
+      if (descEl) descEl.textContent = `${count} akun terpilih`;
+      const roleSelect = document.getElementById('bulk-edit-account-role');
+      const statusSelect = document.getElementById('bulk-edit-account-status');
+      if (roleSelect) roleSelect.value = 'NO_CHANGE';
+      if (statusSelect) statusSelect.value = 'NO_CHANGE';
+      toggleModal('modal-bulk-edit-accounts', true);
+    }
+
+    function executeBulkEditAccounts(event) {
+      if (event) event.preventDefault();
+      if (!state.selectedAccountNrps || state.selectedAccountNrps.size === 0) {
+        toggleModal('modal-bulk-edit-accounts', false);
+        return;
+      }
+
+      const roleVal = document.getElementById('bulk-edit-account-role')?.value;
+      const statusVal = document.getElementById('bulk-edit-account-status')?.value;
+
+      if (roleVal === 'NO_CHANGE' && statusVal === 'NO_CHANGE') {
+        showToast('Tidak ada perubahan yang dipilih!', 'info');
+        toggleModal('modal-bulk-edit-accounts', false);
+        return;
+      }
+
+      let editedCount = 0;
+      const updatedUsers = [];
+
+      state.selectedAccountNrps.forEach(key => {
+        const u = findMasterUser(key);
+        if (u) {
+          if (roleVal !== 'NO_CHANGE') u.role = roleVal;
+          if (statusVal !== 'NO_CHANGE') u.statusAktif = (statusVal === 'true');
+          editedCount++;
+          updatedUsers.push(u);
+        }
+      });
+
+      safeStorage.setItem('SE_MASTER_USERS', JSON.stringify(state.masterUsers));
+
+      // Sinkronisasi Supabase jika online
+      if (state.supabaseClient && updatedUsers.length > 0) {
+        const batchRows = updatedUsers.map(u => ({
+          nrp: u.nrp,
+          nama: u.nama,
+          role: u.role,
+          jabatan: u.jabatan || 'Staff Operasional',
+          password: u.password,
+          status_aktif: u.statusAktif
+        }));
+        state.supabaseClient.from('users').upsert(batchRows, { onConflict: 'nrp' }).catch(() => {});
+      }
+
+      toggleModal('modal-bulk-edit-accounts', false);
+      showToast(`Berhasil memperbarui ${editedCount} akun secara massal!`, 'success');
+      clearAccountSelection();
+      if (typeof notifyDataChanged === 'function') notifyDataChanged();
     }
 
     window.renderAirCleanerMonitorTable = renderAirCleanerMonitorTable;
@@ -25051,7 +25298,15 @@ Oilman 1 & 2 : ${oilman}`;
     window.openAddAccountModal = openAddAccountModal;
     window.openEditAccountModal = openEditAccountModal;
     window.handleSaveAccount = handleSaveAccount;
-    window.deleteMasterAccount = deleteMasterAccount;
+    window.deleteMasterAccount = promptDeleteMasterAccount;
+    window.promptDeleteMasterAccount = promptDeleteMasterAccount;
+    window.executeDeleteAccountConfirmed = executeDeleteAccountConfirmed;
+    window.openBulkDeleteAccountsModal = openBulkDeleteAccountsModal;
+    window.openBulkEditAccountsModal = openBulkEditAccountsModal;
+    window.executeBulkEditAccounts = executeBulkEditAccounts;
+    window.toggleSelectAllAccounts = toggleSelectAllAccounts;
+    window.handleAccountRowCheck = handleAccountRowCheck;
+    window.clearAccountSelection = clearAccountSelection;
     window.openEditClusterLtModal = openEditClusterLtModal;
     window.appendLtToInput = appendLtToInput;
     window.saveClusterLtAssignment = saveClusterLtAssignment;
