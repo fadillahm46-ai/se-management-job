@@ -2540,11 +2540,11 @@
             <div class="flex flex-wrap items-center gap-2 ml-auto shrink-0">
               <input type="date" id="lt-filter-date" onchange="handleDateFilterChange('lt')"
                 class="px-3 py-1.5 rounded-xl border border-slate-200 font-medium text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500 text-xs">
-              <select id="lt-filter-shift" onchange="renderLtScheduleTable()"
+              <select id="lt-filter-shift" onchange="handleLtShiftFilterChange(this.value)"
                 class="px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500 text-xs">
-                <option value="ALL">All Shift</option>
                 <option value="1">Shift 1 (DWS)</option>
                 <option value="2">Shift 2 (NWS)</option>
+                <option value="ALL">All Shift</option>
               </select>
               <select id="lt-filter-cluster" onchange="renderLtScheduleTable()"
                 class="px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500 text-xs">
@@ -2689,11 +2689,11 @@
             <div class="flex flex-wrap items-center gap-2 ml-auto shrink-0">
               <input type="date" id="wt-filter-date" onchange="handleDateFilterChange('wt')"
                 class="px-3 py-1.5 rounded-xl border border-slate-200 font-medium text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500 text-xs">
-              <select id="wt-filter-shift" onchange="renderWtScheduleTable()"
+              <select id="wt-filter-shift" onchange="handleWtShiftFilterChange(this.value)"
                 class="px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500 text-xs">
-                <option value="ALL">All Shift</option>
                 <option value="1">Shift 1 (DWS)</option>
                 <option value="2">Shift 2 (NWS)</option>
+                <option value="ALL">All Shift</option>
               </select>
               <select id="wt-filter-cluster" onchange="renderWtScheduleTable()"
                 class="px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500 text-xs">
@@ -9449,6 +9449,22 @@
       showToast(`Filter tanggal di-reset ke Mining Week hari ini (${dispStart} - ${dispEnd})!`, 'info');
     }
 
+    let lastObservedShiftNum = null;
+
+    function handleLtShiftFilterChange(val) {
+      if (!state.lubetruckState) state.lubetruckState = {};
+      state.lubetruckState.hasManualShiftFilter = true;
+      state.lubetruckState.filterShift = val;
+      renderLtScheduleTable();
+    }
+
+    function handleWtShiftFilterChange(val) {
+      if (!state.watertruckState) state.watertruckState = {};
+      state.watertruckState.hasManualShiftFilter = true;
+      state.watertruckState.filterShift = val;
+      renderWtScheduleTable();
+    }
+
     function updateLiveClocks() {
       const clockEl = document.getElementById('sidebar-live-clock');
       const shiftEl = document.getElementById('sidebar-live-shift');
@@ -9474,6 +9490,19 @@
         const seconds = String(now.getSeconds()).padStart(2, '0');
         clockEl.textContent = `${day} ${month} ${year} • ${hours}:${minutes}:${seconds} WITA`;
       }
+
+      // Deteksi pergantian shift operasional otomatis (05:00 DWS & 17:00 NWS)
+      if (lastObservedShiftNum !== null && lastObservedShiftNum !== info.shiftNumber) {
+        console.log(`[Shift Otomatis] Jam kerja beralih ke Shift ${info.shiftNumber} (${info.shiftCode})`);
+        const isMp = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'mp_wt' || state.currentUser?.role === 'oilman' || state.currentUser?.role === 'washingman');
+        if (isMp) {
+          if (state.lubetruckState) state.lubetruckState.hasManualShiftFilter = false;
+          if (state.watertruckState) state.watertruckState.hasManualShiftFilter = false;
+          if (state.activeTab === 'lt-schedule') renderLtScheduleTable();
+          else if (state.activeTab === 'wt-schedule') renderWtScheduleTable();
+        }
+      }
+      lastObservedShiftNum = info.shiftNumber;
     }
 
     function fillQuickAuth(nrp, autoSubmit = false) {
@@ -12911,8 +12940,17 @@
       state.lubetruckState.filterDate = selectedDate;
       const isTanggalSatu = (selectedDate && (selectedDate.endsWith('-01') || (typeof parseDateString === 'function' && parseDateString(selectedDate).getDate() === 1)));
 
+      const currentShiftInfo = getCurrentShiftAndWeekInfo();
+      const currentShiftNum = currentShiftInfo.shiftNumber; // 1 (DWS) atau 2 (NWS)
+
       const shiftFilterEl = document.getElementById('lt-filter-shift');
-      const shiftFilter = shiftFilterEl?.value || 'ALL';
+      // Otomatisasi shift aktif untuk MP (Oilman): jika belum diubah manual, default adalah shift yang berlaku
+      if (isMp && shiftFilterEl && !state.lubetruckState.hasManualShiftFilter) {
+        shiftFilterEl.value = String(currentShiftNum);
+        state.lubetruckState.filterShift = String(currentShiftNum);
+      }
+
+      const shiftFilter = shiftFilterEl?.value || state.lubetruckState.filterShift || (isMp ? String(currentShiftNum) : 'ALL');
       const clusterFilter = document.getElementById('lt-filter-cluster')?.value || 'ALL';
       const activeCat = state.lubetruckState.activeCategory;
       const isSmallTrack = (activeCat === 'small');
@@ -13134,11 +13172,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         return;
       }
 
-      const currentShiftInfo = getCurrentShiftAndWeekInfo();
-      const currentShiftNum = currentShiftInfo.shiftNumber;
-
-      // Sesuai Foto 5: Akses MP dapat memilih All Shift / Shift 1 / Shift 2
-      // Default dropdown memilih shift sekarang, tetapi filter tidak mengunci MP
+      // Render shift yang dipilih oleh filter (default: shift aktif saat ini untuk MP)
       let shiftsToRender = [];
       if (shiftFilter !== 'ALL') {
         jobs = jobs.filter(j => Number(j.shift) === Number(shiftFilter));
@@ -13148,6 +13182,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       }
 
       shiftsToRender.forEach(shiftNum => {
+        const isThisShiftActive = (Number(shiftNum) === Number(currentShiftNum));
         const shiftJobs = jobs.filter(j => Number(j.shift) === Number(shiftNum));
         const formattedShiftDate = formatDisplayDate(selectedDate);
         const shiftTitle = shiftNum === 1 ? `SHIFT 1 (${formattedShiftDate})` : `SHIFT 2 (${formattedShiftDate})`;
@@ -13161,7 +13196,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           <div class="flex items-center space-x-2">
             <span class="w-2 h-2 rounded-full ${shiftNum === 1 ? 'bg-amber-400' : 'bg-cyan-200'}"></span>
             <span class="font-black text-xs uppercase tracking-tight">${shiftTitle}</span>
-            ${isMp ? `<span class="ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-white/20 text-white animate-pulse">● SHIFT AKTIF</span>` : ''}
+            ${isMp && isThisShiftActive ? `<span class="ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-white/20 text-white animate-pulse">● SHIFT AKTIF</span>` : ''}
           </div>
           <div class="flex items-center space-x-2">
             <span class="text-[11px] font-bold text-emerald-100">Total: ${shiftJobs.length} Job</span>
@@ -13336,8 +13371,17 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       state.watertruckState.filterDate = selectedDate;
       const isTanggalSatu = (selectedDate && (selectedDate.endsWith('-01') || (typeof parseDateString === 'function' && parseDateString(selectedDate).getDate() === 1)));
 
+      const currentShiftInfo = getCurrentShiftAndWeekInfo();
+      const currentShiftNum = currentShiftInfo.shiftNumber; // 1 (DWS) atau 2 (NWS)
+
       const shiftFilterEl = document.getElementById('wt-filter-shift');
-      const shiftFilter = shiftFilterEl?.value || 'ALL';
+      // Otomatisasi shift aktif untuk MP (Washingman): jika belum diubah manual, default adalah shift yang berlaku
+      if (isMp && shiftFilterEl && !state.watertruckState.hasManualShiftFilter) {
+        shiftFilterEl.value = String(currentShiftNum);
+        state.watertruckState.filterShift = String(currentShiftNum);
+      }
+
+      const shiftFilter = shiftFilterEl?.value || state.watertruckState.filterShift || (isMp ? String(currentShiftNum) : 'ALL');
       const clusterFilter = document.getElementById('wt-filter-cluster')?.value || 'ALL';
       const activeCat = state.watertruckState.activeCategory;
       const isWashingCoal = (activeCat === 'coal');
@@ -13546,9 +13590,6 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         return;
       }
 
-      const currentShiftInfo = getCurrentShiftAndWeekInfo();
-      const currentShiftNum = currentShiftInfo.shiftNumber;
-
       // Sesuai Foto 5: Akses MP fleksibel melihat All Shift / Shift 1 / Shift 2
       let shiftsToRender = [];
       if (shiftFilter !== 'ALL') {
@@ -13559,6 +13600,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       }
 
       shiftsToRender.forEach(shiftNum => {
+        const isThisShiftActive = (Number(shiftNum) === Number(currentShiftNum));
         const shiftJobs = jobs.filter(j => Number(j.shift) === Number(shiftNum));
         const formattedShiftDate = formatDisplayDate(selectedDate);
         const shiftTitle = shiftNum === 1 ? `SHIFT 1 (${formattedShiftDate})` : `SHIFT 2 (${formattedShiftDate})`;
@@ -13572,7 +13614,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           <div class="flex items-center space-x-2">
             <span class="w-2 h-2 rounded-full ${shiftNum === 1 ? 'bg-amber-400' : 'bg-cyan-200'}"></span>
             <span class="font-black text-xs uppercase tracking-tight">${shiftTitle}</span>
-            ${isMp ? `<span class="ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-white/20 text-white animate-pulse">● SHIFT AKTIF</span>` : ''}
+            ${isMp && isThisShiftActive ? `<span class="ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-white/20 text-white animate-pulse">● SHIFT AKTIF</span>` : ''}
           </div>
           <div class="flex items-center space-x-2">
             <span class="text-[11px] font-bold text-cyan-100">Total: ${shiftJobs.length} Job</span>
@@ -25642,6 +25684,8 @@ Oilman 1 & 2 : ${oilman}`;
     window.getEffectiveTodayString = getEffectiveTodayString;
     window.enforceDateRestrictions = enforceDateRestrictions;
     window.handleDateFilterChange = handleDateFilterChange;
+    window.handleLtShiftFilterChange = handleLtShiftFilterChange;
+    window.handleWtShiftFilterChange = handleWtShiftFilterChange;
     window.syncAllDateFiltersToToday = syncAllDateFiltersToToday;
     window.ensureJobsForDate = ensureJobsForDate;
     window.openProfileLogoutModal = openProfileLogoutModal;
