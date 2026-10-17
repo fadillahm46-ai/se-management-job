@@ -24223,6 +24223,36 @@ Oilman 1 & 2 : ${oilman}`;
     window.isAllowedAirCleanerType = isAllowedAirCleanerType;
     window.normalizeAirCleanerTypeKey = normalizeAirCleanerTypeKey;
 
+    /**
+     * Menghitung skor urgensi pergantian air cleaner.
+     * Semakin tinggi skor, semakin mendekati (atau sudah wajib) pergantian filter air cleaner baru:
+     * - Skor 400+: Status 'Di Ganti' atau sudah >= 4x pembersihan (sudah jatuh tempo wajib pergantian)
+     * - Skor 300: Status 'Peringatan' atau sudah 3x pembersihan (paling mendekati pergantian, sisa 1x lagi)
+     * - Skor 200: Sudah 2x pembersihan
+     * - Skor 100: Sudah 1x pembersihan
+     * - Skor 0: Belum ada pembersihan / masih baru
+     */
+    function getAirCleanerUrgencyScore(item) {
+      if (!item) return 0;
+      const count = Array.isArray(item.cleans) ? item.cleans.length : 0;
+      const status = String(item.status || '').toLowerCase().trim();
+
+      if (status === 'di ganti' || status === 'diganti' || count >= 4) {
+        return 400 + count;
+      }
+      if (status === 'peringatan' || count === 3) {
+        return 300;
+      }
+      if (count === 2) {
+        return 200;
+      }
+      if (count === 1) {
+        return 100;
+      }
+      return 0;
+    }
+    window.getAirCleanerUrgencyScore = getAirCleanerUrgencyScore;
+
     function updateAirCleanerRecord(noLambung, type, actionType, code) {
       if (!noLambung) return;
       const today = getEffectiveTodayString();
@@ -24361,6 +24391,22 @@ Oilman 1 & 2 : ${oilman}`;
         );
       }
 
+      // PENGURUTAN PRIORITAS:
+      // Yang paling atas adalah yang PALING MENDEKATI pergantian air cleanernya:
+      // 1. Sudah 4x semprot / Di Ganti (wajib pergantian filter)
+      // 2. Sudah 3x semprot / Peringatan (paling mendekati pergantian)
+      // 3. Sudah 2x semprot
+      // 4. Sudah 1x semprot
+      // 5. Belum pernah disemprot / Baru (PS1000)
+      list.sort((a, b) => {
+        const scoreA = getAirCleanerUrgencyScore(a);
+        const scoreB = getAirCleanerUrgencyScore(b);
+        if (scoreB !== scoreA) {
+          return scoreB - scoreA; // Urutan descending: yang paling mendekati pergantian di paling atas
+        }
+        return (a.noLambung || '').localeCompare(b.noLambung || '', undefined, { numeric: true });
+      });
+
       tbody.innerHTML = '';
       if (list.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400 italic text-[11px]">Tidak ada data monitoring air cleaner</td></tr>`;
@@ -24373,12 +24419,17 @@ Oilman 1 & 2 : ${oilman}`;
         const clean3 = item.cleans[2] || '-';
         const clean4 = item.cleans[3] || '-';
 
+        const cleanCount = Array.isArray(item.cleans) ? item.cleans.length : 0;
         let statusBadge = '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">Baik</span>';
-        if (item.status === 'Peringatan') {
-          statusBadge = '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">Peringatan</span>';
-        } else if (item.status === 'Di Ganti') {
-          statusBadge = '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300">Di Ganti</span>';
-        } else if (item.status === 'Baru') {
+        if (item.status === 'Di Ganti' || cleanCount >= 4) {
+          statusBadge = '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 animate-pulse" title="Batas maksimal pembersihan tercapai! Filter wajib segera diganti.">Di Ganti</span>';
+        } else if (item.status === 'Peringatan' || cleanCount === 3) {
+          statusBadge = '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300" title="Mendekati batas pergantian (sudah 3x semprot).">Peringatan (3x)</span>';
+        } else if (cleanCount === 2) {
+          statusBadge = '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-100 text-teal-800 border border-teal-300">Baik (2x)</span>';
+        } else if (cleanCount === 1) {
+          statusBadge = '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">Baik (1x)</span>';
+        } else if (item.status === 'Baru' || (item.serviceCode === 'PS1000' && cleanCount === 0)) {
           statusBadge = '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-300">Baru (PS1000)</span>';
         }
 
@@ -26922,10 +26973,17 @@ Oilman 1 & 2 : ${oilman}`;
           }
         });
 
-        // Urutkan daftar monitoring dan pastikan HANYA unit yang bertipe sesuai 4 foto spesifikasi
+        // Urutkan daftar monitoring: Unit yang paling mendekati pergantian air cleaner di paling atas
         state.airCleanerMonitor = Array.from(supaMap.values())
           .filter(item => isAllowedAirCleanerType(item.type))
-          .sort((a, b) => a.noLambung.localeCompare(b.noLambung, undefined, { numeric: true }));
+          .sort((a, b) => {
+            const scoreA = getAirCleanerUrgencyScore(a);
+            const scoreB = getAirCleanerUrgencyScore(b);
+            if (scoreB !== scoreA) {
+              return scoreB - scoreA;
+            }
+            return (a.noLambung || '').localeCompare(b.noLambung || '', undefined, { numeric: true });
+          });
 
         // Update cache lokal yang bersih
         safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(state.airCleanerMonitor));
