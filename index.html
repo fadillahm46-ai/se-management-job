@@ -4293,9 +4293,9 @@
               </svg>
             </div>
 
-            <!-- List Menu Card 3: Tombol Keluar (Khusus Mode HP, disembunyikan di Desktop via md:hidden) -->
+            <!-- List Menu Card 3: Tombol Keluar (Dihilangkan sepenuhnya di profil karena sudah ada di menu lainnya) -->
             <div id="profile-card-logout-btn" onclick="openProfileLogoutModal()"
-              class="md:hidden bg-white hover:bg-rose-50/50 active:scale-[0.99] transition rounded-2xl p-3.5 border border-rose-200/80 shadow-xs flex items-center justify-between cursor-pointer">
+              class="hidden bg-white hover:bg-rose-50/50 active:scale-[0.99] transition rounded-2xl p-3.5 border border-rose-200/80 shadow-xs items-center justify-between cursor-pointer">
               <div class="flex items-center space-x-3.5">
                 <div
                   class="w-10 h-10 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center border border-rose-100 shrink-0">
@@ -10806,11 +10806,10 @@
       }
 
       // KONTROL TOMBOL KELUAR DI TAB PROFIL:
-      // Sesuai permintaan pengguna: Hilangkan fitur keluar akun di menu profil khusus di mode desktop (karena sudah ada di sidebar bawah)
-      // Terapkan untuk semua akses/role, namun di mode HP tetap muncul aman
+      // Sesuai permintaan pengguna: Hilangkan fitur keluar akun di menu profil di semua mode & akses karena sudah ada di menu Lainnya
       const profileLogoutBtn = document.getElementById('profile-card-logout-btn');
       if (profileLogoutBtn) {
-        profileLogoutBtn.classList.add('md:hidden');
+        profileLogoutBtn.classList.add('hidden');
       }
 
       console.log('[App] Rendering UI untuk role:', user.role);
@@ -11215,8 +11214,13 @@
 
       if (clean.startsWith('D85') || clean.startsWith('DZ85') || clean.startsWith('D8')) return 'PPA_D85ESS-2';
       if (clean.startsWith('D15') || clean.startsWith('DZ15') || clean.startsWith('D1')) return 'PPA_D155A-6';
+      if (clean.startsWith('D245X')) return 'PPA_D245X';
       if (clean.startsWith('D24') || clean.startsWith('DM') || clean.startsWith('D5')) return 'PPA_D245S';
       if (clean.startsWith('DZ')) return 'PPA_D85ESS-2';
+
+      if (clean.startsWith('GD75')) return 'PPA_GD755-5R';
+      if (clean.startsWith('GD82') || clean.startsWith('GD8')) return 'PPA_GD825A-2';
+      if (clean.startsWith('GD70') || clean.startsWith('GD7') || clean.startsWith('GD')) return 'PPA_GD 705A-5';
 
       if (clean.startsWith('SRT')) return 'PPA_SRT100S';
       if (clean.startsWith('HD78')) return 'PPA_HD785-7';
@@ -15508,6 +15512,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
     }
 
     function switchWtCategory(cat) {
+      if (!state.watertruckState) state.watertruckState = {};
+      state.watertruckState.hasManualCategory = true;
       state.watertruckState.activeCategory = cat;
       ['coal', 'rom', 'non_coal'].forEach(c => {
         const btn = document.getElementById(`btn-wt-cat-${c}`);
@@ -15563,10 +15569,28 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       // Otomatisasi cluster filter untuk Manpower (Washingman):
       // Sesuai aturan pengguna: kluster personil berpatokan mutlak pada armada yang dinaiki!
       const clusterFilterEl = document.getElementById('wt-filter-cluster');
-      if (isMp && clusterFilterEl && !state.watertruckState.hasManualClusterFilter) {
-        const myUnitInfo = (typeof getCurrentUserAssignedUnitAndCluster === 'function')
-          ? getCurrentUserAssignedUnitAndCluster(true)
-          : { unit: '-', cluster: 'Tengah' };
+      const myUnitInfo = (typeof getCurrentUserAssignedUnitAndCluster === 'function')
+        ? getCurrentUserAssignedUnitAndCluster(true)
+        : { unit: '-', cluster: 'Tengah' };
+      const myUnitUpper = (myUnitInfo.unit || '').trim().toUpperCase();
+
+      // Khusus armada WT2620: Bekerja di ROM, langsung tampilkan kluster ROM dan job ROM
+      if (myUnitUpper === 'WT2620') {
+        if (isMp && clusterFilterEl && !state.watertruckState.hasManualClusterFilter) {
+          clusterFilterEl.value = 'ROM';
+        }
+        if (isMp && !state.watertruckState.hasManualCategory) {
+          state.watertruckState.activeCategory = 'rom';
+          ['coal', 'rom', 'non_coal'].forEach(c => {
+            const btn = document.getElementById(`btn-wt-cat-${c}`);
+            if (btn) {
+              btn.className = (c === 'rom')
+                ? 'px-3.5 py-2 rounded-xl text-xs font-bold transition bg-brand-200 text-brand-800'
+                : 'px-3.5 py-2 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200';
+            }
+          });
+        }
+      } else if (isMp && clusterFilterEl && !state.watertruckState.hasManualClusterFilter) {
         if (myUnitInfo.cluster) {
           clusterFilterEl.value = myUnitInfo.cluster;
         }
@@ -19173,6 +19197,81 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       processRosterFile(files[0]);
     }
 
+    /**
+     * Resolusi Armada dari Kode Roster & Master Armada (PRD & Master Sync)
+     * - D520 / N520 -> WT2520 (karena di Master Armada hanya ada WT2520, LT2520 tidak ada)
+     * - D515 / N515 -> LT2515 (karena di Master Armada hanya ada LT2515, WT2515 tidak ada)
+     * - D20 / N20 -> LT2620 (aturan khusus pembeda benturan lambung untuk LT)
+     * - D620 / N620 -> WT2620 (aturan khusus pembeda benturan lambung untuk WT)
+     * - Unit lain dicocokkan otomatis ke state.masterArmada
+     */
+    function resolveArmadaFromShiftCode(rawCode, baseUnit = '-', jenis = '') {
+      const code = String(rawCode || '').trim().toUpperCase();
+      if (!code) return baseUnit || '-';
+
+      if (['OOFF', 'OFF', 'CCUTI', 'CUTI', 'INDK', 'INDR', 'TR', 'HR'].includes(code)) {
+        return baseUnit || '-';
+      }
+
+      const match = code.match(/^[DN](\d{2,5})$/i);
+      if (!match) return baseUnit || '-';
+
+      const digits = match[1];
+
+      // 1. Pengecualian benturan lambung & aturan spesifik
+      if (digits === '20') return 'LT2620';
+      if (digits === '620') return 'WT2620';
+      if (digits === '520') return 'WT2520';
+      if (digits === '515') return 'LT2515';
+
+      // 2. Cek terhadap master armada aktif
+      const masterList = (Array.isArray(state?.masterArmada) && state.masterArmada.length > 0)
+        ? state.masterArmada
+        : (typeof DEFAULT_MASTER_ARMADA !== 'undefined' ? DEFAULT_MASTER_ARMADA : []);
+
+      const activeUnits = masterList
+        .map(a => String(a.unit || '').trim().toUpperCase())
+        .filter(u => u && u !== '-');
+
+      const candidates = [];
+      if (digits.length >= 4) {
+        candidates.push('WT' + digits);
+        candidates.push('LT' + digits);
+      } else {
+        candidates.push('WT2' + digits);
+        candidates.push('LT2' + digits);
+        candidates.push('WT' + digits);
+        candidates.push('LT' + digits);
+      }
+
+      const matched = candidates.filter(c => activeUnits.includes(c));
+      const isWater = (String(jenis).toUpperCase() === 'WM') ||
+        (String(jenis).toUpperCase().includes('WATER')) ||
+        (String(baseUnit).toUpperCase().startsWith('WT'));
+
+      if (matched.length === 1) {
+        return matched[0];
+      } else if (matched.length > 1) {
+        const preferred = matched.find(u => isWater ? u.startsWith('WT') : u.startsWith('LT'));
+        if (preferred) return preferred;
+        return matched[0];
+      }
+
+      const endsWithMatches = activeUnits.filter(u => u.endsWith(digits));
+      if (endsWithMatches.length === 1) {
+        return endsWithMatches[0];
+      } else if (endsWithMatches.length > 1) {
+        const preferred = endsWithMatches.find(u => isWater ? u.startsWith('WT') : u.startsWith('LT'));
+        if (preferred) return preferred;
+        return endsWithMatches[0];
+      }
+
+      if (digits.startsWith('10')) return 'WT' + digits;
+      if (digits.length === 4) return 'LT' + digits;
+      return isWater ? ('WT2' + digits) : ('LT2' + digits);
+    }
+    window.resolveArmadaFromShiftCode = resolveArmadaFromShiftCode;
+
     function processRosterFile(file) {
       if (typeof XLSX === 'undefined') {
         showToast('Library SheetJS belum siap!', 'error');
@@ -19337,19 +19436,12 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                   isOff = true;
                 }
 
-                // Sesuai Aturan PRD (Foto 1): Format kode D/N + nomor unit (cth: D515 = DWS LT2515, N168 = NWS LT2168)
-                const spareMatch = rawCode.match(/^([DN])(\d{3,4})$/i);
+                // Sesuai Aturan PRD & Master Armada: Format kode D/N + nomor unit (cth: D520 = WT2520, D515 = LT2515, D20 = LT2620, D620 = WT2620)
+                const spareMatch = rawCode.match(/^([DN])(\d{2,5})$/i);
                 if (spareMatch) {
                   isSpare = true;
                   shift = spareMatch[1].toUpperCase() === 'N' ? 2 : 1;
-                  const digits = spareMatch[2];
-                  if (digits.length === 4) {
-                    unitEfektif = 'LT' + digits;
-                  } else if (digits.startsWith('10')) {
-                    unitEfektif = 'WT' + digits;
-                  } else {
-                    unitEfektif = 'LT2' + digits;
-                  }
+                  unitEfektif = resolveArmadaFromShiftCode(rawCode, unit, jenis);
                 }
 
                 parsedData.push({
@@ -19390,9 +19482,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
               let isSpare = false;
               let unitEfektif = unit;
-              if (/^[DN]\d{3}$/.test(kodeShift)) {
+              if (/^[DN]\d{2,5}$/i.test(kodeShift)) {
                 isSpare = true;
-                unitEfektif = 'LT2' + kodeShift.substring(1);
+                unitEfektif = resolveArmadaFromShiftCode(kodeShift, unit, jenis);
               }
 
               parsedData.push({
@@ -19444,6 +19536,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       // Render seluruh data yang diparsing tanpa pembatasan 100 baris
       list.forEach((r, idx) => {
+        if (r.unitEfektif === 'LT2520') r.unitEfektif = 'WT2520';
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50 transition font-medium';
         const kode = String(r.kodeShift || '').trim().toUpperCase();
@@ -19552,9 +19645,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                 const baseUnit = r.unit || opInfo.unit || '-';
                 let unitEfektif = r.unit_efektif || baseUnit;
                 const shiftCode = String(r.kode_shift || r.shift_code || 'DWS').trim();
-                const matchSpare = shiftCode.match(/^[DN](\d{3,4})$/i);
-                if (matchSpare && (!r.unit_efektif || r.unit_efektif === baseUnit)) {
-                  unitEfektif = 'LT2' + matchSpare[1];
+                const matchSpare = shiftCode.match(/^[DN](\d{2,5})$/i);
+                if (matchSpare && (!r.unit_efektif || r.unit_efektif === baseUnit || r.unit_efektif === 'LT2520')) {
+                  unitEfektif = resolveArmadaFromShiftCode(shiftCode, baseUnit, r.jenis || r.tipe_karyawan);
+                } else if (unitEfektif === 'LT2520') {
+                  unitEfektif = 'WT2520';
                 }
                 const shiftNum = r.shift || ((shiftCode.toUpperCase().startsWith('N')) ? 2 : 1);
                 const armMatch = (state.masterArmada || []).find(a => (a.unit || '').toUpperCase() === (unitEfektif || baseUnit).toUpperCase());
@@ -19602,9 +19697,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
               const baseUnit = r.unit || opInfo.unit || '-';
               let unitEfektif = r.unit_efektif || baseUnit;
               const shiftCode = String(r.kode_shift || r.shift_code || 'DWS').trim();
-              const matchSpare = shiftCode.match(/^[DN](\d{3,4})$/i);
-              if (matchSpare && (!r.unit_efektif || r.unit_efektif === baseUnit)) {
-                unitEfektif = 'LT2' + matchSpare[1];
+              const matchSpare = shiftCode.match(/^[DN](\d{2,5})$/i);
+              if (matchSpare && (!r.unit_efektif || r.unit_efektif === baseUnit || r.unit_efektif === 'LT2520')) {
+                unitEfektif = resolveArmadaFromShiftCode(shiftCode, baseUnit, r.jenis || r.tipe_karyawan);
+              } else if (unitEfektif === 'LT2520') {
+                unitEfektif = 'WT2520';
               }
               const shiftNum = r.shift || ((shiftCode.toUpperCase().startsWith('N')) ? 2 : 1);
               return {
@@ -22510,7 +22607,7 @@ Oilman 1 & 2 : ${oilman}`;
                     ${renderCompletedSortIcon('cluster')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('armada')" class="py-2 px-1 ${isAdmin ? 'w-[14%] md:w-[8%]' : 'w-[15%] md:w-[8%]'} text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Armada">
+                <th onclick="sortCompletedBy('armada')" class="py-2.5 px-1 w-[15%] md:w-[8%] text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Armada">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>ARMADA</span>
                     ${renderCompletedSortIcon('armada')}
@@ -22537,14 +22634,14 @@ Oilman 1 & 2 : ${oilman}`;
                 <th class="hidden md:table-cell py-2.5 px-2 w-[5%] text-center text-slate-400">
                   <span>FOTO</span>
                 </th>
-                <th onclick="sortCompletedBy('status')" class="py-2.5 px-2 ${isAdmin ? 'w-[14%] md:w-[7%]' : 'w-[20%] md:w-[9%]'} text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Status (ACH / Non-ACH)">
+                <th onclick="sortCompletedBy('status')" class="py-2.5 px-1 w-[15%] md:w-[7%] text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Status (ACH / Non-ACH)">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>STATUS</span>
                     ${renderCompletedSortIcon('status')}
                   </div>
                 </th>
                 ${isAdmin ? `
-                  <th class="py-2.5 px-2 w-[10%] md:w-[5%] text-center text-slate-500 font-extrabold uppercase text-[9.5px] tracking-wider select-none" title="Aksi Hapus Riwayat (Khusus Admin)">
+                  <th class="hidden md:table-cell py-2.5 px-2 md:w-[5%] text-center text-slate-500 font-extrabold uppercase text-[9.5px] tracking-wider select-none" title="Aksi Hapus Riwayat (Khusus Admin)">
                     <span>AKSI</span>
                   </th>
                 ` : ''}
@@ -22621,9 +22718,13 @@ Oilman 1 & 2 : ${oilman}`;
             <span class="text-[11px] text-slate-500 font-semibold uppercase mt-0.5 block">${job.lokasi}</span>
           </td>
 
-          <!-- KOLOM 4: ARMADA (TAMPIL DI HP & DESKTOP SEMUA AKSES) -->
-          <td class="py-2.5 px-1 text-center font-mono font-bold ${isWt ? 'text-cyan-800' : 'text-emerald-800'} break-words text-[11px] md:text-[13px] align-middle">
-            <span class="inline-block px-1.5 py-0.5 rounded ${((isWt ? (job.unitWt || job.armada || job.ltUnit) : (job.ltUnit || job.armada)) || '-') !== '-' ? (isWt ? 'bg-cyan-50 border border-cyan-200' : 'bg-emerald-50 border border-emerald-200') : 'text-slate-300'}">${(isWt ? (job.unitWt || job.armada || job.ltUnit) : (job.ltUnit || job.armada)) || '-'}</span>
+          <!-- KOLOM 4: ARMADA (TAMPIL DI HP & DESKTOP SEMUA AKSES, SEJAJAR CENTER) -->
+          <td class="py-2.5 px-1 text-center align-middle break-words">
+            <div class="flex items-center justify-center">
+              <span class="inline-flex items-center justify-center min-w-[50px] md:min-w-[62px] px-1.5 py-0.5 rounded font-mono font-bold text-[11px] md:text-[12px] text-center ${((isWt ? (job.unitWt || job.armada || job.ltUnit) : (job.ltUnit || job.armada)) || '-') !== '-' ? (isWt ? 'bg-cyan-50 border border-cyan-200 text-cyan-800' : 'bg-emerald-50 border border-emerald-200 text-emerald-800') : 'text-slate-300'}">
+                ${(isWt ? (job.unitWt || job.armada || job.ltUnit) : (job.ltUnit || job.armada)) || '-'}
+              </span>
+            </div>
           </td>
 
           <!-- KOLOM 5: PERSONIL -->
@@ -22655,18 +22756,20 @@ Oilman 1 & 2 : ${oilman}`;
             : `<span class="text-slate-300">-</span>`}
           </td>
 
-          <!-- KOLOM 9: STATUS -->
-          <td class="py-2.5 px-2.5 text-center">
-            ${['ach', 'achieved', 'done'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'ACHIEVED'
-            ? `<span class="inline-block px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] tracking-wide uppercase">ACH</span>`
-            : (['non_ach', 'non-ach'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'NON_ACH'
-              ? `<span class="inline-block px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 font-extrabold text-[10px] tracking-wide uppercase" title="${job.alasanNonAch || job.keterangan || '-'}">NON-ACH</span>`
-              : `<span class="inline-block px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-extrabold text-[10px] tracking-wide uppercase">${job.status || 'DONE'}</span>`)}
+          <!-- KOLOM 9: STATUS (SEJAJAR CENTER DENGAN KOLOM ARMADA) -->
+          <td class="py-2.5 px-1 md:px-2 text-center align-middle">
+            <div class="flex items-center justify-center">
+              ${['ach', 'achieved', 'done'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'ACHIEVED'
+              ? `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] tracking-wide uppercase text-center">ACH</span>`
+              : (['non_ach', 'non-ach'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'NON_ACH'
+                ? `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-rose-100 text-rose-800 font-extrabold text-[10px] tracking-wide uppercase text-center" title="${job.alasanNonAch || job.keterangan || '-'}">NON-ACH</span>`
+                : `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-amber-100 text-amber-800 font-extrabold text-[10px] tracking-wide uppercase text-center">${job.status || 'DONE'}</span>`)}
+            </div>
           </td>
 
-          <!-- KOLOM 10: AKSI HAPUS (KHUSUS AKSES ADMIN DI MENU RIWAYAT) -->
+          <!-- KOLOM 10: AKSI HAPUS (KHUSUS AKSES ADMIN DI DESKTOP ONLY, DI HP HILANG KARENA ADA DI DETAIL JOB) -->
           ${isAdmin ? `
-            <td class="py-2.5 px-2 text-center align-middle">
+            <td class="hidden md:table-cell py-2.5 px-2 text-center align-middle">
               <button type="button" onclick="event.stopPropagation(); promptDeleteJob('${job.id}')"
                 title="Hapus data riwayat unit ${job.noLambung || ''}"
                 class="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 hover:border-rose-600 transition shadow-2xs cursor-pointer inline-flex items-center justify-center" aria-label="Hapus Riwayat">
@@ -24079,7 +24182,47 @@ Oilman 1 & 2 : ${oilman}`;
 
     // ========================================================================
     // MONITORING CLEAN AIR CLEANER CONTROLLER & LOGIKA OTOMATIS
+    // KHUSUS: Hanya menampilkan tipe unit yang ada di 4 foto spesifikasi:
+    // 1. Excavator: PC200-8M0, PC210-10M0, PC300SE-8M0, PC850-8R1
+    // 2. Bulldozer: PPA_D155A-6, PPA_D245S, PPA_D245X, PPA_D85ESS-2
+    // 3. Excavator Besar/Sedang: PPA_PC 1250-8R, PPA_PC 1250SP-11R, PPA_PC 2000-8,
+    //    PPA_PC200-8M0, PPA_PC210-10M0, PPA_PC300SE-8M0, PPA_PC3400-11M0, PPA_PC500LC-10R, PPA_PC850-8R1
+    // 4. Motor Grader: PPA_GD 705A-5, PPA_GD755-5R, PPA_GD825A-2
     // ========================================================================
+    const ALLOWED_AC_TYPE_KEYS = new Set([
+      'PC200-8M0',
+      'PC210-10M0',
+      'PC300SE-8M0',
+      'PC850-8R1',
+      'D155A-6',
+      'D245S',
+      'D245X',
+      'D85ESS-2',
+      'PC1250-8R',
+      'PC1250SP-11R',
+      'PC2000-8',
+      'PC3400-11M0',
+      'PC500LC-10R',
+      'GD705A-5',
+      'GD755-5R',
+      'GD825A-2'
+    ]);
+
+    function normalizeAirCleanerTypeKey(typeStr) {
+      return String(typeStr || '')
+        .toUpperCase()
+        .replace(/^(PPA_|RMC_)/i, '')
+        .replace(/[^A-Z0-9-]/g, '');
+    }
+
+    function isAllowedAirCleanerType(typeStr) {
+      if (!typeStr) return false;
+      const cleanKey = normalizeAirCleanerTypeKey(typeStr);
+      return ALLOWED_AC_TYPE_KEYS.has(cleanKey);
+    }
+    window.isAllowedAirCleanerType = isAllowedAirCleanerType;
+    window.normalizeAirCleanerTypeKey = normalizeAirCleanerTypeKey;
+
     function updateAirCleanerRecord(noLambung, type, actionType, code) {
       if (!noLambung) return;
       const today = getEffectiveTodayString();
@@ -24160,19 +24303,20 @@ Oilman 1 & 2 : ${oilman}`;
       const currentVal = select.value || 'ALL';
       const types = new Set();
 
+      // HANYA masukkan tipe unit yang masuk dalam 4 foto spesifikasi
       (state.airCleanerMonitor || []).forEach(m => {
         const t = (m.type || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(m.noLambung, '') : '')).trim();
-        if (t && t !== '-' && t !== 'Unit') types.add(t);
+        if (t && isAllowedAirCleanerType(t)) types.add(t);
       });
 
       if (Array.isArray(state.masterUnits)) {
         state.masterUnits.forEach(u => {
-          const t = (u.typeUnit || u.tipe || u.type || '').trim();
-          if (t && t !== '-' && t !== 'Unit') types.add(t);
+          const t = (u.typeUnit || u.tipe || u.type || u.type_model || '').trim();
+          if (t && isAllowedAirCleanerType(t)) types.add(t);
         });
       }
 
-      const sortedTypes = Array.from(types).sort((a, b) => a.localeCompare(b));
+      const sortedTypes = Array.from(types).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
       if (select.options.length !== (sortedTypes.length + 1)) {
         let optionsHtml = '<option value="ALL">All Type Unit</option>';
         sortedTypes.forEach(t => {
@@ -24195,11 +24339,18 @@ Oilman 1 & 2 : ${oilman}`;
       const searchVal = (document.getElementById('search-aircleaner-input')?.value || '').toLowerCase().trim();
       let list = state.airCleanerMonitor || [];
 
-      // Filter berdasarkan tipe unit yang dipilih
+      // Filter KHUSUS: HANYA tampilkan tipe unit yang ada di 4 foto spesifikasi pengguna
+      list = list.filter(m => {
+        const mType = (m.type || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(m.noLambung, 'Unit') : '')).trim();
+        return isAllowedAirCleanerType(mType);
+      });
+
+      // Filter berdasarkan tipe unit yang dipilih di dropdown
       if (selectedType !== 'ALL') {
+        const selKey = normalizeAirCleanerTypeKey(selectedType);
         list = list.filter(m => {
-          const mType = (m.type || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(m.noLambung, 'Unit') : '')).toUpperCase().trim();
-          return mType === selectedType.toUpperCase().trim();
+          const mType = (m.type || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(m.noLambung, 'Unit') : '')).trim();
+          return (mType === selectedType) || (normalizeAirCleanerTypeKey(mType) === selKey);
         });
       }
 
@@ -24744,10 +24895,10 @@ Oilman 1 & 2 : ${oilman}`;
         shiftSelect.value = '2';
       }
 
-      // Deteksi otomatis status spare (cth: D514, N168)
-      const matchSpare = code.match(/^[DN](\d{3,4})$/i);
+      // Deteksi otomatis status spare (cth: D520 -> WT2520, D515 -> LT2515, D20 -> LT2620, D620 -> WT2620)
+      const matchSpare = code.match(/^[DN](\d{2,5})$/i);
       if (matchSpare) {
-        const spareUnit = 'LT2' + matchSpare[1];
+        const spareUnit = resolveArmadaFromShiftCode(code, unitInput?.value, document.getElementById('edit-roster-jenis')?.value);
         if (efektifInput) efektifInput.value = spareUnit;
         if (hintEl) hintEl.innerHTML = `<span class="font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Spare Terdeteksi: ${spareUnit}</span>`;
       } else if (['OOFF', 'OFF', 'CCUTI', 'CUTI'].includes(code)) {
@@ -24805,10 +24956,15 @@ Oilman 1 & 2 : ${oilman}`;
         return;
       }
 
-      // Deteksi status spare sesuai aturan PRD (Foto 1)
-      const matchSpare = kodeShift.match(/^[DN](\d{3,4})$/i);
+      // Deteksi status spare sesuai aturan PRD & Master Armada
+      const matchSpare = kodeShift.match(/^[DN](\d{2,5})$/i);
       const isOff = ['OOFF', 'OFF', 'CCUTI', 'CUTI'].includes(kodeShift);
       const isTraining = ['INDR', 'INDK', 'TR', 'HR'].includes(kodeShift);
+      if (matchSpare && (!unitEfektif || unitEfektif === unit || unitEfektif === 'LT2520')) {
+        unitEfektif = resolveArmadaFromShiftCode(kodeShift, unit, jenis);
+      } else if (unitEfektif === 'LT2520') {
+        unitEfektif = 'WT2520';
+      }
       const isSpare = Boolean(matchSpare || (unitEfektif && unitEfektif !== unit && !isOff && !isTraining));
 
       // 1. Update state di memori browser
@@ -26262,6 +26418,9 @@ Oilman 1 & 2 : ${oilman}`;
           if (state.activeTab === 'dashboard' && typeof renderDashboardAchievementChart === 'function') {
             renderDashboardAchievementChart(state.dashboardSelectedCategory || 'ALL');
           }
+          if (typeof loadAirCleanerFromSupabase === 'function') {
+            loadAirCleanerFromSupabase();
+          }
 
           console.log(`[Supabase Units OK] Sukses memuat ${formatted.length} unit populasi lapangan.`);
           if (showToastAlert) {
@@ -26690,52 +26849,86 @@ Oilman 1 & 2 : ${oilman}`;
           return;
         }
 
-        if (Array.isArray(data) && data.length > 0) {
-          state.airCleanerMonitor = data.map(row => ({
-            id: row.id || ('AC-' + (row.no_lambung || '').toUpperCase()),
-            noLambung: (row.no_lambung || '').toUpperCase(),
-            type: row.type_model || getUnitTypeFromMaster(row.no_lambung, 'Unit'),
-            cleans: Array.isArray(row.cleans) ? row.cleans : [],
-            serviceCode: row.service_code || '',
-            status: row.status || 'Baik',
-            lastCleanedDate: row.last_cleaned_date || null
-          }));
-        }
+        const supaRows = (Array.isArray(data) && data.length > 0) ? data : [];
+        const supaMap = new Map();
+        supaRows.forEach(row => {
+          const nl = String(row.no_lambung || '').toUpperCase().trim();
+          if (nl) {
+            supaMap.set(nl, {
+              id: row.id || ('AC-' + nl),
+              noLambung: nl,
+              type: row.type_model || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(nl, 'Unit') : 'Unit'),
+              cleans: Array.isArray(row.cleans) ? row.cleans : [],
+              serviceCode: row.service_code || '',
+              status: row.status || 'Baik',
+              lastCleanedDate: row.last_cleaned_date || null
+            });
+          }
+        });
 
-        // Sinkronisasi otomatis: Jika ada job schedule/riwayat selesai kategori aircleaner, pastikan tanggal tercatat
-        const allCompletedJobs = [
+        // Kumpulkan unit alat berat dari masterUnits: HANYA tipe yang ada di 4 foto spesifikasi pengguna!
+        const masterUnitList = Array.isArray(state.masterUnits) ? state.masterUnits : [];
+        masterUnitList.forEach(u => {
+          const nl = String(u.noLambung || u.lambung || '').toUpperCase().trim();
+          const uType = u.typeUnit || u.tipe || u.type || u.type_model || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(nl, 'Unit') : 'Unit');
+          if (nl && isAllowedAirCleanerType(uType) && !supaMap.has(nl)) {
+            supaMap.set(nl, {
+              id: 'AC-' + nl,
+              noLambung: nl,
+              type: uType,
+              cleans: [],
+              serviceCode: '',
+              status: 'Baik',
+              lastCleanedDate: null
+            });
+          }
+        });
+
+        // Sinkronisasi HANYA dari pekerjaan aktual yang BENAR-BENAR SELESAI (status ACH & kategori aircleaner)
+        // PERINGATAN: Jangan pernah mengambil dari antrean harian scheduled/pending atau tanggal greasingan!
+        const actualCompletedJobs = [
           ...(state.lubetruckState?.jobs || []),
           ...(state.watertruckState?.jobs || []),
           ...(Array.isArray(state.jobHistory) ? state.jobHistory : [])
-        ];
+        ].filter(j => {
+          const isAcCat = (j.cat === 'aircleaner') || (j.requestedJob === 'Clean Air Cleaner');
+          const isAch = ['ach', 'achieved', 'done'].includes(String(j.status || '').toLowerCase()) || j.status_final === 'ACHIEVED';
+          return isAcCat && isAch && (j.tanggalRealisasi || j.tanggal);
+        });
 
-        allCompletedJobs.forEach(job => {
-          const isAc = (job.cat === 'aircleaner') || (String(job.status || '').toLowerCase() === 'ach' && job.cat === 'aircleaner');
-          if (isAc && job.noLambung) {
-            const uLambung = job.noLambung.toUpperCase();
-            let monItem = state.airCleanerMonitor.find(m => m.noLambung === uLambung);
-            if (!monItem) {
-              monItem = {
-                id: 'AC-' + uLambung,
-                noLambung: uLambung,
-                type: getUnitTypeFromMaster(uLambung, job.typeUnit || 'Unit'),
-                cleans: [],
-                serviceCode: '',
-                status: 'Baik'
-              };
-              state.airCleanerMonitor.push(monItem);
-            }
-            const dStr = job.tanggalRealisasi || job.tanggal || '';
-            if (dStr) {
-              const parts = dStr.split('-');
-              const formattedDate = (parts.length === 3) ? (parts[2] + '/' + parts[1] + '/' + parts[0]) : dStr;
-              if (!monItem.cleans.includes(formattedDate)) {
-                if (monItem.cleans.length >= 4) monItem.cleans = [formattedDate];
-                else monItem.cleans.push(formattedDate);
-              }
+        actualCompletedJobs.forEach(job => {
+          if (!job.noLambung) return;
+          const uLambung = job.noLambung.toUpperCase().trim();
+          let monItem = supaMap.get(uLambung);
+          if (!monItem) {
+            monItem = {
+              id: 'AC-' + uLambung,
+              noLambung: uLambung,
+              type: (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(uLambung, job.typeUnit || 'Unit') : 'Unit'),
+              cleans: [],
+              serviceCode: '',
+              status: 'Baik'
+            };
+            supaMap.set(uLambung, monItem);
+          }
+          const dStr = job.tanggalRealisasi || job.tanggal || '';
+          if (dStr) {
+            const parts = dStr.split('-');
+            const formattedDate = (parts.length === 3) ? (parts[2] + '/' + parts[1] + '/' + parts[0]) : dStr;
+            if (!monItem.cleans.includes(formattedDate)) {
+              if (monItem.cleans.length >= 4) monItem.cleans = [formattedDate];
+              else monItem.cleans.push(formattedDate);
             }
           }
         });
+
+        // Urutkan daftar monitoring dan pastikan HANYA unit yang bertipe sesuai 4 foto spesifikasi
+        state.airCleanerMonitor = Array.from(supaMap.values())
+          .filter(item => isAllowedAirCleanerType(item.type))
+          .sort((a, b) => a.noLambung.localeCompare(b.noLambung, undefined, { numeric: true }));
+
+        // Update cache lokal yang bersih
+        safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(state.airCleanerMonitor));
 
         if (typeof renderAirCleanerMonitorTable === 'function') {
           renderAirCleanerMonitorTable();
