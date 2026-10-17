@@ -8528,6 +8528,7 @@
         status: row.status || 'scheduled',
         keterangan: row.keterangan || '',
         isPending: Boolean(row.is_pending),
+        isLocked: ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(String(row.status || '').toLowerCase().trim()) || Boolean(row.is_locked),
         unitCondition: row.unit_condition || '',
         serviceNotes: row.service_notes || '',
         bdNotes: row.bd_notes || '',
@@ -11342,11 +11343,44 @@
       ensureJobsForDate(today);
     }
 
-    function ensureJobsForDate(dateStr) {
-      // Data riil diinput langsung oleh pengguna melalui form input / import Excel.
-      // Replikasi dummy data dinonaktifkan.
-      return;
+    async function ensureJobsForDate(dateStr) {
+      if (!dateStr || !state.supabaseClient) return;
+      // Periksa apakah di memori sudah ada jadwal untuk tanggal tersebut
+      const countInDate = (
+        (state.lubetruckState?.jobs ? state.lubetruckState.jobs.filter(j => j.tanggal === dateStr).length : 0) +
+        (state.watertruckState?.jobs ? state.watertruckState.jobs.filter(j => j.tanggal === dateStr).length : 0)
+      );
+      if (countInDate > 0) return;
+      if (window.globalDataCache?.loadedDates?.has(dateStr)) return;
+
+      try {
+        console.log(`[Supabase On-Demand] Memuat jadwal untuk tanggal ${dateStr}...`);
+        const { data, error } = await state.supabaseClient
+          .from('jobs')
+          .select('*')
+          .eq('tanggal', dateStr);
+
+        if (Array.isArray(data)) {
+          if (data.length > 0) {
+            data.forEach(row => {
+              const jobObj = mapSupabaseJobRowToModel(row);
+              if (jobObj && jobObj.id) {
+                window.globalDataCache.jobs.set(String(jobObj.id), jobObj);
+              }
+            });
+            window.globalDataCache.loadedDates.add(dateStr);
+            syncGlobalCacheToState();
+            if (state.activeTab === 'lt-schedule') renderLtScheduleTable();
+            else if (state.activeTab === 'wt-schedule') renderWtScheduleTable();
+          } else {
+            window.globalDataCache.loadedDates.add(dateStr);
+          }
+        }
+      } catch (e) {
+        console.warn('[Supabase On-Demand Error]', e);
+      }
     }
+    window.ensureJobsForDate = ensureJobsForDate;
 
     function switchAdminJobReqSubtab(type) {
       state.adminJobReqFilterType = type || 'ALL';
@@ -13188,9 +13222,62 @@
 
       collections.forEach(list => {
         list.forEach(j => {
-          const s = (j.status || '').toLowerCase();
-          if (s === 'ach' || s === 'achieved' || s === 'done' || s === 'non_ach' || s === 'non-ach' || s === 'service' || s === 'bd' || s === 'cancelled') {
-            return;
+          if (!j || !j.id) return;
+          const cleanJobId = String(j.id);
+          const s = String(j.status || '').toLowerCase().trim();
+
+          // -------------------------------------------------------------------
+          // GUARD ANTI-REGRESI MUTLAK (ATURAN USER: JIKA ACH TERKUNCI & TIDAK BOLEH PENDING):
+          // Jika job sudah ACH, DONE, SERVICE, BD, NON_ACH, CANCEL, atau terkunci (isLocked),
+          // atau tercatat di Riwayat Selesai (state.jobHistory), atau memiliki bukti foto / jam pelaksanaan:
+          // KUNCI STATUSNYA DAN JANGAN PERNAH DIUBAH MENJADI PENDING / DIALIHKAN KE SHIFT 2!
+          // -------------------------------------------------------------------
+          const historyRecord = (Array.isArray(state.jobHistory) && state.jobHistory.length > 0)
+            ? state.jobHistory.find(h => String(h.job_id) === cleanJobId)
+            : null;
+
+          const isHistoryDone = historyRecord && ['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN', 'NON_ACH'].includes(String(historyRecord.status_final || '').toUpperCase());
+
+          let hasPhotos = (Array.isArray(j.fotos) && j.fotos.some(p => p && p.trim() !== ''));
+          if (!hasPhotos) {
+            try {
+              const sf = safeStorage.getItem('SE_JOB_FOTOS_' + cleanJobId);
+              if (sf) {
+                const parsed = JSON.parse(sf);
+                if (Array.isArray(parsed) && parsed.some(p => p && p.trim() !== '')) {
+                  hasPhotos = true;
+                  j.fotos = parsed;
+                }
+              }
+            } catch (e) { }
+          }
+
+          const hasTimes = Boolean(j.jamStart && j.jamEnd && j.jamStart !== '-' && j.jamEnd !== '-');
+          const isFinishedStatus = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s);
+
+          if (
+            j.isLocked ||
+            j.is_locked ||
+            isFinishedStatus ||
+            isHistoryDone ||
+            (typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(j)) ||
+            (hasPhotos && (hasTimes || s === 'ach'))
+          ) {
+            j.isLocked = true;
+            // Jika sebelumnya di riwayat sudah ACHIEVED tapi di memori statusnya ter-override: pulihkan statusnya
+            if (isHistoryDone && !isFinishedStatus) {
+              j.status = (historyRecord.status_final === 'ACHIEVED') ? 'ach' : historyRecord.status_final.toLowerCase();
+              j.isPending = false;
+              if (historyRecord.shift_rencana) j.shift = historyRecord.shift_rencana;
+              if (historyRecord.jam_start) j.jamStart = historyRecord.jam_start;
+              if (historyRecord.jam_end) j.jamEnd = historyRecord.jam_end;
+              if (historyRecord.durasi) j.durasi = historyRecord.durasi;
+              if (historyRecord.keterangan) j.keterangan = historyRecord.keterangan;
+              if (state.supabaseClient && typeof syncJobToSupabase === 'function') {
+                syncJobToSupabase(j);
+              }
+            }
+            return; // LEWATI MUTLAK! DILARANG KERAS DIUBAH JADI PENDING
           }
 
           const jDate = j.tanggal || todayStr;
@@ -14182,11 +14269,18 @@
           }
         });
 
-        // Masukkan ke targetArray in-memory
+        // Masukkan ke targetArray in-memory dengan proteksi anti-overwrite job selesai
         createdJobs.forEach(nj => {
           if (existingIds.has(nj.id)) {
             const idx = targetArray.findIndex(item => item.id === nj.id);
-            if (idx !== -1) targetArray[idx] = nj;
+            if (idx !== -1) {
+              const existingJob = targetArray[idx];
+              // PENGAMAN MUTLAK: Jangan pernah menimpa job yang sudah selesai / dikerjakan / terkunci!
+              if (typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(existingJob)) {
+                return; // Pertahankan job yang sudah selesai
+              }
+              targetArray[idx] = nj;
+            }
           } else {
             targetArray.push(nj);
             existingIds.add(nj.id);
@@ -14195,12 +14289,17 @@
 
         saveDatabaseSync();
 
-        // Kirim batch atomic ke Supabase (Selalu sch_lt atau sch_wt, BUKAN unsch)
+        // Kirim batch atomic ke Supabase (Hanya jadwal baru atau belum dikerjakan, JANGAN menimpa yang sudah selesai)
         if (state.supabaseClient && createdJobs.length > 0) {
-          const batchRows = createdJobs.map(job => {
+          const batchRows = [];
+          createdJobs.forEach(job => {
             const targetId = String(job.id);
+            const existingJob = targetArray.find(item => String(item.id) === targetId);
+            if (existingJob && typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(existingJob)) {
+              return; // Lewati dari update scheduled agar status selesai di Supabase tidak tertimpa
+            }
             const isWtRow = (targetId.startsWith('WTJ') || targetId.startsWith('WT-SCH') || job.targetType === 'WT' || (job.wtUnit && job.wtUnit !== '-'));
-            return {
+            batchRows.push({
               id: targetId,
               job_type: isWtRow ? 'sch_wt' : 'sch_lt',
               cat: job.cat || 'small',
@@ -14223,10 +14322,12 @@
               keterangan: job.keterangan || '',
               is_pending: false,
               updated_at: new Date().toISOString()
-            };
+            });
           });
 
-          const { error } = await state.supabaseClient.from('jobs').upsert(batchRows, { onConflict: 'id' });
+          const { error } = batchRows.length > 0
+            ? await state.supabaseClient.from('jobs').upsert(batchRows, { onConflict: 'id' })
+            : { error: null };
           if (error) {
             console.warn('[Supabase Apply Yesterday Batch Error]', error);
           } else {
@@ -15191,17 +15292,15 @@
       ensureJobsForDate(selectedDate);
 
       // Filter jobs:
-      // - Admin: Menampilkan SELURUH unit agar progres terpantau lengkap (tidak hilang saat di-action)
-      // - MP: Hanya menampilkan antrean aktif (scheduled/pending)
+      // Sesuai aturan baru: Baik Admin maupun MP hanya menampilkan antrean aktif yang belum di-action.
+      // Unit yang sudah di-action (ACH, NON-ACH, SERVICE, BD, CANCEL, dsb) otomatis masuk ke menu Riwayat Selesai.
       let jobs = state.lubetruckState.jobs.filter(j => {
         const matchCat = (j.cat === activeCat);
         const matchDate = (j.tanggal === selectedDate || (!j.tanggal && selectedDate === '2026-09-27'));
-        if (isAdmin) {
-          return matchCat && matchDate;
-        } else {
-          const isQueueActive = (j.status === 'scheduled') || (j.status === 'pending') || j.isPending;
-          return matchCat && matchDate && isQueueActive;
-        }
+        const s = String(j.status || '').toLowerCase().trim();
+        const isActioned = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) || (j.status_final !== undefined && j.status_final !== null && String(j.status_final).trim() !== '');
+        const isQueueActive = ((s === 'scheduled') || (s === 'pending') || Boolean(j.isPending)) && !isActioned;
+        return matchCat && matchDate && isQueueActive;
       });
 
       if (clusterFilter !== 'ALL') {
@@ -15349,7 +15448,7 @@
                 <th class="hidden md:table-cell py-1.5 px-2 w-[7%] text-center">DURASI</th>
                 <th class="hidden md:table-cell py-1.5 px-2 w-[5%] text-center">FOTO</th>
                 <th class="hidden md:table-cell py-1.5 px-2 w-[12%]">TEMUAN / KENDALA</th>
-                <th class="py-1.5 px-1.5 w-[22%] md:w-[9%] text-center">AKSI / STATUS</th>
+                ${!isAdmin ? '<th class="py-1.5 px-1.5 w-[22%] md:w-[9%] text-center">AKSI / STATUS</th>' : ''}
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -15357,7 +15456,7 @@
 
           const tbody = table.querySelector('tbody');
           if (clusterJobs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${state.isLtSchedSelectMode ? 11 : 10}" class="py-5 text-center text-slate-400 italic text-[11px]">
+            tbody.innerHTML = `<tr><td colspan="${state.isLtSchedSelectMode ? (isAdmin ? 10 : 11) : (isAdmin ? 9 : 10)}" class="py-5 text-center text-slate-400 italic text-[11px]">
               <div>${(activeCat === "digger" && (typeof parseDateString === "function" ? parseDateString(selectedDate).getDay() : new Date(selectedDate).getDay()) === 5) ? "🌴 Hari Jumat adalah Hari Libur Operasi Big Digger. Seluruh unit Big Digger libur operasional hari ini." : (isAdmin ? `Belum ada unit yang dijadwalkan untuk tanggal ${selectedDate}.` : `Tidak ada jadwal unit untuk tanggal ${selectedDate}`)}</div>
 ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahkan jadwal.</span>` : ''}
             </td></tr>`;
@@ -15400,9 +15499,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                   <span class="inline-block px-1.5 py-0.5 rounded bg-slate-100 font-mono font-bold text-slate-600">${job.fotos ? job.fotos.length : 0}/4</span>
                 </td>
                 <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-500 break-words">${formatKendalaText(job.keterangan)}</td>
+                ${!isAdmin ? `
                 <td class="py-1 px-1.5 md:py-1.5 md:px-2 text-center">
                   ${renderJobActionCell(job)}
                 </td>
+                ` : ''}
               `;
               tbody.appendChild(tr);
             });
@@ -15500,7 +15601,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                 <th class="hidden md:table-cell py-1.5 px-2 w-[7%] text-center">DURASI</th>
                 <th class="hidden md:table-cell py-1.5 px-2 w-[5%] text-center">FOTO</th>
                 <th class="hidden md:table-cell py-1.5 px-2 w-[12%]">TEMUAN / KENDALA</th>
-                <th class="py-1.5 px-2 w-[18%] md:w-[9%] text-center">AKSI / STATUS</th>
+                ${!isAdmin ? '<th class="py-1.5 px-2 w-[18%] md:w-[9%] text-center">AKSI / STATUS</th>' : ''}
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -15508,7 +15609,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
           const tbody = table.querySelector('tbody');
           if (clusterJobs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="10" class="py-5 text-center text-slate-400 italic text-[11px]">
+            tbody.innerHTML = `<tr><td colspan="${state.isLtSchedSelectMode ? (isAdmin ? 10 : 11) : (isAdmin ? 9 : 10)}" class="py-5 text-center text-slate-400 italic text-[11px]">
               <div>${isAdmin ? `Belum ada unit yang dijadwalkan untuk tanggal ${selectedDate}.` : `Tidak ada jadwal unit untuk tanggal ${selectedDate}`}</div>
 ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahkan jadwal.</span>` : ''}
             </td></tr>`;
@@ -15560,9 +15661,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                   <span class="inline-block px-1.5 py-0.5 rounded bg-slate-100 font-mono font-bold text-slate-600">${job.fotos ? job.fotos.length : 0}/4</span>
                 </td>
                 <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-500 break-words">${formatKendalaText(job.keterangan)}</td>
+                ${!isAdmin ? `
                 <td class="py-1 px-1.5 md:py-1.5 md:px-2 text-center">
                   ${renderJobActionCell(job)}
                 </td>
+                ` : ''}
               `;
               tbody.appendChild(tr);
             });
@@ -15692,16 +15795,15 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         }
       }
 
-      // Filter jobs: Admin melihat semua status, MP hanya melihat antrean aktif
+      // Filter jobs: Baik Admin maupun MP hanya melihat antrean aktif yang belum di-action.
+      // Unit yang sudah di-action otomatis masuk ke menu Riwayat Selesai.
       let jobs = state.watertruckState.jobs.filter(j => {
         const matchCat = (j.cat === activeCat);
         const matchDate = (j.tanggal === selectedDate || (!j.tanggal && selectedDate === '2026-09-27'));
-        if (isAdmin) {
-          return matchCat && matchDate;
-        } else {
-          const isQueueActive = (j.status === 'scheduled') || (j.status === 'pending') || j.isPending;
-          return matchCat && matchDate && isQueueActive;
-        }
+        const s = String(j.status || '').toLowerCase().trim();
+        const isActioned = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) || (j.status_final !== undefined && j.status_final !== null && String(j.status_final).trim() !== '');
+        const isQueueActive = ((s === 'scheduled') || (s === 'pending') || Boolean(j.isPending)) && !isActioned;
+        return matchCat && matchDate && isQueueActive;
       });
 
       if (clusterFilter !== 'ALL') {
@@ -15828,7 +15930,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                 <th class="hidden md:table-cell py-1.5 px-2 w-[7%] text-center">DURASI</th>
                 <th class="hidden md:table-cell py-1.5 px-2 w-[5%] text-center">FOTO</th>
                 <th class="hidden md:table-cell py-1.5 px-2 w-[12%]">TEMUAN / KENDALA</th>
-                <th class="py-1.5 px-1.5 w-[22%] md:w-[9%] text-center">AKSI / STATUS</th>
+                ${!isAdmin ? '<th class="py-1.5 px-1.5 w-[22%] md:w-[9%] text-center">AKSI / STATUS</th>' : ''}
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -15836,7 +15938,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
           const tbody = table.querySelector('tbody');
           if (clusterJobs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="10" class="py-5 text-center text-slate-400 italic text-[11px]">
+            tbody.innerHTML = `<tr><td colspan="${state.isWtSchedSelectMode ? (isAdmin ? 10 : 11) : (isAdmin ? 9 : 10)}" class="py-5 text-center text-slate-400 italic text-[11px]">
               <div>${isAdmin ? `Belum ada unit washing yang dijadwalkan untuk tanggal ${selectedDate}.` : `Tidak ada jadwal unit untuk tanggal ${selectedDate}`}</div>
 ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahkan.</span>` : ''}
             </td></tr>`;
@@ -15879,9 +15981,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                   <span class="inline-block px-1.5 py-0.5 rounded bg-slate-100 font-mono font-bold text-slate-600">${job.fotos ? job.fotos.length : 0}/4</span>
                 </td>
                 <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-500 break-words">${formatKendalaText(job.keterangan)}</td>
+                ${!isAdmin ? `
                 <td class="py-1 px-1.5 md:py-1.5 md:px-2 text-center">
                   ${renderJobActionCell(job)}
                 </td>
+                ` : ''}
               `;
               tbody.appendChild(tr);
             });
@@ -16001,7 +16105,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                   <th class="hidden md:table-cell py-1.5 px-2 w-[7%] text-center">DURASI</th>
                   <th class="hidden md:table-cell py-1.5 px-2 w-[5%] text-center">FOTO</th>
                   <th class="hidden md:table-cell py-1.5 px-2 w-[12%]">TEMUAN / KENDALA</th>
-                  <th class="py-1.5 px-2 w-[18%] md:w-[9%] text-center">AKSI / STATUS</th>
+                  ${!isAdmin ? '<th class="py-1.5 px-2 w-[18%] md:w-[9%] text-center">AKSI / STATUS</th>' : ''}
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -16009,7 +16113,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
             const tbody = table.querySelector('tbody');
             if (clusterJobs.length === 0) {
-              tbody.innerHTML = `<tr><td colspan="10" class="py-4 text-center text-slate-400 italic text-[11px]">
+              tbody.innerHTML = `<tr><td colspan="${state.isWtSchedSelectMode ? (isAdmin ? 10 : 11) : (isAdmin ? 9 : 10)}" class="py-4 text-center text-slate-400 italic text-[11px]">
                 <div>${isAdmin ? `Belum ada jadwal ${round.title.toLowerCase()} untuk tanggal ${selectedDate}.` : `Tidak ada jadwal unit untuk tanggal ${selectedDate}`}</div>
 ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahkan.</span>` : ''}
               </td></tr>`;
@@ -16052,9 +16156,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                     <span class="inline-block px-1.5 py-0.5 rounded bg-slate-100 font-mono font-bold text-slate-600">${job.fotos ? job.fotos.length : 0}/4</span>
                   </td>
                   <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-500 break-words">${formatKendalaText(job.keterangan)}</td>
+                  ${!isAdmin ? `
                   <td class="py-1 px-1.5 md:py-1.5 md:px-2 text-center">
                     ${renderJobActionCell(job)}
                   </td>
+                  ` : ''}
                 `;
                 tbody.appendChild(tr);
               });
@@ -16951,28 +17057,12 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         const d = document.getElementById('lt-filter-date')?.value || today;
         state.lubetruckState.filterDate = d;
         renderLtScheduleTable();
-
-        // On-Demand Archive Fetch jika tanggal yang dipilih belum dicache di memori RAM
-        if (d && !window.globalDataCache?.loadedDates?.has(d)) {
-          if (typeof fetchArchiveJobsOnDemand === 'function') {
-            fetchArchiveJobsOnDemand(d, d).then(() => {
-              renderLtScheduleTable();
-            });
-          }
-        }
+        if (typeof ensureJobsForDate === 'function') ensureJobsForDate(d);
       } else if (prefix === 'wt') {
         const d = document.getElementById('wt-filter-date')?.value || today;
         state.watertruckState.filterDate = d;
         renderWtScheduleTable();
-
-        // On-Demand Archive Fetch jika tanggal yang dipilih belum dicache di memori RAM
-        if (d && !window.globalDataCache?.loadedDates?.has(d)) {
-          if (typeof fetchArchiveJobsOnDemand === 'function') {
-            fetchArchiveJobsOnDemand(d, d).then(() => {
-              renderWtScheduleTable();
-            });
-          }
-        }
+        if (typeof ensureJobsForDate === 'function') ensureJobsForDate(d);
       }
     }
 
@@ -19224,14 +19314,15 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       const isPending = (s === 'pending' || job.isPending);
       const isAdmin = (state.currentUser?.role === 'admin');
 
-      // Khusus Akses Admin: Tombol Action hanya berupa teks/badge statis saja tanpa aksi / tidak memunculkan pop-up penyelesaian tugas (khusus MP)
+      // Khusus Akses Admin: Sediakan tombol Hapus Cepat langsung di tabel + indikator status
       if (isAdmin) {
         return `
-          <div class="flex flex-col items-center justify-center gap-0.5 select-none pointer-events-none">
-            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-extrabold tracking-wider uppercase cursor-default opacity-90 shadow-2xs">
-              ACTION
-            </span>
-            ${isPending ? '<span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">PENDING</span>' : ''}
+          <div class="flex items-center justify-center gap-1.5">
+            <button type="button" onclick="event.stopPropagation(); promptDeleteJob('${job.id}')" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 hover:border-rose-600 text-[10px] font-extrabold transition shadow-2xs cursor-pointer flex items-center space-x-1 active:scale-95" title="Hapus Penugasan Unit Ini">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              <span>Hapus</span>
+            </button>
+            ${isPending ? '<span class="inline-block px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">PENDING</span>' : ''}
           </div>
         `;
       }
@@ -20494,11 +20585,12 @@ Oilman 1 & 2 : ${oilman}`;
           } else {
             delBtnFooter.setAttribute('title', 'Hapus Penugasan / Jadwal Unit (Khusus Admin)');
             delBtnFooter.innerHTML = `
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
               </svg>
+              <span>Hapus Jadwal Unit</span>
             `;
-            delBtnFooter.className = 'p-2 rounded-xl text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 hover:border-rose-600 transition cursor-pointer shadow-2xs flex items-center justify-center';
+            delBtnFooter.className = 'px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition cursor-pointer shadow-2xs flex items-center justify-center';
           }
         } else {
           delBtnFooter.classList.add('hidden');
@@ -20896,38 +20988,62 @@ Oilman 1 & 2 : ${oilman}`;
       const job = findJobById(deletedId);
       const noLambung = job ? job.noLambung : '';
 
+      // Helper kecocokan baris untuk pembersihan bersih lokal & cloud (hapus seluruh baris unit pada tanggal tersebut)
+      const isTargetMatch = (j) => {
+        if (!j) return false;
+        if (String(j.id) === deletedId) return true;
+        if (job && job.noLambung && j.noLambung && String(j.noLambung).trim().toUpperCase() === String(job.noLambung).trim().toUpperCase()) {
+          const sameDate = (j.tanggal && job.tanggal && j.tanggal === job.tanggal);
+          if (sameDate) return true;
+        }
+        return false;
+      };
+
       // 1. Hapus dari seluruh state lokal (Lubetruck, Watertruck, Job Requests, dan Job History)
       ['unscheduledLtJobs', 'unscheduledWtJobs'].forEach(k => {
-        if (state[k]) state[k] = state[k].filter(j => String(j.id) !== deletedId);
+        if (state[k]) state[k] = state[k].filter(j => !isTargetMatch(j));
       });
       if (state.lubetruckState?.jobs) {
-        state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => String(j.id) !== deletedId);
+        state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => !isTargetMatch(j));
       }
       if (state.watertruckState?.jobs) {
-        state.watertruckState.jobs = state.watertruckState.jobs.filter(j => String(j.id) !== deletedId);
+        state.watertruckState.jobs = state.watertruckState.jobs.filter(j => !isTargetMatch(j));
       }
       if (Array.isArray(state.jobHistory)) {
         state.jobHistory = state.jobHistory.filter(h => String(h.job_id || h.id) !== deletedId);
       }
 
-      // 2. Tutup modal konfirmasi dan modal detail job
+      // 2. Hapus bersih dari RAM cache agar saat F5/refresh data tidak pernah muncul lagi
+      if (window.globalDataCache) {
+        if (window.globalDataCache.jobs) {
+          window.globalDataCache.jobs.delete(deletedId);
+          for (const [k, v] of window.globalDataCache.jobs.entries()) {
+            if (isTargetMatch(v)) window.globalDataCache.jobs.delete(k);
+          }
+        }
+        if (window.globalDataCache.orderRequests) {
+          window.globalDataCache.orderRequests.delete(deletedId);
+          for (const [k, v] of window.globalDataCache.orderRequests.entries()) {
+            if (isTargetMatch(v)) window.globalDataCache.orderRequests.delete(k);
+          }
+        }
+      }
+
+      // 3. Tutup modal konfirmasi dan modal detail job
       toggleModal('modal-confirm-delete-job', false);
       toggleModal('modal-job-detail', false);
 
-      // 3. Simpan state lokal dan hapus dari Supabase
+      // 4. Simpan state lokal dan perbarui LocalStorage anti QuotaExceededError
       saveDatabaseSync();
-      if (typeof deleteJobFromSupabase === 'function') {
-        await deleteJobFromSupabase(deletedId);
-      }
-
-      // Hapus bersih dari RAM cache agar saat refresh data tidak muncul lagi
-      if (window.globalDataCache) {
-        if (window.globalDataCache.jobs) window.globalDataCache.jobs.delete(deletedId);
-        if (window.globalDataCache.orderRequests) window.globalDataCache.orderRequests.delete(deletedId);
-      }
       if (typeof safeSaveTrimmedJobsToStorage === 'function') {
         safeSaveTrimmedJobsToStorage();
       }
+
+      // 5. Hapus secara tuntas dari Supabase Cloud
+      if (typeof deleteJobFromSupabase === 'function') {
+        await deleteJobFromSupabase(deletedId, job);
+      }
+
       if (typeof notifyDataChanged === 'function') {
         notifyDataChanged({ source: 'delete_job', deletedJobId: deletedId });
       }
@@ -21790,7 +21906,13 @@ Oilman 1 & 2 : ${oilman}`;
           monthlyJobs.forEach(nj => {
             if (existingIds.has(nj.id)) {
               const idx = targetArray.findIndex(item => item.id === nj.id);
-              if (idx !== -1) targetArray[idx] = nj;
+              if (idx !== -1) {
+                const existingJob = targetArray[idx];
+                if (typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(existingJob)) {
+                  return; // JANGAN timpa job yang sudah selesai/terkunci
+                }
+                targetArray[idx] = nj;
+              }
             } else {
               targetArray.push(nj);
             }
@@ -21800,14 +21922,19 @@ Oilman 1 & 2 : ${oilman}`;
 
           // Kirim batch sekaligus ke Supabase (1 request atomic) agar tidak gagal/drop di perangkat lain
           if (state.supabaseClient && monthlyJobs.length > 0) {
-            const batchRows = monthlyJobs.map(job => {
+            const batchRows = [];
+            monthlyJobs.forEach(job => {
               const targetId = String(job.id);
+              const existingJob = targetArray.find(item => String(item.id) === targetId);
+              if (existingJob && typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(existingJob)) {
+                return; // Lewati dari batch scheduled agar status selesai di Supabase tidak tertimpa
+              }
               const isSchWt = (targetId.startsWith('WT-SCH') || targetId.startsWith('WTJ') || job.targetType === 'WT' || (job.wtUnit && job.wtUnit !== '-') || ['coal', 'rom', 'non_coal'].includes(job.cat));
               const isSchLt = (targetId.startsWith('LT-SCH') || targetId.startsWith('LTJ') || job.targetType === 'LT' || ['small', 'digger', 'aircleaner', 'topup'].includes(job.cat));
               const isUnschWt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-WT') || ((targetId.startsWith('UNS-') || targetId.startsWith('UNS_') || job.cat === 'unscheduled') && (job.serviceType === 'watertruck' || job.targetType === 'WT')));
               const isUnschLt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-LT') || ((targetId.startsWith('UNS-') || targetId.startsWith('UNS_') || job.cat === 'unscheduled') && (job.serviceType === 'lubetruck' || job.targetType === 'LT')));
               const isWtRow = isSchWt || isUnschWt;
-              return {
+              batchRows.push({
                 id: targetId,
                 job_type: isSchWt ? 'sch_wt' : isSchLt ? 'sch_lt' : isUnschWt ? 'unsch_wt' : isUnschLt ? 'unsch_lt' : (isWtRow ? 'sch_wt' : 'sch_lt'),
                 cat: job.cat || (isUnschWt || isUnschLt ? 'unscheduled' : (isWtRow ? 'coal' : 'small')),
@@ -21834,12 +21961,14 @@ Oilman 1 & 2 : ${oilman}`;
                 pemesan: job.namaPemesan || job.pemesan || '',
                 kondisi: job.kondisi || '',
                 updated_at: new Date().toISOString()
-              };
+              });
             });
-            state.supabaseClient.from('jobs').upsert(batchRows, { onConflict: 'id' }).then(({ error }) => {
-              if (error) console.warn('[Supabase Batch Schedule Error]', error.message);
-              else console.log(`[Supabase Batch Schedule OK] ${batchRows.length} jobs tersinkronisasi.`);
-            });
+            if (batchRows.length > 0) {
+              state.supabaseClient.from('jobs').upsert(batchRows, { onConflict: 'id' }).then(({ error }) => {
+                if (error) console.warn('[Supabase Batch Schedule Error]', error.message);
+                else console.log(`[Supabase Batch Schedule OK] ${batchRows.length} jobs tersinkronisasi.`);
+              });
+            }
           }
           toggleModal('modal-add-job', false);
           showToast(`Jadwal 1 bulan penuh (${monthlyJobs.length} hari penugasan) berhasil dibentuk untuk unit ${noLambung}!`, 'success');
@@ -26941,13 +27070,43 @@ Oilman 1 & 2 : ${oilman}`;
       }
     }
 
-    async function deleteJobFromSupabase(jobId) {
+    async function deleteJobFromSupabase(jobId, jobRef = null) {
       if (!state.supabaseClient || !jobId) return;
       try {
         const cleanJobId = String(jobId);
-        await state.supabaseClient.from('jobs').delete().eq('id', cleanJobId);
-        await state.supabaseClient.from('order_requests').delete().or('id.eq.' + cleanJobId + ',kode_order.eq.' + cleanJobId);
-        console.log('[Supabase Outbound Job Deleted]', jobId);
+        const job = jobRef || findJobById(cleanJobId);
+
+        // 1. Hapus berdasarkan primary key ID
+        const { error: errJob } = await state.supabaseClient.from('jobs').delete().eq('id', cleanJobId);
+        if (errJob) {
+          console.warn('[Supabase Delete Job Error by ID]:', errJob.message);
+        }
+
+        // 2. Hapus seluruh baris di Supabase yang cocok dengan unit & tanggal (tanpa membatasi shift)
+        if (job && job.noLambung && job.tanggal) {
+          const cleanLambung = String(job.noLambung).trim().toUpperCase();
+          const { error: errRel } = await state.supabaseClient.from('jobs').delete()
+            .eq('no_lambung', cleanLambung)
+            .eq('tanggal', job.tanggal);
+          if (errRel) console.warn('[Supabase Delete Job Error by Relation]:', errRel.message);
+        }
+
+        // 3. Hapus juga dari order_requests jika merupakan order request
+        const { error: errOrder } = await state.supabaseClient.from('order_requests').delete().or('id.eq.' + cleanJobId + ',kode_order.eq.' + cleanJobId);
+        if (errOrder) console.warn('[Supabase Delete Order Error]:', errOrder.message);
+
+        console.log('[Supabase Outbound Job Deleted OK]', cleanJobId);
+
+        // 4. Pancarkan event Realtime Broadcast Instan (0 ms latency) agar semua perangkat tersinkronisasi
+        if (realtimeChannel && typeof realtimeChannel.send === 'function') {
+          try {
+            realtimeChannel.send({
+              type: 'broadcast',
+              event: 'JOB_DELETED',
+              payload: { id: cleanJobId, noLambung: job?.noLambung, tanggal: job?.tanggal }
+            }).catch(() => { });
+          } catch (eBc) { }
+        }
       } catch (err) {
         console.warn('[Supabase Outbound Delete Job Exception]', err);
       }
@@ -27537,11 +27696,11 @@ Oilman 1 & 2 : ${oilman}`;
     function getHotWindowRange() {
       const todayStr = getEffectiveTodayString();
       const dStart = new Date(todayStr);
-      dStart.setDate(dStart.getDate() - 14);
+      dStart.setDate(dStart.getDate() - 5); // 5 hari ke belakang
       const startDate = dStart.toISOString().split('T')[0];
 
       const dEnd = new Date(todayStr);
-      dEnd.setDate(dEnd.getDate() + 7);
+      dEnd.setDate(dEnd.getDate() + 3); // 3 hari ke depan (hari ini, besok H+1, lusa H+2, H+3)
       const endDate = dEnd.toISOString().split('T')[0];
 
       return { startDate, endDate, todayStr };
@@ -27554,14 +27713,14 @@ Oilman 1 & 2 : ${oilman}`;
         const { startDate, endDate, todayStr } = getHotWindowRange();
         console.log(`[Supabase Hot-Window Fetch] Memuat rentang aktif: ${startDate} s/d ${endDate} (Hari ini: ${todayStr})...`);
 
-        // Query 1: Data dalam rentang aktif (14 hari lalu s/d 7 hari ke depan)
+        // Query 1: Data dalam rentang operasional aktif (H-5 s/d H+3) urut tanggal terdekat, kapasitas hingga 1.000 baris
         const { data: recentJobs, error: errA } = await state.supabaseClient
           .from('jobs')
           .select('*')
           .gte('tanggal', startDate)
           .lte('tanggal', endDate)
-          .order('tanggal', { ascending: false })
-          .limit(300);
+          .order('tanggal', { ascending: true })
+          .limit(1000);
 
         if (errA) console.warn('[Supabase Hot-Window Error recentJobs]:', errA.message);
 
@@ -27587,18 +27746,11 @@ Oilman 1 & 2 : ${oilman}`;
         combinedJobs.forEach(row => {
           const jobObj = mapSupabaseJobRowToModel(row);
           if (jobObj && jobObj.id) {
-            window.globalDataCache.jobs.set(String(jobObj.id), jobObj);
+            const sid = String(jobObj.id);
+            window.globalDataCache.jobs.set(sid, jobObj);
             if (jobObj.tanggal) window.globalDataCache.loadedDates.add(jobObj.tanggal);
           }
         });
-
-        // Tandai seluruh tanggal dalam rentang Hot-Window sebagai sudah dicache di RAM
-        let curD = new Date(startDate);
-        const endD = new Date(endDate);
-        while (curD <= endD) {
-          window.globalDataCache.loadedDates.add(curD.toISOString().split('T')[0]);
-          curD.setDate(curD.getDate() + 1);
-        }
 
         // Query 3: Order Requests dalam rentang aktif & yang masih Pending
         const { data: supaOrders, error: errOrders } = await state.supabaseClient
@@ -27840,6 +27992,12 @@ Oilman 1 & 2 : ${oilman}`;
           console.log('[Supabase Realtime Broadcast] Mutasi order diterima instan (0 ms):', payload.payload?.order?.id);
           if (payload.payload?.order) {
             handleRealtimeOrderChange({ eventType: 'UPDATE', new: payload.payload.order });
+          }
+        })
+        .on('broadcast', { event: 'JOB_DELETED' }, (payload) => {
+          console.log('[Supabase Realtime Broadcast] Penghapusan job diterima instan (0 ms):', payload.payload?.id);
+          if (payload.payload?.id) {
+            handleRealtimeJobChange({ eventType: 'DELETE', old: { id: payload.payload.id }, deletedId: payload.payload.id });
           }
         })
         // JALUR 2: Postgres Changes Replication (Konsistensi mutasi database)
@@ -29942,7 +30100,14 @@ Oilman 1 & 2 : ${oilman}`;
         state.lubetruckState.jobs = toKeep;
       }
 
-      // Hapus dari Supabase secara batch
+      // Hapus dari Supabase secara batch dan bersihkan cache RAM & LocalStorage
+      if (window.globalDataCache?.jobs) {
+        toDelete.forEach(j => {
+          window.globalDataCache.jobs.delete(String(j.id));
+        });
+      }
+      safeSaveTrimmedJobsToStorage();
+
       if (state.supabaseClient) {
         const ids = toDelete.map(j => String(j.id));
         try {
@@ -30121,6 +30286,14 @@ Oilman 1 & 2 : ${oilman}`;
       } else {
         state.lubetruckState.jobs = toKeep;
       }
+
+      // Bersihkan dari cache RAM & LocalStorage agar saat F5 tidak kembali
+      if (window.globalDataCache?.jobs) {
+        deleteIds.forEach(id => {
+          window.globalDataCache.jobs.delete(String(id));
+        });
+      }
+      safeSaveTrimmedJobsToStorage();
 
       // Sinkronisasi hapus ke Supabase
       if (state.supabaseClient) {
