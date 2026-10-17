@@ -19684,7 +19684,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       // Master Data TTL Cache (12 Jam)
       const savedRosterTs = Number(safeStorage.getItem('SE_MASTER_ROSTER_TS') || 0);
       const isRosterFresh = (Date.now() - savedRosterTs) < MASTER_DATA_TTL_MS;
-      if (!force && !periodFilter && isRosterFresh && Array.isArray(state.masterRoster) && state.masterRoster.length > 0) {
+      if (!force && !periodFilter && (isRosterFresh || (Array.isArray(state.masterRoster) && state.masterRoster.length > 0))) {
         console.log('[Supabase Cache TTL] Master Roster fresh dari cache lokal (TTL 12 Jam):', state.masterRoster.length, 'jadwal');
         return true;
       }
@@ -19835,9 +19835,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             // Simpan cache lokal aman dari QuotaExceededError
             try {
               safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster));
+              safeStorage.setItem('SE_MASTER_ROSTER_TS', String(Date.now()));
             } catch (e) {
               try {
                 safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster.slice(0, 1000)));
+                safeStorage.setItem('SE_MASTER_ROSTER_TS', String(Date.now()));
               } catch (e2) { }
             }
 
@@ -26510,7 +26512,7 @@ Oilman 1 & 2 : ${oilman}`;
       // Master Data TTL Cache (12 Jam)
       const savedUnitsTs = Number(safeStorage.getItem('SE_MASTER_UNITS_TS') || 0);
       const isUnitsCacheFresh = (Date.now() - savedUnitsTs) < MASTER_DATA_TTL_MS;
-      if (!force && isUnitsCacheFresh && Array.isArray(state.masterUnits) && state.masterUnits.length > 8) {
+      if (!force && (isUnitsCacheFresh || (Array.isArray(state.masterUnits) && state.masterUnits.length > 8))) {
         state._unitsLoadedFromSupabase = true;
         console.log('[Supabase Cache TTL] Master Units fresh dari cache lokal (TTL 12 Jam):', state.masterUnits.length, 'unit');
         return true;
@@ -26574,6 +26576,7 @@ Oilman 1 & 2 : ${oilman}`;
           state.masterUnits = formatted;
           state._unitsLoadedFromSupabase = true;
           safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+          safeStorage.setItem('SE_MASTER_UNITS_TS', String(Date.now()));
 
           if (typeof alignJobsWithMasterUnits === 'function') {
             alignJobsWithMasterUnits();
@@ -26587,9 +26590,6 @@ Oilman 1 & 2 : ${oilman}`;
           }
           if (state.activeTab === 'dashboard' && typeof renderDashboardAchievementChart === 'function') {
             renderDashboardAchievementChart(state.dashboardSelectedCategory || 'ALL');
-          }
-          if (typeof loadAirCleanerFromSupabase === 'function') {
-            loadAirCleanerFromSupabase();
           }
 
           console.log(`[Supabase Units OK] Sukses memuat ${formatted.length} unit populasi lapangan.`);
@@ -27006,8 +27006,15 @@ Oilman 1 & 2 : ${oilman}`;
       }
     }
 
-    async function loadAirCleanerFromSupabase() {
+    async function loadAirCleanerFromSupabase(force = false) {
       if (!state.supabaseClient) return;
+      // Master Data TTL Cache (12 Jam)
+      const savedAcTs = Number(safeStorage.getItem('SE_AIR_CLEANER_TS') || 0);
+      const isAcFresh = (Date.now() - savedAcTs) < MASTER_DATA_TTL_MS;
+      if (!force && isAcFresh && Array.isArray(state.airCleanerMonitor) && state.airCleanerMonitor.length > 0) {
+        console.log('[Supabase Cache TTL] Air Cleaner fresh dari cache lokal (TTL 12 Jam):', state.airCleanerMonitor.length, 'unit');
+        return;
+      }
       try {
         const { data, error } = await state.supabaseClient
           .from('air_cleaner_monitoring')
@@ -27106,6 +27113,7 @@ Oilman 1 & 2 : ${oilman}`;
 
         // Update cache lokal yang bersih
         safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(state.airCleanerMonitor));
+        safeStorage.setItem('SE_AIR_CLEANER_TS', String(Date.now()));
 
         if (typeof renderAirCleanerMonitorTable === 'function') {
           renderAirCleanerMonitorTable();
@@ -27553,7 +27561,7 @@ Oilman 1 & 2 : ${oilman}`;
           .gte('tanggal', startDate)
           .lte('tanggal', endDate)
           .order('tanggal', { ascending: false })
-          .limit(1500);
+          .limit(300);
 
         if (errA) console.warn('[Supabase Hot-Window Error recentJobs]:', errA.message);
 
@@ -27563,7 +27571,7 @@ Oilman 1 & 2 : ${oilman}`;
           .select('*')
           .or('is_pending.eq.true,status.eq.scheduled,status.eq.pending,status.eq.open,status.eq.in_progress')
           .lt('tanggal', startDate)
-          .limit(500);
+          .limit(200);
 
         if (errB) console.warn('[Supabase Hot-Window Error pendingJobs]:', errB.message);
 
@@ -27598,7 +27606,7 @@ Oilman 1 & 2 : ${oilman}`;
           .select('*')
           .or(`tanggal.gte.${startDate},status.eq.Pending`)
           .order('tanggal', { ascending: false })
-          .limit(500);
+          .limit(100);
 
         if (errOrders) console.warn('[Supabase Hot-Window Error order_requests]:', errOrders.message);
 
@@ -27878,7 +27886,6 @@ Oilman 1 & 2 : ${oilman}`;
 
     // RELAXED BACKGROUND POLLING (120 DETIK) & THROTTLED FOCUS
     let _relaxedPollingTimer = null;
-    let _activeQueueVerifyTimer = null;
 
     function startRelaxedBackgroundPolling() {
       if (_relaxedPollingTimer) clearInterval(_relaxedPollingTimer);
@@ -27890,56 +27897,19 @@ Oilman 1 & 2 : ${oilman}`;
 
           const now = Date.now();
           const lastFetch = window.globalDataCache?.lastFetchTime || 0;
-          if (now - lastFetch < 60000) return;
+          if (now - lastFetch < 120000) return;
 
-          console.log('[Relaxed Polling] Menjalankan Hot-Window sync berkala (120s)...');
+          // Jika WebSocket tersambung prima, biarkan Realtime murni bekerja tanpa REST Egress
+          if (isRealtimeSubscribed && realtimeChannel && realtimeChannel.state === 'joined') {
+            return;
+          }
+
+          console.log('[Relaxed Polling] Menjalankan Hot-Window sync cadangan (120s)...');
           await loadJobsFromSupabase();
         } catch (e) {
           console.warn('[Relaxed Polling Error]', e);
         }
       }, 120000); // 120 detik
-
-      // SMART ACTIVE QUEUE VERIFIER (20 detik):
-      // Jika di layar ada pekerjaan aktif yang belum diselesaikan (status: scheduled / pending),
-      // lakukan pengecekan status silent berbobot sangat ringan (< 1 KB) untuk memastikan
-      // status di layar Admin PASTI langsung berubah menjadi ACH meskipun WebSocket sempat silent-drop.
-      if (_activeQueueVerifyTimer) clearInterval(_activeQueueVerifyTimer);
-      _activeQueueVerifyTimer = setInterval(async () => {
-        try {
-          if (document.hidden || document.visibilityState !== 'visible') return;
-          if (!state.supabaseClient) return;
-
-          // Cek apakah ada unit yang masih berstatus scheduled di jadwal hari ini
-          const activeJobsToday = (state.lubetruckState?.jobs || []).concat(state.watertruckState?.jobs || []).filter(j =>
-            j.status === 'scheduled' || j.status === 'pending' || j.isPending
-          );
-
-          if (activeJobsToday.length === 0) return;
-
-          const targetIds = activeJobsToday.map(j => String(j.id)).slice(0, 50);
-          const { data, error } = await state.supabaseClient
-            .from('jobs')
-            .select('id, status, armada_unit, opt_name, mp1, mp2, jam_start, jam_end, durasi, keterangan, service_notes, is_pending, unit_condition')
-            .in('id', targetIds);
-
-          if (!error && Array.isArray(data)) {
-            let hasChanged = false;
-            data.forEach(row => {
-              const localJob = activeJobsToday.find(j => String(j.id) === String(row.id));
-              if (localJob && row.status && row.status !== localJob.status) {
-                console.log(`[Smart Queue Verifier] Deteksi perubahan status instan: ${localJob.noLambung} (${localJob.status} -> ${row.status})`);
-                handleRealtimeJobChange({ eventType: 'UPDATE', new: row });
-                hasChanged = true;
-              }
-            });
-            if (hasChanged) {
-              debouncedRefreshUI();
-            }
-          }
-        } catch (eQueue) {
-          // Silent ignore
-        }
-      }, 20000); // 20 detik
     }
     window.startRelaxedBackgroundPolling = startRelaxedBackgroundPolling;
 
@@ -27947,24 +27917,28 @@ Oilman 1 & 2 : ${oilman}`;
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden && state.supabaseClient) {
           if (!realtimeChannel || realtimeChannel.state !== 'joined') {
-            console.log('[Realtime DB] Tab aktif kembali, memastikan WebSocket terhubung...');
+            console.log('[Realtime DB] Tab aktif kembali & WebSocket terputus, menyambungkan ulang...');
             setupSupabaseRealtimeListener();
-          }
-          const now = Date.now();
-          const lastFetch = window.globalDataCache?.lastFetchTime || 0;
-          if (now - lastFetch >= 60000) {
-            console.log('[Visibility Throttle] Tab aktif setelah >60 detik, sinkronisasi Hot-Window...');
-            loadJobsFromSupabase();
+            const now = Date.now();
+            const lastFetch = window.globalDataCache?.lastFetchTime || 0;
+            if (now - lastFetch >= 60000) {
+              console.log('[Visibility Throttle] Sinkronisasi Hot-Window setelah reconnect...');
+              loadJobsFromSupabase();
+            }
           }
         }
       });
       window.addEventListener('focus', () => {
         if (state.supabaseClient) {
-          const now = Date.now();
-          const lastFetch = window.globalDataCache?.lastFetchTime || 0;
-          if (now - lastFetch >= 60000) {
-            console.log('[Focus Throttle] Window focus setelah >60 detik, sinkronisasi Hot-Window...');
-            loadJobsFromSupabase();
+          // Hanya fetch jika koneksi WebSocket terputus untuk menghemat 100% egress saat fokus
+          if (!realtimeChannel || realtimeChannel.state !== 'joined') {
+            const now = Date.now();
+            const lastFetch = window.globalDataCache?.lastFetchTime || 0;
+            if (now - lastFetch >= 60000) {
+              console.log('[Focus Throttle] Window focus & WebSocket offline, sinkronisasi Hot-Window...');
+              setupSupabaseRealtimeListener();
+              loadJobsFromSupabase();
+            }
           }
         }
       });
@@ -27989,13 +27963,35 @@ Oilman 1 & 2 : ${oilman}`;
           const statusEl = document.getElementById('header-db-status');
           if (statusEl) statusEl.textContent = 'Online';
 
-          // Muat seluruh data master secara sinkron & paralel (Roster, Kontak 2000+, Armada, Unit, Jobs, Air Cleaner)
+          // Cek apakah data master sudah ada di cache lokal (Master Data TTL Cache)
+          const hasMasterUnits = Array.isArray(state.masterUnits) && state.masterUnits.length > 8;
+          const hasMasterRoster = Array.isArray(state.masterRoster) && state.masterRoster.length > 0;
+          const hasMasterArmada = Array.isArray(state.masterArmada) && state.masterArmada.length > 0;
+          const hasMasterOps = Array.isArray(state.masterOperators) && state.masterOperators.length > 0;
+          const hasMasterUsers = Array.isArray(state.masterUsers) && state.masterUsers.length > 0;
+          const hasAirCleaner = Array.isArray(state.airCleanerMonitor) && state.airCleanerMonitor.length > 0;
+
+          // HANYA tarik master data jika cache lokal benar-benar kosong (0 KB Egress saat startup biasa)
+          const masterLoadTasks = [];
+          if (!hasMasterUnits || !hasMasterArmada || !hasMasterOps || !hasMasterUsers) {
+            console.log('[Supabase Startup] Cache master belum lengkap, memuat data master dari Cloud...');
+            masterLoadTasks.push(typeof syncSupabaseMasterData === 'function' ? syncSupabaseMasterData(false) : Promise.resolve());
+          } else {
+            console.log('[Supabase Startup TTL Cache OK] Master Armada, Units, Kontak, Users dimuat dari LocalStorage (0 KB Egress)!');
+          }
+
+          if (!hasMasterRoster) {
+            masterLoadTasks.push(typeof loadRosterFromSupabase === 'function' ? loadRosterFromSupabase(null, false) : Promise.resolve());
+          }
+
+          if (!hasAirCleaner) {
+            masterLoadTasks.push(typeof loadAirCleanerFromSupabase === 'function' ? loadAirCleanerFromSupabase(false) : Promise.resolve());
+          }
+
+          // Muat transaksi aktif Hot-Window (14 hari) + master data jika cache kosong
           await Promise.allSettled([
-            loadRosterFromSupabase(),
-            (typeof syncSupabaseMasterData === 'function' ? syncSupabaseMasterData() : Promise.resolve()),
             (typeof loadJobsFromSupabase === 'function' ? loadJobsFromSupabase() : Promise.resolve()),
-            (typeof loadAirCleanerFromSupabase === 'function' ? loadAirCleanerFromSupabase() : Promise.resolve()),
-            (typeof loadUnitsFromSupabase === 'function' ? loadUnitsFromSupabase(false, false) : Promise.resolve())
+            ...masterLoadTasks
           ]);
 
           if (typeof alignJobsWithMasterUnits === 'function') {
@@ -28409,42 +28405,46 @@ Oilman 1 & 2 : ${oilman}`;
     async function syncSupabaseMasterData(force = false) {
       if (!state.supabaseClient) return;
 
-      // A. Sinkronisasi Data Master Armada (SELALU sinkron langsung dari Cloud Supabase tanpa terhalang TTL Cache)
-      // Memastikan setiap perubahan cluster/tipe armada di Supabase (misal WT2520 pindah ke Tengah) seketika aktif di web
-      try {
-        const supaArmada = await fetchEntireSupabaseTable('master_armada', '*', 'unit');
-        if (Array.isArray(supaArmada) && supaArmada.length > 0) {
-          state.masterArmada = supaArmada.map(a => ({
-            id: a.id || ('ARM-' + a.unit),
-            unit: a.unit,
-            typeUnit: a.type_unit || a.typeUnit || (String(a.unit).toUpperCase().startsWith('WT') ? 'Water Truck' : 'Lubetruck'),
-            cluster: (a.cluster || 'Selatan').replace(/^KGU\s+/i, '').trim(),
-            status: a.status || 'Aktif',
-            keterangan: a.keterangan || ''
-          }));
-          safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
-          if (typeof syncClusterAssignedFromMasterArmada === 'function') {
-            await syncClusterAssignedFromMasterArmada();
+      // A. Master Armada TTL Cache (12 Jam)
+      const savedArmadaTs = Number(safeStorage.getItem('SE_MASTER_ARMADA_TS') || 0);
+      const isArmadaFresh = (Date.now() - savedArmadaTs) < MASTER_DATA_TTL_MS;
+      if (force || !isArmadaFresh || !Array.isArray(state.masterArmada) || state.masterArmada.length === 0) {
+        try {
+          const supaArmada = await fetchEntireSupabaseTable('master_armada', '*', 'unit');
+          if (Array.isArray(supaArmada) && supaArmada.length > 0) {
+            state.masterArmada = supaArmada.map(a => ({
+              id: a.id || ('ARM-' + a.unit),
+              unit: a.unit,
+              typeUnit: a.type_unit || a.typeUnit || (String(a.unit).toUpperCase().startsWith('WT') ? 'Water Truck' : 'Lubetruck'),
+              cluster: (a.cluster || 'Selatan').replace(/^KGU\s+/i, '').trim(),
+              status: a.status || 'Aktif',
+              keterangan: a.keterangan || ''
+            }));
+            safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
+            safeStorage.setItem('SE_MASTER_ARMADA_TS', String(Date.now()));
+            if (typeof syncClusterAssignedFromMasterArmada === 'function') {
+              await syncClusterAssignedFromMasterArmada();
+            }
+            if (state.masterActiveSection === 'armada' && typeof renderMasterArmadaTable === 'function') {
+              renderMasterArmadaTable();
+            }
+            if (typeof renderManpowerDashboard === 'function') {
+              renderManpowerDashboard();
+            }
+            if (state.activeTab === 'lt-schedule' && typeof renderLtScheduleTable === 'function') {
+              renderLtScheduleTable();
+            }
+            if (state.activeTab === 'wt-schedule' && typeof renderWtScheduleTable === 'function') {
+              renderWtScheduleTable();
+            }
+            if (typeof debouncedRefreshUI === 'function') {
+              debouncedRefreshUI();
+            }
+            console.log('[Supabase Sync] Master Armada & Clusters tersinkronisasi lengkap:', supaArmada.length, 'unit');
           }
-          if (state.masterActiveSection === 'armada' && typeof renderMasterArmadaTable === 'function') {
-            renderMasterArmadaTable();
-          }
-          if (typeof renderManpowerDashboard === 'function') {
-            renderManpowerDashboard();
-          }
-          if (state.activeTab === 'lt-schedule' && typeof renderLtScheduleTable === 'function') {
-            renderLtScheduleTable();
-          }
-          if (state.activeTab === 'wt-schedule' && typeof renderWtScheduleTable === 'function') {
-            renderWtScheduleTable();
-          }
-          if (typeof debouncedRefreshUI === 'function') {
-            debouncedRefreshUI();
-          }
-          console.log('[Supabase Sync] Master Armada & Clusters tersinkronisasi lengkap:', supaArmada.length, 'unit');
+        } catch (armErr) {
+          console.warn('[Supabase Sync Master Armada Warning]', armErr);
         }
-      } catch (armErr) {
-        console.warn('[Supabase Sync Master Armada Warning]', armErr);
       }
 
       // Master Data TTL Cache (12 Jam) khusus untuk Kontak & Populasi Unit (ribuan baris)
@@ -28526,8 +28526,10 @@ Oilman 1 & 2 : ${oilman}`;
 
         safeStorage.setItem('SE_MASTER_DATA_TS', String(Date.now()));
 
-        // F. Sinkronisasi Master Roster langsung dari Supabase (terintegrasi dengan _rosterLoadPromise)
-        await loadRosterFromSupabase(null, force);
+        // F. Sinkronisasi Master Roster langsung dari Supabase HANYA jika force
+        if (force) {
+          await loadRosterFromSupabase(null, true);
+        }
       } catch (err) {
         console.warn('[Supabase Master Data Sync Exception]', err);
       }
@@ -29725,10 +29727,10 @@ Oilman 1 & 2 : ${oilman}`;
       showToast('Menyinkronkan data...', 'info');
       try {
         const results = await Promise.allSettled([
-          loadRosterFromSupabase(null, false),
+          loadRosterFromSupabase(null, true),
           (typeof syncSupabaseMasterData === 'function' ? syncSupabaseMasterData(true) : Promise.resolve()),
           (typeof loadJobsFromSupabase === 'function' ? loadJobsFromSupabase(true) : Promise.resolve()),
-          (typeof loadAirCleanerFromSupabase === 'function' ? loadAirCleanerFromSupabase() : Promise.resolve()),
+          (typeof loadAirCleanerFromSupabase === 'function' ? loadAirCleanerFromSupabase(true) : Promise.resolve()),
           loadUnitsFromSupabase(true, false)
         ]);
 
