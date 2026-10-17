@@ -2550,7 +2550,8 @@
           <div
             class="bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200/80 shadow-2xs mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3 text-xs">
             <!-- Filter Tanggal, Shift, dan Cluster: Di Mode HP di ATAS (order-1) Simetris 3 Kolom -->
-            <div id="lt-filter-grid" class="grid grid-cols-3 gap-1.5 sm:gap-2 w-full sm:w-auto order-1 sm:order-2 sm:flex sm:items-center">
+            <div id="lt-filter-grid"
+              class="grid grid-cols-3 gap-1.5 sm:gap-2 w-full sm:w-auto order-1 sm:order-2 sm:flex sm:items-center">
               <input type="date" id="lt-filter-date" onchange="handleDateFilterChange('lt')"
                 class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center transition">
               <div id="lt-filter-shift-wrapper" class="w-full sm:w-auto min-w-0">
@@ -2562,7 +2563,8 @@
                 </select>
               </div>
               <div class="w-full sm:w-auto min-w-0">
-                <select id="lt-filter-cluster" onchange="state.lubetruckState.hasManualClusterFilter = true; renderLtScheduleTable()"
+                <select id="lt-filter-cluster"
+                  onchange="state.lubetruckState.hasManualClusterFilter = true; renderLtScheduleTable()"
                   class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center truncate cursor-pointer transition">
                   <option value="ALL">All Cluster</option>
                   <optgroup label="Cluster Utama">
@@ -2705,7 +2707,8 @@
           <div
             class="bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200/80 shadow-2xs mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3 text-xs">
             <!-- Filter Tanggal, Shift, dan Cluster: Di Mode HP di ATAS (order-1) Simetris 3 Kolom -->
-            <div id="wt-filter-grid" class="grid grid-cols-3 gap-1.5 sm:gap-2 w-full sm:w-auto order-1 sm:order-2 sm:flex sm:items-center">
+            <div id="wt-filter-grid"
+              class="grid grid-cols-3 gap-1.5 sm:gap-2 w-full sm:w-auto order-1 sm:order-2 sm:flex sm:items-center">
               <input type="date" id="wt-filter-date" onchange="handleDateFilterChange('wt')"
                 class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center transition">
               <div id="wt-filter-shift-wrapper" class="w-full sm:w-auto min-w-0">
@@ -2717,7 +2720,8 @@
                 </select>
               </div>
               <div class="w-full sm:w-auto min-w-0">
-                <select id="wt-filter-cluster" onchange="state.watertruckState.hasManualClusterFilter = true; renderWtScheduleTable()"
+                <select id="wt-filter-cluster"
+                  onchange="state.watertruckState.hasManualClusterFilter = true; renderWtScheduleTable()"
                   class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center truncate cursor-pointer transition">
                   <option value="ALL">All Cluster</option>
                   <optgroup label="Cluster Utama">
@@ -9226,12 +9230,72 @@
     }
     window.getArmadaRegisteredCluster = getArmadaRegisteredCluster;
 
+    function resolveJobArmada(j) {
+      if (!j) return '';
+      const isWt = (j.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(j.cat) || String(j.id || '').includes('WT') || j.serviceType === 'watertruck');
+      const candidates = isWt
+        ? [j.wtUnit, j.unitWt, j.armada, j.armada_unit, j.armadaUnit, j.ltUnit, j.unit]
+        : [j.ltUnit, j.armada, j.armada_unit, j.armadaUnit, j.wtUnit, j.unitWt, j.unit];
+      for (const c of candidates) {
+        if (c && typeof c === 'string') {
+          const clean = c.trim().toUpperCase();
+          if (clean !== '' && clean !== '-' && !clean.startsWith('--')) {
+            return clean;
+          }
+        }
+      }
+      // Coba cari dari Roster berdasarkan opt_name / opt / mp1 pada tanggal & shift
+      if (Array.isArray(state.masterRoster) && state.masterRoster.length > 0 && (j.opt || j.opt_name || j.mp1)) {
+        const optName = String(j.opt || j.opt_name || '').toUpperCase().trim();
+        const mp1Name = String(j.mp1 || '').toUpperCase().trim();
+        const targetDate = j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : '');
+        const sShift = Number(j.shift || j.shift_rencana || 1);
+        const rMatch = state.masterRoster.find(r =>
+          (r.tanggal === targetDate || !r.tanggal) &&
+          (Number(r.shift) === sShift || !r.shift) &&
+          ((optName && optName !== '-' && String(r.nama || '').toUpperCase().trim() === optName) ||
+           (mp1Name && mp1Name !== '-' && String(r.nama || '').toUpperCase().trim() === mp1Name)) &&
+          (r.unitEfektif || r.unit) &&
+          r.unit !== 'SPARE' && r.unit !== '-'
+        );
+        if (rMatch) {
+          const matchedUnit = String(rMatch.unitEfektif || rMatch.unit || '').trim().toUpperCase();
+          if (matchedUnit && matchedUnit !== '-' && !matchedUnit.startsWith('--')) {
+            return matchedUnit;
+          }
+        }
+      }
+      // Fallback ke cluster assigned WT jika unit WT
+      if (isWt && state.clusterWtAssigned && j.cluster && state.clusterWtAssigned[j.cluster]) {
+        const firstAssigned = state.clusterWtAssigned[j.cluster].split(',')[0].trim().toUpperCase();
+        if (firstAssigned && firstAssigned !== '-') return firstAssigned;
+      }
+      return '';
+    }
+    window.resolveJobArmada = resolveJobArmada;
+
+    function isArmadaWaterTruck(armadaName) {
+      if (!armadaName) return false;
+      const clean = String(armadaName).trim().toUpperCase();
+      if (clean.startsWith('WT')) return true;
+      if (clean.startsWith('LT')) return false;
+      if (Array.isArray(state.masterArmada)) {
+        const found = state.masterArmada.find(a => String(a.unit || '').trim().toUpperCase() === clean);
+        if (found) {
+          const t = String(found.typeUnit || found.tipe || found.type_unit || '').toLowerCase();
+          return t.includes('water') || t.includes('wt');
+        }
+      }
+      return false;
+    }
+    window.isArmadaWaterTruck = isArmadaWaterTruck;
+
     function getCurrentUserAssignedUnitAndCluster(isWt) {
       const user = state.currentUser;
       if (!user) return { unit: '-', cluster: isWt ? 'Tengah' : 'Selatan' };
       const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().slice(0, 10);
       const allUserRosters = (state.masterRoster || []).filter(r =>
-        ((user.nrp && (String(r.nik).trim() === String(user.nrp).trim() || String(r.nrp).trim() === String(user.nrp).trim())) ||
+      ((user.nrp && (String(r.nik).trim() === String(user.nrp).trim() || String(r.nrp).trim() === String(user.nrp).trim())) ||
         (user.nama && r.nama && r.nama.toLowerCase().includes(user.nama.toLowerCase())))
       );
       const userRoster = allUserRosters.find(r => r.tanggal === today) || allUserRosters[0];
@@ -12040,8 +12104,8 @@
             pill.type = 'button';
             pill.onclick = () => selectQuickArmada(u);
             pill.className = `px-3 py-1.5 rounded-lg text-xs font-mono font-black transition cursor-pointer flex items-center space-x-1 ${isSelected
-                ? (isWt ? 'bg-cyan-600 text-white shadow-sm ring-2 ring-cyan-300' : 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300')
-                : (isWt ? 'bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200')
+              ? (isWt ? 'bg-cyan-600 text-white shadow-sm ring-2 ring-cyan-300' : 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300')
+              : (isWt ? 'bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200')
               }`;
             pill.innerHTML = `<span>+ ${u}</span>${isSelected ? '<span class="text-[9px] font-sans font-bold bg-white/20 px-1 rounded ml-1">Aktif</span>' : ''}`;
             pillsContainer.appendChild(pill);
@@ -12084,8 +12148,8 @@
           itemBtn.setAttribute('data-unit', u.toUpperCase());
           itemBtn.onclick = () => selectQuickArmada(u);
           itemBtn.className = `w-full flex items-center justify-between p-2.5 rounded-xl text-left transition text-xs font-mono font-bold quick-armada-item cursor-pointer ${isSelected
-              ? (isWt ? 'bg-cyan-100 text-cyan-950 font-black border border-cyan-300' : 'bg-emerald-100 text-emerald-950 font-black border border-emerald-300')
-              : 'hover:bg-slate-100 text-slate-800 border border-transparent'
+            ? (isWt ? 'bg-cyan-100 text-cyan-950 font-black border border-cyan-300' : 'bg-emerald-100 text-emerald-950 font-black border border-emerald-300')
+            : 'hover:bg-slate-100 text-slate-800 border border-transparent'
             }`;
           itemBtn.innerHTML = `
             <div class="flex items-center space-x-2">
@@ -16569,7 +16633,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       // Cari roster personil hari ini terlebih dahulu (targetDate = today)
       const targetRosterDate = today;
       const allUserRosters = (state.masterRoster || []).filter(r =>
-        ((user.nrp && (String(r.nik).trim() === String(user.nrp).trim() || String(r.nrp).trim() === String(user.nrp).trim())) ||
+      ((user.nrp && (String(r.nik).trim() === String(user.nrp).trim() || String(r.nrp).trim() === String(user.nrp).trim())) ||
         (user.nama && r.nama && r.nama.toLowerCase().includes(user.nama.toLowerCase())))
       );
       const userRoster = allUserRosters.find(r => r.tanggal === targetRosterDate) || allUserRosters[0];
@@ -17459,9 +17523,6 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       const unitType = document.getElementById('dash-armada-unit-filter')?.value || 'ALL';
       const clusterFilter = document.getElementById('dash-armada-cluster-filter')?.value || 'ALL';
-      const isLt = (unitType === 'LT');
-      const isWt = (unitType === 'WT');
-      const isAll = (unitType === 'ALL');
 
       const startInput = document.getElementById('dash-filter-start');
       const endInput = document.getElementById('dash-filter-end');
@@ -17472,43 +17533,21 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       const endDate = endInput?.value || currentDefWeek.endDate;
       const shiftFilter = shiftSelect?.value || 'ALL';
 
-      // Menggunakan fungsi sentral getArmadaRegisteredCluster global
-
-      const filterJobItem = (job) => {
-        const jobDate = job.tanggal || '2026-09-27';
-        if (jobDate < startDate || jobDate > endDate) return false;
-        if (shiftFilter !== 'ALL' && String(job.shift) !== String(shiftFilter)) return false;
-        if (clusterFilter !== 'ALL') {
-          // Prioritas filter cluster armada: Cek cluster master unit armada (misal LT2510 = Utara)
-          const armadaUnit = (job.ltUnit || job.armada || job.unitWt || job.unit || '').trim().toUpperCase();
-          const armadaMasterCluster = getArmadaRegisteredCluster(armadaUnit);
-          if (armadaMasterCluster) {
-            if (!isClusterMatchFilter(armadaMasterCluster, clusterFilter)) return false;
-          } else {
-            if (!isClusterMatchFilter(job.cluster, clusterFilter)) return false;
-          }
-        }
-        return true;
+      // Status selesai (ACH / DONE / SERVICE)
+      const isAchStatus = (j) => {
+        if (!j) return false;
+        const s = String(j.status_final || j.status || '').toLowerCase();
+        return s === 'ach' || s === 'achieved' || s === 'done' || s === 'service';
       };
 
-      let jobsPool = [];
-      if (unitType === 'ALL') {
-        jobsPool = [...(state.lubetruckState?.jobs || []), ...(state.watertruckState?.jobs || [])];
-      } else if (unitType === 'WT') {
-        jobsPool = state.watertruckState?.jobs || [];
-      } else {
-        jobsPool = state.lubetruckState?.jobs || [];
-      }
-      const filteredJobs = jobsPool.filter(filterJobItem);
-
-      // Helper durasi menit per job
+      // Helper durasi menit per job aktual
       const getJobDurationMins = (job) => {
         if (!job) return 0;
-        if (typeof job.durationMins === 'number' && !isNaN(job.durationMins)) return job.durationMins;
         if (typeof job.durasiMins === 'number' && !isNaN(job.durasiMins)) return job.durasiMins;
+        if (typeof job.durationMins === 'number' && !isNaN(job.durationMins)) return job.durationMins;
         if (typeof job.durasi === 'number' && !isNaN(job.durasi)) return job.durasi;
-        const start = job.jamStart || job.start;
-        const end = job.jamEnd || job.finish || job.end;
+        const start = job.jamStart || job.jam_start || job.start;
+        const end = job.jamEnd || job.jam_end || job.finish || job.end;
         if (!start || !end || start === '-' || end === '-') {
           if (job.waktu && String(job.waktu).includes('s/d')) {
             const parts = String(job.waktu).split('s/d');
@@ -17545,38 +17584,99 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         return diff;
       };
 
-      // Hitung job per armada: HANYA YANG TELAH DI-ACH / DISELESAIKAN TIM LAPANGAN!
+      // Gabungkan seluruh data job dari seluruh sumber (Lube, Water, Unscheduled, History)
+      const allCandidateJobs = [
+        ...(state.lubetruckState?.jobs || []),
+        ...(state.watertruckState?.jobs || []),
+        ...(state.unscheduledLtJobs || []),
+        ...(state.unscheduledWtJobs || []),
+        ...(Array.isArray(state.jobHistory) ? state.jobHistory.map(h => ({
+          id: h.job_id || h.id,
+          status: h.status_final || 'ach',
+          status_final: h.status_final,
+          cat: h.cat,
+          tanggal: h.tanggal_rencana,
+          tanggalRealisasi: h.tanggal_eksekusi,
+          tanggal_eksekusi: h.tanggal_eksekusi,
+          shift: h.shift_rencana,
+          waktu: h.waktu_rencana,
+          cluster: h.cluster,
+          lokasi: h.lokasi,
+          armada: h.armada_unit,
+          armada_unit: h.armada_unit,
+          opt: h.opt_name,
+          opt_name: h.opt_name,
+          mp1: h.mp1,
+          mp2: h.mp2,
+          jamStart: h.jam_start,
+          jamEnd: h.jam_end,
+          durasi: h.durasi
+        })) : [])
+      ];
+
       const armadaMap = {};
-      filteredJobs.forEach(j => {
-        const isAch = (j.status === 'ach' || j.status === 'done');
-        if (!isAch) return;
-        const armada = (j.ltUnit || j.armada || j.unitWt || j.unit || '').trim().toUpperCase();
-        if (armada && armada !== '-' && !armada.startsWith('--')) {
-          if (!armadaMap[armada]) {
-            armadaMap[armada] = { name: armada, count: 0, totalMins: 0 };
-          }
-          armadaMap[armada].count += 1;
-          armadaMap[armada].totalMins += getJobDurationMins(j);
+      const seenJobIds = new Set();
+
+      allCandidateJobs.forEach(j => {
+        if (!isAchStatus(j)) return;
+
+        const jId = String(j.id || j.job_id || '');
+        if (jId && seenJobIds.has(jId)) return;
+
+        // Filter Tanggal Realisasi / Eksekusi aktual
+        const jobDate = j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || '';
+        if (jobDate) {
+          if (startDate && jobDate < startDate) return;
+          if (endDate && jobDate > endDate) return;
         }
+
+        // Filter Shift
+        const sShift = String(j.shift || j.shift_rencana || '');
+        if (shiftFilter !== 'ALL' && sShift && sShift !== String(shiftFilter)) return;
+
+        // Ambil nama unit armada yang valid (LT / WT)
+        const armada = (typeof resolveJobArmada === 'function') ? resolveJobArmada(j) : ((j.armada || j.wtUnit || j.ltUnit || '').trim().toUpperCase());
+        if (!armada || armada === '-' || armada.startsWith('--')) return;
+
+        // Filter tipe armada: ALL, LT, WT
+        const isArmadaWt = (typeof isArmadaWaterTruck === 'function') ? isArmadaWaterTruck(armada) : armada.startsWith('WT');
+        if (unitType === 'LT' && isArmadaWt) return;
+        if (unitType === 'WT' && !isArmadaWt) return;
+
+        // Filter Cluster
+        if (clusterFilter !== 'ALL') {
+          const armadaMasterCluster = (typeof getArmadaRegisteredCluster === 'function') ? getArmadaRegisteredCluster(armada) : null;
+          if (armadaMasterCluster) {
+            if (!isClusterMatchFilter(armadaMasterCluster, clusterFilter)) return;
+          } else {
+            if (!isClusterMatchFilter(j.cluster, clusterFilter)) return;
+          }
+        }
+
+        if (jId) seenJobIds.add(jId);
+
+        if (!armadaMap[armada]) {
+          armadaMap[armada] = { name: armada, count: 0, totalMins: 0 };
+        }
+        armadaMap[armada].count += 1;
+        armadaMap[armada].totalMins += getJobDurationMins(j);
       });
 
-      // RUMUS SESUAI PERMINTAAN PENGGUNA: Durasi + (Job * 0.5)
-      // Durasi dihitung dalam satuan Jam (totalMins / 60)
-      // Yang tertinggi otomatis menjadi rangking 1 atau paling atas berurut
+      // Sinkron dengan data aktual murni (tanpa rumus penambahan buatan count * 0.5):
+      // Urutan: Beban job selesai terbanyak di atas, jika seri urutkan durasi aktual tertinggi
       const sortedArmada = Object.values(armadaMap).map(item => {
         const durasiHours = item.totalMins / 60;
-        const totalDurasiScore = durasiHours + (item.count * 0.5);
         return {
           name: item.name,
           count: item.count,
-          durasiHours: durasiHours,
-          totalDurasi: totalDurasiScore
+          totalMins: item.totalMins,
+          durasiHours: durasiHours
         };
       }).sort((a, b) => {
-        if (b.totalDurasi !== a.totalDurasi) {
-          return b.totalDurasi - a.totalDurasi;
+        if (b.count !== a.count) {
+          return b.count - a.count;
         }
-        return b.count - a.count;
+        return b.totalMins - a.totalMins;
       });
 
       const totalJobs = sortedArmada.reduce((acc, curr) => acc + curr.count, 0);
@@ -17592,15 +17692,23 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       const footerCountEl = document.getElementById('dash-armada-footer-count');
       if (footerCountEl) {
-        footerCountEl.textContent = totalJobs > 0 ? `${sortedArmada.length} Armada Selesai` : '0 Armada Selesai';
+        footerCountEl.textContent = totalJobs > 0 ? $ + {sortedArmada.length} Armada Selesai : '0 Armada Selesai';
       }
 
       if (armadaDonutChartInstance) armadaDonutChartInstance.destroy();
 
       const palette = ['#10B981', '#3B82F6', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#64748B'];
 
+      // Format durasi aktual murni: Menit jika < 60 mnt, Jam jika >= 60 mnt
+      const formatActualDurasi = (totalMins) => {
+        if (!totalMins || totalMins <= 0) return '0 mnt';
+        if (totalMins >= 60) {
+          return $ + {Number((totalMins / 60).toFixed(1))} Jam;
+        }
+        return $ + {Math.round(totalMins)} mnt;
+      };
+
       if (totalJobs === 0) {
-        // Tampilkan placeholder cincin abu-abu jika belum ada pekerjaan yang diselesaikan (ACH)
         armadaDonutChartInstance = new Chart(ctx, {
           type: 'doughnut',
           data: {
@@ -17648,8 +17756,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                 callbacks: {
                   label: (c) => {
                     const item = sortedArmada[c.dataIndex];
-                    const durText = item ? (Number(item.totalDurasi.toFixed(1)) + ' Jam') : '';
-                    return ` ${c.label}: ${c.raw} Jobs (${totalJobs > 0 ? Math.round((c.raw / totalJobs) * 100) : 0}%) | Total Durasi: ${durText}`;
+                    const durText = item ? formatActualDurasi(item.totalMins) : '';
+                    return  $ + {c.label}: $ + {c.raw} Jobs ($ + {totalJobs > 0 ? Math.round((c.raw / totalJobs) * 100) : 0}%) | Durasi: $ + {durText};
                   }
                 }
               }
@@ -17662,30 +17770,30 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       if (progressListEl) {
         progressListEl.innerHTML = '';
         if (sortedArmada.length === 0) {
-          progressListEl.innerHTML = `<div class="py-4 text-center text-slate-400 italic text-[11px]">Belum ada job armada yang diselesaikan (ACH). Menunggu realisasi checklist digital tim lapangan.</div>`;
+          progressListEl.innerHTML = <div class="py-4 text-center text-slate-400 italic text-[11px]">Belum ada job armada yang diselesaikan (ACH). Menunggu realisasi checklist digital tim lapangan.</div>;
         } else {
           sortedArmada.forEach((item, idx) => {
             const pct = totalJobs > 0 ? Math.round((item.count / totalJobs) * 100) : 0;
             const barColor = palette[idx % palette.length];
-            const durFormatted = `${Number(item.totalDurasi.toFixed(1))} Jam`;
+            const durFormatted = formatActualDurasi(item.totalMins);
             const div = document.createElement('div');
             div.className = 'space-y-1';
-            div.innerHTML = `
+            div.innerHTML = 
             <div class="flex items-center justify-between text-xs font-semibold">
               <span class="font-bold text-slate-800 font-mono flex items-center gap-1.5">
-                <span class="inline-flex items-center justify-center w-4 h-4 rounded text-[9px] font-black ${idx === 0 ? 'bg-amber-100 text-amber-800' : (idx === 1 ? 'bg-slate-200 text-slate-700' : (idx === 2 ? 'bg-amber-50 text-amber-900' : 'bg-slate-100 text-slate-600'))}">#${idx + 1}</span>
-                ${item.name}
+                <span class="inline-flex items-center justify-center w-4 h-4 rounded text-[9px] font-black $ + {idx === 0 ? 'bg-amber-100 text-amber-800' : (idx === 1 ? 'bg-slate-200 text-slate-700' : (idx === 2 ? 'bg-amber-50 text-amber-900' : 'bg-slate-100 text-slate-600'))}">#$ + {idx + 1}</span>
+                $ + {item.name}
               </span>
               <span class="font-mono text-slate-500 text-[11px] sm:text-xs">
-                <span>${item.count} Job (${pct}%)</span>
+                <span>$ + {item.count} Job ($ + {pct}%)</span>
                 <span class="text-slate-300 mx-1">|</span>
-                <span class="font-bold text-slate-900">${durFormatted}</span>
+                <span class="font-bold text-slate-900">$ + {durFormatted}</span>
               </span>
             </div>
             <div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-              <div class="h-full rounded-full transition-all duration-300" style="width: ${pct}%; background-color: ${barColor}"></div>
+              <div class="h-full rounded-full transition-all duration-300" style="width: $ + {pct}%; background-color: $ + {barColor}"></div>
             </div>
-          `;
+          ;
             progressListEl.appendChild(div);
           });
         }
@@ -20290,58 +20398,52 @@ Oilman 1 & 2 : ${oilman}`;
             const hasLocalBase64 = fotosArray.some(f => f && typeof f === 'string' && f.startsWith('data:image/'));
             const syncCont = document.getElementById('detail-modal-sync-container');
             if (syncCont) {
-              if (hasLocalBase64) {
-                syncCont.innerHTML = `
-                  <button type="button" onclick="syncDetailJobPhotosToGoogleDrive('${job.id}')" id="btn-sync-detail-photos"
-                    class="flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold shadow-xs transition cursor-pointer">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
-                    <span>Upload ke Google Drive</span>
-                  </button>
-                `;
-                // Sinkronkan otomatis ke Drive setelah jeda singkat
-                setTimeout(() => {
-                  if (state.currentDetailJobId === job.id) syncDetailJobPhotosToGoogleDrive(job.id);
-                }, 600);
-              } else if (fotosArray.some(f => f && typeof f === 'string' && f.trim() !== '')) {
-                syncCont.innerHTML = `
-                  <span class="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center space-x-1">
-                    <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                    <span>Tersimpan di Drive</span>
-                  </span>
-                `;
-              } else {
-                syncCont.innerHTML = '';
-              }
+              // Tampilan bersih: tidak menampilkan tombol manual upload Google Drive ke admin, bsc, maupun mp
+              syncCont.innerHTML = '';
+            }
+
+            // Jalankan sinkronisasi upload Google Drive otomatis di background tanpa tombol
+            if (hasLocalBase64) {
+              setTimeout(() => {
+                if (state.currentDetailJobId === job.id && typeof syncDetailJobPhotosToGoogleDrive === 'function') {
+                  syncDetailJobPhotosToGoogleDrive(job.id);
+                }
+              }, 400);
             }
 
             const validDetailPhotos = fotosArray.filter(p => p && typeof p === 'string' && p.trim() !== '');
             if (validDetailPhotos.length === 0) {
-              fotosEl.innerHTML = `
-                <div class="col-span-full py-8 text-center text-slate-400 text-xs font-semibold border-2 border-dashed border-slate-200 rounded-2xl bg-white/70">
-                  <svg class="w-8 h-8 mx-auto mb-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Belum ada dokumentasi foto untuk job ini
-                </div>
-              `;
+              const isFetchingRemote = (typeof state._sheetPhotosLoading === 'number') && (Date.now() - state._sheetPhotosLoading < 3500);
+              if (isFetchingRemote) {
+                fotosEl.innerHTML = 
+                  <div class="col-span-full py-8 text-center text-slate-500 text-xs font-semibold border border-slate-200 rounded-2xl bg-white/80">
+                    <div class="flex flex-col items-center justify-center space-y-2">
+                      <svg class="w-6 h-6 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                      <span class="text-[11px] text-slate-600 font-medium">Sedang memuat foto dokumentasi...</span>
+                    </div>
+                  </div>
+                ;
+              } else {
+                fotosEl.innerHTML = 
+                  <div class="col-span-full py-8 text-center text-slate-400 text-xs font-semibold border-2 border-dashed border-slate-200 rounded-2xl bg-white/70">
+                    <svg class="w-8 h-8 mx-auto mb-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Belum ada dokumentasi foto untuk job ini
+                  </div>
+                ;
+              }
             } else {
               window.__currentDetailJobFotos = validDetailPhotos;
               fotosEl.innerHTML = validDetailPhotos.map((src, i) => {
-                const label = `Foto ${i + 1}`;
+                const label = Foto  + $ + {i + 1};
                 const directImgSrc = formatDriveImageUrl(src);
-                const isLocal = src && typeof src === 'string' && src.startsWith('data:image/');
-                const badgeHtml = isLocal
-                  ? `<span class="absolute top-1.5 left-1.5 bg-amber-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md shadow-xs flex items-center gap-1 z-10"><span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>Lokal</span>`
-                  : `<span class="absolute top-1.5 left-1.5 bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md shadow-xs z-10 flex items-center gap-1">☁️ Drive</span>`;
 
-                return `
-                  <div onclick="openPhotoPreview(window.__currentDetailJobFotos, 'Evidence Foto - ${job.noLambung || ''}', ${i}, '${job.noLambung || ''}')"
+                return 
+                  <div onclick="openPhotoPreview(window.__currentDetailJobFotos, 'Evidence Foto - $ + {job.noLambung || ''}', $ + {i}, '$ + {job.noLambung || ''}')"
                     class="group relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 cursor-pointer shadow-xs hover:shadow-md transition">
-                    ${badgeHtml}
                     <div class="aspect-4/3 w-full overflow-hidden bg-slate-950 flex items-center justify-center">
-                      <img src="${directImgSrc}" alt="${label}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'text-white text-xs p-4 text-center\'>Gagal memuat foto</div>';">
+                      <img src=" + $ + {directImgSrc}" alt=" + $ + {label}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'text-white text-xs p-4 text-center\\'>Gagal memuat foto</div>';">
                     </div>
                     <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition p-2 text-center">
                       <svg class="w-6 h-6 text-white mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -20350,11 +20452,11 @@ Oilman 1 & 2 : ${oilman}`;
                       <span class="text-[9.5px] text-white font-bold leading-tight">Klik Perbesar Foto</span>
                     </div>
                     <div class="absolute bottom-0 inset-x-0 bg-slate-950/80 backdrop-blur-xs py-1 px-2.5 flex items-center justify-between">
-                      <span class="text-[9.5px] font-bold text-white truncate">${label}</span>
+                      <span class="text-[9.5px] font-bold text-white truncate"> + $ + {label}</span>
                       <span class="text-[8px] font-medium text-emerald-400">Lihat Full</span>
                     </div>
                   </div>
-                `;
+                ;
               }).join('');
             }
           }
@@ -22760,10 +22862,10 @@ Oilman 1 & 2 : ${oilman}`;
           <td class="py-2.5 px-1 md:px-2 text-center align-middle">
             <div class="flex items-center justify-center">
               ${['ach', 'achieved', 'done'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'ACHIEVED'
-              ? `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] tracking-wide uppercase text-center">ACH</span>`
-              : (['non_ach', 'non-ach'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'NON_ACH'
-                ? `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-rose-100 text-rose-800 font-extrabold text-[10px] tracking-wide uppercase text-center" title="${job.alasanNonAch || job.keterangan || '-'}">NON-ACH</span>`
-                : `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-amber-100 text-amber-800 font-extrabold text-[10px] tracking-wide uppercase text-center">${job.status || 'DONE'}</span>`)}
+            ? `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] tracking-wide uppercase text-center">ACH</span>`
+            : (['non_ach', 'non-ach'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'NON_ACH'
+              ? `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-rose-100 text-rose-800 font-extrabold text-[10px] tracking-wide uppercase text-center" title="${job.alasanNonAch || job.keterangan || '-'}">NON-ACH</span>`
+              : `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-amber-100 text-amber-800 font-extrabold text-[10px] tracking-wide uppercase text-center">${job.status || 'DONE'}</span>`)}
             </div>
           </td>
 
@@ -23946,7 +24048,10 @@ Oilman 1 & 2 : ${oilman}`;
         });
 
         // Cek apakah job sudah memiliki armada yang spesifik sebelumnya
-        const existingArmada = (job.armada && job.armada !== '-') ? job.armada : ((job.wtUnit && job.wtUnit !== '-') ? job.wtUnit : ((job.ltUnit && job.ltUnit !== '-') ? job.ltUnit : ''));
+        let existingArmada = (job.armada && job.armada !== '-') ? job.armada : ((job.wtUnit && job.wtUnit !== '-') ? job.wtUnit : ((job.ltUnit && job.ltUnit !== '-') ? job.ltUnit : ''));
+        if (!existingArmada || existingArmada === '-') {
+          existingArmada = (typeof resolveJobArmada === 'function') ? resolveJobArmada(job) : '';
+        }
 
         if (existingArmada && [...ltCustom.options].some(o => o.value === existingArmada)) {
           ltCustom.value = existingArmada;
@@ -24094,7 +24199,11 @@ Oilman 1 & 2 : ${oilman}`;
       }
 
       const uploadedPhotos = isJobRequest ? [] : state.currentAchPhotos.filter(p => p && p.trim() !== '');
-      const ltValue = (document.getElementById('ach-lt-custom')?.value || job.ltUnit || 'LT2535').trim().toUpperCase();
+      const isWashing = (job.cat === 'coal' || job.cat === 'rom' || job.cat === 'non_coal' || (job.id && job.id.startsWith('WTJ')) || job.serviceType === 'watertruck');
+      let ltValue = (document.getElementById('ach-lt-custom')?.value || '').trim().toUpperCase();
+      if (!ltValue || ltValue === '-' || ltValue.startsWith('--')) {
+        ltValue = (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '') || (isWashing ? 'WT2636' : 'LT2535');
+      }
       const ket = document.getElementById('ach-keterangan')?.value.trim() || (isJobRequest ? 'Selesai sesuai SOP' : 'Nihil / Lancar sesuai SOP');
 
       const optVal = document.getElementById('ach-opt-name')?.value || job.opt || '-';
@@ -24150,7 +24259,12 @@ Oilman 1 & 2 : ${oilman}`;
       job.status = isJobRequest ? 'done' : 'ach';
       job.isPending = false;
       job.isLocked = true;
-      job.ltUnit = ltValue;
+      job.ltUnit = isWashing ? '-' : ltValue;
+      job.wtUnit = isWashing ? ltValue : '-';
+      job.armada = ltValue;
+      job.armadaUnit = ltValue;
+      job.armada_unit = ltValue;
+      if (isWashing) job.targetType = 'WT';
       job.opt = optVal;
       job.mp1 = mp1Val;
       job.mp2 = mp2Val;
@@ -24904,7 +25018,7 @@ Oilman 1 & 2 : ${oilman}`;
       if (jenisBadge) {
         jenisBadge.textContent = item.jenis || 'OPT';
         jenisBadge.className = `px-2 py-0.5 rounded text-[10px] font-black ${item.jenis === 'OPT' ? 'bg-amber-100 text-amber-800' :
-            (item.jenis === 'OM' ? 'bg-emerald-100 text-emerald-800' : 'bg-cyan-100 text-cyan-800')
+          (item.jenis === 'OM' ? 'bg-emerald-100 text-emerald-800' : 'bg-cyan-100 text-cyan-800')
           }`;
       }
       if (namaDisplay) namaDisplay.textContent = item.nama || '-';
@@ -26782,7 +26896,7 @@ Oilman 1 & 2 : ${oilman}`;
           type_unit: job.typeUnit || 'Unit',
           no_lambung: job.noLambung || '',
           lokasi: job.lokasi || '',
-          armada_unit: (isWt || isUnschWt) ? (job.wtUnit || job.armadaUnit || 'WT101') : (job.ltUnit || job.armadaUnit || 'LT2535'),
+          armada_unit: (isWt || isUnschWt) ? (job.wtUnit && job.wtUnit !== '-' ? job.wtUnit : (job.armada && job.armada !== '-' ? job.armada : (job.armadaUnit && job.armadaUnit !== '-' ? job.armadaUnit : 'WT2636'))) : (job.ltUnit && job.ltUnit !== '-' ? job.ltUnit : (job.armada && job.armada !== '-' ? job.armada : (job.armadaUnit && job.armadaUnit !== '-' ? job.armadaUnit : 'LT2535'))),
           opt_name: job.opt || job.optName || '-',
           mp1: job.mp1 || '-',
           mp2: job.mp2 || '-',
@@ -26894,7 +27008,7 @@ Oilman 1 & 2 : ${oilman}`;
           .from('air_cleaner_monitoring')
           .select('*')
           .order('no_lambung', { ascending: true });
-        
+
         if (error) {
           console.warn('[loadAirCleanerFromSupabase Error]', error);
           return;
