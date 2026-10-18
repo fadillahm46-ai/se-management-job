@@ -24562,18 +24562,41 @@ Oilman 1 & 2 : ${oilman}`;
         job.kondisi = selectedKeadaan;
       }
 
-      // Sinkronisasi otomatis ke Monitoring Air Cleaner jika action terkait:
+      // Sinkronisasi otomatis ke Monitoring Air Cleaner (KHUSUS LT):
       // 1. Dari schedule air cleaner (job.cat === 'aircleaner')
-      // 2. Dari job request yang permintaannya air cleaner
-      // 3. Dari unit yang statusnya service
-      const selectedReqJob = document.getElementById('ach-job-type')?.value || '';
-      const isAirCleanerAction = (job.cat === 'aircleaner' || job.cat === 'air_cleaner') ||
-        (selectedReqJob === 'Clean Air Cleaner') ||
-        (String(job.requestedJob || '').toLowerCase().includes('air cleaner')) ||
-        (String(job.deskripsi || '').toLowerCase().includes('air cleaner')) ||
-        (String(job.keterangan || '').toLowerCase().includes('air cleaner'));
-      if (isAirCleanerAction) {
-        updateAirCleanerRecord(job.noLambung, getUnitTypeFromMaster(job.noLambung, job.typeUnit), 'clean', '');
+      // 2. Dari job request yang permintaannya air cleaner / deskripsi mengandung air cleaner
+      // 3. Dari unit berstatus SERVICE, atau Job Request yang mengandung kata "service" (walau tanpa kata air cleaner)
+      const isLtTarget = (job.targetType === 'LT' || !job.serviceType || job.serviceType === 'lubetruck' || String(job.id || '').startsWith('LT') || String(job.id || '').startsWith('UNS-LT'));
+      if (isLtTarget) {
+        const selectedReqJob = document.getElementById('ach-job-type')?.value || '';
+        const selectedKeadaan = (document.getElementById('ach-keadaan-unit')?.value || job.kondisi || '').toUpperCase();
+        const reqJobStr = String(selectedReqJob || job.requestedJob || '').toLowerCase();
+        const descStr = String(job.deskripsi || '').toLowerCase();
+        const ketStr = String(ket || job.keterangan || '').toLowerCase();
+
+        const isAcCat = (job.cat === 'aircleaner' || job.cat === 'air_cleaner');
+        const isAcReq = (selectedReqJob === 'Clean Air Cleaner') ||
+          reqJobStr.includes('air cleaner') ||
+          descStr.includes('air cleaner') ||
+          ketStr.includes('air cleaner');
+
+        // Kriteria baru: jika job request mengandung SERVICE walau tidak ada kata air cleaner, ATAU unit berstatus/kondisi SERVICE:
+        const isServiceAction = (job.status === 'service' || selectedKeadaan === 'SERVICE' || String(job.kondisi || '').toUpperCase() === 'SERVICE') ||
+          reqJobStr.includes('service') ||
+          descStr.includes('service') ||
+          ketStr.includes('service');
+
+        if (isAcCat || isAcReq || isServiceAction) {
+          const psRadio = document.querySelector('input[name="ach-ps-type"]:checked');
+          let psCode = psRadio ? psRadio.value : '';
+          if (!psCode) {
+            const allText = `${selectedKeadaan} ${descStr} ${ketStr}`;
+            const m = allText.match(/PS\s*(\d+)/i);
+            if (m) psCode = 'PS' + m[1];
+            else if (isServiceAction) psCode = 'SERVICE';
+          }
+          updateAirCleanerRecord(job.noLambung, getUnitTypeFromMaster(job.noLambung, job.typeUnit), isServiceAction ? 'service' : 'clean', psCode);
+        }
       }
 
       // isWashing already defined above
@@ -24722,30 +24745,23 @@ Oilman 1 & 2 : ${oilman}`;
         state.airCleanerMonitor.push(item);
       }
 
-      if (actionType === 'service') {
-        if (code === 'PS1000') {
-          // Reset dari 0 lagi, filter baru diganti
-          item.cleans = [];
-          item.serviceCode = 'PS1000';
-          item.status = 'Baru';
-        } else {
-          // PS250, PS500 atau service berkala: Unit yang service WAJIB ada penyemprotan air cleaner (otomatis masuk siklus 6x)
-          item.serviceCode = code || 'Service';
-          const entry = code ? `${formattedDate} (${code})` : formattedDate;
-          if (item.cleans.length >= 6) {
-            item.cleans = [entry];
-          } else {
-            item.cleans.push(entry);
-          }
-        }
-      } else if (actionType === 'clean') {
+      // Format entri semprotan dengan tanggal dan label PS jika ada (misal: "18/10/2026 (PS250)", "18/10/2026 (PS1000)")
+      const labelCode = (code && code !== 'clean') ? String(code).trim() : '';
+      const entry = labelCode ? `${formattedDate} (${labelCode})` : formattedDate;
+
+      // ATURAN BARU: HILANGKAN ATURAN RESET JIKA SERVICE 1000.
+      // Seluruh semprotan (termasuk PS1000) masuk hitungan siklus cleans.
+      // Hanya jika sudah mencapai 6x semprot, baru masuk masa pergantian filter.
+      if (!item.cleans.some(c => c.startsWith(formattedDate))) {
         if (item.cleans.length >= 6) {
-          // Siklus 6x selesai, mulai dari 0 lagi setelah pergantian
-          item.cleans = [formattedDate];
+          // Siklus 6x selesai (masa pergantian lewat), mulai dari siklus semprotan 1 lagi pada filter baru
+          item.cleans = [entry];
         } else {
-          item.cleans.push(formattedDate);
+          item.cleans.push(entry);
         }
-        item.serviceCode = code || '';
+      }
+      if (labelCode) {
+        item.serviceCode = labelCode;
       }
 
       // Evaluasi status otomatis berdasarkan siklus 6x penyemprotan:
@@ -24753,9 +24769,7 @@ Oilman 1 & 2 : ${oilman}`;
       // Clean 5: Peringatan (5x) - Mendekati batas pergantian
       // Clean 6: Di Ganti / Masa Pergantian (6x)
       const count = item.cleans.length;
-      if (item.serviceCode === 'PS1000' && count === 0) {
-        item.status = 'Baru';
-      } else if (count <= 4) {
+      if (count <= 4) {
         item.status = 'Baik';
       } else if (count === 5) {
         item.status = 'Peringatan';
@@ -24912,8 +24926,8 @@ Oilman 1 & 2 : ${oilman}`;
           statusBadge = '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-100 text-teal-800 border border-teal-300">Baik (2x)</span>';
         } else if (cleanCount === 1) {
           statusBadge = '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">Baik (1x)</span>';
-        } else if (item.status === 'Baru' || (item.serviceCode === 'PS1000' && cleanCount === 0)) {
-          statusBadge = '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-300">Baru (PS1000)</span>';
+        } else if (cleanCount === 0) {
+          statusBadge = '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-700 border border-slate-300">Baik (0x)</span>';
         }
 
         const tr = document.createElement('tr');
@@ -27458,25 +27472,39 @@ Oilman 1 & 2 : ${oilman}`;
         // Sinkronisasi HANYA dari pekerjaan aktual yang BENAR-BENAR SELESAI:
         // 1. Schedule Air Cleaner
         // 2. Job Request yang permintaannya Air Cleaner
-        // 3. Unit yang statusnya SERVICE (karena unit yang service wajib disemprot air cleaner)
+        // Sinkronisasi otomatis ke Monitoring Air Cleaner (KHUSUS LT):
+        // 1. Schedule Air Cleaner: Pekerjaan terjadwal kategori aircleaner yang telah diselesaikan.
+        // 2. Job Request Lapangan: Permintaan pekerjaan dengan request Clean Air Cleaner atau deskripsi/keterangan pekerjaan mengandung kata air cleaner yang telah diselesaikan.
+        // 3. Pekerjaan / Unit Berstatus SERVICE, ATAU Job Request yang mengandung SERVICE walau tidak ada kata air cleaner yang telah diselesaikan.
         const actualCompletedJobs = [
           ...(state.lubetruckState?.jobs || []),
-          ...(state.watertruckState?.jobs || []),
           ...(state.unscheduledLtJobs || []),
-          ...(state.unscheduledWtJobs || []),
           ...(Array.isArray(state.jobHistory) ? state.jobHistory : [])
         ].filter(j => {
+          // KHUSUS LT: Kecualikan Water Truck (WT)
+          const targetId = String(j.id || '');
+          const isWt = (targetId.startsWith('WT') || j.targetType === 'WT' || j.serviceType === 'watertruck' || ['coal', 'rom', 'non_coal'].includes(j.cat));
+          if (isWt) return false;
+
           const s = String(j.status || '').toLowerCase();
-          const cond = String(j.unitCondition || '').toLowerCase();
+          const cond = String(j.kondisi || j.keadaan_unit || j.unitCondition || '').toLowerCase();
           const isFinished = ['ach', 'achieved', 'done', 'service'].includes(s) || j.status_final === 'ACHIEVED' || cond === 'service';
           if (!isFinished) return false;
 
+          // 1. Schedule Air Cleaner
           const isAcCat = (j.cat === 'aircleaner' || j.cat === 'air_cleaner');
+
+          // 2. Job Request Clean Air Cleaner
+          const reqJobStr = String(j.requestedJob || '').toLowerCase();
+          const descStr = String(j.deskripsi || '').toLowerCase();
+          const ketStr = String(j.keterangan || '').toLowerCase();
           const isAcReq = (j.requestedJob === 'Clean Air Cleaner') ||
-            (String(j.requestedJob || '').toLowerCase().includes('air cleaner')) ||
-            (String(j.deskripsi || '').toLowerCase().includes('air cleaner')) ||
-            (String(j.keterangan || '').toLowerCase().includes('air cleaner'));
-          const isService = (s === 'service' || cond === 'service');
+            reqJobStr.includes('air cleaner') ||
+            descStr.includes('air cleaner') ||
+            ketStr.includes('air cleaner');
+
+          // 3. Status SERVICE atau Job Request mengandung kata "service" (walau tanpa kata air cleaner)
+          const isService = (s === 'service' || cond === 'service' || cond.includes('service') || reqJobStr.includes('service') || descStr.includes('service') || ketStr.includes('service'));
 
           return (isAcCat || isAcReq || isService) && (j.tanggalRealisasi || j.tanggal);
         });
@@ -27500,18 +27528,26 @@ Oilman 1 & 2 : ${oilman}`;
           if (dStr) {
             const parts = dStr.split('-');
             const formattedDate = (parts.length === 3) ? (parts[2] + '/' + parts[1] + '/' + parts[0]) : dStr;
-            const sCode = (job.status === 'service' || job.unitCondition === 'service') ? (job.psType || 'PS') : '';
+            
+            // Ekstrak label PS jika ada (misal PS250, PS500, PS1000)
+            const textPool = `${job.psType || ''} ${job.kondisi || ''} ${job.deskripsi || ''} ${job.keterangan || ''} ${job.serviceNotes || ''}`;
+            const psMatch = textPool.match(/PS\s*(\d+)/i);
+            let sCode = '';
+            if (psMatch) {
+              sCode = 'PS' + psMatch[1];
+            } else if (job.status === 'service' || String(job.kondisi || '').toLowerCase().includes('service')) {
+              sCode = 'SERVICE';
+            }
+
             const entryText = sCode ? `${formattedDate} (${sCode})` : formattedDate;
             if (!monItem.cleans.some(c => c.startsWith(formattedDate))) {
               if (monItem.cleans.length >= 6) monItem.cleans = [entryText];
               else monItem.cleans.push(entryText);
             }
           }
-          // Evaluasi status sesuai siklus 6x
+          // Evaluasi status sesuai siklus 6x (HILANGKAN ATURAN RESET PS1000)
           const count = monItem.cleans.length;
-          if (monItem.serviceCode === 'PS1000' && count === 0) {
-            monItem.status = 'Baru';
-          } else if (count <= 4) {
+          if (count <= 4) {
             monItem.status = 'Baik';
           } else if (count === 5) {
             monItem.status = 'Peringatan';
