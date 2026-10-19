@@ -8474,7 +8474,7 @@
     // Mengeliminasi Egress berlebih dengan HANYA mengambil kolom yang ditampilkan di UI
     // =========================================================================
     const APP_CLIENT_ID = 'cli_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
-    const SUPABASE_JOB_LIST_COLS = 'id,job_type,cat,tanggal,shift,washing_round,cluster,waktu_rencana,type_unit,no_lambung,lokasi,armada_unit,opt_name,mp1,mp2,jam_start,jam_end,durasi,hm_stop,hm_ready,status,is_pending,ada_operator,unit_condition,service_type,pemesan,kondisi,non_ach_category,created_at,updated_at';
+    const SUPABASE_JOB_LIST_COLS = 'id,job_type,cat,tanggal,shift,washing_round,cluster,waktu_rencana,type_unit,no_lambung,lokasi,armada_unit,opt_name,mp1,mp2,jam_start,jam_end,durasi,hm_stop,hm_ready,status,is_pending,keterangan,service_notes,bd_notes,non_ach_category,non_ach_reason,ada_operator,unit_condition,service_type,pemesan,kondisi,created_at,updated_at';
     const SUPABASE_ORDER_LIST_COLS = 'id,kode_order,service_type,type_unit,tanggal,shift,jam,nama_pemesan,role_pemesan,nrp_pemesan,no_lambung,cluster,lokasi,keadaan_unit,armada_unit,opt_name,mp1,mp2,hm_start,hm_end,jam_start,jam_end,durasi,tanggal_eksekusi,status,is_locked,handled_by,created_at,updated_at';
     const SUPABASE_ARMADA_COLS = 'id,unit,type_unit,cluster,status,keterangan';
     const SUPABASE_USER_COLS = 'id,nrp,nama,password,role,jabatan,status_aktif';
@@ -8941,11 +8941,8 @@
               if ((info.orderId || (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(j)) || String(j.id || '').startsWith('UNS')) && typeof syncOrderToSupabase === 'function') {
                 syncOrderToSupabase(j);
               }
-              // Pancarkan sinyal broadcast minimalis ke perangkat lain (Aturan 4)
-              if (typeof emitJobBroadcastSignal === 'function' && j && j.id) {
-                const isOrd = (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(j)) || String(j.id).startsWith('UNS');
-                emitJobBroadcastSignal(j.id, 'UPDATE', isOrd ? 'order_requests' : 'jobs');
-              }
+              // Catatan: syncJobToSupabase sudah memancarkan JOB_SIGNAL WebSocket lengkap dengan payload objek data.
+              // Jangan pancarkan ulang sinyal tanpa data di sini agar tab lain tidak memicu query HTTP fallback .single()
               if (realtimeBroadcastBus) {
                 try { realtimeBroadcastBus.postMessage({ type: 'DATA_MUTATED', source: info.source || 'job_sync', job: j }); } catch (e) { }
               }
@@ -13048,10 +13045,10 @@
       }
       safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
 
-      // Kunci ke Supabase tabel job_history jika online
-      if (state.supabaseClient) {
+      // Kunci ke Supabase tabel job_history jika online dan tabel tersedia di schema database
+      if (state.supabaseClient && window._supabaseHasJobHistory !== false) {
         try {
-          await state.supabaseClient.from('job_history').upsert({
+          const { error } = await state.supabaseClient.from('job_history').upsert({
             job_id: snapshotRecord.job_id,
             no_lambung: snapshotRecord.no_lambung,
             type_unit: snapshotRecord.type_unit,
@@ -13076,9 +13073,19 @@
             snapshot_data: job,
             created_at: snapshotRecord.created_at
           }, { onConflict: 'job_id' });
-          console.log('[Snapshot History Locked OK]', cleanId);
+          if (error) {
+            if (error.code === 'PGRST205' || error.code === '42P01' || (error.message && (error.message.includes('not find the table') || error.message.includes('does not exist')))) {
+              window._supabaseHasJobHistory = false;
+              console.info('[Snapshot History] Tabel job_history belum dibuat di database Supabase (PGRST205). Riwayat tersimpan aman di local audit cache (0 error log).');
+            } else {
+              console.warn('[Snapshot History Lock Warn]', error.message);
+            }
+          } else {
+            window._supabaseHasJobHistory = true;
+            console.log('[Snapshot History Locked OK]', cleanId);
+          }
         } catch (err) {
-          console.warn('[Snapshot History Lock Warn]', err.message);
+          window._supabaseHasJobHistory = false;
         }
       }
     }
@@ -13368,61 +13375,6 @@
       ];
 
       // -----------------------------------------------------------------------
-      // PEMBERSIHAN DATA ANOMALI (WASHING MULTI-ROUND RESTORATION):
-      // Mengatasi insiden di mana job washing sesi lain (Washing 2, Shift 2)
-      // otomatis ter-close tanpa foto dan tanpa jam pelaksanaan.
-      // Sesi pencucian yang tidak memiliki bukti foto & jam start/end aktual serta
-      // tidak tercatat secara sah di state.jobHistory otomatis dipulihkan ke 'scheduled'.
-      // -----------------------------------------------------------------------
-      if (state.watertruckState && Array.isArray(state.watertruckState.jobs)) {
-        let wtRepaired = false;
-        state.watertruckState.jobs.forEach(j => {
-          if (!j || !j.id) return;
-          const s = String(j.status || '').toLowerCase().trim();
-          const isDone = (s === 'ach' || s === 'achieved' || s === 'done');
-          if (isDone) {
-            const hasPhotos = (Array.isArray(j.fotos) && j.fotos.some(p => p && typeof p === 'string' && p.trim() !== ''));
-            const hasTime = Boolean(j.jamStart && j.jamStart !== '-' && j.jamStart.trim() !== '');
-            const inHist = Array.isArray(state.jobHistory) && state.jobHistory.some(h => String(h.job_id) === String(j.id) && String(h.status_final || '').toUpperCase() === 'ACHIEVED');
-            if (!hasPhotos && !hasTime && !inHist) {
-              j.status = 'scheduled';
-              j.isPending = false;
-              j.isLocked = false;
-              j.is_locked = false;
-              if (j.keterangan && (j.keterangan.includes('SOP') || j.keterangan.includes('Maksimal 1 hari') || j.keterangan.includes('Nihil / Lancar'))) {
-                j.keterangan = '';
-              }
-              wtRepaired = true;
-              if (state.supabaseClient && typeof syncJobToSupabase === 'function') {
-                syncJobToSupabase(j);
-              }
-            }
-          }
-        });
-        if (wtRepaired) {
-          hasChanges = true;
-          safeSaveTrimmedJobsToStorage();
-        }
-      }
-
-      // Bersihkan rekaman palsu di state.jobHistory untuk washing yang tidak ada foto dan jam
-      if (Array.isArray(state.jobHistory)) {
-        const initialHistLen = state.jobHistory.length;
-        state.jobHistory = state.jobHistory.filter(h => {
-          const isWater = (h.job_type === 'water' || h.cat === 'rom' || h.cat === 'coal' || h.cat === 'non_coal');
-          const hasPhotos = (Array.isArray(h.fotos) && h.fotos.length > 0);
-          const hasTime = Boolean(h.jam_start && h.jam_start !== '-' && h.jam_start.trim() !== '');
-          if (isWater && !hasPhotos && !hasTime && String(h.status_final || '').toUpperCase() === 'ACHIEVED') {
-            return false;
-          }
-          return true;
-        });
-        if (state.jobHistory.length !== initialHistLen) {
-          safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
-        }
-      }
-
-      // -----------------------------------------------------------------------
       // PETA UNIT SELESAI / ACH PER TANGGAL (CROSS-JOB PROTECTION):
       // Mengidentifikasi unit yang sudah selesai (ACH / DONE / SERVICE / BD) pada tanggal tersebut.
       // KHUSUS untuk kategori GREASING SMALL (D85, PC210, dsb - 1x sehari).
@@ -13517,45 +13469,29 @@
           const isUnitAlreadyAchieved = isGreasingSmallJob && achievedUnitDateMap.has(currentUnitDateKey);
 
           if (
-            (j.isLocked && !isWashingJob) ||
-            (j.is_locked && !isWashingJob) ||
+            j.isLocked ||
+            j.is_locked ||
             isFinishedStatus ||
             isHistoryDone ||
             hasPhotos ||
             (isUnitAlreadyAchieved && isGreasingSmallJob) ||
-            (typeof isJobLockedOrFinished === 'function' && !isWashingJob && isJobLockedOrFinished(j))
+            (typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(j))
           ) {
-            // Pengaman khusus Washing: Jika washing job tidak punya foto dan tidak ada di histori sah, jangan kunci statusnya
-            if (isWashingJob && !hasPhotos && !isHistoryDone) {
-              // Abaikan flag lock palsu
-            } else {
-              j.isLocked = true;
-              // Jika memiliki bukti foto atau unit greasing small sudah tercatat selesai pada tanggal ini:
-              if ((hasPhotos || (isUnitAlreadyAchieved && isGreasingSmallJob)) && (!isFinishedStatus || s === 'pending' || j.isPending || s === 'non_ach')) {
-                j.status = 'ach';
-                j.isPending = false;
-                if (j.keterangan && j.keterangan.includes('Non ACH: Maksimal 1 hari')) {
-                  j.keterangan = 'Nihil / Lancar sesuai SOP';
-                }
-                if (state.supabaseClient && typeof syncJobToSupabase === 'function') {
-                  syncJobToSupabase(j);
-                }
+            j.isLocked = true;
+            // Jika sebelumnya di riwayat sudah ACHIEVED tapi di memori statusnya ter-override: pulihkan statusnya
+            if (isHistoryDone && !isFinishedStatus) {
+              j.status = (historyRecord.status_final === 'ACHIEVED') ? 'ach' : historyRecord.status_final.toLowerCase();
+              j.isPending = false;
+              if (historyRecord.shift_rencana) j.shift = historyRecord.shift_rencana;
+              if (historyRecord.jam_start) j.jamStart = historyRecord.jam_start;
+              if (historyRecord.jam_end) j.jamEnd = historyRecord.jam_end;
+              if (historyRecord.durasi) j.durasi = historyRecord.durasi;
+              if (historyRecord.keterangan) j.keterangan = historyRecord.keterangan;
+              if (state.supabaseClient && typeof syncJobToSupabase === 'function') {
+                syncJobToSupabase(j);
               }
-              // Jika sebelumnya di riwayat sudah ACHIEVED tapi di memori statusnya ter-override: pulihkan statusnya
-              if (isHistoryDone && !isFinishedStatus) {
-                j.status = (historyRecord.status_final === 'ACHIEVED') ? 'ach' : historyRecord.status_final.toLowerCase();
-                j.isPending = false;
-                if (historyRecord.shift_rencana) j.shift = historyRecord.shift_rencana;
-                if (historyRecord.jam_start) j.jamStart = historyRecord.jam_start;
-                if (historyRecord.jam_end) j.jamEnd = historyRecord.jam_end;
-                if (historyRecord.durasi) j.durasi = historyRecord.durasi;
-                if (historyRecord.keterangan) j.keterangan = historyRecord.keterangan;
-                if (state.supabaseClient && typeof syncJobToSupabase === 'function') {
-                  syncJobToSupabase(j);
-                }
-              }
-              return; // LEWATI MUTLAK! DILARANG KERAS DIUBAH JADI PENDING / NON ACH
             }
+            return; // LEWATI MUTLAK! DILARANG KERAS DIUBAH JADI PENDING / NON ACH
           }
 
           // Pengaman Mutlak: Jadwal hari esok / masa depan TIDAK BOLEH dievaluasi atau dialihkan
@@ -15602,13 +15538,26 @@
     }
     window.executeDuplicateWtFromModal = executeDuplicateWtFromModal;
 
+        // Throttled Auto-Evaluation Guard (Minimal 60 detik cooldown antar render tabel)
+    let _lastAutoEvalTime = 0;
+    function autoEvaluatePendingJobsThrottled() {
+      const now = Date.now();
+      if (now - _lastAutoEvalTime < 60000) return 0;
+      _lastAutoEvalTime = now;
+      if (typeof autoEvaluatePendingJobs === 'function') {
+        return autoEvaluatePendingJobs();
+      }
+      return 0;
+    }
+    window.autoEvaluatePendingJobsThrottled = autoEvaluatePendingJobsThrottled;
+
     function renderLtScheduleTable() {
       const container = document.getElementById('lt-schedule-table-container');
       if (!container) return;
 
-      // Evaluasi otomatis sebelum me-render tabel jadwal
-      if (typeof autoEvaluatePendingJobs === 'function') {
-        autoEvaluatePendingJobs();
+      // Evaluasi otomatis ter-throttle sebelum me-render tabel jadwal (Cooldown 60s)
+      if (typeof autoEvaluatePendingJobsThrottled === 'function') {
+        autoEvaluatePendingJobsThrottled();
       }
 
       const isAdmin = (state.currentUser?.role === 'admin');
@@ -16182,9 +16131,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       const container = document.getElementById('wt-schedule-table-container');
       if (!container) return;
 
-      // Evaluasi otomatis sebelum me-render tabel jadwal
-      if (typeof autoEvaluatePendingJobs === 'function') {
-        autoEvaluatePendingJobs();
+      // Evaluasi otomatis ter-throttle sebelum me-render tabel jadwal (Cooldown 60s)
+      if (typeof autoEvaluatePendingJobsThrottled === 'function') {
+        autoEvaluatePendingJobsThrottled();
       }
 
       const isAdmin = (state.currentUser?.role === 'admin');
@@ -18903,7 +18852,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           for (let i = 0; i < nrpsToDelete.length; i += chunkSize) {
             const chunk = nrpsToDelete.slice(i, i + chunkSize);
             await state.supabaseClient.from("master_operators").delete().in("nrp", chunk);
-            try { await state.supabaseClient.from("master_kontak_pro").delete().in("nrp", chunk); } catch (e) { }
+            // master_kontak_pro omitted
           }
           console.log(`[Supabase Bulk Delete OK] ${nrpsToDelete.length} kontak terhapus dari cloud.`);
         } catch (supaErr) {
@@ -19023,18 +18972,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             cloudSynced = true;
             console.log("[Supabase Save Operator OK via master_operators]", nrp, nama);
           } else {
-            console.warn("[Supabase Upsert master_operators Warning]", resOps.error);
-            // 2. Fallback upsert ke master_kontak_pro
-            const resPro = await state.supabaseClient
-              .from("master_kontak_pro")
-              .upsert({ nrp, nama, no_wa: noWa, updated_at: new Date().toISOString() }, { onConflict: "nrp" });
-            if (!resPro.error) {
-              cloudSynced = true;
-              console.log("[Supabase Save Operator OK via master_kontak_pro]", nrp, nama);
-            } else {
-              console.error("[Supabase Save Operator Error]", resOps.error, resPro.error);
-              showToast(`Tersimpan di lokal, namun gagal sinkron ke cloud: ${resOps.error.message || resPro.error.message}`, "warning");
-            }
+            console.error("[Supabase Save Operator Error]", resOps.error);
+            showToast(`Tersimpan di lokal, namun gagal sinkron ke cloud: ${resOps.error.message}`, "warning");
           }
         } catch (supaErr) {
           console.error("[Supabase Save Operator Exception]", supaErr);
@@ -19078,7 +19017,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       if (state.supabaseClient && target && target.nrp) {
         try {
           await state.supabaseClient.from("master_operators").delete().eq("nrp", target.nrp);
-          try { await state.supabaseClient.from("master_kontak_pro").delete().eq("nrp", target.nrp); } catch (e) { }
+          // master_kontak_pro omitted
           console.log("[Supabase Delete Operator OK]", target.nrp);
         } catch (delErr) {
           console.warn("[Supabase Delete Operator Warning]", delErr);
@@ -19444,12 +19383,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           const chunkSize = 100;
           for (let i = 0; i < cleanPayload.length; i += chunkSize) {
             const chunk = cleanPayload.slice(i, i + chunkSize);
-            // 1. Coba upsert ke master_kontak_pro
-            const resPro = await state.supabaseClient.from('master_kontak_pro').upsert(chunk, { onConflict: 'nrp' });
-            if (resPro.error) {
-              // 2. Fallback upsert ke master_operators jika master_kontak_pro belum dibuat di SQL
-              await state.supabaseClient.from('master_operators').upsert(chunk, { onConflict: 'nrp' });
-            }
+            await state.supabaseClient.from('master_operators').upsert(chunk, { onConflict: 'nrp' });
           }
           console.log('[Supabase Sync] Kontak Operator berhasil diupsert ke Supabase:', supaUpsertPayload.length);
         } catch (supaErr) {
@@ -23700,7 +23634,28 @@ Oilman 1 & 2 : ${oilman}`;
         });
       }
 
+      // Reset ke halaman 1 jika filter tanggal, shift, cluster, kategori, atau kata kunci berubah
+      const currentFilterKey = `${normStart}|${normEnd}|${shiftFilter}|${clusterFilter}|${cat}|${searchVal}`;
+      if (state._lastCompFilterKey !== currentFilterKey) {
+        state._lastCompFilterKey = currentFilterKey;
+        state.completedPage = 1;
+      }
+
       state._lastFilteredCompletedIds = filtered.map(j => String(j.id));
+
+      // Paginasi Riwayat Selesai (Dibatasi 100 per halaman sesuai permintaan agar ringan dan super cepat)
+      state.completedPageSize = state.completedPageSize || 100;
+      state.completedPage = state.completedPage || 1;
+
+      const pageSize = state.completedPageSize === 'ALL' ? filtered.length : (parseInt(state.completedPageSize, 10) || 100);
+      const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+      if (state.completedPage > totalPages) state.completedPage = totalPages;
+      if (state.completedPage < 1) state.completedPage = 1;
+
+      const startIndex = (state.completedPage - 1) * pageSize;
+      const endIndex = Math.min(startIndex + pageSize, filtered.length);
+      const pagedList = filtered.slice(startIndex, endIndex);
+      state._lastPagedCompletedIds = pagedList.map(j => String(j.id));
 
       container.innerHTML = `
         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
@@ -23780,6 +23735,23 @@ Oilman 1 & 2 : ${oilman}`;
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
           </table>
+
+          <!-- Footer Navigasi & Pagination Riwayat Selesai -->
+          <div class="p-3 sm:p-3.5 bg-slate-50 border-t border-slate-200/90 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-600 select-none">
+            <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+              <span id="completed-footer-count" class="font-semibold text-slate-700"></span>
+              <span class="text-slate-300">|</span>
+              <span class="text-slate-500 font-medium">Per halaman:</span>
+              <select id="comp-page-size" onchange="changeCompletedPageSize(this.value)"
+                class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer shadow-2xs">
+                <option value="50" ${pageSize === 50 ? 'selected' : ''}>50 / halaman</option>
+                <option value="100" ${pageSize === 100 ? 'selected' : ''}>100 / halaman (Rekomendasi)</option>
+                <option value="200" ${pageSize === 200 ? 'selected' : ''}>200 / halaman</option>
+                <option value="ALL" ${state.completedPageSize === 'ALL' ? 'selected' : ''}>Semua Data</option>
+              </select>
+            </div>
+            <div id="completed-pagination-controls" class="flex items-center space-x-1 flex-wrap"></div>
+          </div>
         </div>
       `;
 
@@ -23804,10 +23776,13 @@ Oilman 1 & 2 : ${oilman}`;
             : 'Belum ada riwayat pekerjaan selesai untuk kategori ini');
 
         tbody.innerHTML = `<tr><td colspan="${(state.isCompSelectMode ? 1 : 0) + 10 + (isAdmin ? 1 : 0)}" class="py-8 text-center text-slate-400 italic text-xs">${emptyMsg}</td></tr>`;
+        const footerCount = container.querySelector('#completed-footer-count');
+        if (footerCount) footerCount.textContent = 'Menampilkan 0 riwayat';
+        renderCompletedPagination(0, 1);
         return;
       }
 
-      filtered.forEach(job => {
+      pagedList.forEach(job => {
         const unitType = getUnitTypeFromMaster(job.noLambung, job.typeUnit || 'Unit');
         const planDateDisplay = formatDisplayDate(job.tanggal || selectedDate || '2026-10-05');
         const realisasiDateDisplay = formatDisplayDate(job.tanggalRealisasi || job.tanggal || selectedDate || '2026-10-05');
@@ -23946,16 +23921,79 @@ Oilman 1 & 2 : ${oilman}`;
         tbody.appendChild(tr);
       });
 
-      // Sinkronisasi status master checkbox "Pilih Semua"
+      // Perbarui label status footer dan render tombol navigasi pagination
+      const footerCount = container.querySelector('#completed-footer-count');
+      if (footerCount) {
+        footerCount.textContent = `Menampilkan ${(startIndex + 1).toLocaleString('id-ID')} - ${endIndex.toLocaleString('id-ID')} dari ${filtered.length.toLocaleString('id-ID')} riwayat`;
+      }
+      renderCompletedPagination(totalPages, state.completedPage);
+
+      // Sinkronisasi status master checkbox "Pilih Semua" (berdasarkan baris yang tampil di halaman aktif)
       if (state.isCompSelectMode) {
         const checkAllEl = document.getElementById("comp-check-all");
-        if (checkAllEl && filtered.length > 0) {
-          const allSelected = filtered.every(j => state.selectedCompJobIds.has(String(j.id)));
+        if (checkAllEl && pagedList.length > 0) {
+          const allSelected = pagedList.every(j => state.selectedCompJobIds.has(String(j.id)));
           checkAllEl.checked = allSelected;
         }
       }
       updateCompBulkActionBar();
     }
+
+    function changeCompletedPageSize(newSize) {
+      state.completedPageSize = newSize;
+      state.completedPage = 1;
+      renderCompletedTable();
+    }
+    window.changeCompletedPageSize = changeCompletedPageSize;
+
+    function goToCompletedPage(pageNum) {
+      state.completedPage = pageNum;
+      renderCompletedTable();
+      const c = document.getElementById('completed-table-container');
+      if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    window.goToCompletedPage = goToCompletedPage;
+
+    function renderCompletedPagination(totalPages, currentPage) {
+      const paginationContainer = document.getElementById('completed-pagination-controls');
+      if (!paginationContainer) return;
+
+      if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      const prevDisabled = currentPage <= 1;
+      html += `<button type="button" onclick="goToCompletedPage(${currentPage - 1})" ${prevDisabled ? 'disabled' : ''} class="px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-semibold ${prevDisabled ? 'opacity-40 cursor-not-allowed bg-slate-50 text-slate-400' : 'bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}">Prev</button>`;
+
+      let startP = Math.max(1, currentPage - 2);
+      let endP = Math.min(totalPages, startP + 4);
+      if (endP - startP < 4) {
+        startP = Math.max(1, endP - 4);
+      }
+
+      if (startP > 1) {
+        html += `<button type="button" onclick="goToCompletedPage(1)" class="w-7 h-7 rounded-lg border border-slate-200 text-xs font-semibold bg-white text-slate-700 hover:bg-slate-100 cursor-pointer">1</button>`;
+        if (startP > 2) html += `<span class="px-1 text-slate-400">...</span>`;
+      }
+
+      for (let p = startP; p <= endP; p++) {
+        const isActive = p === currentPage;
+        html += `<button type="button" onclick="goToCompletedPage(${p})" class="w-7 h-7 rounded-lg text-xs font-bold ${isActive ? 'bg-brand-600 text-white shadow-2xs' : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}">${p}</button>`;
+      }
+
+      if (endP < totalPages) {
+        if (endP < totalPages - 1) html += `<span class="px-1 text-slate-400">...</span>`;
+        html += `<button type="button" onclick="goToCompletedPage(${totalPages})" class="w-7 h-7 rounded-lg border border-slate-200 text-xs font-semibold bg-white text-slate-700 hover:bg-slate-100 cursor-pointer">${totalPages}</button>`;
+      }
+
+      const nextDisabled = currentPage >= totalPages;
+      html += `<button type="button" onclick="goToCompletedPage(${currentPage + 1})" ${nextDisabled ? 'disabled' : ''} class="px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-semibold ${nextDisabled ? 'opacity-40 cursor-not-allowed bg-slate-50 text-slate-400' : 'bg-white text-slate-700 hover:bg-slate-100 cursor-pointer'}">Next</button>`;
+
+      paginationContainer.innerHTML = html;
+    }
+    window.renderCompletedPagination = renderCompletedPagination;
 
     // ========================================================================
     // CONTROLLER & LOGIKA HAPUS MASAL RIWAYAT PEKERJAAN SELESAI
@@ -24014,11 +24052,13 @@ Oilman 1 & 2 : ${oilman}`;
 
     function toggleSelectAllCompletedCheckboxes(isChecked) {
       if (!state.selectedCompJobIds) state.selectedCompJobIds = new Set();
-      const currentIds = state._lastFilteredCompletedIds || [];
+      const targetIds = (state._lastPagedCompletedIds && state._lastPagedCompletedIds.length > 0)
+        ? state._lastPagedCompletedIds
+        : (state._lastFilteredCompletedIds || []);
       if (isChecked) {
-        currentIds.forEach(id => state.selectedCompJobIds.add(String(id)));
+        targetIds.forEach(id => state.selectedCompJobIds.add(String(id)));
       } else {
-        currentIds.forEach(id => state.selectedCompJobIds.delete(String(id)));
+        targetIds.forEach(id => state.selectedCompJobIds.delete(String(id)));
       }
       updateCompBulkActionBar();
       renderCompletedTable();
@@ -28243,7 +28283,75 @@ Oilman 1 & 2 : ${oilman}`;
     }
 
     // A. OUTBOUND SYNC HELPERS (WEB -> SUPABASE)
-    async function syncJobToSupabase(job) {
+    // Cache signature baris terakhir yang tersinkronisasi ke Supabase (Dirty Check Guard)
+    const _lastSyncedJobState = new Map();
+    let _jobSyncQueue = new Map();
+    let _jobSyncTimer = null;
+
+    function getJobSyncSignature(supaRow) {
+      if (!supaRow) return '';
+      return [
+        supaRow.id,
+        supaRow.status,
+        supaRow.shift,
+        supaRow.tanggal,
+        supaRow.jam_start,
+        supaRow.jam_end,
+        supaRow.durasi,
+        supaRow.is_pending,
+        supaRow.keterangan,
+        supaRow.opt_name,
+        supaRow.mp1,
+        supaRow.mp2,
+        supaRow.armada_unit,
+        supaRow.hm_stop,
+        supaRow.hm_ready,
+        supaRow.cluster,
+        supaRow.lokasi,
+        supaRow.service_notes,
+        supaRow.bd_notes
+      ].map(v => String(v ?? '')).join('|');
+    }
+
+    async function flushJobSyncQueue() {
+      if (!state.supabaseClient || _jobSyncQueue.size === 0) return;
+      if (_jobSyncTimer) {
+        clearTimeout(_jobSyncTimer);
+        _jobSyncTimer = null;
+      }
+      const rowsToSync = Array.from(_jobSyncQueue.values());
+      _jobSyncQueue.clear();
+
+      try {
+        console.log(`[Supabase Batch Outbound] Mengirim ${rowsToSync.length} baris mutasi dalam 1 HTTP request (Ultra-Low Egress & Log)...!`);
+        const { error } = await state.supabaseClient.from('jobs').upsert(rowsToSync, { onConflict: 'id' });
+        if (error) {
+          console.warn('[Supabase Batch Outbound Error]', error.message);
+        } else {
+          // Pancarkan Broadcast Realtime WebSocket Instan untuk setiap baris yang berhasil di-upsert
+          if (realtimeChannel && typeof realtimeChannel.send === 'function') {
+            rowsToSync.forEach(supaRow => {
+              try {
+                const broadcastPayload = { ...supaRow };
+                if (broadcastPayload.service_notes && broadcastPayload.service_notes.length > 300) {
+                  broadcastPayload.service_notes = broadcastPayload.service_notes.substring(0, 300);
+                }
+                realtimeChannel.send({
+                  type: 'broadcast',
+                  event: 'JOB_SIGNAL',
+                  payload: { id: supaRow.id, action: 'UPDATE', table: 'jobs', data: broadcastPayload, sender: (typeof APP_CLIENT_ID !== 'undefined' ? APP_CLIENT_ID : 'cli_web') }
+                }).catch(() => { });
+              } catch (eBc) { }
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('[Supabase Batch Outbound Exception]', err);
+      }
+    }
+    window.flushJobSyncQueue = flushJobSyncQueue;
+
+    async function syncJobToSupabase(job, immediate = false) {
       if (!state.supabaseClient || !job || !job.id) return;
       try {
         const targetId = String(job.id);
@@ -28292,25 +28400,39 @@ Oilman 1 & 2 : ${oilman}`;
           updated_at: new Date().toISOString()
         };
 
-        const res = await state.supabaseClient.from('jobs').upsert(supaRow, { onConflict: 'id' });
-        if (res?.error) {
-          console.warn('[Supabase Outbound Job Error]', res.error.message);
-        } else {
-          console.log('[Supabase Outbound Job OK]', targetId);
-          // Pancarkan event Broadcast Realtime WebSocket Instan (0 ms latency, 0 log HTTP query antar perangkat)
-          if (realtimeChannel && typeof realtimeChannel.send === 'function') {
-            try {
-              const broadcastPayload = { ...supaRow };
-              if (broadcastPayload.service_notes && broadcastPayload.service_notes.length > 300) {
-                broadcastPayload.service_notes = broadcastPayload.service_notes.substring(0, 300);
-              }
-              realtimeChannel.send({
-                type: 'broadcast',
-                event: 'JOB_SIGNAL',
-                payload: { id: targetId, action: 'UPDATE', table: 'jobs', data: broadcastPayload, sender: APP_CLIENT_ID }
-              }).catch(() => { });
-            } catch (eBc) { }
+        // DIRTY CHECK GUARD: Bandingkan dengan snapshot data terakhir yang disinkronkan
+        const currentSig = getJobSyncSignature(supaRow);
+        if (_lastSyncedJobState.get(targetId) === currentSig) {
+          // Data sama persis, lewati pengiriman (0 KB Egress, 0 PostgREST log!)
+          return;
+        }
+        _lastSyncedJobState.set(targetId, currentSig);
+
+        if (immediate) {
+          const res = await state.supabaseClient.from('jobs').upsert(supaRow, { onConflict: 'id' });
+          if (res?.error) {
+            console.warn('[Supabase Outbound Job Error]', res.error.message);
+          } else {
+            console.log('[Supabase Outbound Job OK]', targetId);
+            if (realtimeChannel && typeof realtimeChannel.send === 'function') {
+              try {
+                const broadcastPayload = { ...supaRow };
+                if (broadcastPayload.service_notes && broadcastPayload.service_notes.length > 300) {
+                  broadcastPayload.service_notes = broadcastPayload.service_notes.substring(0, 300);
+                }
+                realtimeChannel.send({
+                  type: 'broadcast',
+                  event: 'JOB_SIGNAL',
+                  payload: { id: targetId, action: 'UPDATE', table: 'jobs', data: broadcastPayload, sender: (typeof APP_CLIENT_ID !== 'undefined' ? APP_CLIENT_ID : 'cli_web') }
+                }).catch(() => { });
+              } catch (eBc) { }
+            }
           }
+        } else {
+          // Antrekan dalam batch queue (Debounce 350ms)
+          _jobSyncQueue.set(targetId, supaRow);
+          if (_jobSyncTimer) clearTimeout(_jobSyncTimer);
+          _jobSyncTimer = setTimeout(flushJobSyncQueue, 350);
         }
       } catch (err) {
         console.warn('[Supabase Outbound Job Exception]', err);
@@ -28993,12 +29115,19 @@ Oilman 1 & 2 : ${oilman}`;
     function getHotWindowRange() {
       const todayStr = getEffectiveTodayString();
       const dStart = new Date(todayStr);
-      dStart.setDate(dStart.getDate() - 5); // 5 hari ke belakang
+      dStart.setDate(dStart.getDate() - 14); // 14 hari ke belakang sesuai Aturan 1
       const startDate = dStart.toISOString().split('T')[0];
 
-      const dEnd = new Date(todayStr);
-      dEnd.setDate(dEnd.getDate() + 3); // 3 hari ke depan (hari ini, besok H+1, lusa H+2, H+3)
-      const endDate = dEnd.toISOString().split('T')[0];
+      // Pastikan mencakup seluruh Mining Week aktif (Minggu s/d Sabtu)
+      const weekRange = (typeof getMiningWeekRange === 'function') ? getMiningWeekRange(new Date()) : null;
+      let endDate = todayStr;
+      if (weekRange && weekRange.endDate) {
+        endDate = weekRange.endDate;
+      } else {
+        const dEnd = new Date(todayStr);
+        dEnd.setDate(dEnd.getDate() + 7);
+        endDate = dEnd.toISOString().split('T')[0];
+      }
 
       return { startDate, endDate, todayStr };
     }
@@ -29051,7 +29180,7 @@ Oilman 1 & 2 : ${oilman}`;
             parsedJobs.forEach(j => {
               if (j && j.id) {
                 window.globalDataCache.jobs.set(String(j.id), j);
-                if (j.tanggal) window.globalDataCache.loadedDates.add(j.tanggal);
+                // Jangan tandai loadedDates di sini agar fetch Supabase tetap melengkapi seluruh baris
               }
             });
           }
@@ -29084,21 +29213,49 @@ Oilman 1 & 2 : ${oilman}`;
 
         console.log('[Supabase Data Sync] Mengambil data Hot-Window: ' + startDate + ' s/d ' + endDate + ' (Hari ini: ' + todayStr + ')...');
 
-        // Tarik data paralel: jobs dalam rentang operasional aktif, pending jobs di luar rentang, dan seluruh order requests
-        const [recentJobsRes, pendingJobsRes, ordersRes] = await Promise.all([
-          state.supabaseClient
+        // Paginasi bertahap untuk Hot-Window Jobs (Aturan 1 & Aturan 2: Mencegah terpotong batas 1.000 Supabase)
+        let recentJobs = [];
+        let fromOffset = 0;
+        const CHUNK_SIZE = 1000;
+        let keepFetching = true;
+        let iter = 0;
+        let recentJobsError = null;
+
+        while (keepFetching && iter < 10) {
+          iter++;
+          const { data, error } = await state.supabaseClient
             .from('jobs')
             .select(SUPABASE_JOB_LIST_COLS)
             .gte('tanggal', startDate)
             .lte('tanggal', endDate)
             .order('tanggal', { ascending: true })
-            .limit(1000),
+            .range(fromOffset, fromOffset + CHUNK_SIZE - 1);
+
+          if (error) {
+            recentJobsError = error;
+            console.warn('[Supabase Sync Error recentJobs]:', error.message);
+            break;
+          }
+          if (Array.isArray(data) && data.length > 0) {
+            recentJobs = recentJobs.concat(data);
+            if (data.length < CHUNK_SIZE) {
+              keepFetching = false;
+            } else {
+              fromOffset += data.length;
+            }
+          } else {
+            keepFetching = false;
+          }
+        }
+
+        // Tarik data paralel: pending jobs di luar rentang dan seluruh order requests
+        const [pendingJobsRes, ordersRes] = await Promise.all([
           state.supabaseClient
             .from('jobs')
             .select(SUPABASE_JOB_LIST_COLS)
             .or('is_pending.eq.true,status.eq.scheduled,status.eq.pending,status.eq.open,status.eq.in_progress')
             .lt('tanggal', startDate)
-            .limit(200),
+            .limit(500),
           state.supabaseClient
             .from('order_requests')
             .select(SUPABASE_ORDER_LIST_COLS)
@@ -29106,7 +29263,6 @@ Oilman 1 & 2 : ${oilman}`;
             .limit(300)
         ]);
 
-        if (recentJobsRes.error) console.warn('[Supabase Sync Error recentJobs]:', recentJobsRes.error.message);
         if (pendingJobsRes.error) console.warn('[Supabase Sync Error pendingJobs]:', pendingJobsRes.error.message);
         if (ordersRes.error) console.warn('[Supabase Sync Error order_requests]:', ordersRes.error.message);
 
@@ -29149,9 +29305,8 @@ Oilman 1 & 2 : ${oilman}`;
         // =========================================================================
         // REKONSILIASI 2: JOBS (GREASING, AIR CLEANER, WATER TRUCK LENGKAP & REKONSILIASI)
         // =========================================================================
-        if (!recentJobsRes.error) {
-          const recentJobs = recentJobsRes.data || [];
-          const pendingJobs = pendingJobsRes.data || [];
+        if (!recentJobsError) {
+          const pendingJobs = pendingJobsRes?.data || [];
           const combinedJobs = [...recentJobs, ...pendingJobs];
           const cloudJobIds = new Set(combinedJobs.map(j => String(j.id)));
 
@@ -29173,9 +29328,16 @@ Oilman 1 & 2 : ${oilman}`;
             if (jobObj && jobObj.id) {
               const sid = String(jobObj.id);
               window.globalDataCache.jobs.set(sid, jobObj);
-              if (jobObj.tanggal) window.globalDataCache.loadedDates.add(jobObj.tanggal);
             }
           });
+
+          // Tandai seluruh tanggal dalam rentang Hot-Window sebagai fully loaded
+          let curD = new Date(startDate);
+          const endD = new Date(endDate);
+          while (curD <= endD) {
+            window.globalDataCache.loadedDates.add(curD.toISOString().split('T')[0]);
+            curD.setDate(curD.getDate() + 1);
+          }
 
           safeSaveTrimmedJobsToStorage();
           console.log('[Supabase Jobs Sync OK] ' + combinedJobs.length + ' jobs termuat dalam rentang aktif. Total cache RAM: ' + window.globalDataCache.jobs.size + ' jobs.');
@@ -29473,7 +29635,6 @@ Oilman 1 & 2 : ${oilman}`;
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_armada' }, handleRealtimeArmadaChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'air_cleaner_monitoring' }, handleRealtimeAirCleanerChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_operators' }, handleRealtimeOperatorChange)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'master_kontak_pro' }, handleRealtimeOperatorChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_units' }, handleRealtimeUnitChange)
         // Listener Postgres Changes Realtime untuk Mutasi Hapus & Tambah Langsung dari Database Supabase
         .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'order_requests' }, (payload) => {
@@ -29699,6 +29860,9 @@ Oilman 1 & 2 : ${oilman}`;
           refreshActiveTable();
           if (state.activeTab === 'dashboard' && typeof refreshDashboardData === 'function') {
             refreshDashboardData();
+          }
+          if (typeof autoEvaluatePendingJobs === 'function') {
+            autoEvaluatePendingJobs();
           }
         } catch (e) {
           console.warn('[Supabase] Init gagal, menggunakan local fallback:', e);
@@ -30108,16 +30272,10 @@ Oilman 1 & 2 : ${oilman}`;
 
       let supaOps = null;
       try {
-        // 1. Coba baca seluruh data dari master_operators terlebih dahulu (tabel utama di Supabase)
+        // Baca seluruh data kontak dari master_operators (tabel utama di Supabase)
         const opsData = await fetchEntireSupabaseTable("master_operators", "id, nrp, nama, no_wa, cluster, jabatan, status_aktif", "nama");
         if (Array.isArray(opsData) && opsData.length > 0) {
           supaOps = opsData;
-        } else {
-          // 2. Fallback baca dari master_kontak_pro jika master_operators kosong
-          const proData = await fetchEntireSupabaseTable("master_kontak_pro", "id, nrp, nama, no_wa", "nama");
-          if (Array.isArray(proData) && proData.length > 0) {
-            supaOps = proData;
-          }
         }
       } catch (fetchErr) {
         console.warn("[Supabase Sync Kontak Pro Error]", fetchErr);
@@ -32607,8 +32765,13 @@ Oilman 1 & 2 : ${oilman}`;
       } catch (e) { }
       try {
         if (typeof autoEvaluatePendingJobs === 'function') {
-          autoEvaluatePendingJobs();
-          setInterval(autoEvaluatePendingJobs, 300000); // 5 menit (menghemat 90% frekuensi pemrosesan & log Supabase)
+          // Jangan panggil evaluasi secara sinkron pada cache lokal parsial di boot.
+          // Jadwalkan evaluasi background berkala setiap 5 menit ketika online.
+          setInterval(() => {
+            if (state.isOnlineSupabase && !window.globalDataCache?.isFetchingActiveJobs) {
+              autoEvaluatePendingJobs();
+            }
+          }, 300000);
         }
       } catch (e) { }
       try { enforceDateRestrictions(); } catch (e) { }
