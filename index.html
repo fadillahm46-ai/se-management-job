@@ -20911,14 +20911,13 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         ? isJobAnOrderRequest(job)
         : (String(job.id).startsWith('UNS') || job.job_type === 'unsch_lt' || job.job_type === 'unsch_wt');
 
-      const headerText = isRequest
-        ? '𝙋𝙚𝙡𝙖𝙥𝙤𝙧𝙖𝙣 𝙐𝙣𝙞𝙩 𝙍𝙚𝙦𝙪𝙚𝙨𝙩/𝙐𝙣𝙨𝙘𝙝𝙚𝙙𝙪𝙡𝙚 𝙨𝙚𝙧𝙫𝙞𝙘𝙚'
-        : '𝙋𝙚𝙡𝙖𝙥𝙤𝙧𝙖𝙣 𝙐𝙣𝙞𝙩 𝙎𝙘𝙝𝙚𝙙𝙪𝙡𝙚𝙙 𝙨𝙚𝙧𝙫𝙞𝙘𝙚';
+      // Format Header Bold sesuai permintaan pengguna (*PELAPORAN UNIT* untuk tebal di WhatsApp & Markdown)
+      const headerText = '*PELAPORAN UNIT*';
 
       const kodeUnit = job.noLambung || '-';
       let deskripsi = '-';
       if (isRequest) {
-        deskripsi = job.deskripsi || job.keterangan || job.alasan || job.kondisi || '-';
+        deskripsi = job.deskripsi || job.keterangan || job.alasan || job.kondisi || job.requestedJob || '-';
       } else {
         const catMap = {
           small: 'Greasing Small Track',
@@ -20937,21 +20936,40 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         : ((job.hmStop && job.hmReady)
           ? `${job.hmStop} s/d ${job.hmReady}`
           : (job.hmUnit || job.hm || '-'));
+
       const startFinish = (job.jamStart || job.jamEnd)
         ? `${job.jamStart || '-'} s/d ${job.jamEnd || '-'}`
         : (job.waktu || '-');
 
-      let statusStr = (job.status ? job.status.toUpperCase() : 'SCHEDULED');
+      let statusStr = (job.status ? String(job.status).toUpperCase() : 'SCHEDULED');
       if (job.status === 'ach') statusStr = 'ACH';
-      else if (job.status === 'non_ach') statusStr = 'NON ACH';
-      if (job.isPending) statusStr += ' (PENDING)';
+      else if (job.status === 'non_ach' || job.status === 'non-ach') statusStr = 'NON ACH';
+      else if (job.status === 'pending' || job.isPending) statusStr = 'PENDING';
+      else if (job.status === 'scheduled') statusStr = 'SCHEDULED';
+      else if (job.status === 'cancel' || job.status === 'cancelled') statusStr = 'CANCEL';
 
-      const keterangan = job.alasanNonAch || job.keterangan || '-';
+      let rawKet = job.alasanNonAch || job.non_ach_reason || job.keterangan || job.deskripsi || '-';
+      if (rawKet && typeof rawKet === 'string') {
+        if (rawKet.startsWith('PHOTOS_ATTACHED')) {
+          rawKet = '-';
+        } else {
+          rawKet = rawKet.replace(/\bPS\s*1000\b/gi, '').replace(/\[SERVICE\]:\s*/gi, '').replace(/\s*\(?PS\s*\d*\)?/gi, '').trim() || '-';
+        }
+      }
+      const keterangan = rawKet || '-';
+
       const armada = (job.armada && job.armada !== '-')
         ? job.armada
-        : (job.ltUnit && job.ltUnit !== '-' ? job.ltUnit : (job.wtUnit || '-'));
-      const operator = (job.opt && job.opt !== '-') ? job.opt : (job.optName || '-');
-      const oilman = `${job.mp1 || '-'} & ${job.mp2 || '-'}`;
+        : (job.ltUnit && job.ltUnit !== '-' ? job.ltUnit : (job.wtUnit && job.wtUnit !== '-' ? job.wtUnit : '-'));
+
+      const operator = (job.opt && job.opt !== '-')
+        ? job.opt
+        : (job.optName && job.optName !== '-' ? job.optName : '-');
+
+      const mps = [job.mp1, job.mp2].filter(m => m && m !== '-' && m !== '');
+      const oilman = (mps.length > 0)
+        ? mps.join(' & ')
+        : (job.mp && job.mp !== '-' ? job.mp : '-');
 
       const textToCopy = `${headerText}
 Kode Unit : ${kodeUnit}
@@ -20976,7 +20994,7 @@ Oilman 1 & 2 : ${oilman}`;
     }
     window.copyJobDetailReport = copyJobDetailReport;
 
-    function fallbackCopyText(text) {
+        function fallbackCopyText(text) {
       const ta = document.createElement('textarea');
       ta.value = text;
       ta.style.position = 'fixed';
