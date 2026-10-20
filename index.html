@@ -6764,12 +6764,13 @@
   </div>
 
   <!-- MODAL DETAIL AKSI CLEAN AIR CLEANER -->
+  <!-- MODAL DETAIL AKSI CLEAN AIR CLEANER -->
   <div id="modal-ac-detail"
-    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4 overflow-y-auto">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 space-y-3 shadow-2xl max-h-[92vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 shrink-0">
         <div class="flex items-center space-x-2.5">
-          <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+          <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
             </svg>
@@ -6786,15 +6787,15 @@
         </button>
       </div>
 
-      <div class="space-y-3 text-xs">
+      <div class="space-y-2.5 text-xs overflow-y-auto pr-1 flex-1">
         <!-- Tanggal Action -->
-        <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+        <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
           <span class="text-slate-500 font-semibold text-[11px]">Tanggal Action:</span>
           <span class="font-bold font-mono text-emerald-800 text-xs px-2.5 py-1 bg-white rounded-lg border border-emerald-200/60 shadow-2xs" id="ac-detail-date">-</span>
         </div>
 
         <!-- Keterangan yang diisi oleh Oilman -->
-        <div class="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-100 space-y-1.5">
+        <div class="p-3 rounded-2xl bg-emerald-50/60 border border-emerald-100 space-y-1.5">
           <div class="flex items-center justify-between">
             <span class="text-[11px] font-bold text-emerald-950 flex items-center space-x-1.5">
               <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -6804,11 +6805,27 @@
             </span>
             <span class="text-[10px] text-emerald-700 font-semibold" id="ac-detail-oilman"></span>
           </div>
-          <p class="text-xs text-slate-700 font-medium leading-relaxed bg-white p-2.5 rounded-xl border border-emerald-100/80 min-h-[50px] whitespace-pre-wrap" id="ac-detail-notes">-</p>
+          <p class="text-xs text-slate-700 font-medium leading-relaxed bg-white p-2.5 rounded-xl border border-emerald-100/80 min-h-[45px] whitespace-pre-wrap" id="ac-detail-notes">-</p>
+        </div>
+
+        <!-- Dokumentasi Foto Evidence (Jika Ada) -->
+        <div id="ac-detail-photo-container" class="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2 hidden">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-800 flex items-center space-x-1.5">
+              <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              <span>Dokumentasi Foto Evidence</span>
+            </span>
+            <span id="ac-detail-photo-count" class="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 shadow-2xs">0 Foto</span>
+          </div>
+          <div id="ac-detail-photos" class="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1 pb-1">
+            <!-- Foto dynamically rendered di sini -->
+          </div>
         </div>
       </div>
 
-      <div class="pt-2">
+      <div class="pt-2 border-t border-slate-100 shrink-0">
         <button type="button" onclick="toggleModal('modal-ac-detail', false)"
           class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition shadow-xs cursor-pointer">
           Tutup
@@ -6816,8 +6833,6 @@
       </div>
     </div>
   </div>
-
-  <!-- MODAL 3I: DETAIL LENGKAP JADWAL JOB (Pop-up saat No Lambung Unit Diklik) -->
   <div id="modal-job-detail"
     class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white rounded-2xl max-w-lg w-full p-3.5 sm:p-4 space-y-2 shadow-2xl border border-slate-100 max-h-[92vh] flex flex-col">
@@ -8773,7 +8788,101 @@
       }
     }
 
-    function loadDatabaseSync() {
+    /**
+     * PEMBERSIH & PEMULIH OTOMATIS BUG SILANG KATEGORI (Cross-Job Bug Healer)
+     * 1. Menstandarkan ID jadwal yang lama (tanpa slug kategori) agar tidak pernah bertabrakan
+     * 2. Memulihkan unit yang tertular status ACH dari kategori lain (misal E289 di Air Cleaner tertular Greasing)
+     */
+    function healCrossCategoryScheduleCollisions() {
+      if (!window.globalDataCache || !window.globalDataCache.jobs) return;
+      let hasFixes = false;
+
+      const getCleanCatSlug = (cat, isWt = false) => {
+        const c = String(cat || '').toLowerCase().trim();
+        if (c === 'aircleaner' || c === 'air_cleaner') return 'aircleaner';
+        if (c === 'topup' || c === 'topup_oil') return 'topup';
+        if (c === 'digger') return 'digger';
+        if (c === 'small') return 'small';
+        if (c === 'non_coal' || c === 'noncoal') return 'noncoal';
+        if (c === 'rom') return 'rom';
+        return isWt ? 'coal' : 'small';
+      };
+
+      for (const [id, job] of Array.from(window.globalDataCache.jobs.entries())) {
+        if (!job) continue;
+        const idStr = String(job.id || '');
+        const isSch = idStr.startsWith('LT-SCH-') || idStr.startsWith('WT-SCH-');
+        if (!isSch) continue;
+
+        const isWt = idStr.startsWith('WT') || job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat);
+        const catSlug = getCleanCatSlug(job.cat, isWt);
+
+        // 1. Perbaiki ID jadwal lama yang belum mengandung slug kategori
+        if (!idStr.includes(`-${catSlug}-`) && !idStr.includes(`-${catSlug}`)) {
+          const cleanLambung = String(job.noLambung || 'UNIT').trim().toUpperCase();
+          const dateStr = String(job.tanggal || getEffectiveTodayString()).replace(/-/g, '');
+          const shift = parseInt(job.shift || 1, 10);
+          const prefix = isWt ? 'WT-SCH-' : 'LT-SCH-';
+          const roundSuffix = (isWt && parseInt(job.washingRound, 10) === 2) ? '-W2' : '';
+          const newId = `${prefix}${catSlug}-${cleanLambung}-${dateStr}-S${shift}${roundSuffix}`;
+
+          window.globalDataCache.jobs.delete(idStr);
+          job.id = newId;
+          window.globalDataCache.jobs.set(newId, job);
+          hasFixes = true;
+        }
+
+        // 2. Pemulihan unit yang tertular status ACH dari kategori lain
+        // Jika job berkategori di luar greasing small (misal aircleaner, topup, washing non coal, washing coal)
+        // dan berstatus ACH padahal TIDAK memiliki foto atau bukti pengerjaan sendiri:
+        if (catSlug !== 'small') {
+          const s = String(job.status || '').toLowerCase().trim();
+          const isAch = ['ach', 'achieved', 'done'].includes(s) || job.status_final === 'ACHIEVED';
+          const hasEvidence = (Array.isArray(job.fotos) && job.fotos.some(p => p && typeof p === 'string' && p.trim() !== '')) ||
+                              (Boolean(job.jamStart) && String(job.jamStart).trim() !== '-' && Boolean(job.jamEnd) && String(job.jamEnd).trim() !== '-');
+
+          if (isAch && !hasEvidence && !job.serviceNotes?.includes('SERVICE')) {
+            job.status = 'scheduled';
+            job.isPending = false;
+            job.isLocked = false;
+            delete job.status_final;
+            delete job.statusFinal;
+            job.jamStart = '';
+            job.jamEnd = '';
+            job.durasi = null;
+            hasFixes = true;
+            console.log(`[Cross-ACH Guard] Memulihkan unit ${job.noLambung} (${catSlug}) dari penularan ACH palsu kembali ke antrean aktif.`);
+          }
+        }
+      }
+
+      // Bersihkan juga jobHistory jika ada record non-small yang tercatat tanpa foto/jam pelaksanaan akibat tabrakan ID
+      if (Array.isArray(state.jobHistory)) {
+        const origLen = state.jobHistory.length;
+        state.jobHistory = state.jobHistory.filter(h => {
+          if (!h) return false;
+          const hCat = String(h.cat || '').toLowerCase().trim();
+          const isAch = String(h.status_final || '').toUpperCase() === 'ACHIEVED';
+          const hasEvidence = (Array.isArray(h.fotos) && h.fotos.length > 0) || (Boolean(h.jam_start) && h.jam_start !== '-');
+          if (hCat && hCat !== 'small' && isAch && !hasEvidence) {
+            return false;
+          }
+          return true;
+        });
+        if (state.jobHistory.length !== origLen) {
+          hasFixes = true;
+          safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
+        }
+      }
+
+      if (hasFixes) {
+        if (typeof syncGlobalCacheToState === 'function') syncGlobalCacheToState();
+        if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
+      }
+    }
+    window.healCrossCategoryScheduleCollisions = healCrossCategoryScheduleCollisions;
+
+        function loadDatabaseSync() {
       try {
         // Satu kali migrasi pembersihan data dummy lama dari local storage browser pengguna
         const CLEAN_VERSION = 'v2026_clean_data_init_1';
@@ -8826,7 +8935,7 @@
                 if (j && j.id) window.globalDataCache.jobs.set(String(j.id), j);
               });
               if (typeof syncGlobalCacheToState === 'function') {
-                syncGlobalCacheToState();
+                syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
               }
               console.log(`[Storage Render-First] ${parsed.length} transaksi dimuat dari local cache.`);
             }
@@ -11499,7 +11608,7 @@
               }
             });
             window.globalDataCache.loadedDates.add(dateStr);
-            syncGlobalCacheToState();
+            syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
             if (state.activeTab === 'lt-schedule') renderLtScheduleTable();
             else if (state.activeTab === 'wt-schedule') renderWtScheduleTable();
           } else {
@@ -13195,6 +13304,17 @@
     /**
      * Membentuk jadwal 1 bulan penuh (auto-fill 30/31 hari) sesuai aturan frekuensi pekerjaan
      */
+    function getScheduleCategoryKey(cat, isWt = false) {
+      const c = String(cat || '').toLowerCase().trim();
+      if (c === 'aircleaner' || c === 'air_cleaner') return 'aircleaner';
+      if (c === 'topup' || c === 'topup_oil') return 'topup';
+      if (c === 'digger') return 'digger';
+      if (c === 'small') return 'small';
+      if (c === 'non_coal' || c === 'noncoal') return 'noncoal';
+      if (c === 'rom') return 'rom';
+      return isWt ? 'coal' : 'small';
+    }
+    window.getScheduleCategoryKey = getScheduleCategoryKey;
     function generateMonthlySchedule(baseJob, targetMonthStr, masterUnits = []) {
       const targetMonth = targetMonthStr || (baseJob.tanggal ? baseJob.tanggal.slice(0, 7) : getEffectiveTodayString().slice(0, 7));
       const [yearStr, monthStr] = targetMonth.split('-');
@@ -13278,7 +13398,8 @@
           const shift = parseInt(baseJob.shift || 1, 10);
           const idPrefix = isWt ? 'WT-SCH-' : 'LT-SCH-';
           const roundSuffix = (isWt && parseInt(baseJob.washingRound, 10) === 2) ? '-W2' : '';
-          const jobId = `${idPrefix}${dateStr.replace(/-/g, '')}-${cleanLambung}-S${shift}${roundSuffix}`;
+          const catKey = (typeof getScheduleCategoryKey === "function") ? getScheduleCategoryKey(baseJob.cat, isWt) : (isWt ? "coal" : "small");
+          const jobId = `${idPrefix}${dateStr.replace(/-/g, '')}-${cleanLambung}-${catKey}-S${shift}${roundSuffix}`;
 
           // Otomatis tentukan armada & personil roster untuk tanggal dan shift tersebut
           const assignedArmada = baseJob.ltUnit || baseJob.armada || (isWt ? 'WT101' : 'LT2535');
@@ -13393,7 +13514,7 @@
           if (['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN'].includes(st)) {
             const d = h.tanggal_eksekusi || h.tanggal_rencana || '';
             const u = String(h.no_lambung || '').trim().toUpperCase();
-            const c = String(h.cat || 'small').toLowerCase();
+            const c = String(h.cat || '').toLowerCase().trim();
             // Hanya greasing small yang menggunakan cross-job daily protection:
             if (d && u && (c === 'small')) {
               achievedUnitDateMap.add(`${d}_${u}_${c}`);
@@ -13411,7 +13532,7 @@
           if (isDone || hasEvidence || j.isLocked) {
             const d = j.tanggal || todayStr;
             const u = String(j.noLambung).trim().toUpperCase();
-            const c = String(j.cat || 'small').toLowerCase();
+            const c = String(j.cat || '').toLowerCase().trim();
             // Hanya greasing small:
             if (c === 'small') {
               achievedUnitDateMap.add(`${d}_${u}_${c}`);
@@ -13433,7 +13554,14 @@
           // KUNCI STATUSNYA DAN JANGAN PERNAH DIUBAH MENJADI PENDING / DIALIHKAN KE SHIFT 2 / DITUTUP NON ACH!
           // -------------------------------------------------------------------
           const historyRecord = (Array.isArray(state.jobHistory) && state.jobHistory.length > 0)
-            ? state.jobHistory.find(h => String(h.job_id) === cleanJobId)
+            ? state.jobHistory.find(h => {
+                if (String(h.job_id) !== cleanJobId && String(h.id) !== cleanJobId) return false;
+                // Proteksi Silang Kategori: Riwayat selesai HANYA berlaku untuk kategori yang sama persis
+                const jCat = String(j.cat || '').toLowerCase().trim();
+                const hCat = String(h.cat || '').toLowerCase().trim();
+                if (jCat && hCat && jCat !== hCat) return false;
+                return true;
+              })
             : null;
 
           const isHistoryDone = historyRecord && ['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN', 'NON_ACH'].includes(String(historyRecord.status_final || '').toUpperCase());
@@ -13469,9 +13597,10 @@
           const isGreasingSmallJob = (j.cat === 'small' || (typeof getJobCategoryRule === 'function' && getJobCategoryRule(j) === 'GREASING_SMALL'));
 
           const jDate = j.tanggal || todayStr;
-          const currentUnitDateKey = `${jDate}_${String(j.noLambung || '').trim().toUpperCase()}_${String(j.cat || 'small').toLowerCase()}`;
-          // isUnitAlreadyAchieved HANYA berlaku untuk greasing small (1x sehari), DILARANG KERAS untuk washing (4x sehari):
-          const isUnitAlreadyAchieved = isGreasingSmallJob && achievedUnitDateMap.has(currentUnitDateKey);
+          const jCat = String(j.cat || '').toLowerCase().trim();
+          const currentUnitDateKey = `${jDate}_${String(j.noLambung || '').trim().toUpperCase()}_small`;
+          // isUnitAlreadyAchieved HANYA berlaku untuk greasing small (1x sehari), DILARANG KERAS untuk washing, aircleaner, dan top up:
+          const isUnitAlreadyAchieved = (jCat === 'small') && achievedUnitDateMap.has(currentUnitDateKey);
 
           if (
             j.isLocked ||
@@ -14575,7 +14704,9 @@
             monthlyList.forEach(mj => createdJobs.push(mj));
           } else {
             const idPrefix = isWt ? 'WT-SCH-' : 'LT-SCH-';
-            baseJob.id = `${idPrefix}${selectedDate.replace(/-/g, '')}-${cleanLambung}-S${effectiveShift}`;
+            const catKey = (typeof getScheduleCategoryKey === "function") ? getScheduleCategoryKey(baseJob.cat, isWt) : (isWt ? "coal" : "small");
+            const roundSuffix = (isWt && parseInt(baseJob.washingRound, 10) === 2) ? "-W2" : "";
+            baseJob.id = `${idPrefix}${selectedDate.replace(/-/g, '')}-${cleanLambung}-${catKey}-S${effectiveShift}${roundSuffix}`;
             createdJobs.push(baseJob);
           }
         });
@@ -15811,7 +15942,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
               // Deteksi apakah unit Big Digger ini juga memiliki pekerjaan Clean Air Cleaner pada tanggal yang sama
               const hasAcJob = (() => {
-                if (activeCat !== 'digger') return false;
+                if (activeCat !== 'digger' && activeCat !== 'small') return false;
                 const targetLambung = String(job.noLambung || '').trim().toUpperCase();
                 if (!targetLambung) return false;
                 const targetDate = job.tanggal || selectedDate;
@@ -16009,7 +16140,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
               // Deteksi apakah unit Big Digger ini juga memiliki pekerjaan Clean Air Cleaner pada tanggal yang sama
               const hasAcJob = (() => {
-                if (activeCat !== 'digger') return false;
+                if (activeCat !== 'digger' && activeCat !== 'small') return false;
                 const targetLambung = String(job.noLambung || '').trim().toUpperCase();
                 if (!targetLambung) return false;
                 const targetDate = job.tanggal || selectedDate;
@@ -16384,7 +16515,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
               // Deteksi apakah unit Big Digger ini juga memiliki pekerjaan Clean Air Cleaner pada tanggal yang sama
               const hasAcJob = (() => {
-                if (activeCat !== 'digger') return false;
+                if (activeCat !== 'digger' && activeCat !== 'small') return false;
                 const targetLambung = String(job.noLambung || '').trim().toUpperCase();
                 if (!targetLambung) return false;
                 const targetDate = job.tanggal || selectedDate;
@@ -22810,7 +22941,8 @@ Oilman 1 & 2 : ${oilman}`;
       }
 
       // 2. Single Day Job (Fallback jika toggle dimatikan)
-      baseJob.id = isWt ? ('WT-SCH-' + (baseJob.tanggal || '').replace(/-/g, '') + '-' + noLambung + '-S' + baseJob.shift + (parseInt(washingRound, 10) === 2 ? '-W2-' : '-W1-') + Math.random().toString(36).substr(2, 4)) : ('LT-SCH-' + String(Date.now()).slice(-6));
+            const catKey = (typeof getScheduleCategoryKey === 'function') ? getScheduleCategoryKey(baseJob.cat, isWt) : (isWt ? 'coal' : 'small');
+      baseJob.id = isWt ? ('WT-SCH-' + (baseJob.tanggal || '').replace(/-/g, '') + '-' + noLambung + '-' + catKey + '-S' + baseJob.shift + (parseInt(washingRound, 10) === 2 ? '-W2-' : '-W1-') + Math.random().toString(36).substr(2, 4)) : ('LT-SCH-' + (baseJob.tanggal || '').replace(/-/g, '') + '-' + noLambung + '-' + catKey + '-S' + baseJob.shift + '-' + Math.random().toString(36).substr(2, 4));
       if (isWt) {
         state.watertruckState.jobs.push(baseJob);
       } else {
@@ -25736,7 +25868,7 @@ Oilman 1 & 2 : ${oilman}`;
     window.updateAirCleanerTypeOptions = updateAirCleanerTypeOptions;
 
     function showAirCleanerActionDetail(noLambung, cleanIdx) {
-      const item = (state.airCleanerMonitor || []).find(m => String(m.noLambung).toUpperCase() === String(noLambung).toUpperCase());
+      const item = (state.airCleanerMonitor || []).find(m => String(m.noLambung || '').trim().toUpperCase() === String(noLambung || '').trim().toUpperCase());
       if (!item) return;
 
       const rawClean = (item.cleans && item.cleans[cleanIdx]) ? item.cleans[cleanIdx] : '';
@@ -25754,37 +25886,121 @@ Oilman 1 & 2 : ${oilman}`;
         actionDate = rawStr.replace(/\s*\(?PS\s*\d*\)?/gi, '').replace(/\s*\(?SERVICE\)?/gi, '').trim();
       }
 
-      // Cari dari daftar pekerjaan aktual untuk mendapatkan keterangan yang diisi oleh oilman
+      // Normalisasi format tanggal seragam (YYYY-MM-DD) agar pencarian akurat
+      const normalizeDateToStandard = (dStr) => {
+        if (!dStr) return '';
+        dStr = String(dStr).trim();
+        if (dStr.includes('/')) {
+          const p = dStr.split('/');
+          if (p.length === 3) {
+            const y = (p[2].length === 2) ? ('20' + p[2]) : p[2];
+            const m = p[1].padStart(2, '0');
+            const d = p[0].padStart(2, '0');
+            return `${y}-${m}-${d}`;
+          }
+        }
+        if (dStr.includes('-')) {
+          const p = dStr.split('-');
+          if (p.length === 3) {
+            if (p[0].length === 4) {
+              return `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
+            }
+            const y = (p[2].length === 2) ? ('20' + p[2]) : p[2];
+            return `${y}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
+          }
+        }
+        return dStr;
+      };
+
+      const stdActionDate = normalizeDateToStandard(actionDate);
+
+      // Cari dari daftar pekerjaan aktual untuk mendapatkan keterangan dan bukti foto
       const allJobs = [
         ...(state.lubetruckState?.jobs || []),
         ...(state.unscheduledLtJobs || []),
         ...(Array.isArray(state.jobHistory) ? state.jobHistory : []),
-        ...(state.orderRequests || [])
+        ...(state.orderRequests || []),
+        ...(window.globalDataCache?.jobs ? Array.from(window.globalDataCache.jobs.values()) : [])
       ];
 
       // Cari job yang cocok berdasarkan nomor lambung dan tanggal
       const matchedJobs = allJobs.filter(j => {
-        if (String(j.noLambung || '').toUpperCase() !== String(noLambung).toUpperCase()) return false;
-        const jDate = j.tanggalRealisasi || j.tanggal || '';
-        const parts = jDate.split('-');
-        const fDate = (parts.length === 3) ? `${parts[2]}/${parts[1]}/${parts[0]}` : jDate;
-        return fDate === actionDate || jDate === actionDate;
+        if (!j) return false;
+        const jLambung = String(j.noLambung || j.no_lambung || '').trim().toUpperCase();
+        if (jLambung !== String(noLambung || '').trim().toUpperCase()) return false;
+        const jDate = String(j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || j.tanggal_rencana || '').trim();
+        const stdJDate = normalizeDateToStandard(jDate);
+        return (stdJDate && stdJDate === stdActionDate) || (jDate && jDate === actionDate);
       });
 
-      if (matchedJobs.length > 0) {
-        const bestJob = matchedJobs.find(j => j.serviceNotes || (j.keterangan && j.keterangan !== '-')) || matchedJobs[0];
-        if (!oilmanNotes) {
-          oilmanNotes = bestJob.serviceNotes || bestJob.keterangan || bestJob.deskripsi || '';
-          // Hapus teks PS1000 atau prefix [SERVICE]: dari keterangan sesuai permintaan
-          oilmanNotes = oilmanNotes.replace(/\bPS\s*1000\b/gi, '').replace(/\[SERVICE\]:\s*/gi, '').replace(/\s*\(?PS\s*\d*\)?/gi, '').trim();
+      // Prioritaskan job Air Cleaner jika ada, baru fallback ke job lainnya pada unit & tanggal yang sama
+      const sortedMatched = [...matchedJobs].sort((a, b) => {
+        const isAcA = (a.cat === 'aircleaner' || a.cat === 'air_cleaner' || String(a.requestedJob || '').toLowerCase().includes('air') || String(a.deskripsi || '').toLowerCase().includes('air')) ? 2 : 1;
+        const isAcB = (b.cat === 'aircleaner' || b.cat === 'air_cleaner' || String(b.requestedJob || '').toLowerCase().includes('air') || String(b.deskripsi || '').toLowerCase().includes('air')) ? 2 : 1;
+        return isAcB - isAcA;
+      });
+
+      let foundPhotos = [];
+
+      if (sortedMatched.length > 0) {
+        // 1. Ekstrak keterangan oilman yang bersih (bukan string metadata foto seperti PHOTOS_ATTACHED_COUNT_3)
+        for (const j of sortedMatched) {
+          const rawKet = (j.keterangan && j.keterangan !== '-') ? j.keterangan : (j.deskripsi || '');
+          if (rawKet && !rawKet.startsWith('PHOTOS') && !rawKet.startsWith('[')) {
+            oilmanNotes = rawKet.replace(/\bPS\s*1000\b/gi, '').replace(/\[SERVICE\]:\s*/gi, '').replace(/\s*\(?PS\s*\d*\)?/gi, '').trim();
+            break;
+          }
         }
-        if (!oilmanName) {
-          const mps = [bestJob.mp1, bestJob.mp2].filter(m => m && m !== '-' && m !== '');
-          oilmanName = mps.join(' & ') || bestJob.opt || '';
+
+        // 2. Ekstrak nama personil yang bertugas
+        for (const j of sortedMatched) {
+          const mps = [j.mp1, j.mp2].filter(m => m && m !== '-' && m !== '');
+          if (mps.length > 0) {
+            oilmanName = mps.join(' & ');
+            break;
+          } else if (j.opt && j.opt !== '-') {
+            oilmanName = j.opt;
+            break;
+          }
+        }
+
+        // 3. Kumpulkan bukti foto pengerjaan dari seluruh job yang cocok untuk unit ini pada tanggal tersebut
+        for (const j of sortedMatched) {
+          if (Array.isArray(j.fotos) && j.fotos.length > 0) {
+            const valid = j.fotos.filter(p => p && typeof p === 'string' && p.trim() !== '');
+            if (valid.length > 0) { foundPhotos = valid; break; }
+          }
+          const jId = String(j.id || j.job_id || '');
+          if (jId) {
+            try {
+              const sf = safeStorage.getItem('SE_JOB_FOTOS_' + jId);
+              if (sf) {
+                const parsed = JSON.parse(sf);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                  const valid = parsed.filter(p => p && typeof p === 'string' && p.trim() !== '');
+                  if (valid.length > 0) { foundPhotos = valid; break; }
+                }
+              }
+            } catch (e) { }
+            if (state.jobPhotosMap && state.jobPhotosMap[jId]) {
+              const valid = state.jobPhotosMap[jId].filter(p => p && typeof p === 'string' && p.trim() !== '');
+              if (valid.length > 0) { foundPhotos = valid; break; }
+            }
+          }
+          if (j.serviceNotes && j.serviceNotes.includes('PHOTOS:')) {
+            try {
+              const raw = j.serviceNotes.slice(j.serviceNotes.indexOf('PHOTOS:') + 7);
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                const valid = parsed.filter(p => p && typeof p === 'string' && p.trim() !== '');
+                if (valid.length > 0) { foundPhotos = valid; break; }
+              }
+            } catch (e) { }
+          }
         }
       }
 
-      if (!oilmanNotes || oilmanNotes === '-') {
+      if (!oilmanNotes || oilmanNotes === '-' || oilmanNotes.startsWith('PHOTOS_ATTACHED')) {
         oilmanNotes = 'Pembersihan filter air cleaner selesai sesuai SOP.';
       }
 
@@ -25796,18 +26012,56 @@ Oilman 1 & 2 : ${oilman}`;
       const oilmanEl = document.getElementById('ac-detail-oilman');
 
       if (titleEl) titleEl.textContent = `Clean Ke ${cleanIdx + 1}`;
-      if (subtitleEl) subtitleEl.textContent = `No Unit: ${item.noLambung} (${item.type || 'Unit'})`;
+      if (subtitleEl) subtitleEl.textContent = `No Unit: ${noLambung} (${item.unitModel || item.model || item.type || 'Unit'})`;
       if (dateEl) dateEl.textContent = actionDate || '-';
       if (notesEl) notesEl.textContent = oilmanNotes;
       if (oilmanEl) {
         oilmanEl.textContent = oilmanName ? `Oilman: ${oilmanName}` : '';
       }
 
+      // Render foto evidence jika tersedia
+      window.__currentAcDetailPhotos = foundPhotos;
+      const photoContainer = document.getElementById('ac-detail-photo-container');
+      const photoGrid = document.getElementById('ac-detail-photos');
+      const photoCount = document.getElementById('ac-detail-photo-count');
+
+      if (photoContainer && photoGrid) {
+        if (foundPhotos && foundPhotos.length > 0) {
+          photoContainer.classList.remove('hidden');
+          if (photoCount) photoCount.textContent = `${foundPhotos.length} Foto`;
+          photoGrid.innerHTML = foundPhotos.map((src, i) => {
+            const label = `Foto ${i + 1}`;
+            const directImgSrc = (typeof formatDriveImageUrl === 'function') ? formatDriveImageUrl(src) : src;
+            return `
+              <div onclick="if(typeof openPhotoPreview==='function'){openPhotoPreview(window.__currentAcDetailPhotos, 'Foto Clean Air Cleaner - ${noLambung}', ${i}, '')}"
+                class="group relative rounded-xl overflow-hidden border border-slate-200 bg-slate-900 cursor-pointer shadow-2xs hover:shadow-md transition">
+                <div class="h-24 sm:h-28 w-full overflow-hidden bg-slate-950 flex items-center justify-center">
+                  <img src="${directImgSrc}" alt="${label}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'text-white text-xs p-2 text-center\\'>Gagal memuat foto</div>';">
+                </div>
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition p-1 text-center">
+                  <svg class="w-4 h-4 text-white mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
+                  </svg>
+                  <span class="text-[8.5px] text-white font-bold leading-tight">Perbesar</span>
+                </div>
+                <div class="absolute bottom-0 inset-x-0 bg-slate-950/80 backdrop-blur-xs py-0.5 px-2 flex items-center justify-between">
+                  <span class="text-[8.5px] font-bold text-white truncate">${label}</span>
+                  <span class="text-[8px] font-semibold text-emerald-400">Lihat Full</span>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          photoContainer.classList.add('hidden');
+          photoGrid.innerHTML = '';
+        }
+      }
+
       toggleModal('modal-ac-detail', true);
     }
     window.showAirCleanerActionDetail = showAirCleanerActionDetail;
 
-    function renderCleanCell(item, colIdx) {
+        function renderCleanCell(item, colIdx) {
       const cVal = (item.cleans && item.cleans[colIdx]) ? item.cleans[colIdx] : null;
       if (!cVal || cVal === '-' || (typeof cVal === 'string' && cVal.trim() === '')) {
         return `<span class="text-slate-300 font-bold">-</span>`;
@@ -28794,7 +29048,22 @@ Oilman 1 & 2 : ${oilman}`;
 
       if (!row || (!row.id && !row.no_lambung && !row.noLambung)) return;
       const targetId = String(row.id || '');
-      const existingJob = findJobById(targetId) || (row.no_lambung || row.noLambung ? state.lubetruckState?.jobs?.find(j => (j.noLambung || '').toUpperCase() === (row.no_lambung || row.noLambung).toUpperCase() && String(j.shift) === String(row.shift || 1)) : null);
+      const targetCat = String(row.cat || '').toLowerCase().trim();
+      const targetLambung = (row.no_lambung || row.noLambung || '').trim().toUpperCase();
+      const targetShift = String(row.shift || 1);
+      const isWtRow = (targetId.startsWith('WT') || row.job_type === 'sch_wt' || ['coal', 'rom', 'non_coal'].includes(targetCat));
+      let existingJob = findJobById(targetId);
+      if (existingJob && targetCat && existingJob.cat && existingJob.cat.toLowerCase().trim() !== targetCat) {
+        existingJob = null;
+      }
+      if (!existingJob && targetLambung) {
+        const pool = isWtRow ? (state.watertruckState?.jobs || []) : (state.lubetruckState?.jobs || []);
+        existingJob = pool.find(j => 
+          (j.noLambung || '').trim().toUpperCase() === targetLambung &&
+          String(j.shift || 1) === targetShift &&
+          (!targetCat || !j.cat || j.cat.toLowerCase().trim() === targetCat)
+        );
+      }
 
       if (existingJob) {
         // Mutasikan seluruh properti yang dikirim dari Supabase payload.new secara instan
@@ -29272,7 +29541,7 @@ Oilman 1 & 2 : ${oilman}`;
       }
 
       // Render awal cepat dari storage lokal jika ada
-      syncGlobalCacheToState();
+      syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
       debouncedRefreshUI();
 
       try {
@@ -29414,7 +29683,7 @@ Oilman 1 & 2 : ${oilman}`;
         }
 
         safeStorage.setItem('SE_JOBS_LAST_SYNC_TS', currentIso);
-        syncGlobalCacheToState();
+        syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
         debouncedRefreshUI();
       } catch (err) {
         console.warn('[getJobsWithCache Exception]', err);
@@ -29551,7 +29820,7 @@ Oilman 1 & 2 : ${oilman}`;
         }
 
         // Sinkronkan ke state
-        syncGlobalCacheToState();
+        syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
         console.log(`[On-Demand Archive Fetch OK] Berhasil memuat ${fetchedRows.length} baris data arsip. Total RAM cache: ${window.globalDataCache.jobs.size} jobs.`);
 
         debouncedRefreshUI();
@@ -29632,7 +29901,7 @@ Oilman 1 & 2 : ${oilman}`;
                 window.globalDataCache.jobs?.set(sid, mappedObj);
                 if (isOrder) window.globalDataCache.orderRequests?.set(sid, mappedObj);
               }
-              syncGlobalCacheToState();
+              syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
               if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
               debouncedRefreshUI();
               return;
@@ -29658,7 +29927,7 @@ Oilman 1 & 2 : ${oilman}`;
                   window.globalDataCache.jobs?.set(sid, mappedObj);
                   if (isOrder) window.globalDataCache.orderRequests?.set(sid, mappedObj);
                 }
-                syncGlobalCacheToState();
+                syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
                 if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
                 debouncedRefreshUI();
               }
@@ -29673,7 +29942,7 @@ Oilman 1 & 2 : ${oilman}`;
             const mapped = mapSupabaseJobRowToModel(p.payload.job);
             if (mapped && mapped.id && window.globalDataCache) {
               window.globalDataCache.jobs?.set(String(mapped.id), mapped);
-              syncGlobalCacheToState();
+              syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
               debouncedRefreshUI();
             }
           }
@@ -29684,7 +29953,7 @@ Oilman 1 & 2 : ${oilman}`;
             if (mapped && mapped.id && window.globalDataCache) {
               window.globalDataCache.orderRequests?.set(String(mapped.id), mapped);
               window.globalDataCache.jobs?.set(String(mapped.id), mapped);
-              syncGlobalCacheToState();
+              syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
               debouncedRefreshUI();
             }
           }
@@ -29746,7 +30015,7 @@ Oilman 1 & 2 : ${oilman}`;
                 window.globalDataCache.orderRequests?.set(sid, mappedObj);
                 window.globalDataCache.jobs?.set(sid, mappedObj);
               }
-              syncGlobalCacheToState();
+              syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
               debouncedRefreshUI();
             }
           }
@@ -29760,7 +30029,7 @@ Oilman 1 & 2 : ${oilman}`;
                 window.globalDataCache.orderRequests?.set(sid, mappedObj);
                 window.globalDataCache.jobs?.set(sid, mappedObj);
               }
-              syncGlobalCacheToState();
+              syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
               debouncedRefreshUI();
             }
           }
