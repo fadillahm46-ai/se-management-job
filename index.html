@@ -4304,9 +4304,9 @@
               </svg>
             </div>
 
-            <!-- List Menu Card 3: Tombol Keluar (Dihilangkan sepenuhnya di profil karena sudah ada di menu lainnya) -->
+            <!-- List Menu Card 3: Tombol Keluar (Khusus Akses User Mode HP di Bawah Instal) -->
             <div id="profile-card-logout-btn" onclick="openProfileLogoutModal()"
-              class="hidden bg-white hover:bg-rose-50/50 active:scale-[0.99] transition rounded-2xl p-3.5 border border-rose-200/80 shadow-xs items-center justify-between cursor-pointer">
+              class="hidden md:hidden bg-white hover:bg-rose-50/50 active:scale-[0.99] transition rounded-2xl p-3.5 border border-rose-200/80 shadow-xs flex items-center justify-between cursor-pointer">
               <div class="flex items-center space-x-3.5">
                 <div
                   class="w-10 h-10 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center border border-rose-100 shrink-0">
@@ -10997,10 +10997,17 @@
       }
 
       // KONTROL TOMBOL KELUAR DI TAB PROFIL:
-      // Sesuai permintaan pengguna: Hilangkan fitur keluar akun di menu profil di semua mode & akses karena sudah ada di menu Lainnya
+      // Khusus akses role user pada mode HP: tampilkan tombol keluar di menu profil (di bawah instal aplikasi)
+      // Untuk role lain (admin, basecontrol, manpower), logout sudah tersedia di menu Lainnya.
       const profileLogoutBtn = document.getElementById('profile-card-logout-btn');
       if (profileLogoutBtn) {
-        profileLogoutBtn.classList.add('hidden');
+        if (user.role === 'user') {
+          profileLogoutBtn.classList.remove('hidden');
+          profileLogoutBtn.classList.add('flex');
+        } else {
+          profileLogoutBtn.classList.add('hidden');
+          profileLogoutBtn.classList.remove('flex');
+        }
       }
 
       console.log('[App] Rendering UI untuk role:', user.role);
