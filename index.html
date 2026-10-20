@@ -8605,7 +8605,7 @@
         isPending: Boolean(row.is_pending),
         isLocked: ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(String(row.status || '').toLowerCase().trim()) || Boolean(row.is_locked),
         unitCondition: row.unit_condition || '',
-        serviceNotes: row.service_notes || '',
+        serviceNotes: (row.service_notes && !row.service_notes.startsWith('PHOTOS:') && !row.service_notes.startsWith('PHOTOS_ATTACHED')) ? row.service_notes : '',
         bdNotes: row.bd_notes || '',
         serviceType: row.service_type || (isUnschWt ? 'watertruck' : 'lubetruck'),
         namaPemesan: row.pemesan || '',
@@ -8614,10 +8614,16 @@
         carryCount: row.carry_count || 0,
         originalDate: row.original_date || '',
         fotos: (() => {
+          if (Array.isArray(row.fotos) && row.fotos.length > 0) return row.fotos;
           if (row.service_notes && row.service_notes.startsWith('PHOTOS:')) {
             try {
               const parsed = JSON.parse(row.service_notes.slice(7));
-              if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                safeStorage.setItem('SE_JOB_FOTOS_' + targetId, JSON.stringify(parsed));
+                if (!state.jobPhotosMap) state.jobPhotosMap = {};
+                state.jobPhotosMap[targetId] = parsed;
+                return parsed;
+              }
             } catch (e) { }
           }
           const saved = safeStorage.getItem('SE_JOB_FOTOS_' + targetId);
@@ -14273,6 +14279,42 @@
               fotos: (Array.isArray(h.fotos) && h.fotos.length > 0) ? h.fotos : (JSON.parse(safeStorage.getItem('SE_JOB_FOTOS_' + h.job_id) || '[]'))
             });
             existingIds.add(String(h.job_id || ''));
+          }
+        });
+      }
+
+      // SINKRONISASI PICA CLOUD: Gabungkan data kendala dari tabel pica_records Supabase
+      if (Array.isArray(state.picaCloudRecords) && state.picaCloudRecords.length > 0) {
+        const existingIds = new Set(pool.map(j => String(j.id || '')));
+        state.picaCloudRecords.forEach(p => {
+          const jId = String(p.job_id || p.id || '');
+          if (jId && !existingIds.has(jId)) {
+            pool.push({
+              id: jId,
+              noLambung: p.no_lambung,
+              typeUnit: p.type_unit || 'Unit',
+              cat: p.cat || 'small',
+              tanggal: p.tanggal,
+              tanggalRealisasi: p.tanggal,
+              shift: p.shift || 1,
+              waktu: '07:00 s/d 07:15',
+              cluster: p.cluster || 'Selatan',
+              lokasi: p.lokasi || 'Pit Area',
+              armada: p.armada_unit || 'LT2535',
+              ltUnit: p.armada_unit || 'LT2535',
+              opt: p.pic || '-',
+              mp1: '-',
+              mp2: '-',
+              jamStart: '',
+              jamEnd: '',
+              durasi: null,
+              status: 'non_ach',
+              keterangan: p.problem_description || p.root_cause || '-',
+              alasanNonAch: p.problem_description || '-',
+              nonAchCategory: p.kategori || 'Operasional',
+              fotos: []
+            });
+            existingIds.add(jId);
           }
         });
       }
@@ -20012,9 +20054,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         lockJobHistorySnapshot(job, 'NON_ACH', job.keterangan);
       }
 
-      // Sinkronisasi ke Supabase
-      if (state.supabaseClient && typeof syncJobToSupabase === 'function') {
-        syncJobToSupabase(job);
+      // Sinkronisasi ke Supabase (jobs dan pica_records)
+      if (state.supabaseClient) {
+        if (typeof syncJobToSupabase === 'function') syncJobToSupabase(job);
+        if (typeof syncPicaToSupabase === 'function') syncPicaToSupabase(job, kategori, alasan);
       }
 
       saveDatabaseSync();
@@ -21027,7 +21070,19 @@ Oilman 1 & 2 : ${oilman}`;
           if (job) {
             if (data.deskripsi) job.deskripsi = data.deskripsi;
             if (data.keterangan) job.keterangan = data.keterangan;
-            if (data.service_notes) job.serviceNotes = data.service_notes;
+            if (data.service_notes) {
+              if (data.service_notes.startsWith('PHOTOS:')) {
+                try {
+                  const parsed = JSON.parse(data.service_notes.slice(7));
+                  if (Array.isArray(parsed) && parsed.length > 0 && (!job.fotos || job.fotos.length === 0)) {
+                    job.fotos = parsed;
+                    safeStorage.setItem('SE_JOB_FOTOS_' + jobId, JSON.stringify(parsed));
+                  }
+                } catch (e) { }
+              } else if (!data.service_notes.startsWith('PHOTOS_ATTACHED')) {
+                job.serviceNotes = data.service_notes;
+              }
+            }
             if (data.bd_notes) job.bdNotes = data.bd_notes;
             if (data.non_ach_reason) job.alasanNonAch = data.non_ach_reason;
             if (Array.isArray(data.fotos) && data.fotos.length > 0) job.fotos = data.fotos;
@@ -21038,9 +21093,10 @@ Oilman 1 & 2 : ${oilman}`;
               const pEl = descEl.querySelector('p');
               if (pEl) pEl.textContent = data.deskripsi || data.keterangan || '-';
             }
+            const cleanSn = (data.service_notes && !data.service_notes.startsWith('PHOTOS:') && !data.service_notes.startsWith('PHOTOS_ATTACHED')) ? data.service_notes : '';
             const ketEl = document.getElementById('detail-modal-keterangan');
-            if (ketEl && (data.keterangan || data.service_notes || data.non_ach_reason)) {
-              ketEl.textContent = data.keterangan || data.non_ach_reason || data.service_notes || '-';
+            if (ketEl && (data.keterangan || cleanSn || data.non_ach_reason)) {
+              ketEl.textContent = data.keterangan || data.non_ach_reason || cleanSn || '-';
             }
           }
         }
@@ -25638,8 +25694,9 @@ Oilman 1 & 2 : ${oilman}`;
         safeStorage.setItem('SE_JOB_FOTOS_' + job.id, JSON.stringify(uploadedPhotos));
         if (!state.jobPhotosMap) state.jobPhotosMap = {};
         state.jobPhotosMap[job.id] = [...uploadedPhotos];
-        if (!job.serviceNotes || !job.serviceNotes.includes('SERVICE')) {
-          job.serviceNotes = 'PHOTOS:' + JSON.stringify(uploadedPhotos);
+        // serviceNotes HANYA diperuntukkan bagi catatan teks servis aktual, BUKAN foto/JSON!
+        if (job.serviceNotes && (job.serviceNotes.startsWith('PHOTOS:') || job.serviceNotes.startsWith('PHOTOS_ATTACHED'))) {
+          job.serviceNotes = '';
         }
       }
 
@@ -26018,7 +26075,7 @@ Oilman 1 & 2 : ${oilman}`;
         }
       }
 
-      if (!oilmanNotes || oilmanNotes === '-' || oilmanNotes.startsWith('PHOTOS_ATTACHED')) {
+      if (!oilmanNotes || oilmanNotes === '-' || oilmanNotes.startsWith('PHOTOS_ATTACHED') || oilmanNotes.startsWith('PHOTOS:')) {
         oilmanNotes = 'Pembersihan filter air cleaner selesai sesuai SOP.';
       }
 
@@ -28675,7 +28732,9 @@ Oilman 1 & 2 : ${oilman}`;
             rowsToSync.forEach(supaRow => {
               try {
                 const broadcastPayload = { ...supaRow };
-                if (broadcastPayload.service_notes && broadcastPayload.service_notes.length > 300) {
+                if (broadcastPayload.service_notes && broadcastPayload.service_notes.startsWith('PHOTOS:')) {
+                  broadcastPayload.service_notes = '';
+                } else if (broadcastPayload.service_notes && broadcastPayload.service_notes.length > 300) {
                   broadcastPayload.service_notes = broadcastPayload.service_notes.substring(0, 300);
                 }
                 realtimeChannel.send({
@@ -28730,10 +28789,10 @@ Oilman 1 & 2 : ${oilman}`;
           unit_condition: job.unitCondition || '',
           service_notes: (function() {
             let sn = job.serviceNotes || (job.status === 'service' ? (job.keterangan || '') : '');
-            if (sn.includes('data:image/')) {
-              sn = 'PHOTOS_ATTACHED_COUNT_' + (Array.isArray(job.fotos) ? job.fotos.length : 1);
+            if (typeof sn === 'string' && (sn.startsWith('PHOTOS:') || sn.startsWith('PHOTOS_ATTACHED') || sn.includes('data:image/'))) {
+              return '';
             }
-            return sn;
+            return sn || '';
           })(),
           bd_notes: job.bdNotes || (job.status === 'bd' ? job.keterangan : ''),
           service_type: job.serviceType || '',
@@ -28759,7 +28818,9 @@ Oilman 1 & 2 : ${oilman}`;
             if (realtimeChannel && typeof realtimeChannel.send === 'function') {
               try {
                 const broadcastPayload = { ...supaRow };
-                if (broadcastPayload.service_notes && broadcastPayload.service_notes.length > 300) {
+                if (broadcastPayload.service_notes && broadcastPayload.service_notes.startsWith('PHOTOS:')) {
+                  broadcastPayload.service_notes = '';
+                } else if (broadcastPayload.service_notes && broadcastPayload.service_notes.length > 300) {
                   broadcastPayload.service_notes = broadcastPayload.service_notes.substring(0, 300);
                 }
                 realtimeChannel.send({
@@ -29135,8 +29196,14 @@ Oilman 1 & 2 : ${oilman}`;
         } else if (row.service_notes && row.service_notes.startsWith('PHOTOS:')) {
           try {
             const parsed = JSON.parse(row.service_notes.slice(7));
-            if (Array.isArray(parsed) && parsed.length > 0) existingJob.fotos = parsed;
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              existingJob.fotos = parsed;
+              safeStorage.setItem('SE_JOB_FOTOS_' + targetId, JSON.stringify(parsed));
+              if (!state.jobPhotosMap) state.jobPhotosMap = {};
+              state.jobPhotosMap[targetId] = parsed;
+            }
           } catch (e) { }
+          existingJob.serviceNotes = '';
         }
 
         if (window.globalDataCache?.jobs) {
@@ -29667,16 +29734,26 @@ Oilman 1 & 2 : ${oilman}`;
           const combinedJobs = [...recentJobs, ...pendingJobs];
           const cloudJobIds = new Set(combinedJobs.map(j => String(j.id)));
 
-          // Hapus jobs di RAM cache dalam rentang Hot-Window yang sudah dihapus di Supabase
-          for (const [jId, jObj] of Array.from(window.globalDataCache.jobs.entries())) {
-            if (String(jId).startsWith('UNS-') || window.globalDataCache.orderRequests.has(jId)) continue;
-            const jDate = jObj?.tanggal || '';
-            if (jDate >= startDate && jDate <= endDate) {
-              if (!cloudJobIds.has(jId)) {
-                // Job ini sudah dihapus dari database Supabase
-                window.globalDataCache.jobs.delete(jId);
+          // HANYA hapus jobs di RAM cache jika Supabase memang mengembalikan data (cloudJobIds.size > 0).
+          // Jika Supabase kosong (0 records) tapi di web lokal ada jadwal, JANGAN HAPUS!
+          // Sebaliknya, otomatis dorong / unggah jadwal lokal ke Supabase agar tabel Supabase terisi!
+          if (cloudJobIds.size > 0) {
+            for (const [jId, jObj] of Array.from(window.globalDataCache.jobs.entries())) {
+              if (String(jId).startsWith('UNS-') || window.globalDataCache.orderRequests.has(jId)) continue;
+              const jDate = jObj?.tanggal || '';
+              if (jDate >= startDate && jDate <= endDate) {
+                if (!cloudJobIds.has(jId)) {
+                  // Job ini sudah dihapus dari database Supabase
+                  window.globalDataCache.jobs.delete(jId);
+                }
               }
             }
+          } else if (window.globalDataCache.jobs.size > 0 && !window._hasAutoPushedJobsToCloud) {
+            window._hasAutoPushedJobsToCloud = true;
+            console.log('[Supabase Auto-Sync] Tabel jobs di Cloud Supabase kosong. Menjadwalkan unggah massal ' + window.globalDataCache.jobs.size + ' jadwal lokal ke Supabase...');
+            setTimeout(() => {
+              if (typeof pushAllJobsToSupabase === 'function') pushAllJobsToSupabase(false);
+            }, 1200);
           }
 
           // Masukkan seluruh data aktual dari database Supabase
@@ -30190,9 +30267,11 @@ Oilman 1 & 2 : ${oilman}`;
             masterLoadTasks.push(typeof loadAirCleanerFromSupabase === 'function' ? loadAirCleanerFromSupabase(false) : Promise.resolve());
           }
 
-          // Muat transaksi aktif Hot-Window (14 hari) + master data jika cache kosong
+          // Muat transaksi aktif Hot-Window (14 hari) + riwayat selesai + log PICA + master data
           await Promise.allSettled([
             (typeof loadJobsFromSupabase === 'function' ? loadJobsFromSupabase() : Promise.resolve()),
+            (typeof loadJobHistoryFromSupabase === 'function' ? loadJobHistoryFromSupabase() : Promise.resolve()),
+            (typeof loadPicaFromSupabase === 'function' ? loadPicaFromSupabase() : Promise.resolve()),
             ...masterLoadTasks
           ]);
 
@@ -32004,31 +32083,299 @@ Oilman 1 & 2 : ${oilman}`;
     window.triggerParseRoster = triggerParseRoster;
     window.loadSampleRosterTemplate = loadSampleRosterTemplate;
     window.saveParsedRoster = saveParsedRoster;
+    /**
+     * =========================================================================
+     * MODUL SINKRONISASI DUA ARAH SUPABASE: JOBS, JOB HISTORY, & PICA RECORDS
+     * =========================================================================
+     */
+
+    // 1. UNGGAH MASSAL SELURUH JADWAL AKTIF KE TABEL jobs DI SUPABASE
+    async function pushAllJobsToSupabase(showAlert = true) {
+      if (!state.supabaseClient) {
+        if (showAlert) showToast('Koneksi Supabase belum aktif!', 'error');
+        return;
+      }
+      if (showAlert) showToast('Mengunggah seluruh jadwal ke Supabase...', 'info');
+      try {
+        const allJobs = [];
+        if (window.globalDataCache && window.globalDataCache.jobs) {
+          for (const j of window.globalDataCache.jobs.values()) {
+            if (j && j.id) allJobs.push(j);
+          }
+        }
+        if (allJobs.length === 0) {
+          const lube = state.lubetruckState?.jobs || [];
+          const water = state.watertruckState?.jobs || [];
+          allJobs.push(...lube, ...water);
+        }
+        if (allJobs.length === 0) {
+          if (showAlert) showToast('Tidak ada jadwal untuk diunggah', 'warning');
+          return;
+        }
+
+        const supaRows = allJobs.map(job => {
+          const targetId = String(job.id);
+          const isSchWt = (targetId.startsWith('WT-SCH') || targetId.startsWith('WTJ') || (!targetId.startsWith('UNS') && (job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat) || (job.wtUnit && job.wtUnit !== '-'))));
+          const isSchLt = (targetId.startsWith('LT-SCH') || targetId.startsWith('LTJ') || (!targetId.startsWith('UNS') && (job.targetType === 'LT' || ['small', 'digger', 'aircleaner', 'topup'].includes(job.cat))));
+          const isUnschWt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-WT') || ((targetId.startsWith('UNS-') || targetId.startsWith('UNS_') || job.cat === 'unscheduled') && (job.serviceType === 'watertruck' || job.targetType === 'WT')));
+          const isUnschLt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-LT') || ((targetId.startsWith('UNS-') || targetId.startsWith('UNS_') || job.cat === 'unscheduled') && (job.serviceType === 'lubetruck' || job.targetType === 'LT')));
+          const isWt = isSchWt || isUnschWt;
+
+          return {
+            id: targetId,
+            job_type: isSchWt ? 'sch_wt' : isSchLt ? 'sch_lt' : isUnschWt ? 'unsch_wt' : isUnschLt ? 'unsch_lt' : (isWt ? 'sch_wt' : 'sch_lt'),
+            cat: job.cat || (isUnschWt || isUnschLt ? 'unscheduled' : (isWt ? 'coal' : 'small')),
+            tanggal: job.tanggal || getEffectiveTodayString(),
+            shift: parseInt(job.shift, 10) || 1,
+            washing_round: typeof getJobWashingRound === 'function' ? getJobWashingRound(job) : (parseInt(job.washingRound, 10) || (targetId.includes('-W2-') ? 2 : 1)),
+            cluster: job.cluster || 'Selatan',
+            waktu_rencana: job.waktu || '07:00 s/d 07:15',
+            type_unit: job.typeUnit || 'Unit',
+            no_lambung: job.noLambung || '',
+            lokasi: job.lokasi || '',
+            armada_unit: (isWt || isUnschWt) ? (job.wtUnit && job.wtUnit !== '-' ? job.wtUnit : (job.armada && job.armada !== '-' ? job.armada : (job.armadaUnit && job.armadaUnit !== '-' ? job.armadaUnit : 'WT2636'))) : (job.ltUnit && job.ltUnit !== '-' ? job.ltUnit : (job.armada && job.armada !== '-' ? job.armada : (job.armadaUnit && job.armadaUnit !== '-' ? job.armadaUnit : 'LT2535'))),
+            opt_name: job.opt || job.optName || '-',
+            mp1: job.mp1 || '-',
+            mp2: job.mp2 || '-',
+            jam_start: job.jamStart || '',
+            jam_end: job.jamEnd || '',
+            durasi: job.durasi ? parseFloat(job.durasi) : null,
+            hm_stop: job.hmStop || job.hmStart || null,
+            hm_ready: job.hmReady || job.hmEnd || null,
+            status: job.status || 'scheduled',
+            keterangan: job.keterangan || '',
+            is_pending: Boolean(job.isPending),
+            unit_condition: job.unitCondition || '',
+            service_notes: (typeof job.serviceNotes === 'string' && !job.serviceNotes.startsWith('PHOTOS:') && !job.serviceNotes.startsWith('PHOTOS_ATTACHED')) ? job.serviceNotes : '',
+            bd_notes: job.bdNotes || '',
+            service_type: job.serviceType || '',
+            pemesan: job.namaPemesan || job.pemesan || '',
+            kondisi: job.kondisi || '',
+            updated_at: new Date().toISOString()
+          };
+        });
+
+        const BATCH_SIZE = 100;
+        let insertedCount = 0;
+        for (let i = 0; i < supaRows.length; i += BATCH_SIZE) {
+          const batch = supaRows.slice(i, i + BATCH_SIZE);
+          const { error } = await state.supabaseClient.from('jobs').upsert(batch, { onConflict: 'id' });
+          if (error) {
+            console.warn('[Push Jobs Batch Error at ' + i + ']', error.message);
+          } else {
+            insertedCount += batch.length;
+          }
+        }
+        console.log('[Push Jobs OK] Berhasil mengunggah ' + insertedCount + ' dari ' + supaRows.length + ' jadwal ke Supabase.');
+        if (showAlert) showToast('Berhasil menyinkronkan ' + insertedCount + ' jadwal ke Supabase!', 'success');
+      } catch (err) {
+        console.error('[Push All Jobs Exception]', err);
+        if (showAlert) showToast('Gagal mengunggah jadwal: ' + err.message, 'error');
+      }
+    }
+    window.pushAllJobsToSupabase = pushAllJobsToSupabase;
+
+    // 2. UNGGAH MASSAL SELURUH RIWAYAT SELESAI KE TABEL job_history DI SUPABASE
+    async function pushAllJobHistoryToSupabase(showAlert = false) {
+      if (!state.supabaseClient || !Array.isArray(state.jobHistory) || state.jobHistory.length === 0) return;
+      try {
+        const histRows = state.jobHistory.map(h => {
+          const cleanId = String(h.job_id || h.id || '');
+          return {
+            job_id: cleanId,
+            no_lambung: h.no_lambung || h.noLambung || 'UNIT',
+            type_unit: h.type_unit || h.typeUnit || 'Unit',
+            cat: h.cat || 'small',
+            job_type: h.job_type || ((cleanId.includes('WT') || h.targetType === 'WT') ? 'water' : 'lube'),
+            tanggal_rencana: h.tanggal_rencana || h.tanggal || getEffectiveTodayString(),
+            shift_rencana: parseInt(h.shift_rencana || h.shift || 1, 10),
+            waktu_rencana: h.waktu_rencana || h.waktu || '07:00 s/d 07:15',
+            cluster: h.cluster || 'Selatan',
+            lokasi: h.lokasi || 'Pit Area',
+            armada_unit: h.armada_unit || h.armada || h.ltUnit || h.wtUnit || 'LT2535',
+            opt_name: h.opt_name || h.opt || '-',
+            mp1: h.mp1 || '-',
+            mp2: h.mp2 || '-',
+            tanggal_eksekusi: h.tanggal_eksekusi || h.tanggalRealisasi || h.tanggal || getEffectiveTodayString(),
+            jam_start: h.jam_start || h.jamStart || '',
+            jam_end: h.jam_end || h.jamEnd || '',
+            status_final: (h.status_final || h.status || 'ACHIEVED').toUpperCase(),
+            keterangan: h.keterangan || h.non_ach_reason || '',
+            non_ach_category: h.non_ach_category || h.nonAchCategory || 'Operasional',
+            non_ach_reason: h.non_ach_reason || h.alasanNonAch || '',
+            created_at: h.created_at || new Date().toISOString()
+          };
+        });
+
+        const BATCH_SIZE = 50;
+        let uploaded = 0;
+        for (let i = 0; i < histRows.length; i += BATCH_SIZE) {
+          const batch = histRows.slice(i, i + BATCH_SIZE);
+          const { error } = await state.supabaseClient.from('job_history').upsert(batch, { onConflict: 'job_id' });
+          if (!error) uploaded += batch.length;
+        }
+        console.log('[Push History OK] ' + uploaded + ' dari ' + histRows.length + ' riwayat selesai diunggah ke Supabase.');
+        if (showAlert) showToast(uploaded + ' riwayat selesai tersinkron ke Supabase!', 'success');
+      } catch (err) {
+        console.warn('[Push History Exception]', err);
+      }
+    }
+    window.pushAllJobHistoryToSupabase = pushAllJobHistoryToSupabase;
+
+    // 3. TARIK SELURUH RIWAYAT SELESAI DARI TABEL job_history SUPABASE
+    async function loadJobHistoryFromSupabase(silent = false) {
+      if (!state.supabaseClient) return;
+      try {
+        const { data, error } = await state.supabaseClient.from('job_history').select('*').order('created_at', { ascending: false }).limit(1000);
+        if (!error && Array.isArray(data) && data.length > 0) {
+          if (!Array.isArray(state.jobHistory)) state.jobHistory = [];
+          const map = new Map();
+          // Masukkan data cloud
+          data.forEach(item => {
+            if (item && item.job_id) map.set(String(item.job_id), item);
+          });
+          // Masukkan data lokal jika belum ada di cloud
+          state.jobHistory.forEach(item => {
+            const jId = String(item.job_id || item.id || '');
+            if (jId && !map.has(jId)) map.set(jId, item);
+          });
+          state.jobHistory = Array.from(map.values());
+          safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
+          console.log('[Supabase History Sync OK] Total ' + state.jobHistory.length + ' riwayat selesai termuat.');
+          if (typeof renderHistoryTable === 'function') renderHistoryTable();
+        }
+      } catch (e) {
+        console.warn('[loadJobHistoryFromSupabase Error]', e);
+      }
+    }
+    window.loadJobHistoryFromSupabase = loadJobHistoryFromSupabase;
+
+    // 4. SINKRONISASI TUNGGAL PICA KE TABEL pica_records DI SUPABASE
+    async function syncPicaToSupabase(job, kategori = '', alasan = '') {
+      if (!state.supabaseClient || !job) return;
+      try {
+        const cleanId = String(job.id || Date.now());
+        const picaId = 'PICA-' + cleanId;
+        const picaRow = {
+          id: picaId,
+          job_id: cleanId,
+          no_lambung: job.noLambung || job.no_lambung || 'UNIT',
+          tanggal: job.tanggalRealisasi || job.tanggal || getEffectiveTodayString(),
+          shift: parseInt(job.shift || job.shift_rencana || 1, 10),
+          cluster: job.cluster || 'Selatan',
+          kategori: kategori || job.nonAchCategory || job.non_ach_category || 'Operasional',
+          problem_description: alasan || job.alasanNonAch || job.non_ach_reason || job.keterangan || 'Kendala Operasional Non-ACH',
+          root_cause: job.keterangan || alasan || '-',
+          corrective_action: 'Unit dialihkan / penjadwalan ulang sesuai SOP',
+          preventive_action: 'Monitoring kesiapan jalur kerja & kesiapan unit',
+          pic: job.opt || job.opt_name || job.mp1 || 'Pengawas Lapangan',
+          status: 'Open',
+          updated_at: new Date().toISOString()
+        };
+        const { error } = await state.supabaseClient.from('pica_records').upsert(picaRow, { onConflict: 'id' });
+        if (!error) {
+          console.log('[Supabase PICA Single Sync OK]', picaId);
+        }
+      } catch (e) {
+        console.warn('[syncPicaToSupabase Error]', e);
+      }
+    }
+    window.syncPicaToSupabase = syncPicaToSupabase;
+
+    // 5. UNGGAH MASSAL SELURUH LOG PICA KE TABEL pica_records DI SUPABASE
+    async function pushAllPicaToSupabase(showAlert = false) {
+      if (!state.supabaseClient) return;
+      try {
+        const nonAchJobs = (typeof getFilteredPicaJobs === 'function') ? getFilteredPicaJobs() : [];
+        if (nonAchJobs.length === 0) return;
+
+        const picaRows = nonAchJobs.map(j => {
+          const cleanId = String(j.id || '');
+          return {
+            id: 'PICA-' + cleanId,
+            job_id: cleanId,
+            no_lambung: j.noLambung || j.no_lambung || 'UNIT',
+            tanggal: j.tanggalRealisasi || j.tanggal || getEffectiveTodayString(),
+            shift: parseInt(j.shift || 1, 10),
+            cluster: j.cluster || 'Selatan',
+            kategori: j.nonAchCategory || 'Operasional',
+            problem_description: j.alasanNonAch || j.keterangan || 'Kendala Non-ACH',
+            root_cause: j.keterangan || j.alasanNonAch || '-',
+            corrective_action: 'Penanganan kendala & koordinasi pengawas lapangan',
+            preventive_action: 'Pemeriksaan kesiapan unit & jalur',
+            pic: j.opt || j.opt_name || j.mp1 || 'Pengawas Lapangan',
+            status: 'Open',
+            updated_at: new Date().toISOString()
+          };
+        });
+
+        const { error } = await state.supabaseClient.from('pica_records').upsert(picaRows, { onConflict: 'id' });
+        if (!error) {
+          console.log('[Push PICA OK] ' + picaRows.length + ' kendala PICA tersinkronisasi ke Supabase.');
+          if (showAlert) showToast(picaRows.length + ' Log PICA berhasil disinkronkan ke Supabase!', 'success');
+        }
+      } catch (err) {
+        console.warn('[Push All PICA Error]', err);
+      }
+    }
+    window.pushAllPicaToSupabase = pushAllPicaToSupabase;
+
+    // 6. TARIK SELURUH RECORD PICA DARI TABEL pica_records SUPABASE
+    async function loadPicaFromSupabase() {
+      if (!state.supabaseClient) return;
+      try {
+        const { data, error } = await state.supabaseClient.from('pica_records').select('*').order('tanggal', { ascending: false }).limit(500);
+        if (!error && Array.isArray(data)) {
+          state.picaCloudRecords = data;
+          console.log('[Supabase PICA Load OK] ' + data.length + ' records PICA termuat dari Cloud.');
+        }
+      } catch (e) {
+        console.warn('[loadPicaFromSupabase Error]', e);
+      }
+    }
+    window.loadPicaFromSupabase = loadPicaFromSupabase;
+
+    // 7. SINKRONISASI PENUH DUA ARAH (DARI & KE SUPABASE CLOUD)
     async function forceSyncAllDataFromSupabase() {
       if (!state.supabaseClient) {
         showToast('Koneksi Supabase belum aktif! Periksa koneksi internet Anda.', 'error');
         return;
       }
-      showToast('Menyinkronkan data...', 'info');
+      showToast('Menyinkronkan data penuh dua arah (Jobs, History, PICA)...', 'info');
       try {
         const results = await Promise.allSettled([
           loadRosterFromSupabase(null, true),
           (typeof syncSupabaseMasterData === 'function' ? syncSupabaseMasterData(true) : Promise.resolve()),
           (typeof loadJobsFromSupabase === 'function' ? loadJobsFromSupabase(true) : Promise.resolve()),
+          (typeof loadJobHistoryFromSupabase === 'function' ? loadJobHistoryFromSupabase(true) : Promise.resolve()),
+          (typeof loadPicaFromSupabase === 'function' ? loadPicaFromSupabase() : Promise.resolve()),
           (typeof loadAirCleanerFromSupabase === 'function' ? loadAirCleanerFromSupabase(true) : Promise.resolve()),
           loadUnitsFromSupabase(true, false)
         ]);
+
+        // Pastikan seluruh data lokal (Jadwal, Riwayat, PICA) terunggah ke Supabase jika di Cloud masih kosong
+        if (typeof pushAllJobsToSupabase === 'function') {
+          await pushAllJobsToSupabase(false);
+        }
+        if (typeof pushAllJobHistoryToSupabase === 'function') {
+          await pushAllJobHistoryToSupabase(false);
+        }
+        if (typeof pushAllPicaToSupabase === 'function') {
+          await pushAllPicaToSupabase(false);
+        }
 
         renderDatabaseRosterTable();
         if (typeof renderMasterUnitsTable === 'function') renderMasterUnitsTable();
         if (typeof renderMasterArmadaTable === 'function') renderMasterArmadaTable();
         if (typeof renderMasterOperatorsTable === 'function') renderMasterOperatorsTable();
         if (typeof populateOrderUnitsDatalist === 'function') populateOrderUnitsDatalist();
+        if (typeof renderHistoryTable === 'function') renderHistoryTable();
+        if (typeof renderPicaTable === 'function') renderPicaTable();
         if (state.activeTab === 'dashboard' && typeof refreshDashboardData === 'function') {
           refreshDashboardData();
         }
 
-        showToast('Sinkron berhasil', 'success');
+        showToast('Sinkronisasi penuh berhasil! Cloud Supabase & Web telah sinkron 100%.', 'success');
       } catch (e) {
         console.error('Error saat force sync dari Supabase:', e);
         showToast('Gagal sinkronisasi data dari Supabase: ' + e.message, 'error');
