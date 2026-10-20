@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -8890,18 +8890,36 @@
 
         function loadDatabaseSync() {
       try {
-        // Satu kali migrasi pembersihan data dummy lama dari local storage browser pengguna
-        const CLEAN_VERSION = 'v2026_clean_data_init_1';
-        if (safeStorage.getItem('SE_DATA_CLEAN_INIT') !== CLEAN_VERSION) {
+        // FORCE BUILD VERSION UPGRADE: Bersihkan seluruh cache kotor & data zombie di seluruh client
+        const APP_BUILD_VERSION = 'v2026_10_21_clean_sync_v5';
+        if (safeStorage.getItem('SE_APP_BUILD_VERSION') !== APP_BUILD_VERSION) {
+          console.log('[Version Upgrade] Memperbarui aplikasi & membersihkan cache lokal ke versi:', APP_BUILD_VERSION);
+          safeStorage.setItem('SE_APP_BUILD_VERSION', APP_BUILD_VERSION);
+          safeStorage.setItem('SE_DATA_CLEAN_INIT', APP_BUILD_VERSION);
           safeStorage.removeItem('SE_LUBE_JOBS');
           safeStorage.removeItem('SE_WATER_JOBS');
           safeStorage.removeItem('SE_UNSCH_LT_JOBS');
           safeStorage.removeItem('SE_UNSCH_WT_JOBS');
           safeStorage.removeItem('SE_AIR_CLEANER');
           safeStorage.removeItem('SE_MASTER_UNITS');
+          safeStorage.removeItem('SE_MASTER_UNITS_TS');
+          safeStorage.removeItem('SE_MASTER_ARMADA');
+          safeStorage.removeItem('SE_MASTER_ARMADA_TS');
           safeStorage.removeItem('SE_MASTER_OPERATORS');
+          safeStorage.removeItem('SE_MASTER_DATA_TS');
           safeStorage.removeItem('SE_MASTER_ROSTER');
-          safeStorage.setItem('SE_DATA_CLEAN_INIT', CLEAN_VERSION);
+          safeStorage.removeItem('SE_CLUSTER_LT');
+          safeStorage.removeItem('SE_CLUSTER_WT');
+          safeStorage.removeItem('SE_TRIMMED_JOBS_CACHE');
+          safeStorage.removeItem('SE_JOBS_CACHE');
+          safeStorage.removeItem('SE_ORDERS_CACHE');
+          safeStorage.removeItem('SE_JOBS_LAST_SYNC_TS');
+          if (window.globalDataCache) {
+            window.globalDataCache.jobs?.clear();
+            window.globalDataCache.orderRequests?.clear();
+            window.globalDataCache.loadedDates?.clear();
+            window.globalDataCache.lastFetchTime = 0;
+          }
         }
 
         // Muat URL Google Apps Script yang tersimpan atau default deploy dari pengguna
@@ -9130,95 +9148,21 @@
 
     const DEFAULT_MASTER_UNITS = [
       // Fleet AMM Aktif (Sesuai Data Riil Jadwal & Supabase master_units)
-      { id: 'UNIT-EB56001AMM', lambung: 'EB56001AMM', type: 'AMM_SY600E', kategori: 'coal', cluster: 'ROM', lokasi: 'ROM Area', statusAktif: true },
-      { id: 'UNIT-EB56002AMM', lambung: 'EB56002AMM', type: 'AMM_SY600E', kategori: 'coal', cluster: 'ROM', lokasi: 'ROM Area', statusAktif: true },
-      { id: 'UNIT-EB56003AMM', lambung: 'EB56003AMM', type: 'AMM_SY600E', kategori: 'coal', cluster: 'ROM', lokasi: 'ROM Area', statusAktif: true },
-      { id: 'UNIT-EB56004AMM', lambung: 'EB56004AMM', type: 'AMM_SY600E', kategori: 'coal', cluster: 'ROM', lokasi: 'ROM Area', statusAktif: true },
-      { id: 'UNIT-EB56005AMM', lambung: 'EB56005AMM', type: 'AMM_SY600E', kategori: 'coal', cluster: 'ROM', lokasi: 'ROM Area', statusAktif: true },
-      { id: 'UNIT-EB521001AMM', lambung: 'EB521001AMM', type: 'AMM_SY215E', kategori: 'coal', cluster: 'ROM', lokasi: 'ROM Area', statusAktif: true },
-      { id: 'UNIT-EB521002AMM', lambung: 'EB521002AMM', type: 'AMM_SY215E', kategori: 'coal', cluster: 'ROM', lokasi: 'ROM Area', statusAktif: true },
-      { id: 'UNIT-WB596001AMM', lambung: 'WB596001AMM', type: 'AMM_SW966E', kategori: 'coal', cluster: 'ROM', lokasi: 'ROM Area', statusAktif: true },
-      { id: 'UNIT-WB596002AMM', lambung: 'WB596002AMM', type: 'AMM_SW966E', kategori: 'coal', cluster: 'ROM', lokasi: 'ROM Area', statusAktif: true },
-      { id: 'UNIT-WB596003AMM', lambung: 'WB596003AMM', type: 'AMM_SW966E', kategori: 'coal', cluster: 'ROM', lokasi: 'ROM Area', statusAktif: true },
-      { id: 'UNIT-WB596004AMM', lambung: 'WB596004AMM', type: 'AMM_SW966E', kategori: 'coal', cluster: 'ROM', lokasi: 'ROM Area', statusAktif: true },
-      { id: 'UNIT-D5172AMM', lambung: 'D5172AMM', type: 'D155A-6', kategori: 'coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
-      { id: 'UNIT-D5109AMM', lambung: 'D5109AMM', type: 'PPA_D155A-6', kategori: 'non_coal', cluster: 'Utara', lokasi: 'PIT UTARA', statusAktif: true },
-      { id: 'UNIT-D5165AMM', lambung: 'D5165AMM', type: 'PPA_D155A-6', kategori: 'non_coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
-      // Fleet PPA Standar
-      { id: 'UNIT-E2008', lambung: 'E2008', type: 'PPA_PC 2000-8', kategori: 'coal', cluster: 'Utara', lokasi: 'PIT UTARA', statusAktif: true },
-      { id: 'UNIT-E2009', lambung: 'E2009', type: 'PPA_PC 2000-8', kategori: 'coal', cluster: 'Utara', lokasi: 'FRONT UTARA', statusAktif: true },
-      { id: 'UNIT-D85161', lambung: 'D85161', type: 'PPA_D85ESS-2', kategori: 'non_coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
-      { id: 'UNIT-D85183', lambung: 'D85183', type: 'PPA_D85ESS-2', kategori: 'non_coal', cluster: 'Tengah', lokasi: 'SIM E', statusAktif: true },
-      { id: 'UNIT-E347', lambung: 'E347', type: 'PPA_PC300SE-8M0', kategori: 'coal', cluster: 'Tengah', lokasi: 'SIM E', statusAktif: true },
-      { id: 'UNIT-E345', lambung: 'E345', type: 'PPA_PC300SE-8M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
-      { id: 'UNIT-E2180', lambung: 'E2180', type: 'PPA_PC210-10M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
-      { id: 'UNIT-E1225', lambung: 'E1225', type: 'PPA_PC 1250-8R', kategori: 'coal', cluster: 'Utara', lokasi: 'PIT UTARA', statusAktif: true },
-      { id: 'UNIT-E1237', lambung: 'E1237', type: 'PPA_PC 1250SP-11R', kategori: 'coal', cluster: 'Utara', lokasi: 'PIT UTARA', statusAktif: true },
-      { id: 'UNIT-DM04', lambung: 'DM04', type: 'PPA_D245S', kategori: 'non_coal', cluster: 'Utara', lokasi: 'PIT UTARA', statusAktif: true },
-      { id: 'UNIT-DM06', lambung: 'DM06', type: 'PPA_D245S', kategori: 'non_coal', cluster: 'Utara', lokasi: 'PIT UTARA', statusAktif: true },
-      { id: 'UNIT-EX2168', lambung: 'EX2168', type: 'PPA_PC210-10M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
-      { id: 'UNIT-EX2169', lambung: 'EX2169', type: 'PPA_PC210-10M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'SIM E', statusAktif: true },
-      { id: 'UNIT-DZ8589', lambung: 'DZ8589', type: 'PPA_D85ESS-2', kategori: 'non_coal', cluster: 'Tengah', lokasi: 'FRONT RAJAWALI', statusAktif: true },
-      { id: 'UNIT-EX8501', lambung: 'EX8501', type: 'PPA_PC850-8R1', kategori: 'coal', cluster: 'Utara', lokasi: 'PIT UTARA', statusAktif: true },
-      { id: 'UNIT-EX001', lambung: 'EX001', type: 'PPA_PC200-8M0', kategori: 'coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true },
-      { id: 'UNIT-EX002', lambung: 'EX002', type: 'PPA_PC300SE-8M0', kategori: 'coal', cluster: 'Tengah', lokasi: 'SIM E', statusAktif: true },
-      { id: 'UNIT-DZ001', lambung: 'DZ001', type: 'PPA_D85ESS-2', kategori: 'non_coal', cluster: 'Utara', lokasi: 'PIT 1 UTARA', statusAktif: true },
-      { id: 'UNIT-DZ155', lambung: 'DZ155', type: 'PPA_D155A-6', kategori: 'non_coal', cluster: 'Selatan', lokasi: 'BALANAI', statusAktif: true }
     ];
 
-    const DEFAULT_MASTER_ARMADA = [
-      // KGU Selatan - Lubetruck
-      { id: 'ARM-01', unit: 'LT2535', typeUnit: 'Lubetruck', cluster: 'Selatan', status: 'Aktif' },
-      { id: 'ARM-02', unit: 'LT2622', typeUnit: 'Lubetruck', cluster: 'Selatan', status: 'Aktif' },
-      { id: 'ARM-03', unit: 'LT2530', typeUnit: 'Lubetruck', cluster: 'Selatan', status: 'Aktif' },
-      // KGU Tengah - Lubetruck
-      { id: 'ARM-04', unit: 'LT2514', typeUnit: 'Lubetruck', cluster: 'Tengah', status: 'Aktif' },
-      { id: 'ARM-05', unit: 'LT2518', typeUnit: 'Lubetruck', cluster: 'Tengah', status: 'Aktif' },
-      { id: 'ARM-06', unit: 'LT52506', typeUnit: 'Lubetruck', cluster: 'Tengah', status: 'Aktif' },
-      // KGU Utara - Lubetruck (LT2510, LT2515, LT2525, LT2620)
-      { id: 'ARM-07', unit: 'LT2510', typeUnit: 'Lubetruck', cluster: 'Utara', status: 'Aktif' },
-      { id: 'ARM-08', unit: 'LT2515', typeUnit: 'Lubetruck', cluster: 'Utara', status: 'Aktif' },
-      { id: 'ARM-09', unit: 'LT2525', typeUnit: 'Lubetruck', cluster: 'Utara', status: 'Aktif' },
-      { id: 'ARM-10', unit: 'LT2620', typeUnit: 'Lubetruck', cluster: 'Utara', status: 'Aktif' },
-      // Workshop - Lubetruck
-      { id: 'ARM-11', unit: 'LT2536', typeUnit: 'Lubetruck', cluster: 'Workshop', status: 'Aktif' },
-      { id: 'ARM-12', unit: 'LT2621', typeUnit: 'Lubetruck', cluster: 'Workshop', status: 'Aktif' },
-      { id: 'ARM-13', unit: 'LT52507', typeUnit: 'Lubetruck', cluster: 'Workshop', status: 'Aktif' },
-      { id: 'ARM-14', unit: 'LT52605', typeUnit: 'Lubetruck', cluster: 'Workshop', status: 'Aktif' },
-      // Water Truck - Selatan
-      { id: 'ARM-15', unit: 'WT101', typeUnit: 'Water Truck', cluster: 'Selatan', status: 'Aktif' },
-      { id: 'ARM-16', unit: 'WT104', typeUnit: 'Water Truck', cluster: 'Selatan', status: 'Aktif' },
-      { id: 'ARM-18', unit: 'WT2636', typeUnit: 'Water Truck', cluster: 'Selatan', status: 'Aktif' },
-      // Water Truck - Tengah
-      { id: 'ARM-17', unit: 'WT2520', typeUnit: 'Water Truck', cluster: 'Tengah', status: 'Aktif' },
-      { id: 'ARM-19', unit: 'WT102', typeUnit: 'Water Truck', cluster: 'Tengah', status: 'Aktif' },
-      { id: 'ARM-20', unit: 'WT105', typeUnit: 'Water Truck', cluster: 'Tengah', status: 'Aktif' },
-      // Water Truck - Utara
-      { id: 'ARM-21', unit: 'WT103', typeUnit: 'Water Truck', cluster: 'Utara', status: 'Aktif' },
-      { id: 'ARM-22', unit: 'WT2640', typeUnit: 'Water Truck', cluster: 'Utara', status: 'Aktif' },
-      { id: 'ARM-23', unit: 'WT2644', typeUnit: 'Water Truck', cluster: 'Utara', status: 'Aktif' },
-      { id: 'ARM-24', unit: 'WT52534', typeUnit: 'Water Truck', cluster: 'Utara', status: 'Aktif' },
-      // Water Truck - ROM
-      { id: 'ARM-25', unit: 'WT2620', typeUnit: 'Water Truck', cluster: 'ROM', status: 'Aktif' },
-      { id: 'ARM-26', unit: 'WT2645', typeUnit: 'Water Truck', cluster: 'ROM', status: 'Aktif' },
-      // Water Truck - Workshop
-      { id: 'ARM-27', unit: 'WT2638', typeUnit: 'Water Truck', cluster: 'Workshop', status: 'Aktif' }
-    ];
+    const DEFAULT_MASTER_ARMADA = [];
 
     function reconcileMasterArmada() {
-      if (!Array.isArray(state.masterArmada) || state.masterArmada.length === 0) {
-        const savedArmada = safeStorage.getItem("SE_MASTER_ARMADA");
-        if (savedArmada) {
-          try {
-            const parsed = JSON.parse(savedArmada);
-            if (Array.isArray(parsed) && parsed.length > 0) state.masterArmada = parsed;
-          } catch (e) { }
-        }
-        if (!Array.isArray(state.masterArmada) || state.masterArmada.length === 0) {
-          state.masterArmada = [...DEFAULT_MASTER_ARMADA];
-        }
+      if (!Array.isArray(state.masterArmada)) {
+        state.masterArmada = [];
       }
-      safeStorage.setItem("SE_MASTER_ARMADA", JSON.stringify(state.masterArmada));
+      const savedArmada = safeStorage.getItem("SE_MASTER_ARMADA");
+      if (savedArmada && state.masterArmada.length === 0) {
+        try {
+          const parsed = JSON.parse(savedArmada);
+          if (Array.isArray(parsed)) state.masterArmada = parsed;
+        } catch (e) { }
+      }
     }
     window.reconcileMasterArmada = reconcileMasterArmada;
 
@@ -11845,7 +11789,7 @@
       });
       if (sectionKey === 'units') {
         renderMasterUnitsTable();
-        if ((!state._unitsLoadedFromSupabase || (Array.isArray(state.masterUnits) && state.masterUnits.length <= 25)) && state.supabaseClient) {
+        if (!state._unitsLoadedFromSupabase && state.supabaseClient) {
           loadUnitsFromSupabase(true, false);
         }
       }
@@ -13486,6 +13430,10 @@
      */
     function autoEvaluatePendingJobs(showNotification = false) {
       if (typeof document !== 'undefined' && document.hidden) return 0; // Hemat kuota log saat tab di background
+      if (!state._initialJobsReconciled) {
+        // Tunda evaluasi sampai rekonsiliasi data dari Supabase selesai agar tidak ada push data zombie ke cloud
+        return 0;
+      } // Hemat kuota log saat tab di background
       if (!state.lubetruckState || !Array.isArray(state.lubetruckState.jobs)) return 0;
 
       // 1. Cek reset bulanan jika tanggal 1
@@ -22072,7 +22020,7 @@ Oilman 1 & 2 : ${oilman}`;
       populateAddJobArmadaOptions(targetType, cluster, shift);
       renderAddJobUnitOptions('');
       // Proaktif sinkronkan seluruh Data Master Populasi Unit dari Cloud Supabase jika cache lokal belum lengkap (> 25 unit)
-      if ((!Array.isArray(state.masterUnits) || state.masterUnits.length <= 25) && state.supabaseClient) {
+      if (!state._unitsLoadedFromSupabase && state.supabaseClient) {
         loadUnitsFromSupabase(false, false).then(() => {
           const curSearch = (document.getElementById('add-job-unit-search')?.value || '').toLowerCase().trim();
           renderAddJobUnitOptions(curSearch);
@@ -22722,7 +22670,7 @@ Oilman 1 & 2 : ${oilman}`;
           }
           renderAddJobUnitOptions('');
           // Jika data unit di memori masih belum lengkap (<= 25 unit), muat langsung dari Supabase
-          if ((!Array.isArray(state.masterUnits) || state.masterUnits.length <= 25) && state.supabaseClient) {
+          if (!state._unitsLoadedFromSupabase && state.supabaseClient) {
             loadUnitsFromSupabase(false, false).then(() => {
               const cur = (document.getElementById('add-job-unit-search')?.value || '').toLowerCase().trim();
               renderAddJobUnitOptions(cur);
@@ -27220,7 +27168,7 @@ Oilman 1 & 2 : ${oilman}`;
         emitJobBroadcastSignal(unit, "UPDATE", "master_armada");
       }
     }
-    async function syncClusterAssignedFromMasterArmada(skipSupabaseUpsert = false) {
+    async function syncClusterAssignedFromMasterArmada(skipSupabaseUpsert = true) {
       if (!state.masterArmada || !Array.isArray(state.masterArmada)) return;
       const baseClusters = ['Selatan', 'Tengah', 'Utara', 'ROM', 'Workshop', 'Outpit Selatan', 'Outpit Tengah', 'Outpit Utara'];
       const allClusters = [...baseClusters];
@@ -28299,12 +28247,12 @@ Oilman 1 & 2 : ${oilman}`;
         return false;
       }
       // 1. Pulihkan dari cache lokal jika memori belum terisi
-      if (!Array.isArray(state.masterUnits) || state.masterUnits.length <= 25) {
+      if (!Array.isArray(state.masterUnits) || state.masterUnits.length === 0) {
         const cachedRaw = safeStorage.getItem('SE_MASTER_UNITS');
         if (cachedRaw) {
           try {
             const parsed = JSON.parse(cachedRaw);
-            if (Array.isArray(parsed) && parsed.length > 25) {
+            if (Array.isArray(parsed)) {
               state.masterUnits = parsed;
             }
           } catch (e) { }
@@ -28314,13 +28262,8 @@ Oilman 1 & 2 : ${oilman}`;
       // Master Data TTL Cache (24 Jam)
       const savedUnitsTs = Number(safeStorage.getItem('SE_MASTER_UNITS_TS') || 0);
       const isUnitsCacheFresh = (Date.now() - savedUnitsTs) < MASTER_DATA_TTL_MS;
-      if (!force && isUnitsCacheFresh && Array.isArray(state.masterUnits) && state.masterUnits.length > 25) {
-        state._unitsLoadedFromSupabase = true;
+      if (!force && isUnitsCacheFresh && state._unitsLoadedFromSupabase && Array.isArray(state.masterUnits) && state.masterUnits.length > 0) {
         console.log('[Supabase Cache TTL] Master Units fresh dari cache lokal (TTL 24 Jam):', state.masterUnits.length, 'unit');
-        return true;
-      }
-      if (!force && Array.isArray(state.masterUnits) && state.masterUnits.length > 25 && savedUnitsTs > 0) {
-        state._unitsLoadedFromSupabase = true;
         return true;
       }
 
@@ -28405,8 +28348,23 @@ Oilman 1 & 2 : ${oilman}`;
           }
           return true;
         } else {
-          console.warn('[loadUnitsFromSupabase] Tidak ada record unit ditemukan di Supabase.');
-          return false;
+          // DATABASE SUPABASE KOSONG (0 unit) - Bersihkan cache lokal seketika!
+          state.masterUnits = [];
+          state._unitsLoadedFromSupabase = true;
+          safeStorage.setItem('SE_MASTER_UNITS', '[]');
+          safeStorage.setItem('SE_MASTER_UNITS_TS', String(Date.now()));
+
+          if (state.masterActiveSection === 'units' && typeof renderMasterUnitsTable === 'function') {
+            renderMasterUnitsTable();
+          }
+          if (typeof populateOrderUnitsDatalist === 'function') {
+            populateOrderUnitsDatalist();
+          }
+          const badgeEl = document.getElementById('units-count-badge');
+          if (badgeEl) badgeEl.textContent = 'Total: 0 Unit';
+
+          console.warn('[loadUnitsFromSupabase] Tidak ada record unit di Supabase (Tabel Kosong). Cache lokal dikosongkan.');
+          return true;
         }
       } catch (err) {
         console.error('[loadUnitsFromSupabase Exception]', err);
@@ -28415,7 +28373,7 @@ Oilman 1 & 2 : ${oilman}`;
       }
     }
 
-    // Fungsi Sinkronisasi Menyeluruh Populasi Unit ke Cloud Supabase (Bidirectional)
+    // Fungsi Sinkronisasi Menyeluruh Populasi Unit ke Cloud Supabase (Murni Pull-Only: Supabase -> Web)
     async function syncMasterUnitsToSupabase(showToastAlert = true) {
       if (!state.supabaseClient) {
         if (showToastAlert) showToast('Koneksi Supabase belum siap!', 'warning');
@@ -28433,47 +28391,18 @@ Oilman 1 & 2 : ${oilman}`;
       if (icon) icon.classList.add('animate-spin');
       if (label) label.textContent = 'Menyinkronkan...';
 
-      if (showToastAlert) showToast('Menghubungkan ke Cloud Supabase...', 'info');
+      if (showToastAlert) showToast('Mengambil data unit dari Cloud Supabase...', 'info');
 
       try {
-        // 1. Ambil data terbaru dari Supabase terlebih dahulu
-        await loadUnitsFromSupabase(true, false);
-
-        // 2. Periksa apakah ada unit lokal draft baru yang belum terdaftar di Cloud
-        const localUnits = Array.isArray(state.masterUnits) ? state.masterUnits : [];
-        const unsyncedUnits = localUnits.filter(u => !u.id || String(u.id).startsWith('U-') || String(u.id).startsWith('UNIT-'));
-
-        if (unsyncedUnits.length > 0) {
-          const rowsToUpsert = unsyncedUnits.map(u => ({
-            no_lambung: u.lambung,
-            type_model: u.type || 'PC210-10M0',
-            kategori: (u.kategori || 'coal').toLowerCase(),
-            cluster: u.cluster || 'Selatan',
-            lokasi: u.lokasi || 'Pit Area',
-            status: u.statusAktif ? 'Operasi' : 'Breakdown',
-            status_aktif: u.statusAktif !== false,
-            updated_at: new Date().toISOString()
-          }));
-
-          const { data, error } = await state.supabaseClient
-            .from('master_units')
-            .upsert(rowsToUpsert, { onConflict: 'no_lambung' })
-            .select('id, no_lambung');
-
-          if (!error && Array.isArray(data)) {
-            data.forEach(d => {
-              const match = state.masterUnits.find(m => (m.lambung || '').toUpperCase() === (d.no_lambung || '').toUpperCase());
-              if (match && d.id) match.id = d.id;
-            });
-            safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
-          }
-        }
+        // 1. Ambil data terbaru dari Supabase (Pull-Only, One-Way: Supabase -> Web)
+        const ok = await loadUnitsFromSupabase(true, false);
 
         renderMasterUnitsTable();
         if (typeof populateOrderUnitsDatalist === 'function') populateOrderUnitsDatalist();
 
         if (showToastAlert) {
-          showToast('Sinkron berhasil', 'success');
+          const count = Array.isArray(state.masterUnits) ? state.masterUnits.length : 0;
+          showToast(`Sinkron berhasil: ${count} unit dari Cloud.`, 'success');
         }
       } catch (err) {
         console.error('[syncMasterUnitsToSupabase Exception]', err);
@@ -29747,28 +29676,34 @@ Oilman 1 & 2 : ${oilman}`;
           const cloudJobIds = new Set(combinedJobs.map(j => String(j.id)));
 
           // Rekonsiliasi akurat anti Zombie-Cache:
-          // Hapus seluruh jadwal lokal dalam rentang tanggal ini yang TIDAK ADA di Supabase.
-          // Jika pengguna menghapus jadwal di database Supabase (atau seluruh baris tabel dikosongkan),
-          // cache lokal WAJIB dibersihkan dan JANGAN PERNAH mengunggah ulang data zombie ke Supabase!
-          for (const [jId, jObj] of Array.from(window.globalDataCache.jobs.entries())) {
-            if (String(jId).startsWith('UNS-') || window.globalDataCache.orderRequests.has(jId)) continue;
-            const jDate = jObj?.tanggal || '';
-            if (force || (jDate >= startDate && jDate <= endDate)) {
-              if (!cloudJobIds.has(jId)) {
-                // Job ini sudah dihapus dari database Supabase
-                window.globalDataCache.jobs.delete(jId);
+          if (combinedJobs.length === 0 && (force || recentJobs.length === 0)) {
+            // Jika di Supabase tabel jobs kosong/dihapus tuntas, bersihkan seluruh cache jobs lokal
+            console.log('[Supabase Jobs Sync] Tabel jobs di Supabase kosong. Mengosongkan cache jobs lokal.');
+            window.globalDataCache.jobs.clear();
+          } else {
+            // Hapus seluruh jadwal lokal dalam rentang tanggal ini yang TIDAK ADA di Supabase.
+            // Jika pengguna menghapus jadwal di database Supabase (atau seluruh baris tabel dikosongkan),
+            // cache lokal WAJIB dibersihkan dan JANGAN PERNAH mengunggah ulang data zombie ke Supabase!
+            for (const [jId, jObj] of Array.from(window.globalDataCache.jobs.entries())) {
+              if (String(jId).startsWith('UNS-') || window.globalDataCache.orderRequests.has(jId)) continue;
+              const jDate = jObj?.tanggal || '';
+              if (force || (jDate >= startDate && jDate <= endDate) || !jDate || jObj.isPending) {
+                if (!cloudJobIds.has(jId)) {
+                  // Job ini sudah dihapus dari database Supabase
+                  window.globalDataCache.jobs.delete(jId);
+                }
               }
             }
-          }
 
-          // Masukkan seluruh data aktual dari database Supabase
-          combinedJobs.forEach(row => {
-            const jobObj = mapSupabaseJobRowToModel(row);
-            if (jobObj && jobObj.id) {
-              const sid = String(jobObj.id);
-              window.globalDataCache.jobs.set(sid, jobObj);
-            }
-          });
+            // Masukkan seluruh data aktual dari database Supabase
+            combinedJobs.forEach(row => {
+              const jobObj = mapSupabaseJobRowToModel(row);
+              if (jobObj && jobObj.id) {
+                const sid = String(jobObj.id);
+                window.globalDataCache.jobs.set(sid, jobObj);
+              }
+            });
+          }
 
           // Tandai seluruh tanggal dalam rentang Hot-Window sebagai fully loaded
           let curD = new Date(startDate);
@@ -29778,6 +29713,7 @@ Oilman 1 & 2 : ${oilman}`;
             curD.setDate(curD.getDate() + 1);
           }
 
+          state._initialJobsReconciled = true;
           safeSaveTrimmedJobsToStorage();
           console.log('[Supabase Jobs Sync OK] ' + combinedJobs.length + ' jobs termuat dalam rentang aktif. Total cache RAM: ' + window.globalDataCache.jobs.size + ' jobs.');
         }
@@ -30715,31 +30651,36 @@ Oilman 1 & 2 : ${oilman}`;
       try {
         // Baca seluruh data kontak dari master_operators (tabel utama di Supabase)
         const opsData = await fetchEntireSupabaseTable("master_operators", "id, nrp, nama, no_wa, cluster, jabatan, status_aktif", "nama");
-        if (Array.isArray(opsData) && opsData.length > 0) {
+        if (Array.isArray(opsData)) {
           supaOps = opsData;
         }
       } catch (fetchErr) {
         console.warn("[Supabase Sync Kontak Pro Error]", fetchErr);
       }
 
-      if (Array.isArray(supaOps) && supaOps.length > 0) {
-        state.masterOperators = supaOps.map(o => ({
-          id: String(o.id || ("OPT-" + o.nrp)),
-          nrp: String(o.nrp || "").trim(),
-          nama: String(o.nama || "").trim(),
-          noWa: o.no_wa || o.noWa || "",
-          cluster: o.cluster || "Selatan",
-          statusAktif: (o.status_aktif !== false)
-        }));
-        safeStorage.setItem("SE_MASTER_OPERATORS", JSON.stringify(state.masterOperators));
-        safeStorage.setItem("SE_MASTER_DATA_TS", String(Date.now()));
-        if (typeof renderMasterOperatorsTable === "function") {
-          renderMasterOperatorsTable();
+      if (Array.isArray(supaOps)) {
+        if (supaOps.length === 0) {
+          state.masterOperators = [];
+          safeStorage.setItem("SE_MASTER_OPERATORS", "[]");
+          safeStorage.setItem("SE_MASTER_DATA_TS", String(Date.now()));
+          if (typeof renderMasterOperatorsTable === "function") renderMasterOperatorsTable();
+          if (typeof renderMpKontakProTable === "function") renderMpKontakProTable();
+          console.log("[Supabase Sync] Kontak Produksi di Supabase kosong. Cache lokal dibersihkan.");
+        } else {
+          state.masterOperators = supaOps.map(o => ({
+            id: String(o.id || ("OPT-" + o.nrp)),
+            nrp: String(o.nrp || "").trim(),
+            nama: String(o.nama || "").trim(),
+            noWa: o.no_wa || o.noWa || "",
+            cluster: o.cluster || "Selatan",
+            statusAktif: (o.status_aktif !== false)
+          }));
+          safeStorage.setItem("SE_MASTER_OPERATORS", JSON.stringify(state.masterOperators));
+          safeStorage.setItem("SE_MASTER_DATA_TS", String(Date.now()));
+          if (typeof renderMasterOperatorsTable === "function") renderMasterOperatorsTable();
+          if (typeof renderMpKontakProTable === "function") renderMpKontakProTable();
+          console.log("[Supabase Sync] Kontak Produksi tersinkronisasi lengkap:", state.masterOperators.length, "kontak");
         }
-        if (typeof renderMpKontakProTable === "function") {
-          renderMpKontakProTable();
-        }
-        console.log("[Supabase Sync] Kontak Produksi tersinkronisasi lengkap:", state.masterOperators.length, "kontak");
       }
       return (state.masterOperators || []).length;
     }
@@ -30765,7 +30706,7 @@ Oilman 1 & 2 : ${oilman}`;
     async function syncSupabaseMasterData(force = false) {
       if (!state.supabaseClient) return;
 
-      // A. Master Armada: Gunakan Master Data TTL Cache (24 Jam) agar hemat kuota log
+      // A. Master Armada: Gunakan Master Data TTL Cache (24 Jam)
       const savedArmadaTs = Number(safeStorage.getItem('SE_MASTER_ARMADA_TS') || 0);
       const isArmadaFresh = (Date.now() - savedArmadaTs) < MASTER_DATA_TTL_MS;
       if (!force && isArmadaFresh && Array.isArray(state.masterArmada) && state.masterArmada.length > 0) {
@@ -30773,36 +30714,52 @@ Oilman 1 & 2 : ${oilman}`;
       } else if (state.supabaseClient) {
         try {
           const supaArmada = await fetchEntireSupabaseTable('master_armada', SUPABASE_ARMADA_COLS, 'unit');
-          if (Array.isArray(supaArmada) && supaArmada.length > 0) {
-            state.masterArmada = supaArmada.map(a => ({
-              id: a.id || ('ARM-' + a.unit),
-              unit: a.unit,
-              typeUnit: a.type_unit || a.typeUnit || (String(a.unit).toUpperCase().startsWith('WT') ? 'Water Truck' : 'Lubetruck'),
-              cluster: (a.cluster || 'Selatan').replace(/^KGU\s+/i, '').trim(),
-              status: a.status || 'Aktif',
-              keterangan: a.keterangan || ''
-            }));
-            safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
-            safeStorage.setItem('SE_MASTER_ARMADA_TS', String(Date.now()));
-            if (typeof syncClusterAssignedFromMasterArmada === 'function') {
-              await syncClusterAssignedFromMasterArmada();
+          if (Array.isArray(supaArmada)) {
+            if (supaArmada.length === 0) {
+              state.masterArmada = [];
+              safeStorage.setItem('SE_MASTER_ARMADA', '[]');
+              safeStorage.setItem('SE_MASTER_ARMADA_TS', String(Date.now()));
+              if (typeof syncClusterAssignedFromMasterArmada === 'function') {
+                await syncClusterAssignedFromMasterArmada(true);
+              }
+              if (state.masterActiveSection === 'armada' && typeof renderMasterArmadaTable === 'function') {
+                renderMasterArmadaTable();
+              }
+              if (typeof debouncedRefreshUI === 'function') {
+                debouncedRefreshUI();
+              }
+              console.log('[Supabase Sync] Master Armada di Supabase kosong. Cache lokal dibersihkan.');
+            } else {
+              state.masterArmada = supaArmada.map(a => ({
+                id: a.id || ('ARM-' + a.unit),
+                unit: a.unit,
+                typeUnit: a.type_unit || a.typeUnit || (String(a.unit).toUpperCase().startsWith('WT') ? 'Water Truck' : 'Lubetruck'),
+                cluster: (a.cluster || 'Selatan').replace(/^KGU\s+/i, '').trim(),
+                status: a.status || 'Aktif',
+                keterangan: a.keterangan || ''
+              }));
+              safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
+              safeStorage.setItem('SE_MASTER_ARMADA_TS', String(Date.now()));
+              if (typeof syncClusterAssignedFromMasterArmada === 'function') {
+                await syncClusterAssignedFromMasterArmada(true); // PENTING: skipSupabaseUpsert = true!
+              }
+              if (state.masterActiveSection === 'armada' && typeof renderMasterArmadaTable === 'function') {
+                renderMasterArmadaTable();
+              }
+              if (typeof renderManpowerDashboard === 'function') {
+                renderManpowerDashboard();
+              }
+              if (state.activeTab === 'lt-schedule' && typeof renderLtScheduleTable === 'function') {
+                renderLtScheduleTable();
+              }
+              if (state.activeTab === 'wt-schedule' && typeof renderWtScheduleTable === 'function') {
+                renderWtScheduleTable();
+              }
+              if (typeof debouncedRefreshUI === 'function') {
+                debouncedRefreshUI();
+              }
+              console.log('[Supabase Sync] Master Armada & Clusters tersinkronisasi lengkap:', supaArmada.length, 'unit');
             }
-            if (state.masterActiveSection === 'armada' && typeof renderMasterArmadaTable === 'function') {
-              renderMasterArmadaTable();
-            }
-            if (typeof renderManpowerDashboard === 'function') {
-              renderManpowerDashboard();
-            }
-            if (state.activeTab === 'lt-schedule' && typeof renderLtScheduleTable === 'function') {
-              renderLtScheduleTable();
-            }
-            if (state.activeTab === 'wt-schedule' && typeof renderWtScheduleTable === 'function') {
-              renderWtScheduleTable();
-            }
-            if (typeof debouncedRefreshUI === 'function') {
-              debouncedRefreshUI();
-            }
-            console.log('[Supabase Sync] Master Armada & Clusters tersinkronisasi lengkap:', supaArmada.length, 'unit');
           }
         } catch (armErr) {
           console.warn('[Supabase Sync Master Armada Warning]', armErr);
@@ -30812,7 +30769,7 @@ Oilman 1 & 2 : ${oilman}`;
       // B. Sinkronisasi Data Master Populasi Unit Lapangan (Hanya muat jika cache kosong/stale)
       const savedUnitsTs = Number(safeStorage.getItem('SE_MASTER_UNITS_TS') || 0);
       const isUnitsFresh = (Date.now() - savedUnitsTs) < MASTER_DATA_TTL_MS;
-      if (force || !isUnitsFresh || !Array.isArray(state.masterUnits) || state.masterUnits.length <= 25) {
+      if (force || !isUnitsFresh || !state._unitsLoadedFromSupabase || !Array.isArray(state.masterUnits) || state.masterUnits.length === 0) {
         if (typeof loadUnitsFromSupabase === 'function') {
           await loadUnitsFromSupabase(force, false);
         }
@@ -30831,33 +30788,38 @@ Oilman 1 & 2 : ${oilman}`;
         await syncMasterOperatorsFromSupabase(force);
         // D. Sinkronisasi Armada Clusters (Terkoneksi langsung ke Master Data Armada)
         if (typeof syncClusterAssignedFromMasterArmada === 'function') {
-          await syncClusterAssignedFromMasterArmada();
+          await syncClusterAssignedFromMasterArmada(true); // PENTING: skipSupabaseUpsert = true!
           console.log('[Supabase Sync] Armada Clusters tersinkronisasi murni dari Master Data Armada');
         }
 
         // E. Sinkronisasi Akun Pengguna (Users - Seluruh data tanpa batas 1.000)
         const supaUsers = await fetchEntireSupabaseTable('users', SUPABASE_USER_COLS, 'nrp');
-        if (Array.isArray(supaUsers) && supaUsers.length > 0) {
-          const uMap = new Map();
-          state.masterUsers.forEach(u => uMap.set(u.nrp, u));
-          supaUsers.forEach(su => {
-            uMap.set(su.nrp, {
-              id: su.id,
-              nrp: su.nrp,
-              nama: su.nama,
-              role: su.role,
-              jabatan: su.jabatan || 'Staff Operasional',
-              password: su.password,
-              noWa: su.no_wa || '',
-              statusAktif: (su.status_aktif !== false)
+        if (Array.isArray(supaUsers)) {
+          if (supaUsers.length === 0) {
+            state.masterUsers = [];
+            safeStorage.setItem('SE_MASTER_USERS', '[]');
+          } else {
+            const uMap = new Map();
+            state.masterUsers.forEach(u => uMap.set(u.nrp, u));
+            supaUsers.forEach(su => {
+              uMap.set(su.nrp, {
+                id: su.id,
+                nrp: su.nrp,
+                nama: su.nama,
+                role: su.role,
+                jabatan: su.jabatan || 'Staff Operasional',
+                password: su.password,
+                noWa: su.no_wa || '',
+                statusAktif: (su.status_aktif !== false)
+              });
             });
-          });
-          state.masterUsers = Array.from(uMap.values());
-          safeStorage.setItem('SE_MASTER_USERS', JSON.stringify(state.masterUsers));
+            state.masterUsers = Array.from(uMap.values());
+            safeStorage.setItem('SE_MASTER_USERS', JSON.stringify(state.masterUsers));
+          }
           if (state.masterActiveSection === 'accounts' && typeof renderMasterAccountsTable === 'function') {
             renderMasterAccountsTable();
           }
-          console.log('[Supabase Sync] Users tersinkronisasi lengkap:', supaUsers.length, 'pengguna');
+          console.log('[Supabase Sync] Users tersinkronisasi lengkap:', state.masterUsers.length, 'pengguna');
         }
 
         safeStorage.setItem('SE_MASTER_DATA_TS', String(Date.now()));
@@ -33849,16 +33811,33 @@ Oilman 1 & 2 : ${oilman}`;
 
     // // Progressive Web App: Service Worker Registration
     if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      // Auto-reload saat Service Worker versi baru mengambil alih kontrol halaman
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          console.log('[PWA] Service Worker baru aktif, memuat ulang halaman untuk memperbarui versi...');
+          window.location.reload();
+        }
+      });
+
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js', { scope: './' })
           .then((reg) => {
             console.log('[PWA] Service Worker terdaftar dengan scope:', reg.scope);
+            // Paksa periksa update setiap kali aplikasi dibuka
+            if (typeof reg.update === 'function') {
+              reg.update().catch(() => {});
+            }
             reg.onupdatefound = () => {
               const installingWorker = reg.installing;
               if (installingWorker) {
                 installingWorker.onstatechange = () => {
-                  if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    console.log('[PWA] Versi baru aplikasi tersedia. Silakan muat ulang untuk memperbarui.');
+                  if (installingWorker.state === 'installed') {
+                    if (navigator.serviceWorker.controller) {
+                      console.log('[PWA] Versi baru aplikasi ditemukan. Mengaktifkan segera...');
+                      installingWorker.postMessage({ type: 'SKIP_WAITING' });
+                    }
                   }
                 };
               }

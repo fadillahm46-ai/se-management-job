@@ -1,10 +1,10 @@
 /**
  * Service Worker: SE MANAGEMENT JOB - Mine Operations
- * Versi Cache: se-mine-ops-v1.0.6
+ * Versi Cache: se-mine-ops-v1.0.8
  * Fitur: Offline Caching, Network-First untuk Halaman Utama (Navigation), Stale-While-Revalidate untuk aset statis
  */
 
-const CACHE_NAME = 'se-mine-ops-v1.0.6';
+const CACHE_NAME = 'se-mine-ops-v1.0.8';
 
 // Daftar aset statis utama yang dicache saat instalasi
 const PRECACHE_ASSETS = [
@@ -42,7 +42,7 @@ self.addEventListener('install', (event) => {
         )
       );
     }).then(() => {
-      console.log('[SW] Service Worker v1.0.2 berhasil diinstal.');
+      console.log('[SW] Service Worker v1.0.7 berhasil diinstal.');
       return self.skipWaiting();
     })
   );
@@ -61,7 +61,7 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => {
-      console.log('[SW] Service Worker v1.0.2 aktif dan mengontrol halaman.');
+      console.log('[SW] Service Worker v1.0.7 aktif dan mengontrol halaman.');
       return self.clients.claim();
     })
   );
