@@ -1057,7 +1057,7 @@
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span id="header-db-status" class="font-bold text-slate-700">Online</span>
             <button type="button" onclick="forceSyncAllDataFromSupabase()"
-              title="Klik untuk sinkronisasi ulang seluruh data dari Supabase"
+              title="Klik untuk memuat ulang data terbaru dari Cloud Supabase (Tarik Data Murni)"
               class="text-slate-400 hover:text-emerald-700 ml-1 transition cursor-pointer">
               <svg class="w-3 h-3 hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor"
                 viewBox="0 0 24 24">
@@ -24367,12 +24367,16 @@ Oilman 1 & 2 : ${oilman}`;
           safeSaveTrimmedJobsToStorage();
         }
 
-        // 2. Hapus dari Supabase cloud jika online
+        // 2. Hapus dari Supabase cloud jika online (hapus dari jobs, job_history, dan pica_records)
         if (state.supabaseClient) {
           try {
             for (let i = 0; i < deleteIds.length; i += 50) {
               const chunk = deleteIds.slice(i, i + 50);
-              await state.supabaseClient.from("jobs").delete().in("id", chunk);
+              await Promise.allSettled([
+                state.supabaseClient.from("jobs").delete().in("id", chunk),
+                state.supabaseClient.from("job_history").delete().in("job_id", chunk),
+                state.supabaseClient.from("pica_records").delete().in("job_id", chunk)
+              ]);
             }
             console.log("[Supabase Bulk Delete Riwayat] " + deleteIds.length + " data riwayat berhasil dihapus dari cloud.");
           } catch (supaErr) {
@@ -28858,6 +28862,14 @@ Oilman 1 & 2 : ${oilman}`;
         const { error: errOrder } = await state.supabaseClient.from('order_requests').delete().or('id.eq.' + cleanJobId + ',kode_order.eq.' + cleanJobId);
         if (errOrder) console.warn('[Supabase Delete Order Error]:', errOrder.message);
 
+        // 3. Hapus juga dari job_history & pica_records agar tidak tertinggal sebagai data zombie
+        try {
+          await Promise.allSettled([
+            state.supabaseClient.from('job_history').delete().eq('job_id', cleanJobId),
+            state.supabaseClient.from('pica_records').delete().eq('job_id', cleanJobId)
+          ]);
+        } catch (eRel) { }
+
         console.log('[Supabase Outbound Job Deleted OK]', cleanJobId);
 
         // 3. Pancarkan event Realtime Broadcast Instan (0 ms latency) agar semua perangkat tersinkronisasi
@@ -29734,26 +29746,19 @@ Oilman 1 & 2 : ${oilman}`;
           const combinedJobs = [...recentJobs, ...pendingJobs];
           const cloudJobIds = new Set(combinedJobs.map(j => String(j.id)));
 
-          // HANYA hapus jobs di RAM cache jika Supabase memang mengembalikan data (cloudJobIds.size > 0).
-          // Jika Supabase kosong (0 records) tapi di web lokal ada jadwal, JANGAN HAPUS!
-          // Sebaliknya, otomatis dorong / unggah jadwal lokal ke Supabase agar tabel Supabase terisi!
-          if (cloudJobIds.size > 0) {
-            for (const [jId, jObj] of Array.from(window.globalDataCache.jobs.entries())) {
-              if (String(jId).startsWith('UNS-') || window.globalDataCache.orderRequests.has(jId)) continue;
-              const jDate = jObj?.tanggal || '';
-              if (jDate >= startDate && jDate <= endDate) {
-                if (!cloudJobIds.has(jId)) {
-                  // Job ini sudah dihapus dari database Supabase
-                  window.globalDataCache.jobs.delete(jId);
-                }
+          // Rekonsiliasi akurat anti Zombie-Cache:
+          // Hapus seluruh jadwal lokal dalam rentang tanggal ini yang TIDAK ADA di Supabase.
+          // Jika pengguna menghapus jadwal di database Supabase (atau seluruh baris tabel dikosongkan),
+          // cache lokal WAJIB dibersihkan dan JANGAN PERNAH mengunggah ulang data zombie ke Supabase!
+          for (const [jId, jObj] of Array.from(window.globalDataCache.jobs.entries())) {
+            if (String(jId).startsWith('UNS-') || window.globalDataCache.orderRequests.has(jId)) continue;
+            const jDate = jObj?.tanggal || '';
+            if (force || (jDate >= startDate && jDate <= endDate)) {
+              if (!cloudJobIds.has(jId)) {
+                // Job ini sudah dihapus dari database Supabase
+                window.globalDataCache.jobs.delete(jId);
               }
             }
-          } else if (window.globalDataCache.jobs.size > 0 && !window._hasAutoPushedJobsToCloud) {
-            window._hasAutoPushedJobsToCloud = true;
-            console.log('[Supabase Auto-Sync] Tabel jobs di Cloud Supabase kosong. Menjadwalkan unggah massal ' + window.globalDataCache.jobs.size + ' jadwal lokal ke Supabase...');
-            setTimeout(() => {
-              if (typeof pushAllJobsToSupabase === 'function') pushAllJobsToSupabase(false);
-            }, 1200);
           }
 
           // Masukkan seluruh data aktual dari database Supabase
@@ -32089,136 +32094,21 @@ Oilman 1 & 2 : ${oilman}`;
      * =========================================================================
      */
 
-    // 1. UNGGAH MASSAL SELURUH JADWAL AKTIF KE TABEL jobs DI SUPABASE
-    async function pushAllJobsToSupabase(showAlert = true) {
-      if (!state.supabaseClient) {
-        if (showAlert) showToast('Koneksi Supabase belum aktif!', 'error');
-        return;
-      }
-      if (showAlert) showToast('Mengunggah seluruh jadwal ke Supabase...', 'info');
-      try {
-        const allJobs = [];
-        if (window.globalDataCache && window.globalDataCache.jobs) {
-          for (const j of window.globalDataCache.jobs.values()) {
-            if (j && j.id) allJobs.push(j);
-          }
-        }
-        if (allJobs.length === 0) {
-          const lube = state.lubetruckState?.jobs || [];
-          const water = state.watertruckState?.jobs || [];
-          allJobs.push(...lube, ...water);
-        }
-        if (allJobs.length === 0) {
-          if (showAlert) showToast('Tidak ada jadwal untuk diunggah', 'warning');
-          return;
-        }
-
-        const supaRows = allJobs.map(job => {
-          const targetId = String(job.id);
-          const isSchWt = (targetId.startsWith('WT-SCH') || targetId.startsWith('WTJ') || (!targetId.startsWith('UNS') && (job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat) || (job.wtUnit && job.wtUnit !== '-'))));
-          const isSchLt = (targetId.startsWith('LT-SCH') || targetId.startsWith('LTJ') || (!targetId.startsWith('UNS') && (job.targetType === 'LT' || ['small', 'digger', 'aircleaner', 'topup'].includes(job.cat))));
-          const isUnschWt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-WT') || ((targetId.startsWith('UNS-') || targetId.startsWith('UNS_') || job.cat === 'unscheduled') && (job.serviceType === 'watertruck' || job.targetType === 'WT')));
-          const isUnschLt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-LT') || ((targetId.startsWith('UNS-') || targetId.startsWith('UNS_') || job.cat === 'unscheduled') && (job.serviceType === 'lubetruck' || job.targetType === 'LT')));
-          const isWt = isSchWt || isUnschWt;
-
-          return {
-            id: targetId,
-            job_type: isSchWt ? 'sch_wt' : isSchLt ? 'sch_lt' : isUnschWt ? 'unsch_wt' : isUnschLt ? 'unsch_lt' : (isWt ? 'sch_wt' : 'sch_lt'),
-            cat: job.cat || (isUnschWt || isUnschLt ? 'unscheduled' : (isWt ? 'coal' : 'small')),
-            tanggal: job.tanggal || getEffectiveTodayString(),
-            shift: parseInt(job.shift, 10) || 1,
-            washing_round: typeof getJobWashingRound === 'function' ? getJobWashingRound(job) : (parseInt(job.washingRound, 10) || (targetId.includes('-W2-') ? 2 : 1)),
-            cluster: job.cluster || 'Selatan',
-            waktu_rencana: job.waktu || '07:00 s/d 07:15',
-            type_unit: job.typeUnit || 'Unit',
-            no_lambung: job.noLambung || '',
-            lokasi: job.lokasi || '',
-            armada_unit: (isWt || isUnschWt) ? (job.wtUnit && job.wtUnit !== '-' ? job.wtUnit : (job.armada && job.armada !== '-' ? job.armada : (job.armadaUnit && job.armadaUnit !== '-' ? job.armadaUnit : 'WT2636'))) : (job.ltUnit && job.ltUnit !== '-' ? job.ltUnit : (job.armada && job.armada !== '-' ? job.armada : (job.armadaUnit && job.armadaUnit !== '-' ? job.armadaUnit : 'LT2535'))),
-            opt_name: job.opt || job.optName || '-',
-            mp1: job.mp1 || '-',
-            mp2: job.mp2 || '-',
-            jam_start: job.jamStart || '',
-            jam_end: job.jamEnd || '',
-            durasi: job.durasi ? parseFloat(job.durasi) : null,
-            hm_stop: job.hmStop || job.hmStart || null,
-            hm_ready: job.hmReady || job.hmEnd || null,
-            status: job.status || 'scheduled',
-            keterangan: job.keterangan || '',
-            is_pending: Boolean(job.isPending),
-            unit_condition: job.unitCondition || '',
-            service_notes: (typeof job.serviceNotes === 'string' && !job.serviceNotes.startsWith('PHOTOS:') && !job.serviceNotes.startsWith('PHOTOS_ATTACHED')) ? job.serviceNotes : '',
-            bd_notes: job.bdNotes || '',
-            service_type: job.serviceType || '',
-            pemesan: job.namaPemesan || job.pemesan || '',
-            kondisi: job.kondisi || '',
-            updated_at: new Date().toISOString()
-          };
-        });
-
-        const BATCH_SIZE = 100;
-        let insertedCount = 0;
-        for (let i = 0; i < supaRows.length; i += BATCH_SIZE) {
-          const batch = supaRows.slice(i, i + BATCH_SIZE);
-          const { error } = await state.supabaseClient.from('jobs').upsert(batch, { onConflict: 'id' });
-          if (error) {
-            console.warn('[Push Jobs Batch Error at ' + i + ']', error.message);
-          } else {
-            insertedCount += batch.length;
-          }
-        }
-        console.log('[Push Jobs OK] Berhasil mengunggah ' + insertedCount + ' dari ' + supaRows.length + ' jadwal ke Supabase.');
-        if (showAlert) showToast('Berhasil menyinkronkan ' + insertedCount + ' jadwal ke Supabase!', 'success');
-      } catch (err) {
-        console.error('[Push All Jobs Exception]', err);
-        if (showAlert) showToast('Gagal mengunggah jadwal: ' + err.message, 'error');
-      }
+    // 1. DINONAKTIFKAN TOTAL: PUSH MASSAL CACHE LOKAL DIHAPUS DEMI KEAMANAN DATA SUPABASE
+    // Sesuai aturan arsitektur data: Sinkronisasi dari Web murni bersifat PULL (menarik data dari Supabase).
+    // Data di Cloud Supabase HANYA BOLEH bertambah/berubah saat User/Admin resmi mengisi form jadwal
+    // atau Tim Lapangan (Oilman/Washingman) mengeksekusi aksi pekerjaan (Action Job).
+    async function pushAllJobsToSupabase(showAlert = false) {
+      console.log('[Supabase Guard] pushAllJobsToSupabase diblokir: Cache lokal dilarang mengotori database Cloud.');
+      if (showAlert) showToast('Data Supabase hanya diperbarui saat ada input jadwal resmi atau aksi lapangan.', 'info');
+      return;
     }
     window.pushAllJobsToSupabase = pushAllJobsToSupabase;
 
-    // 2. UNGGAH MASSAL SELURUH RIWAYAT SELESAI KE TABEL job_history DI SUPABASE
+    // 2. DINONAKTIFKAN TOTAL: PUSH MASSAL RIWAYAT DIHAPUS DEMI KEAMANAN DATA
     async function pushAllJobHistoryToSupabase(showAlert = false) {
-      if (!state.supabaseClient || !Array.isArray(state.jobHistory) || state.jobHistory.length === 0) return;
-      try {
-        const histRows = state.jobHistory.map(h => {
-          const cleanId = String(h.job_id || h.id || '');
-          return {
-            job_id: cleanId,
-            no_lambung: h.no_lambung || h.noLambung || 'UNIT',
-            type_unit: h.type_unit || h.typeUnit || 'Unit',
-            cat: h.cat || 'small',
-            job_type: h.job_type || ((cleanId.includes('WT') || h.targetType === 'WT') ? 'water' : 'lube'),
-            tanggal_rencana: h.tanggal_rencana || h.tanggal || getEffectiveTodayString(),
-            shift_rencana: parseInt(h.shift_rencana || h.shift || 1, 10),
-            waktu_rencana: h.waktu_rencana || h.waktu || '07:00 s/d 07:15',
-            cluster: h.cluster || 'Selatan',
-            lokasi: h.lokasi || 'Pit Area',
-            armada_unit: h.armada_unit || h.armada || h.ltUnit || h.wtUnit || 'LT2535',
-            opt_name: h.opt_name || h.opt || '-',
-            mp1: h.mp1 || '-',
-            mp2: h.mp2 || '-',
-            tanggal_eksekusi: h.tanggal_eksekusi || h.tanggalRealisasi || h.tanggal || getEffectiveTodayString(),
-            jam_start: h.jam_start || h.jamStart || '',
-            jam_end: h.jam_end || h.jamEnd || '',
-            status_final: (h.status_final || h.status || 'ACHIEVED').toUpperCase(),
-            keterangan: h.keterangan || h.non_ach_reason || '',
-            non_ach_category: h.non_ach_category || h.nonAchCategory || 'Operasional',
-            non_ach_reason: h.non_ach_reason || h.alasanNonAch || '',
-            created_at: h.created_at || new Date().toISOString()
-          };
-        });
-
-        const BATCH_SIZE = 50;
-        let uploaded = 0;
-        for (let i = 0; i < histRows.length; i += BATCH_SIZE) {
-          const batch = histRows.slice(i, i + BATCH_SIZE);
-          const { error } = await state.supabaseClient.from('job_history').upsert(batch, { onConflict: 'job_id' });
-          if (!error) uploaded += batch.length;
-        }
-        console.log('[Push History OK] ' + uploaded + ' dari ' + histRows.length + ' riwayat selesai diunggah ke Supabase.');
-        if (showAlert) showToast(uploaded + ' riwayat selesai tersinkron ke Supabase!', 'success');
-      } catch (err) {
-        console.warn('[Push History Exception]', err);
-      }
+      console.log('[Supabase Guard] pushAllJobHistoryToSupabase diblokir: Riwayat di cloud hanya disimpan saat eksekusi selesai.');
+      return;
     }
     window.pushAllJobHistoryToSupabase = pushAllJobHistoryToSupabase;
 
@@ -32227,21 +32117,12 @@ Oilman 1 & 2 : ${oilman}`;
       if (!state.supabaseClient) return;
       try {
         const { data, error } = await state.supabaseClient.from('job_history').select('*').order('created_at', { ascending: false }).limit(1000);
-        if (!error && Array.isArray(data) && data.length > 0) {
-          if (!Array.isArray(state.jobHistory)) state.jobHistory = [];
-          const map = new Map();
-          // Masukkan data cloud
-          data.forEach(item => {
-            if (item && item.job_id) map.set(String(item.job_id), item);
-          });
-          // Masukkan data lokal jika belum ada di cloud
-          state.jobHistory.forEach(item => {
-            const jId = String(item.job_id || item.id || '');
-            if (jId && !map.has(jId)) map.set(jId, item);
-          });
-          state.jobHistory = Array.from(map.values());
+        if (!error && Array.isArray(data)) {
+          // Supabase adalah sumber kebenaran tunggal (Single Source of Truth).
+          // Jika tabel di cloud kosong (pengguna menghapus riwayat di Supabase), kosongkan juga cache lokal anti zombie cache.
+          state.jobHistory = data;
           safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
-          console.log('[Supabase History Sync OK] Total ' + state.jobHistory.length + ' riwayat selesai termuat.');
+          console.log('[Supabase History Sync OK] Total ' + state.jobHistory.length + ' riwayat selesai termuat dari Supabase.');
           if (typeof renderHistoryTable === 'function') renderHistoryTable();
         }
       } catch (e) {
@@ -32282,41 +32163,10 @@ Oilman 1 & 2 : ${oilman}`;
     }
     window.syncPicaToSupabase = syncPicaToSupabase;
 
-    // 5. UNGGAH MASSAL SELURUH LOG PICA KE TABEL pica_records DI SUPABASE
+    // 5. DINONAKTIFKAN TOTAL: PUSH MASSAL PICA DIHAPUS DEMI KEAMANAN DATA
     async function pushAllPicaToSupabase(showAlert = false) {
-      if (!state.supabaseClient) return;
-      try {
-        const nonAchJobs = (typeof getFilteredPicaJobs === 'function') ? getFilteredPicaJobs() : [];
-        if (nonAchJobs.length === 0) return;
-
-        const picaRows = nonAchJobs.map(j => {
-          const cleanId = String(j.id || '');
-          return {
-            id: 'PICA-' + cleanId,
-            job_id: cleanId,
-            no_lambung: j.noLambung || j.no_lambung || 'UNIT',
-            tanggal: j.tanggalRealisasi || j.tanggal || getEffectiveTodayString(),
-            shift: parseInt(j.shift || 1, 10),
-            cluster: j.cluster || 'Selatan',
-            kategori: j.nonAchCategory || 'Operasional',
-            problem_description: j.alasanNonAch || j.keterangan || 'Kendala Non-ACH',
-            root_cause: j.keterangan || j.alasanNonAch || '-',
-            corrective_action: 'Penanganan kendala & koordinasi pengawas lapangan',
-            preventive_action: 'Pemeriksaan kesiapan unit & jalur',
-            pic: j.opt || j.opt_name || j.mp1 || 'Pengawas Lapangan',
-            status: 'Open',
-            updated_at: new Date().toISOString()
-          };
-        });
-
-        const { error } = await state.supabaseClient.from('pica_records').upsert(picaRows, { onConflict: 'id' });
-        if (!error) {
-          console.log('[Push PICA OK] ' + picaRows.length + ' kendala PICA tersinkronisasi ke Supabase.');
-          if (showAlert) showToast(picaRows.length + ' Log PICA berhasil disinkronkan ke Supabase!', 'success');
-        }
-      } catch (err) {
-        console.warn('[Push All PICA Error]', err);
-      }
+      console.log('[Supabase Guard] pushAllPicaToSupabase diblokir: PICA di cloud hanya disimpan saat ada aksi Non-ACH lapangan.');
+      return;
     }
     window.pushAllPicaToSupabase = pushAllPicaToSupabase;
 
@@ -32335,13 +32185,13 @@ Oilman 1 & 2 : ${oilman}`;
     }
     window.loadPicaFromSupabase = loadPicaFromSupabase;
 
-    // 7. SINKRONISASI PENUH DUA ARAH (DARI & KE SUPABASE CLOUD)
+    // 7. SINKRONISASI MURNI DARI CLOUD SUPABASE (PULL DATA SAJA)
     async function forceSyncAllDataFromSupabase() {
       if (!state.supabaseClient) {
         showToast('Koneksi Supabase belum aktif! Periksa koneksi internet Anda.', 'error');
         return;
       }
-      showToast('Menyinkronkan data penuh dua arah (Jobs, History, PICA)...', 'info');
+      showToast('Mengambil data terbaru dari Cloud Supabase...', 'info');
       try {
         const results = await Promise.allSettled([
           loadRosterFromSupabase(null, true),
@@ -32353,16 +32203,8 @@ Oilman 1 & 2 : ${oilman}`;
           loadUnitsFromSupabase(true, false)
         ]);
 
-        // Pastikan seluruh data lokal (Jadwal, Riwayat, PICA) terunggah ke Supabase jika di Cloud masih kosong
-        if (typeof pushAllJobsToSupabase === 'function') {
-          await pushAllJobsToSupabase(false);
-        }
-        if (typeof pushAllJobHistoryToSupabase === 'function') {
-          await pushAllJobHistoryToSupabase(false);
-        }
-        if (typeof pushAllPicaToSupabase === 'function') {
-          await pushAllPicaToSupabase(false);
-        }
+        // Catatan Anti-Zombie: JANGAN otomatis push cache lokal saat sinkronisasi tarik cloud.
+        // Sinkronisasi tombol ini murni menarik (PULL) kondisi terkini dari database Supabase ke web.
 
         renderDatabaseRosterTable();
         if (typeof renderMasterUnitsTable === 'function') renderMasterUnitsTable();
