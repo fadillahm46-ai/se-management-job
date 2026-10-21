@@ -24,6 +24,16 @@ const MIME_TYPES = {
   '.csv': 'text/csv'
 };
 
+
+const scheduler = require('./scheduler');
+
+// Jalankan scheduler background loop
+try {
+  scheduler.startSchedulerLoop(60);
+} catch (e) {
+  console.warn('Gagal memulai loop background scheduler:', e.message);
+}
+
 const server = http.createServer((req, res) => {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -55,6 +65,40 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ status: 'error', message: err.message }));
       }
     });
+    return;
+  }
+
+  
+  // Scheduler Cutoff APIs
+  if (req.url === '/api/scheduler/shift-cutoff' && req.method === 'POST') {
+    scheduler.evaluateShift1Cutoff().then(result => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'success', result }));
+    }).catch(err => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
+    });
+    return;
+  }
+
+  if (req.url === '/api/scheduler/day-cutoff' && req.method === 'POST') {
+    scheduler.evaluateDayCutoff().then(result => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'success', result }));
+    }).catch(err => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'error', message: err.message }));
+    });
+    return;
+  }
+
+  if (req.url === '/api/scheduler/status' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      status: 'active',
+      serverTime: new Date().toISOString(),
+      service: 'SE Management Job Scheduler'
+    }));
     return;
   }
 

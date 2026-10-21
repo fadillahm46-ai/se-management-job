@@ -52,6 +52,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet">
 
+  <!-- Shared Role Router & Access Guard (6 Role Support) -->
+  <script src="shared.js"></script>
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -1390,8 +1393,8 @@
                           <span class="text-[9px] text-slate-400">Stockpile & hopper</span>
                         </div>
                         <span id="dash-cat-rom-val"
-                          class="text-[11px] font-black text-slate-900 group-hover:text-emerald-800 font-mono">18 Unit
-                          (94.4%)</span>
+                          class="text-[11px] font-black text-slate-900 group-hover:text-emerald-800 font-mono">0 Unit
+                          (0%)</span>
                       </div>
 
                       <!-- Kategori 4: Clean Air Cleaner -->
@@ -1408,8 +1411,8 @@
                           <span class="text-[9px] text-slate-400">Saringan udara periodik</span>
                         </div>
                         <span id="dash-cat-aircleaner-val"
-                          class="text-[11px] font-black text-slate-900 group-hover:text-emerald-800 font-mono">2 Unit
-                          (100.0%)</span>
+                          class="text-[11px] font-black text-slate-900 group-hover:text-emerald-800 font-mono">0 Unit
+                          (0%)</span>
                       </div>
 
                       <!-- Kategori 5: Top Up Oil -->
@@ -1426,8 +1429,8 @@
                           <span class="text-[9px] text-slate-400">Pengecekan oli (4 foto)</span>
                         </div>
                         <span id="dash-cat-topup-val"
-                          class="text-[11px] font-black text-slate-900 group-hover:text-emerald-800 font-mono">2 Unit
-                          (100.0%)</span>
+                          class="text-[11px] font-black text-slate-900 group-hover:text-emerald-800 font-mono">0 Unit
+                          (0%)</span>
                       </div>
 
                       <!-- Kategori 6: Unscheduled Job -->
@@ -1443,7 +1446,7 @@
                           <span class="text-[9px] text-blue-500">Job Request</span>
                         </div>
                         <span id="dash-cat-unsched-val"
-                          class="text-[11px] font-black text-blue-900 group-hover:text-blue-950 font-mono">6 Unit</span>
+                          class="text-[11px] font-black text-blue-900 group-hover:text-blue-950 font-mono">0 Unit</span>
                       </div>
                     </div>
                   </div>
@@ -1476,7 +1479,7 @@
                     </div>
                     <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-600 font-mono"
                       id="dash-audit-total-label">
-                      184 Total Jobs Evaluated
+                      0 Total Jobs Evaluated
                     </span>
                   </div>
 
@@ -1487,34 +1490,34 @@
                         <div class="flex items-center justify-between mb-1">
                           <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status Kepatuhan
                             Operasi</span>
-                          <span class="text-xs font-black text-emerald-700">OPTIMAL (88%)</span>
+                          <span class="text-xs font-black text-emerald-700">OPTIMAL (0%)</span>
                         </div>
 
                         <!-- Segmented Bar Horizontal -->
                         <div class="h-4 w-full bg-slate-100 rounded-lg overflow-hidden flex shadow-inner">
                           <div id="dash-bar-ach" class="bg-emerald-500 h-full transition-all duration-500"
-                            style="width: 88%" title="Terselesaikan ACH"></div>
+                            style="width: 0%" title="Terselesaikan ACH"></div>
                           <div id="dash-bar-pending" class="bg-amber-400 h-full transition-all duration-500"
-                            style="width: 4.5%" title="Pending Lemparan"></div>
+                            style="width: 0%" title="Pending Lemparan"></div>
                           <div id="dash-bar-nonach" class="bg-rose-500 h-full transition-all duration-500"
-                            style="width: 7.5%" title="Kendala Non-Ach PICA"></div>
+                            style="width: 0%" title="Kendala Non-Ach PICA"></div>
                         </div>
 
                         <!-- Keterangan Jumlah di Bawah Bar (Mirip 2.6K Toxic, 4.6K Pot, 28.8K Non-toxic) -->
                         <div class="grid grid-cols-3 gap-2 mt-2 text-center text-xs">
                           <div class="p-2 rounded-xl bg-emerald-50/70 border border-emerald-200/50">
                             <span class="text-[10px] font-bold text-emerald-800 block">Selesai (ACH)</span>
-                            <span id="dash-audit-ach-count" class="text-sm font-black text-emerald-700 font-mono">162
+                            <span id="dash-audit-ach-count" class="text-sm font-black text-emerald-700 font-mono">0
                               Unit</span>
                           </div>
                           <div class="p-2 rounded-xl bg-amber-50/70 border border-amber-200/50">
                             <span class="text-[10px] font-bold text-amber-800 block">Pending</span>
-                            <span id="dash-audit-pending-count" class="text-sm font-black text-amber-700 font-mono">8
+                            <span id="dash-audit-pending-count" class="text-sm font-black text-amber-700 font-mono">0
                               Unit</span>
                           </div>
                           <div class="p-2 rounded-xl bg-rose-50/70 border border-rose-200/50">
                             <span class="text-[10px] font-bold text-rose-800 block">Non-Ach (PICA)</span>
-                            <span id="dash-audit-nonach-count" class="text-sm font-black text-rose-700 font-mono">14
+                            <span id="dash-audit-nonach-count" class="text-sm font-black text-rose-700 font-mono">0
                               Unit</span>
                           </div>
                         </div>
@@ -2110,12 +2113,12 @@
                       <div class="flex items-center space-x-1.5">
                         <span class="w-3.5 h-3.5 rounded-sm bg-[#BE123C]"></span>
                         <span id="kpi-opp-legend-sesuai" class="font-black text-slate-900 text-xs sm:text-[13px]">SESUAI
-                          REGULASI (88%)</span>
+                          REGULASI (0%)</span>
                       </div>
                       <div class="flex items-center space-x-1.5">
                         <span class="w-3.5 h-3.5 rounded-sm bg-[#C2410C]"></span>
                         <span id="kpi-opp-legend-tidaksesuai"
-                          class="font-black text-slate-900 text-xs sm:text-[13px]">TIDAK SESUAI REGULASI (12%)</span>
+                          class="font-black text-slate-900 text-xs sm:text-[13px]">TIDAK SESUAI REGULASI (0%)</span>
                       </div>
                     </div>
                   </div>
@@ -2138,7 +2141,7 @@
                               class="py-3 px-4 text-[#881337] border-r border-slate-200 font-black text-xs sm:text-[13px]">
                               SESUAI REGULASI</td>
                             <td id="kpi-opp-table-sesuai"
-                              class="py-3 px-4 text-center font-mono text-[#881337] text-base sm:text-lg font-black">29
+                              class="py-3 px-4 text-center font-mono text-[#881337] text-base sm:text-lg font-black">0
                             </td>
                           </tr>
                           <tr class="bg-white hover:bg-slate-50 transition">
@@ -2146,7 +2149,7 @@
                               class="py-3 px-4 text-slate-800 border-r border-slate-200 font-black text-xs sm:text-[13px]">
                               TIDAK SESUAI REGULASI</td>
                             <td id="kpi-opp-table-tidaksesuai"
-                              class="py-3 px-4 text-center font-mono text-[#C2410C] text-base sm:text-lg font-black">4
+                              class="py-3 px-4 text-center font-mono text-[#C2410C] text-base sm:text-lg font-black">0
                             </td>
                           </tr>
                         </tbody>
@@ -2156,7 +2159,7 @@
                               class="py-3 px-4 border-r border-slate-200 text-xs sm:text-[13px] font-black text-slate-800">
                               TOTAL EVENT OPPORTUNITY</td>
                             <td id="kpi-opp-table-total"
-                              class="py-3 px-4 text-center font-mono text-[#881337] text-base sm:text-xl font-black">33
+                              class="py-3 px-4 text-center font-mono text-[#881337] text-base sm:text-xl font-black">0
                               Event</td>
                           </tr>
                         </tfoot>
@@ -3694,10 +3697,13 @@
                   </svg>
                   <span>Import Kontak (.xlsx)</span>
                 </button>
-                <button type="button" onclick="syncMasterOperatorsManual(event)" title="Sinkronkan data kontak terbaru dari cloud Supabase"
+                <button type="button" onclick="syncMasterOperatorsManual(event)"
+                  title="Sinkronkan data kontak terbaru dari cloud Supabase"
                   class="px-3.5 py-2 rounded-xl bg-sky-100 hover:bg-sky-200 text-sky-800 font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-2xs">
                   <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                    </path>
                   </svg>
                   <span>Sinkron Cloud</span>
                 </button>
@@ -3852,6 +3858,7 @@
                   <option value="ALL">All Role</option>
                   <option value="admin">Administrator / Planner</option>
                   <option value="basecontrol">Operator Base Control</option>
+                  <option value="track">Tim Track</option>
                   <option value="mp_lt">Oilman (MP LT)</option>
                   <option value="mp_wt">Washingman (MP WT)</option>
                   <option value="user">User Pemohon / Driver</option>
@@ -4358,6 +4365,72 @@
             </div>
           </div>
 
+          <!-- Grid Menu Kartu Khusus Track & Base Control (Mode HP Sesuai Foto Pengguna) -->
+          <!-- HANYA MENAMPILKAN: Profil Saya, Form Order, Job Request, Tombol Keluar -->
+          <div id="more-full-track-bc-grid" class="hidden grid grid-cols-2 gap-3">
+            <!-- 1. Profil Saya (Ujung Kiri Atas) -->
+            <div onclick="navigateTab('profile')"
+              class="bg-white hover:bg-slate-50 border border-slate-200/80 active:scale-[0.98] transition rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer space-y-3">
+              <div
+                class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100/80 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-xs font-black text-slate-900 leading-tight">Profil Saya</h4>
+              </div>
+            </div>
+
+            <!-- 2. Form Order -->
+            <div onclick="navigateTab('orders')"
+              class="bg-white hover:bg-slate-50 border border-slate-200/80 active:scale-[0.98] transition rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer space-y-3">
+              <div
+                class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100/80 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                  </path>
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-xs font-black text-slate-900 leading-tight">Form Order</h4>
+              </div>
+            </div>
+
+            <!-- 3. Job Request -->
+            <div onclick="navigateTab('job-requests')"
+              class="bg-white hover:bg-slate-50 border border-slate-200/80 active:scale-[0.98] transition rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer space-y-3">
+              <div
+                class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100/80 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-xs font-black text-slate-900 leading-tight">Job Request</h4>
+              </div>
+            </div>
+
+            <!-- 4. Tombol Keluar (Di dalam grid persegi) -->
+            <div onclick="openProfileLogoutModal()"
+              class="bg-white hover:bg-rose-50 border border-slate-200/80 active:scale-[0.98] transition rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer space-y-3">
+              <div
+                class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100/80 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                  </path>
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-xs font-black text-rose-600 leading-tight">Keluar</h4>
+              </div>
+            </div>
+          </div>
+
           <!-- Grid Menu Kartu 2 Kolom untuk Admin -->
           <div id="more-full-admin-grid" class="grid grid-cols-2 gap-3">
             <!-- 1. Profil Saya (Ujung Kiri Atas di Semua Akses - Persegi) -->
@@ -4590,7 +4663,7 @@
           </div>
 
           <!-- SECTION: LAINNYA (SESUAI FOTO PENGGUNA) -->
-          <div class="pt-2">
+          <div id="more-full-bottom-logout-section" class="pt-2">
             <span class="text-xs font-black text-slate-400 tracking-wider uppercase block mb-2 px-1">LAINNYA</span>
             <!-- Tombol Keluar / Logout Sesuai Foto -->
             <div onclick="openProfileLogoutModal()"
@@ -4736,7 +4809,8 @@
                     <th class="py-2.5 px-2 text-center w-24 md:w-28 border-r border-white/10">CLEAN KE 5</th>
                     <th class="py-2.5 px-2 text-center w-24 md:w-28 border-r border-white/10">CLEAN KE 6</th>
                     <th class="py-2.5 px-3 text-center w-32">STATUS</th>
-                    <th id="th-aircleaner-action" class="py-2.5 px-3 text-center w-24 md:w-28 border-l border-white/10 hidden">AKSI</th>
+                    <th id="th-aircleaner-action"
+                      class="py-2.5 px-3 text-center w-24 md:w-28 border-l border-white/10 hidden">AKSI</th>
                   </tr>
                 </thead>
                 <tbody id="aircleaner-monitor-tbody" class="divide-y divide-slate-100 text-slate-800 font-medium">
@@ -4804,6 +4878,19 @@
         </svg>
         <span class="text-[10px] font-medium mt-1 tracking-tight transition-colors">Job Request</span>
         <span class="mob-dot w-1 h-1 rounded-full bg-amber-500 mt-0.5 opacity-0 transition-opacity"></span>
+      </button>
+
+      <!-- Monitoring Air Cleaner Mobile Nav (Khusus Track & Base Control di HP) -->
+      <button id="mob-nav-aircleaner" onclick="navigateTab('air-cleaner-monitor')"
+        class="mob-nav-btn hidden flex flex-col items-center justify-center flex-1 py-1 text-slate-400 transition-all duration-200 active:scale-95"
+        data-tab="air-cleaner-monitor">
+        <svg class="w-5 h-5 shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
+          </path>
+        </svg>
+        <span class="text-[10px] font-medium mt-1 tracking-tight transition-colors">Air Cleaner</span>
+        <span class="mob-dot w-1 h-1 rounded-full bg-teal-600 mt-0.5 opacity-0 transition-opacity"></span>
       </button>
 
       <!-- Admin More Button (Khusus Mode Admin di HP) -->
@@ -5216,7 +5303,8 @@
 
       <form onsubmit="submitAchAction(event)" class="space-y-3 text-xs font-semibold" novalidate>
         <!-- Pilihan Kondisi Unit Lapangan (Oilman, Washingman, Admin & Basecontrol) -->
-        <div id="ach-oilman-condition-box" class="p-3 rounded-2xl bg-white border border-slate-200 space-y-2 shadow-2xs">
+        <div id="ach-oilman-condition-box"
+          class="p-3 rounded-2xl bg-white border border-slate-200 space-y-2 shadow-2xs">
           <label class="block text-slate-800 font-bold text-xs">Kondisi Unit Lapangan <span
               class="text-rose-500 font-bold">*</span></label>
           <select id="ach-unit-condition" onchange="handleOilmanConditionChange(this.value)"
@@ -5231,10 +5319,15 @@
           <div id="ach-service-ps-container" class="hidden pt-2 border-t border-slate-200 space-y-2">
             <div>
               <label class="block text-blue-950 text-xs mb-1.5 font-bold flex items-center space-x-1.5">
-                <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                  </path>
+                </svg>
                 <span>Keterangan / Catatan Service <span class="text-rose-500">*</span></span>
               </label>
-              <textarea id="ach-service-notes" rows="3" placeholder="Tuliskan keterangan pekerjaan service (misal: PCR, Ganti oli & filter, tune up, dll)..."
+              <textarea id="ach-service-notes" rows="3"
+                placeholder="Tuliskan keterangan pekerjaan service (misal: PCR, Ganti oli & filter, tune up, dll)..."
                 class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium"></textarea>
             </div>
           </div>
@@ -5253,10 +5346,17 @@
           <div class="p-2.5 rounded-2xl bg-white border border-slate-200 space-y-1.5 shadow-2xs">
             <div class="flex items-center justify-between">
               <span class="text-[11px] font-bold text-slate-800 flex items-center space-x-1.5">
-                <svg class="w-3.5 h-3.5 text-rose-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <svg class="w-3.5 h-3.5 text-rose-500 flex-shrink-0" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
                 <span>Lokasi & Cluster Pit Aktual (MP Lapangan)</span>
               </span>
-              <span class="text-[9px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded tracking-tight flex items-center space-x-1">
+              <span
+                class="text-[9px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded tracking-tight flex items-center space-x-1">
                 <span class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block"></span>
                 <span>SINKRON DATA MASTER</span>
               </span>
@@ -5560,10 +5660,7 @@
           <label class="block text-slate-700 mb-1">No Lambung Armada Servis (LT/WT)</label>
           <select id="action-service-unit"
             class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 bg-white">
-            <option value="LT2535">LT2535 (KGU Selatan)</option>
-            <option value="LT2622">LT2622 (KGU Selatan)</option>
-            <option value="LT2514">LT2514 (KGU Tengah)</option>
-            <option value="LT2510">LT2510 (KGU Utara)</option>
+            <option value="">-- Pilih Armada Servis --</option>
           </select>
         </div>
 
@@ -5740,7 +5837,9 @@
         </div>
         <div>
           <label class="block text-slate-700 mb-1">No Lambung Unit</label>
-          <input type="text" id="edit-no-lambung" list="order-units-datalist" placeholder="Ketik / pilih no lambung dari master..." class="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono uppercase font-bold text-slate-800">
+          <input type="text" id="edit-no-lambung" list="order-units-datalist"
+            placeholder="Ketik / pilih no lambung dari master..."
+            class="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono uppercase font-bold text-slate-800">
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
@@ -6362,13 +6461,15 @@
           </div>
 
           <!-- Toggle Auto-Generate 1 Bulan Penuh -->
-          <div id="add-job-generate-month-container" class="p-3 rounded-2xl bg-emerald-50/80 border border-emerald-200/90 flex items-center justify-between shadow-2xs">
+          <div id="add-job-generate-month-container"
+            class="p-3 rounded-2xl bg-emerald-50/80 border border-emerald-200/90 flex items-center justify-between shadow-2xs">
             <div class="space-y-0.5 pr-2">
               <label for="add-job-generate-month"
                 class="text-xs font-black text-emerald-950 cursor-pointer flex items-center space-x-1.5">
                 <span class="flex items-center space-x-1.5">
                   <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                   </svg>
                   <span>Auto-Generate Jadwal 1 Bulan Penuh</span>
                 </span>
@@ -6376,7 +6477,8 @@
                   class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-200 text-emerald-900 uppercase">Auto-Fill
                   30/31 Hari</span>
               </label>
-              <p class="text-[10.5px] text-emerald-800 font-medium leading-tight">Otomatis membentuk jadwal 1 bulan penuh
+              <p class="text-[10.5px] text-emerald-800 font-medium leading-tight">Otomatis membentuk jadwal 1 bulan
+                penuh
                 berulang sesuai frekuensi unit (harian / siklus 3 hari / mingguan). Reset otomatis setiap tanggal 1.</p>
             </div>
             <input type="checkbox" id="add-job-generate-month" checked
@@ -6763,11 +6865,170 @@
     </div>
   </div>
 
-  <!-- MODAL DETAIL AKSI CLEAN AIR CLEANER -->
+  <!-- MODAL REPLACE AIR CLEANER & UPLOAD EVIDENCE FOTO -->
+  <div id="modal-replace-aircleaner"
+    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-3 sm:p-4 overflow-y-auto">
+    <div
+      class="bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 space-y-3.5 shadow-2xl max-h-[92vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 shrink-0">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+              </path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-slate-900">Replace Komponen Air Cleaner</h3>
+            <p class="text-[11px] text-slate-500 font-medium" id="replace-ac-subtitle">Unit: -</p>
+          </div>
+        </div>
+        <button type="button" onclick="toggleModal('modal-replace-aircleaner', false)"
+          class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <form onsubmit="submitReplaceAirCleaner(event)" class="space-y-3 text-xs overflow-y-auto pr-1 flex-1">
+        <input type="hidden" id="replace-ac-unit-val">
+        <input type="hidden" id="replace-ac-type-val">
+
+        <!-- Ringkasan Unit & Siklus -->
+        <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 font-bold text-[11px]">Nomor &amp; Tipe Unit:</span>
+            <span
+              class="font-mono font-black text-slate-900 text-xs px-2 py-0.5 bg-white rounded-lg border border-slate-200"
+              id="replace-ac-unit-badge">-</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 font-bold text-[11px]">Siklus Sebelum Ganti:</span>
+            <span class="font-mono font-bold text-amber-800 text-xs" id="replace-ac-prev-cleans">-</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 font-bold text-[11px]">Status Siklus:</span>
+            <span class="font-bold text-xs" id="replace-ac-status-badge">-</span>
+          </div>
+        </div>
+
+        <!-- Tanggal & Jam Pergantian -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-slate-700 font-bold text-[11px] mb-1">Tanggal Pergantian *</label>
+            <input type="date" id="replace-ac-date" required
+              class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-medium text-slate-900 focus:outline-none focus:border-teal-500">
+          </div>
+          <div>
+            <label class="block text-slate-700 font-bold text-[11px] mb-1">Jam Pelaksanaan *</label>
+            <input type="time" id="replace-ac-time" required
+              class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-medium text-slate-900 focus:outline-none focus:border-teal-500">
+          </div>
+        </div>
+
+        <!-- PIC & NRP Teknisi Tim Track -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-slate-700 font-bold text-[11px] mb-1">Teknisi / PIC *</label>
+            <input type="text" id="replace-ac-pic" required placeholder="Nama Teknisi"
+              class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-medium text-slate-900 focus:outline-none focus:border-teal-500">
+          </div>
+          <div>
+            <label class="block text-slate-700 font-bold text-[11px] mb-1">NRP Teknisi *</label>
+            <input type="text" id="replace-ac-nrp" required placeholder="NRP Teknisi"
+              class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-medium text-slate-900 focus:outline-none focus:border-teal-500">
+          </div>
+        </div>
+
+        <!-- Keterangan Teknis / Part Number -->
+        <div>
+          <label class="block text-slate-700 font-bold text-[11px] mb-1">Keterangan / Part Number Filter</label>
+          <textarea id="replace-ac-notes" rows="2"
+            placeholder="Contoh: Pergantian filter saringan udara inner &amp; outer baru, part number P780621..."
+            class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-medium text-slate-900 focus:outline-none focus:border-teal-500 resize-none"></textarea>
+        </div>
+
+        <!-- Upload Foto Evidence (Wajib) -->
+        <div class="space-y-1.5">
+          <label class="block text-slate-800 font-bold text-[11px] flex items-center justify-between">
+            <span class="flex items-center gap-1">
+              <svg class="w-3.5 h-3.5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+                </path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              <span>Foto Evidence Pergantian Komponen *</span>
+            </span>
+            <span
+              class="text-[9.5px] font-medium text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded-md border border-teal-200/60">Upload
+              ke Google Drive</span>
+          </label>
+
+          <input type="file" id="replace-ac-photo-file" accept="image/*" capture="environment"
+            onchange="handleReplaceAcPhotoSelect(event)" class="hidden">
+
+          <!-- Tombol Ambil / Pilih Foto -->
+          <div id="replace-ac-upload-box" onclick="document.getElementById('replace-ac-photo-file').click()"
+            class="border-2 border-dashed border-teal-300 hover:border-teal-500 bg-teal-50/50 hover:bg-teal-50 rounded-2xl p-3.5 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1 text-slate-600">
+            <div class="w-9 h-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+            </div>
+            <span class="text-xs font-bold text-teal-900">Ambil Foto / Pilih Berkas Evidence</span>
+            <span class="text-[10px] text-slate-400">Format JPG/PNG, otomatis dikompres &amp; diunggah ke Google
+              Drive</span>
+          </div>
+
+          <!-- Area Preview Foto yang Dipilih -->
+          <div id="replace-ac-preview-container"
+            class="relative rounded-2xl overflow-hidden border border-slate-200 hidden bg-slate-900">
+            <img id="replace-ac-preview-img" src="" alt="Evidence Air Cleaner" class="w-full h-40 object-cover">
+            <div
+              class="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-between text-white text-[11px] font-bold">
+              <span class="flex items-center gap-1">
+                <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd"></path>
+                </svg>
+                <span>Foto Siap Disimpan</span>
+              </span>
+              <button type="button" onclick="clearReplaceAcPhoto()"
+                class="px-2 py-0.5 rounded-lg bg-rose-600/90 hover:bg-rose-700 text-white text-[10px] font-bold transition">
+                Ganti Foto
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tombol Submit -->
+        <div class="pt-2 border-t border-slate-100 flex items-center gap-2">
+          <button type="button" onclick="toggleModal('modal-replace-aircleaner', false)"
+            class="w-1/3 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition cursor-pointer">
+            Batal
+          </button>
+          <button type="submit" id="btn-submit-replace-ac"
+            class="w-2/3 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-extrabold text-xs shadow-md shadow-teal-500/20 active:scale-[0.98] transition cursor-pointer flex items-center justify-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span id="btn-submit-replace-ac-text">Simpan &amp; Upload Evidence</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL DETAIL AKSI CLEAN AIR CLEANER -->
   <div id="modal-ac-detail"
     class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 space-y-3 shadow-2xl max-h-[92vh] flex flex-col">
+    <div
+      class="bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 space-y-3 shadow-2xl max-h-[92vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 shrink-0">
         <div class="flex items-center space-x-2.5">
           <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
@@ -6780,7 +7041,8 @@
             <p class="text-[11px] text-slate-500 font-medium" id="ac-detail-subtitle">No Unit: -</p>
           </div>
         </div>
-        <button type="button" onclick="toggleModal('modal-ac-detail', false)" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer">
+        <button type="button" onclick="toggleModal('modal-ac-detail', false)"
+          class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
@@ -6791,7 +7053,9 @@
         <!-- Tanggal Action -->
         <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
           <span class="text-slate-500 font-semibold text-[11px]">Tanggal Action:</span>
-          <span class="font-bold font-mono text-emerald-800 text-xs px-2.5 py-1 bg-white rounded-lg border border-emerald-200/60 shadow-2xs" id="ac-detail-date">-</span>
+          <span
+            class="font-bold font-mono text-emerald-800 text-xs px-2.5 py-1 bg-white rounded-lg border border-emerald-200/60 shadow-2xs"
+            id="ac-detail-date">-</span>
         </div>
 
         <!-- Keterangan yang diisi oleh Oilman -->
@@ -6799,25 +7063,33 @@
           <div class="flex items-center justify-between">
             <span class="text-[11px] font-bold text-emerald-950 flex items-center space-x-1.5">
               <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                </path>
               </svg>
               <span>Keterangan Oilman:</span>
             </span>
             <span class="text-[10px] text-emerald-700 font-semibold" id="ac-detail-oilman"></span>
           </div>
-          <p class="text-xs text-slate-700 font-medium leading-relaxed bg-white p-2.5 rounded-xl border border-emerald-100/80 min-h-[45px] whitespace-pre-wrap" id="ac-detail-notes">-</p>
+          <p class="text-xs text-slate-700 font-medium leading-relaxed bg-white p-2.5 rounded-xl border border-emerald-100/80 min-h-[45px] whitespace-pre-wrap"
+            id="ac-detail-notes">-</p>
         </div>
 
         <!-- Dokumentasi Foto Evidence (Jika Ada) -->
-        <div id="ac-detail-photo-container" class="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2 hidden">
+        <div id="ac-detail-photo-container"
+          class="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2 hidden">
           <div class="flex items-center justify-between">
             <span class="text-[11px] font-bold text-slate-800 flex items-center space-x-1.5">
               <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                </path>
               </svg>
               <span>Dokumentasi Foto Evidence</span>
             </span>
-            <span id="ac-detail-photo-count" class="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 shadow-2xs">0 Foto</span>
+            <span id="ac-detail-photo-count"
+              class="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 shadow-2xs">0
+              Foto</span>
           </div>
           <div id="ac-detail-photos" class="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1 pb-1">
             <!-- Foto dynamically rendered di sini -->
@@ -6835,7 +7107,8 @@
   </div>
   <div id="modal-job-detail"
     class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-3.5 sm:p-4 space-y-2 shadow-2xl border border-slate-100 max-h-[92vh] flex flex-col">
+    <div
+      class="bg-white rounded-2xl max-w-lg w-full p-3.5 sm:p-4 space-y-2 shadow-2xl border border-slate-100 max-h-[92vh] flex flex-col">
 
       <!-- Modal Header -->
       <div class="flex items-center justify-between border-b border-slate-100 pb-2 shrink-0">
@@ -7053,7 +7326,11 @@
         <div class="flex items-center space-x-2 ml-auto">
           <button type="button" onclick="copyJobDetailReport()"
             class="px-3.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs shadow-2xs transition flex items-center space-x-1 cursor-pointer">
-            <svg class="w-3.5 h-3.5 text-amber-950 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg><span>Salin Job</span>
+            <svg class="w-3.5 h-3.5 text-amber-950 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+              </path>
+            </svg><span>Salin Job</span>
           </button>
           <button type="button" onclick="toggleModal('modal-job-detail', false)"
             class="px-4 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
@@ -8522,9 +8799,9 @@
     };
 
     const SUPABASE_CONFIG = {
-      url: 'https://wgabhjvjbvmgxebuusmv.supabase.co',
-      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnYWJoanZqYnZtZ3hlYnV1c212Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNTc4ODksImV4cCI6MjEwNjgzMzg4OX0.Il80MkiPYkPtoZIt-VnfYZ8mB09YJdO4dNnvq28Q-xU',
-      publishableKey: 'sb_publishable_J2C5_w5qCkSeg0erRISNSg_m7sZjAws'
+      url: 'https://xradixojgnncuxqfrrti.supabase.co',
+      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhyYWRpeG9qZ25uY3V4cWZycnRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1MjA5NDAsImV4cCI6MjEwODA5Njk0MH0.5kxL9aTROpKX7BKor5SyQ1gHOpyoB1HRT9j4LTc2l6Y',
+      publishableKey: 'sb_publishable_y8PM0UEYevCKJArO_SOOQg_MENKxPwL'
     };
 
     const APPS_SCRIPT_CONFIG = {
@@ -8590,9 +8867,9 @@
         typeUnit: row.type_unit || 'Unit',
         noLambung: row.no_lambung || '',
         lokasi: row.lokasi || '',
-        ltUnit: (isWt || isUnschWt) ? '-' : (row.armada_unit || 'LT2535'),
-        wtUnit: (isWt || isUnschWt) ? (row.armada_unit || 'WT101') : '-',
-        armada: row.armada_unit || (isWt ? 'WT101' : 'LT2535'),
+        ltUnit: (isWt || isUnschWt) ? '-' : (row.armada_unit || '-'),
+        wtUnit: (isWt || isUnschWt) ? (row.armada_unit || '-') : '-',
+        armada: row.armada_unit || '-',
         targetType: (isWt || isUnschWt) ? 'WT' : 'LT',
         opt: (row.opt_name && row.opt_name !== '-') ? row.opt_name : '-',
         mp1: (row.mp1 && row.mp1 !== '-') ? row.mp1 : '-',
@@ -8845,7 +9122,7 @@
           const s = String(job.status || '').toLowerCase().trim();
           const isAch = ['ach', 'achieved', 'done'].includes(s) || job.status_final === 'ACHIEVED';
           const hasEvidence = (Array.isArray(job.fotos) && job.fotos.some(p => p && typeof p === 'string' && p.trim() !== '')) ||
-                              (Boolean(job.jamStart) && String(job.jamStart).trim() !== '-' && Boolean(job.jamEnd) && String(job.jamEnd).trim() !== '-');
+            (Boolean(job.jamStart) && String(job.jamStart).trim() !== '-' && Boolean(job.jamEnd) && String(job.jamEnd).trim() !== '-');
 
           if (isAch && !hasEvidence && !job.serviceNotes?.includes('SERVICE')) {
             job.status = 'scheduled';
@@ -8888,10 +9165,10 @@
     }
     window.healCrossCategoryScheduleCollisions = healCrossCategoryScheduleCollisions;
 
-        function loadDatabaseSync() {
+    function loadDatabaseSync() {
       try {
         // FORCE BUILD VERSION UPGRADE: Bersihkan seluruh cache kotor & data zombie di seluruh client
-        const APP_BUILD_VERSION = 'v2026_10_21_clean_sync_v5';
+        const APP_BUILD_VERSION = 'v2026_10_21_clean_sync_v6';
         if (safeStorage.getItem('SE_APP_BUILD_VERSION') !== APP_BUILD_VERSION) {
           console.log('[Version Upgrade] Memperbarui aplikasi & membersihkan cache lokal ke versi:', APP_BUILD_VERSION);
           safeStorage.setItem('SE_APP_BUILD_VERSION', APP_BUILD_VERSION);
@@ -8908,6 +9185,7 @@
           safeStorage.removeItem('SE_MASTER_OPERATORS');
           safeStorage.removeItem('SE_MASTER_DATA_TS');
           safeStorage.removeItem('SE_MASTER_ROSTER');
+          safeStorage.removeItem('SE_MASTER_USERS');
           safeStorage.removeItem('SE_CLUSTER_LT');
           safeStorage.removeItem('SE_CLUSTER_WT');
           safeStorage.removeItem('SE_TRIMMED_JOBS_CACHE');
@@ -9039,14 +9317,15 @@
         syncMasterOperatorsWithUsers(); // Data roster murni dari Supabase
         const savedUsers = safeStorage.getItem('SE_MASTER_USERS');
         if (savedUsers !== null) {
-          const parsed = JSON.parse(savedUsers);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            const merged = [...parsed];
-            MOCK_USERS.forEach(mockU => {
-              const exists = merged.some(u => (u.nrp || '').toLowerCase() === (mockU.nrp || '').toLowerCase());
-              if (!exists) merged.push(mockU);
-            });
-            state.masterUsers = merged;
+          try {
+            const parsed = JSON.parse(savedUsers);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              state.masterUsers = parsed;
+            } else {
+              state.masterUsers = [];
+            }
+          } catch (e) {
+            state.masterUsers = [];
           }
         }
       } catch (err) {
@@ -9131,17 +9410,8 @@
 
     // Predefined Mock Users for Verification & Quick Switch
     const MOCK_USERS = [
-      { id: '1', nrp: 'admin', nama: 'Admin Operasional', password: 'admin123', role: 'admin', jabatan: 'Admin / Planner', statusAktif: true },
-      { id: '2', nrp: 'user', nama: 'User Lapangan', password: 'user123', role: 'user', jabatan: 'User Pemohon / Driver', statusAktif: true },
-      { id: '3', nrp: 'om', nama: 'Oilman (Lubetruck)', password: 'om123', role: 'mp_lt', jabatan: 'Oilman (Lubetruck)', statusAktif: true },
-      { id: '4', nrp: 'wm', nama: 'Washingman (Water Truck)', password: 'wm123', role: 'mp_wt', jabatan: 'Washingman', statusAktif: true },
-      { id: '5', nrp: 'bsc', nama: 'Operator Base Control', password: 'bsc123', role: 'basecontrol', jabatan: 'Base Control (Radio Room)', statusAktif: true },
-      // Akun cadangan / legacy:
-      { id: '6', nrp: 'ADMIN01', nama: 'Admin Operasional', password: 'admin123', role: 'admin', jabatan: 'Admin / Planner', statusAktif: true },
-      { id: '7', nrp: 'OM1001', nama: 'Oilman 1', password: 'om123', role: 'mp_lt', jabatan: 'Oilman (Lubetruck)', statusAktif: true },
-      { id: '8', nrp: 'WM2001', nama: 'Washingman 1', password: 'wm123', role: 'mp_wt', jabatan: 'Washingman', statusAktif: true },
-      { id: '9', nrp: 'USER01', nama: 'User Lapangan', password: 'user123', role: 'user', jabatan: 'User Pemohon / Driver', statusAktif: true },
-      { id: '10', nrp: 'BC01', nama: 'Operator Base Control', password: 'bsc123', role: 'basecontrol', jabatan: 'Base Control (Radio Room)', statusAktif: true }
+      { id: 'track-01', nrp: 'track', nama: 'Tim Track Lapangan', password: 'track123', role: 'track', jabatan: 'Tim Track', statusAktif: true },
+      { id: '1', nrp: 'admin', nama: 'Admin Operasional', password: 'admin123', role: 'admin', jabatan: 'Admin / Planner', statusAktif: true }
     ];
 
     // Global Reactive Application State (Siap Uji Coba Data Riil)
@@ -9181,19 +9451,8 @@
       completedCategory: 'all',
       picaCategory: 'ALL',
       airCleanerMonitor: [],
-      clusterLtAssigned: {
-        'Selatan': 'LT2530, LT2535, LT2622',
-        'Tengah': 'LT2514, LT2518, LT52506',
-        'Utara': 'LT2510, LT2515, LT2525, LT2620',
-        'Workshop': 'LT2536, LT2621, LT52507, LT52605'
-      },
-      clusterWtAssigned: {
-        'Selatan': 'WT2636',
-        'Tengah': 'WT2520',
-        'Utara': 'WT2640, WT2644, WT52534',
-        'ROM': 'WT2620, WT2645',
-        'Workshop': 'WT2638'
-      },
+      clusterLtAssigned: {},
+      clusterWtAssigned: {},
       masterArmada: [...DEFAULT_MASTER_ARMADA],
       isArmadaSelectMode: false,
       selectedArmadaIds: new Set(),
@@ -9205,7 +9464,7 @@
       isCompSelectMode: false,
       selectedCompJobIds: new Set(),
       _lastFilteredCompletedIds: [],
-      masterUsers: [...MOCK_USERS],
+      masterUsers: [],
       currentAchPhotos: ['', '', '', ''],
       isRosterSelectMode: false,
       selectedRosterIds: new Set(),
@@ -9412,7 +9671,7 @@
           (r.tanggal === targetDate || !r.tanggal) &&
           (Number(r.shift) === sShift || !r.shift) &&
           ((optName && optName !== '-' && String(r.nama || '').toUpperCase().trim() === optName) ||
-           (mp1Name && mp1Name !== '-' && String(r.nama || '').toUpperCase().trim() === mp1Name)) &&
+            (mp1Name && mp1Name !== '-' && String(r.nama || '').toUpperCase().trim() === mp1Name)) &&
           (r.unitEfektif || r.unit) &&
           r.unit !== 'SPARE' && r.unit !== '-'
         );
@@ -10832,16 +11091,6 @@
       lastObservedShiftNum = info.shiftNumber;
     }
 
-    function fillQuickAuth(nrp, autoSubmit = false) {
-      const nrpInput = document.getElementById('input-nrp');
-      const passInput = document.getElementById('input-password');
-      if (nrpInput) nrpInput.value = nrp;
-      if (passInput) passInput.value = nrp;
-      if (autoSubmit) {
-        handleLoginSubmit();
-      }
-    }
-
     async function handleLoginSubmit(event) {
       if (event) {
         try {
@@ -10909,6 +11158,8 @@
           const uPass = String(u.password || '').toLowerCase();
 
           const matchNrp = (uNrpLower === nrpLower) ||
+            (nrpLower === 'track' && (uNrpLower === 'track' || uNrpLower === 'tim_track')) ||
+            (nrpLower === 'tim_track' && (uNrpLower === 'track' || uNrpLower === 'tim_track')) ||
             (nrpLower === 'admin' && (uNrpLower === 'admin' || uNrpLower === 'admin01')) ||
             (nrpLower === 'admin01' && (uNrpLower === 'admin' || uNrpLower === 'admin01')) ||
             (nrpLower === 'user' && (uNrpLower === 'user' || uNrpLower === 'user01')) ||
@@ -10924,6 +11175,8 @@
           if (!matchNrp) return false;
 
           const matchPass = (uPass === passLower) ||
+            (nrpLower === 'track' && password === 'track123') ||
+            (nrpLower === 'tim_track' && password === 'track123') ||
             (nrpLower === 'admin' && password === 'admin123') ||
             (nrpLower === 'admin01' && password === 'admin123') ||
             (nrpLower === 'user' && password === 'user123') ||
@@ -11096,6 +11349,7 @@
 
       const roleLabels = {
         admin: 'Admin Operasional',
+        track: 'Tim Track',
         mp_lt: 'Oilman (MP Lubetruck)',
         mp_wt: 'Washingman',
         user: 'User Lapangan',
@@ -11141,6 +11395,7 @@
       const mobWt = document.getElementById('mob-nav-wt');
       const mobJobReq = document.getElementById('mob-nav-jobreq');
       const mobAdminMore = document.getElementById('mob-nav-admin-more');
+      const mobAirCleaner = document.getElementById('mob-nav-aircleaner');
       const mobMpSched = document.getElementById('mob-nav-mp-sched');
       const mobMpUnsched = document.getElementById('mob-nav-mp-unsched');
       const mobMpComp = document.getElementById('mob-nav-mp-comp');
@@ -11199,6 +11454,7 @@
         if (mobWt) mobWt.style.order = '';
         if (mobJobReq) mobJobReq.style.order = '';
         if (mobAdminMore) mobAdminMore.style.order = '';
+        if (mobAirCleaner) mobAirCleaner.style.order = '';
         if (mobOrder) mobOrder.style.order = '';
         if (mobProfile) mobProfile.style.order = '';
         if (mobMpSched) mobMpSched.style.order = '';
@@ -11210,6 +11466,7 @@
         if (mobWt) mobWt.classList.remove('hidden');
         if (mobJobReq) mobJobReq.classList.remove('hidden');
         if (mobAdminMore) mobAdminMore.classList.remove('hidden');
+        if (mobAirCleaner) mobAirCleaner.classList.add('hidden');
         if (mobOrder) mobOrder.classList.add('hidden');
         if (mobProfile) mobProfile.classList.add('hidden');
         if (mobMpSched) mobMpSched.classList.add('hidden');
@@ -11233,9 +11490,10 @@
         syncAllDateFiltersToToday();
         navigateTab('dashboard');
 
-      } else if (user.role === 'basecontrol') {
-        // Mode Base Control:
-        // Dashboard Pencapaian Foto 1 & 2 + Toolbar filter, Form Order, Job Request BC (Read-Only), Riwayat Selesai (Read-Only), Air Cleaner, PICA, Profil
+      } else if (user.role === 'basecontrol' || user.role === 'track') {
+        // Mode Base Control & Tim Track:
+        // Dashboard Pencapaian Foto 1 & 2 + Toolbar filter, Form Order, Job Request, Riwayat Selesai, Air Cleaner, PICA, Profil
+        // Khusus Tim Track: memiliki akses Replace Komponen Air Cleaner dengan evidence
         if (secHome) secHome.classList.remove('hidden');
         if (secPekerjaan) secPekerjaan.classList.remove('hidden');
         if (navGroupAdmin) navGroupAdmin.classList.remove('hidden');
@@ -11243,7 +11501,7 @@
         if (btnNavLt) btnNavLt.classList.add('hidden');
         if (btnNavWt) btnNavWt.classList.add('hidden');
         if (btnNavJobReq) btnNavJobReq.classList.remove('hidden');
-        if (textNavJobReq) textNavJobReq.textContent = 'Job Request BC';
+        if (textNavJobReq) textNavJobReq.textContent = (user.role === 'track') ? 'Job Request' : 'Job Request BC';
         if (btnNavOrder) btnNavOrder.classList.remove('hidden');
         if (textNavOrder) textNavOrder.textContent = 'Form Order';
 
@@ -11279,27 +11537,30 @@
           colMonitoringBc.classList.add('lg:col-span-3');
         }
 
-        // Mobile Nav Base Control: Beranda (1), Job Request BC (2), Form Order di TENGAH (3), Riwayat (4), Lainnya di UJUNG KANAN (5)
+        // Mobile Nav Track & Base Control: Tepat 4 Tombol Sesuai Instruksi Pengguna:
+        // 1. Beranda (1)
+        // 2. Monitoring Air Cleaner (2)
+        // 3. Riwayat (3)
+        // 4. Menu Lain / Lainnya (4)
         if (mobDashboard) {
           mobDashboard.classList.remove('hidden');
           mobDashboard.style.order = '1';
         }
-        if (mobJobReq) {
-          mobJobReq.classList.remove('hidden');
-          mobJobReq.style.order = '2';
-        }
-        if (mobOrder) {
-          mobOrder.classList.remove('hidden');
-          mobOrder.style.order = '3'; // TEPAT DI TENGAH SESUAI PERMINTAAN USER
+        if (mobAirCleaner) {
+          mobAirCleaner.classList.remove('hidden');
+          mobAirCleaner.style.order = '2';
         }
         if (mobMpComp) {
           mobMpComp.classList.remove('hidden');
-          mobMpComp.style.order = '4';
+          mobMpComp.style.order = '3';
         }
         if (mobAdminMore) {
           mobAdminMore.classList.remove('hidden');
-          mobAdminMore.style.order = '5'; // TEPAT DI UJUNG KANAN SESUAI PERMINTAAN USER
+          mobAdminMore.style.order = '4';
         }
+        // Sembunyikan tombol lainnya (Job Request & Form Order dipindah ke Menu Lainnya)
+        if (mobJobReq) mobJobReq.classList.add('hidden');
+        if (mobOrder) mobOrder.classList.add('hidden');
         if (mobLt) mobLt.classList.add('hidden');
         if (mobWt) mobWt.classList.add('hidden');
         if (mobProfile) mobProfile.classList.add('hidden');
@@ -12777,10 +13038,22 @@
       } else if (tabKey === 'completed') {
         targetBtnId = 'mob-nav-mp-comp';
         activeColorClass = 'text-emerald-700';
-      } else if (tabKey === 'mp-kontak-pro' || tabKey === 'more' || tabKey === 'air-cleaner-monitor') {
-        if (state.currentUser?.role === 'admin' || state.currentUser?.role === 'basecontrol') {
+      } else if (tabKey === 'air-cleaner-monitor') {
+        const isTrackOrBc = (state.currentUser?.role === 'track' || state.currentUser?.role === 'basecontrol' || state.currentUser?.role === 'base_control');
+        if (isTrackOrBc) {
+          targetBtnId = 'mob-nav-aircleaner';
+          activeColorClass = 'text-teal-600';
+        } else if (state.currentUser?.role === 'admin') {
           targetBtnId = 'mob-nav-admin-more';
           activeColorClass = 'text-purple-600';
+        } else {
+          targetBtnId = 'mob-nav-mp-more';
+          activeColorClass = 'text-emerald-700';
+        }
+      } else if (tabKey === 'mp-kontak-pro' || tabKey === 'more') {
+        if (state.currentUser?.role === 'admin' || state.currentUser?.role === 'basecontrol' || state.currentUser?.role === 'base_control' || state.currentUser?.role === 'track') {
+          targetBtnId = 'mob-nav-admin-more';
+          activeColorClass = 'text-slate-900';
         } else {
           targetBtnId = 'mob-nav-mp-more';
           activeColorClass = 'text-emerald-700';
@@ -13079,7 +13352,7 @@
         waktu_rencana: job.waktu || job.waktu_rencana || '07:00 s/d 07:15',
         cluster: job.cluster || 'Selatan',
         lokasi: job.lokasi || 'Pit Area',
-        armada_unit: job.armada || job.ltUnit || job.wtUnit || job.armada_unit || 'LT2535',
+        armada_unit: job.armada || job.ltUnit || job.wtUnit || job.armada_unit || '-',
         opt_name: job.opt || job.opt_name || '-',
         mp1: job.mp1 || '-',
         mp2: job.mp2 || '-',
@@ -13352,7 +13625,7 @@
           const jobId = `${idPrefix}${dateStr.replace(/-/g, '')}-${cleanLambung}-${catKey}-S${shift}${roundSuffix}`;
 
           // Otomatis tentukan armada & personil roster untuk tanggal dan shift tersebut
-          const assignedArmada = baseJob.ltUnit || baseJob.armada || (isWt ? 'WT101' : 'LT2535');
+          const assignedArmada = baseJob.ltUnit || baseJob.armada || '-';
           const crew = (typeof getPersonnelForArmada === 'function')
             ? getPersonnelForArmada(assignedArmada, baseJob.cluster || 'Selatan', shift, dateStr)
             : { opt: baseJob.opt || '-', mp1: baseJob.mp1 || '-', mp2: baseJob.mp2 || '-' };
@@ -13509,13 +13782,13 @@
           // -------------------------------------------------------------------
           const historyRecord = (Array.isArray(state.jobHistory) && state.jobHistory.length > 0)
             ? state.jobHistory.find(h => {
-                if (String(h.job_id) !== cleanJobId && String(h.id) !== cleanJobId) return false;
-                // Proteksi Silang Kategori: Riwayat selesai HANYA berlaku untuk kategori yang sama persis
-                const jCat = String(j.cat || '').toLowerCase().trim();
-                const hCat = String(h.cat || '').toLowerCase().trim();
-                if (jCat && hCat && jCat !== hCat) return false;
-                return true;
-              })
+              if (String(h.job_id) !== cleanJobId && String(h.id) !== cleanJobId) return false;
+              // Proteksi Silang Kategori: Riwayat selesai HANYA berlaku untuk kategori yang sama persis
+              const jCat = String(j.cat || '').toLowerCase().trim();
+              const hCat = String(h.cat || '').toLowerCase().trim();
+              if (jCat && hCat && jCat !== hCat) return false;
+              return true;
+            })
             : null;
 
           const isHistoryDone = historyRecord && ['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN', 'NON_ACH'].includes(String(historyRecord.status_final || '').toUpperCase());
@@ -14248,8 +14521,8 @@
               waktu: '07:00 s/d 07:15',
               cluster: p.cluster || 'Selatan',
               lokasi: p.lokasi || 'Pit Area',
-              armada: p.armada_unit || 'LT2535',
-              ltUnit: p.armada_unit || 'LT2535',
+              armada: p.armada_unit || '-',
+              ltUnit: p.armada_unit || '-',
               opt: p.pic || '-',
               mp1: '-',
               mp2: '-',
@@ -14521,8 +14794,8 @@
               typeUnit: row.type_unit || 'Unit',
               noLambung: row.no_lambung || '',
               waktu: row.waktu_rencana || row.waktu || '07:00 s/d 07:15',
-              ltUnit: row.armada_unit || 'LT2535',
-              wtUnit: row.armada_unit || 'WT101',
+              ltUnit: row.armada_unit || '-',
+              wtUnit: row.armada_unit || '-',
               armada: row.armada_unit,
               opt: row.opt_name || '-',
               mp1: row.mp1 || '-',
@@ -14670,9 +14943,9 @@
             typeUnit: currentType,
             noLambung: cleanLambung,
             waktu: src.waktu || '07:00 s/d 07:15',
-            ltUnit: isWt ? '-' : (src.ltUnit || src.armada || 'LT2535'),
-            wtUnit: isWt ? (src.wtUnit || src.armada || 'WT101') : '-',
-            armada: src.armada || (isWt ? 'WT101' : 'LT2535'),
+            ltUnit: isWt ? '-' : (src.ltUnit || src.armada || '-'),
+            wtUnit: isWt ? (src.wtUnit || src.armada || '-') : '-',
+            armada: src.armada || '-',
             targetType: isWt ? 'WT' : 'LT',
             opt: src.opt || '-',
             mp1: src.mp1 || '-',
@@ -14743,7 +15016,7 @@
               type_unit: job.typeUnit || 'Unit',
               no_lambung: job.noLambung || '',
               lokasi: job.lokasi || '',
-              armada_unit: isWtRow ? (job.wtUnit || job.armada || 'WT101') : (job.ltUnit || job.armada || 'LT2535'),
+              armada_unit: isWtRow ? (job.wtUnit || job.armada || '-') : (job.ltUnit || job.armada || '-'),
               opt_name: job.opt || '-',
               mp1: job.mp1 || '-',
               mp2: job.mp2 || '-',
@@ -15664,7 +15937,7 @@
     }
     window.executeDuplicateWtFromModal = executeDuplicateWtFromModal;
 
-        // Throttled Auto-Evaluation Guard (Minimal 60 detik cooldown antar render tabel)
+    // Throttled Auto-Evaluation Guard (Minimal 60 detik cooldown antar render tabel)
     let _lastAutoEvalTime = 0;
     function autoEvaluatePendingJobsThrottled() {
       const now = Date.now();
@@ -17402,7 +17675,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                 };
               });
               state.masterRoster = (state.masterRoster || []).filter(r => String(r.nrp).trim() !== uNrp && String(r.nik).trim() !== uNrp).concat(mapped);
-              try { safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster)); } catch(e){}
+              try { safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster)); } catch (e) { }
               renderManpowerDashboard();
             }
           })
@@ -18287,7 +18560,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       });
     }
 
-        function renderArmadaJobChart() {
+    function renderArmadaJobChart() {
       const canvas = document.getElementById('chart-armada-donut');
       if (!canvas || !canvas.getContext || typeof Chart === 'undefined') return;
       const ctx = canvas.getContext('2d');
@@ -20985,7 +21258,7 @@ Oilman 1 & 2 : ${oilman}`;
     }
     window.copyJobDetailReport = copyJobDetailReport;
 
-        function fallbackCopyText(text) {
+    function fallbackCopyText(text) {
       const ta = document.createElement('textarea');
       ta.value = text;
       ta.style.position = 'fixed';
@@ -21295,7 +21568,7 @@ Oilman 1 & 2 : ${oilman}`;
               }
             }
 
-                        const hasLocalBase64 = fotosArray.some(f => f && typeof f === 'string' && f.startsWith('data:image/'));
+            const hasLocalBase64 = fotosArray.some(f => f && typeof f === 'string' && f.startsWith('data:image/'));
             const syncCont = document.getElementById('detail-modal-sync-container');
             if (syncCont) {
               // Tampilan bersih: tidak menampilkan tombol manual upload Google Drive ke admin, bsc, maupun mp
@@ -22137,8 +22410,7 @@ Oilman 1 & 2 : ${oilman}`;
       });
 
       if (!html || html === `<option value="">-- Pilih Armada ${isWt ? 'WT' : 'LT'} --</option>`) {
-        const fallbacks = isWt ? ['WT101', 'WT102', 'WT103'] : ['LT2510', 'LT2514', 'LT2535', 'LT2536'];
-        html = `<option value="">-- Pilih Armada ${isWt ? 'WT' : 'LT'} --</option>` + fallbacks.map(a => `<option value="${a}">${a}</option>`).join('');
+        html = `<option value="">-- Belum ada armada di Data Master --</option>`;
       }
 
       if (selectEl) {
@@ -22636,18 +22908,18 @@ Oilman 1 & 2 : ${oilman}`;
         if (clusterSel && u.cluster) {
           clusterSel.value = u.cluster;
           if (typeof populateAddJobArmadaOptions === 'function') {
-          const subEl = document.getElementById('add-job-modal-subtitle');
-          const sVal = document.getElementById('add-job-shift')?.value || '1';
-          const rVal = document.getElementById('add-job-washing-round')?.value || '1';
-          const catVal = (document.getElementById('add-job-cat')?.value || '').toLowerCase();
-          const tTypeInp = (document.getElementById('add-job-target-type')?.value || '').toUpperCase();
-          const curTargetType = (tTypeInp === 'WT' || ['coal', 'rom', 'non_coal'].includes(catVal)) ? 'WT' : 'LT';
-          if (subEl) {
-            subEl.textContent = 'Shift ' + sVal + '   KGU ' + u.cluster + (curTargetType === 'WT' ? ('   Washing Ke ' + rVal) : '');
-          }
-          if (typeof populateAddJobArmadaOptions === 'function') {
-            populateAddJobArmadaOptions(curTargetType, u.cluster, parseInt(sVal, 10));
-          }
+            const subEl = document.getElementById('add-job-modal-subtitle');
+            const sVal = document.getElementById('add-job-shift')?.value || '1';
+            const rVal = document.getElementById('add-job-washing-round')?.value || '1';
+            const catVal = (document.getElementById('add-job-cat')?.value || '').toLowerCase();
+            const tTypeInp = (document.getElementById('add-job-target-type')?.value || '').toUpperCase();
+            const curTargetType = (tTypeInp === 'WT' || ['coal', 'rom', 'non_coal'].includes(catVal)) ? 'WT' : 'LT';
+            if (subEl) {
+              subEl.textContent = 'Shift ' + sVal + '   KGU ' + u.cluster + (curTargetType === 'WT' ? ('   Washing Ke ' + rVal) : '');
+            }
+            if (typeof populateAddJobArmadaOptions === 'function') {
+              populateAddJobArmadaOptions(curTargetType, u.cluster, parseInt(sVal, 10));
+            }
           }
         }
       }
@@ -22693,22 +22965,22 @@ Oilman 1 & 2 : ${oilman}`;
       if (!container) return;
 
       // Ambil seluruh populasi unit komprehensif dari data master & jadwal aktif
-      const units = (typeof getAllMasterUnitsComprehensive === 'function') 
-        ? getAllMasterUnitsComprehensive() 
+      const units = (typeof getAllMasterUnitsComprehensive === 'function')
+        ? getAllMasterUnitsComprehensive()
         : (state.masterUnits || []);
 
       // Urutkan secara alfabetis A-Z natural
       units.sort((a, b) => (a.lambung || '').localeCompare(b.lambung || '', undefined, { numeric: true, sensitivity: 'base' }));
 
       const kw = String(filter || '').toLowerCase().trim();
-      const filtered = kw 
+      const filtered = kw
         ? units.filter(u => {
-            const lb = String(u.lambung || '').toLowerCase();
-            const tp = String(u.type || '').toLowerCase();
-            const loc = String(u.lokasi || '').toLowerCase();
-            const cl = String(u.cluster || '').toLowerCase();
-            return lb.includes(kw) || tp.includes(kw) || loc.includes(kw) || cl.includes(kw);
-          })
+          const lb = String(u.lambung || '').toLowerCase();
+          const tp = String(u.type || '').toLowerCase();
+          const loc = String(u.lokasi || '').toLowerCase();
+          const cl = String(u.cluster || '').toLowerCase();
+          return lb.includes(kw) || tp.includes(kw) || loc.includes(kw) || cl.includes(kw);
+        })
         : units;
 
       const displayLimit = kw ? 300 : 120;
@@ -22931,7 +23203,7 @@ Oilman 1 & 2 : ${oilman}`;
                 type_unit: job.typeUnit || 'Unit',
                 no_lambung: job.noLambung || '',
                 lokasi: job.lokasi || '',
-                armada_unit: (isWtRow || isUnschWt) ? (job.wtUnit || job.armadaUnit || 'WT101') : (job.ltUnit || job.armadaUnit || 'LT2535'),
+                armada_unit: (isWtRow || isUnschWt) ? (job.wtUnit || job.armadaUnit || '-') : (job.ltUnit || job.armadaUnit || '-'),
                 opt_name: job.opt || job.optName || '-',
                 mp1: job.mp1 || '-',
                 mp2: job.mp2 || '-',
@@ -22963,7 +23235,7 @@ Oilman 1 & 2 : ${oilman}`;
       }
 
       // 2. Single Day Job (Fallback jika toggle dimatikan)
-            const catKey = (typeof getScheduleCategoryKey === 'function') ? getScheduleCategoryKey(baseJob.cat, isWt) : (isWt ? 'coal' : 'small');
+      const catKey = (typeof getScheduleCategoryKey === 'function') ? getScheduleCategoryKey(baseJob.cat, isWt) : (isWt ? 'coal' : 'small');
       baseJob.id = isWt ? ('WT-SCH-' + (baseJob.tanggal || '').replace(/-/g, '') + '-' + noLambung + '-' + catKey + '-S' + baseJob.shift + (parseInt(washingRound, 10) === 2 ? '-W2-' : '-W1-') + Math.random().toString(36).substr(2, 4)) : ('LT-SCH-' + (baseJob.tanggal || '').replace(/-/g, '') + '-' + noLambung + '-' + catKey + '-S' + baseJob.shift + '-' + Math.random().toString(36).substr(2, 4));
       if (isWt) {
         state.watertruckState.jobs.push(baseJob);
@@ -25310,14 +25582,7 @@ Oilman 1 & 2 : ${oilman}`;
         });
 
         if (Object.keys(clusterGroups).length === 0) {
-          // Fallback aman jika master data armada belum termuat
-          const fallbackArr = isWashing
-            ? [{ c: 'KGU SELATAN', u: 'WT101' }, { c: 'KGU TENGAH', u: 'WT102' }, { c: 'KGU UTARA', u: 'WT103' }]
-            : [{ c: 'KGU SELATAN', u: 'LT2535' }, { c: 'KGU TENGAH', u: 'LT2514' }, { c: 'KGU UTARA', u: 'LT2510' }];
-          fallbackArr.forEach(item => {
-            if (!clusterGroups[item.c]) clusterGroups[item.c] = [];
-            clusterGroups[item.c].push(item.u);
-          });
+          // Tidak ada armada dummy - murni dari master data
         }
 
         Object.keys(clusterGroups).forEach(cName => {
@@ -25439,7 +25704,7 @@ Oilman 1 & 2 : ${oilman}`;
 
         let ltValue = (document.getElementById('ach-lt-custom')?.value || '').trim().toUpperCase();
         if (!ltValue || ltValue === '-' || ltValue.startsWith('--')) {
-          ltValue = (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '') || (isWashing ? 'WT2636' : 'LT2535');
+          ltValue = (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '') || job.armada || job.ltUnit || job.wtUnit || '-';
         }
         const optVal = document.getElementById('ach-opt-name')?.value || job.opt || '-';
         const mp1Val = document.getElementById('ach-mp1-name')?.value || job.mp1 || '-';
@@ -25461,7 +25726,7 @@ Oilman 1 & 2 : ${oilman}`;
         job.keterangan = `[SERVICE]: ${serviceNotes}`;
         job.serviceNotes = serviceNotes;
         if (!job.tanggalRealisasi) job.tanggalRealisasi = getEffectiveTodayString();
-        
+
         // Sesuai aturan: Unit yang service WAJIB ada penyemprotan air cleaner sehingga otomatis masuk ke rekapan Air Cleaner
         // Dengan label keterangan service (misal: "PCR", "Service", dsb)
         if (typeof updateAirCleanerRecord === 'function') {
@@ -25521,7 +25786,7 @@ Oilman 1 & 2 : ${oilman}`;
       // isWashing sudah diinisialisasi di awal fungsi submitAchAction
       let ltValue = (document.getElementById('ach-lt-custom')?.value || '').trim().toUpperCase();
       if (!ltValue || ltValue === '-' || ltValue.startsWith('--')) {
-        ltValue = (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '') || (isWashing ? 'WT2636' : 'LT2535');
+        ltValue = (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '') || job.armada || job.ltUnit || job.wtUnit || '-';
       }
       const ket = document.getElementById('ach-keterangan')?.value.trim() || (isJobRequest ? 'Selesai sesuai SOP' : 'Nihil / Lancar sesuai SOP');
 
@@ -25862,6 +26127,214 @@ Oilman 1 & 2 : ${oilman}`;
     }
     window.resetUnitAirCleanerCycle = resetUnitAirCleanerCycle;
 
+    // ========================================================================
+    // MODAL & LOGIKA REPLACE AIR CLEANER DENGAN UPLOAD EVIDENCE (ADMIN & TIM TRACK)
+    // ========================================================================
+    let currentReplaceAcPhotoBase64 = '';
+
+    function openReplaceAirCleanerModal(noLambung) {
+      const canAccess = (state.currentUser?.role === 'admin' || state.currentUser?.role === 'track');
+      if (!canAccess) {
+        if (typeof showToast === 'function') {
+          showToast('Fitur Replace Air Cleaner hanya dapat diakses oleh Administrator dan Tim Track.', 'warning');
+        }
+        return;
+      }
+
+      if (!noLambung) return;
+      const item = (state.airCleanerMonitor || []).find(m => String(m.noLambung || '').trim().toUpperCase() === String(noLambung).trim().toUpperCase());
+      if (!item) {
+        if (typeof showToast === 'function') showToast(`Data Air Cleaner unit ${noLambung} tidak ditemukan!`, 'error');
+        return;
+      }
+
+      const unitValEl = document.getElementById('replace-ac-unit-val');
+      const typeValEl = document.getElementById('replace-ac-type-val');
+      const subtitleEl = document.getElementById('replace-ac-subtitle');
+      const badgeEl = document.getElementById('replace-ac-unit-badge');
+      const prevCleansEl = document.getElementById('replace-ac-prev-cleans');
+      const statusEl = document.getElementById('replace-ac-status-badge');
+
+      if (unitValEl) unitValEl.value = item.noLambung;
+      if (typeValEl) typeValEl.value = item.type || 'Unit';
+      if (subtitleEl) subtitleEl.textContent = `No Lambung: ${item.noLambung} (${item.type || 'Unit'})`;
+      if (badgeEl) badgeEl.textContent = `${item.noLambung} - ${item.type || 'Unit'}`;
+
+      const cleanCount = Array.isArray(item.cleans) ? item.cleans.length : 0;
+      if (prevCleansEl) prevCleansEl.textContent = `${cleanCount}x Semprotan Clean`;
+
+      if (statusEl) {
+        statusEl.textContent = item.status || 'Baik';
+        statusEl.className = 'font-bold text-xs ' + (item.status === 'Di Ganti' ? 'text-rose-600' : (item.status === 'Peringatan' ? 'text-amber-600' : 'text-emerald-700'));
+      }
+
+      const dateInp = document.getElementById('replace-ac-date');
+      if (dateInp) dateInp.value = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+
+      const timeInp = document.getElementById('replace-ac-time');
+      if (timeInp) {
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        timeInp.value = `${hh}:${mm}`;
+      }
+
+      const picInp = document.getElementById('replace-ac-pic');
+      const nrpInp = document.getElementById('replace-ac-nrp');
+      if (picInp) picInp.value = state.currentUser?.nama || (state.currentUser?.role === 'track' ? 'Tim Track' : 'Admin Operasional');
+      if (nrpInp) nrpInp.value = state.currentUser?.nrp || 'track';
+
+      const notesInp = document.getElementById('replace-ac-notes');
+      if (notesInp) notesInp.value = '';
+
+      clearReplaceAcPhoto();
+      toggleModal('modal-replace-aircleaner', true);
+    }
+    window.openReplaceAirCleanerModal = openReplaceAirCleanerModal;
+
+    async function handleReplaceAcPhotoSelect(event) {
+      const file = event?.target?.files?.[0];
+      if (!file) return;
+
+      try {
+        if (typeof showToast === 'function') showToast('Memproses dan mengompres foto evidence...', 'info');
+        const base64 = await compressImageFile(file, 1280, 0.85);
+        currentReplaceAcPhotoBase64 = base64;
+
+        const previewImg = document.getElementById('replace-ac-preview-img');
+        const previewBox = document.getElementById('replace-ac-preview-container');
+        const uploadBox = document.getElementById('replace-ac-upload-box');
+        if (previewImg && previewBox && uploadBox) {
+          previewImg.src = base64;
+          previewBox.classList.remove('hidden');
+          uploadBox.classList.add('hidden');
+        }
+      } catch (err) {
+        console.error('[Replace AC Photo Select Error]', err);
+        if (typeof showToast === 'function') showToast('Gagal memproses gambar: ' + err.message, 'error');
+      }
+    }
+    window.handleReplaceAcPhotoSelect = handleReplaceAcPhotoSelect;
+
+    function clearReplaceAcPhoto() {
+      currentReplaceAcPhotoBase64 = '';
+      const fileInp = document.getElementById('replace-ac-photo-file');
+      if (fileInp) fileInp.value = '';
+      const previewBox = document.getElementById('replace-ac-preview-container');
+      const uploadBox = document.getElementById('replace-ac-upload-box');
+      const previewImg = document.getElementById('replace-ac-preview-img');
+      if (previewBox) previewBox.classList.add('hidden');
+      if (uploadBox) uploadBox.classList.remove('hidden');
+      if (previewImg) previewImg.src = '';
+    }
+    window.clearReplaceAcPhoto = clearReplaceAcPhoto;
+
+    async function submitReplaceAirCleaner(event) {
+      if (event) {
+        try {
+          event.preventDefault();
+          event.stopPropagation();
+        } catch (e) { }
+      }
+
+      const noLambung = (document.getElementById('replace-ac-unit-val')?.value || '').trim().toUpperCase();
+      const typeUnit = document.getElementById('replace-ac-type-val')?.value || 'Unit';
+      const tanggal = document.getElementById('replace-ac-date')?.value || ((typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0]);
+      const jam = document.getElementById('replace-ac-time')?.value || '08:00';
+      const pic = (document.getElementById('replace-ac-pic')?.value || '').trim() || (state.currentUser?.nama || 'Tim Track');
+      const picNrp = (document.getElementById('replace-ac-nrp')?.value || '').trim() || (state.currentUser?.nrp || 'track');
+      const notes = (document.getElementById('replace-ac-notes')?.value || '').trim();
+
+      if (!currentReplaceAcPhotoBase64) {
+        if (typeof showToast === 'function') showToast('Foto evidence pergantian air cleaner wajib diunggah!', 'warning');
+        return;
+      }
+
+      const submitBtn = document.getElementById('btn-submit-replace-ac');
+      const submitText = document.getElementById('btn-submit-replace-ac-text');
+      if (submitBtn) submitBtn.disabled = true;
+      if (submitText) submitText.textContent = 'Mengunggah Foto ke Drive...';
+
+      let driveUrl = '';
+      try {
+        if (typeof showToast === 'function') showToast('Mengunggah foto evidence ke Google Drive...', 'info');
+        driveUrl = await uploadBase64PhotoToDrive(
+          currentReplaceAcPhotoBase64,
+          noLambung,
+          'AIR_CLEANER_REPLACE',
+          1,
+          'REPLACE-' + noLambung + '-' + tanggal.replace(/-/g, '')
+        );
+        console.log('[Drive Upload Replace AC OK]', driveUrl);
+      } catch (driveErr) {
+        console.warn('[Drive Upload Replace AC Error]', driveErr);
+        driveUrl = currentReplaceAcPhotoBase64;
+        if (typeof showToast === 'function') showToast('Peringatan: Gagal kirim ke Drive, foto disimpan lokal di sistem.', 'warning');
+      }
+
+      // 1. Reset siklus unit di state.airCleanerMonitor
+      const item = (state.airCleanerMonitor || []).find(m => String(m.noLambung || '').trim().toUpperCase() === noLambung);
+      if (item) {
+        item.cleans = [];
+        item.status = 'Baik';
+        item.serviceCode = '';
+        item.lastReplacedAt = new Date().toISOString();
+        item.lastReplacedBy = pic;
+        item.lastEvidenceUrl = driveUrl;
+        item.lastReplaceNotes = notes;
+      }
+
+      try {
+        safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(state.airCleanerMonitor));
+      } catch (e) { }
+
+      // 2. Simpan ke Supabase tabel air_cleaner_monitoring & air_cleaner_replacements
+      if (state.supabaseClient) {
+        try {
+          await state.supabaseClient.from('air_cleaner_monitoring').upsert({
+            id: 'AC-' + noLambung,
+            no_lambung: noLambung,
+            type_model: typeUnit,
+            cleans: [],
+            service_code: '',
+            status: 'Baik',
+            last_cleaned_date: tanggal,
+            evidence_url: driveUrl,
+            last_replaced_at: new Date().toISOString(),
+            last_replaced_by: pic,
+            replace_notes: notes,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'no_lambung' });
+
+          await state.supabaseClient.from('air_cleaner_replacements').insert([{
+            no_lambung: noLambung,
+            type_model: typeUnit,
+            tanggal: tanggal,
+            jam: jam,
+            pic: pic,
+            pic_nrp: picNrp,
+            keterangan: notes,
+            evidence_url: driveUrl,
+            created_at: new Date().toISOString()
+          }]).catch(e => console.warn('[Supabase Replacements Insert]', e));
+
+          console.log('[Supabase Replace AC Synced OK]', noLambung);
+        } catch (supaErr) {
+          console.warn('[Supabase Replace AC Error]', supaErr);
+        }
+      }
+
+      if (submitBtn) submitBtn.disabled = false;
+      if (submitText) submitText.textContent = 'Simpan & Upload Evidence';
+
+      toggleModal('modal-replace-aircleaner', false);
+      renderAirCleanerMonitorTable();
+      if (typeof showToast === 'function') {
+        showToast(`🎉 Sukses! Evidence pergantian Air Cleaner unit ${noLambung} tersimpan & siklus kembali ke 0.`, 'success');
+      }
+    }
+    window.submitReplaceAirCleaner = submitReplaceAirCleaner;
+
     function updateAirCleanerTypeOptions() {
       const select = document.getElementById('filter-aircleaner-type');
       if (!select) return;
@@ -26088,7 +26561,7 @@ Oilman 1 & 2 : ${oilman}`;
     }
     window.showAirCleanerActionDetail = showAirCleanerActionDetail;
 
-        function renderCleanCell(item, colIdx) {
+    function renderCleanCell(item, colIdx) {
       const cVal = (item.cleans && item.cleans[colIdx]) ? item.cleans[colIdx] : null;
       if (!cVal || cVal === '-' || (typeof cVal === 'string' && cVal.trim() === '')) {
         return `<span class="text-slate-300 font-bold">-</span>`;
@@ -26112,16 +26585,16 @@ Oilman 1 & 2 : ${oilman}`;
       const tbody = document.getElementById('aircleaner-monitor-tbody');
       if (!tbody) return;
 
-      // Kontrol visibilitas tombol Reset Siklus Week & Kolom Aksi Reset: HANYA tampil untuk role Admin
-      const isAdmin = (state.currentUser?.role === 'admin');
+      // Kontrol visibilitas tombol & Kolom Aksi Replace: Dapat diakses oleh Admin dan Tim Track
+      const canReplace = (state.currentUser?.role === 'admin' || state.currentUser?.role === 'track');
       const btnResetAc = document.getElementById('btn-reset-aircleaner');
       if (btnResetAc) {
-        if (isAdmin) btnResetAc.classList.remove('hidden');
+        if (canReplace) btnResetAc.classList.remove('hidden');
         else btnResetAc.classList.add('hidden');
       }
       const thAction = document.getElementById('th-aircleaner-action');
       if (thAction) {
-        if (isAdmin) thAction.classList.remove('hidden');
+        if (canReplace) thAction.classList.remove('hidden');
         else thAction.classList.add('hidden');
       }
 
@@ -26172,7 +26645,7 @@ Oilman 1 & 2 : ${oilman}`;
 
       tbody.innerHTML = '';
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${isAdmin ? 10 : 9}" class="py-6 text-center text-slate-400 italic text-[11px]">Tidak ada data monitoring air cleaner</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${canReplace ? 10 : 9}" class="py-6 text-center text-slate-400 italic text-[11px]">Tidak ada data monitoring air cleaner</td></tr>`;
         return;
       }
 
@@ -26229,18 +26702,30 @@ Oilman 1 & 2 : ${oilman}`;
           <td class="py-2.5 px-2 text-center border-r border-slate-100 ${item.cleans && item.cleans[3] ? 'bg-teal-50/40' : ''}">${renderCleanCell(item, 3)}</td>
           <td class="py-2.5 px-2 text-center border-r border-slate-100 ${item.cleans && item.cleans[4] ? 'bg-amber-50/40' : ''}">${renderCleanCell(item, 4)}</td>
           <td class="py-2.5 px-2 text-center border-r border-slate-100 ${item.cleans && item.cleans[5] ? 'bg-rose-50/40' : ''}">${renderCleanCell(item, 5)}</td>
-          <td class="py-2.5 px-3 text-center ${isAdmin ? 'border-r border-slate-100' : ''}">
-            ${statusBadge}
+          <td class="py-2.5 px-3 text-center ${canReplace ? 'border-r border-slate-100' : ''}">
+            <div class="flex flex-col items-center gap-1">
+              ${statusBadge}
+              ${(item.lastEvidenceUrl || item.evidence_url || item.evidenceUrl) ? `
+              <button type="button" onclick="openPhotoPreview('${item.lastEvidenceUrl || item.evidence_url || item.evidenceUrl}', 'Evidence Replace ${item.noLambung}')"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-800 text-[9px] font-bold border border-teal-200 transition cursor-pointer"
+                title="Lihat foto evidence pergantian terakhir">
+                <svg class="w-3 h-3 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <span>Evidence</span>
+              </button>` : ''}
+            </div>
           </td>
-          ${isAdmin ? `
+          ${canReplace ? `
           <td class="py-2.5 px-2 text-center">
-            <button type="button" onclick="resetUnitAirCleanerCycle('${item.noLambung}')"
-              class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl ${cleanCount > 0 ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 border border-rose-200/90 active:scale-95 shadow-2xs cursor-pointer' : 'bg-slate-50 text-slate-400 border border-slate-200/80 cursor-pointer'} text-[11px] font-bold transition-all"
-              title="${cleanCount > 0 ? `Reset siklus unit ${item.noLambung} ke 0 (mulai dari awal)` : `Siklus unit ${item.noLambung} sudah 0 (awal)`}">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" onclick="openReplaceAirCleanerModal('${item.noLambung}')"
+              class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 hover:text-teal-900 border border-teal-200/90 active:scale-95 shadow-2xs cursor-pointer text-[11px] font-bold transition-all"
+              title="Replace komponen air cleaner unit ${item.noLambung} (Minta Evidence Pergantian)">
+              <svg class="w-3.5 h-3.5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
               </svg>
-              <span>Reset</span>
+              <span>Replace</span>
             </button>
           </td>` : ''}
         `;
@@ -28707,7 +29192,7 @@ Oilman 1 & 2 : ${oilman}`;
           type_unit: job.typeUnit || 'Unit',
           no_lambung: job.noLambung || '',
           lokasi: job.lokasi || '',
-          armada_unit: (isWt || isUnschWt) ? (job.wtUnit && job.wtUnit !== '-' ? job.wtUnit : (job.armada && job.armada !== '-' ? job.armada : (job.armadaUnit && job.armadaUnit !== '-' ? job.armadaUnit : 'WT2636'))) : (job.ltUnit && job.ltUnit !== '-' ? job.ltUnit : (job.armada && job.armada !== '-' ? job.armada : (job.armadaUnit && job.armadaUnit !== '-' ? job.armadaUnit : 'LT2535'))),
+          armada_unit: (isWt || isUnschWt) ? (job.wtUnit && job.wtUnit !== '-' ? job.wtUnit : (job.armada && job.armada !== '-' ? job.armada : (job.armadaUnit && job.armadaUnit !== '-' ? job.armadaUnit : '-'))) : (job.ltUnit && job.ltUnit !== '-' ? job.ltUnit : (job.armada && job.armada !== '-' ? job.armada : (job.armadaUnit && job.armadaUnit !== '-' ? job.armadaUnit : '-'))),
           opt_name: job.opt || job.optName || '-',
           mp1: job.mp1 || '-',
           mp2: job.mp2 || '-',
@@ -28720,7 +29205,7 @@ Oilman 1 & 2 : ${oilman}`;
           keterangan: job.keterangan || '',
           is_pending: Boolean(job.isPending),
           unit_condition: job.unitCondition || '',
-          service_notes: (function() {
+          service_notes: (function () {
             let sn = job.serviceNotes || (job.status === 'service' ? (job.keterangan || '') : '');
             if (typeof sn === 'string' && (sn.startsWith('PHOTOS:') || sn.startsWith('PHOTOS_ATTACHED') || sn.includes('data:image/'))) {
               return '';
@@ -28993,7 +29478,7 @@ Oilman 1 & 2 : ${oilman}`;
           if (dStr) {
             const parts = dStr.split('-');
             const formattedDate = (parts.length === 3) ? (parts[2] + '/' + parts[1] + '/' + parts[0]) : dStr;
-            
+
             // Ekstrak label PS jika ada (misal PS250, PS500, PS1000)
             const textPool = `${job.psType || ''} ${job.kondisi || ''} ${job.deskripsi || ''} ${job.keterangan || ''} ${job.serviceNotes || ''}`;
             const psMatch = textPool.match(/PS\s*(\d+)/i);
@@ -29078,7 +29563,7 @@ Oilman 1 & 2 : ${oilman}`;
       }
       if (!existingJob && targetLambung) {
         const pool = isWtRow ? (state.watertruckState?.jobs || []) : (state.lubetruckState?.jobs || []);
-        existingJob = pool.find(j => 
+        existingJob = pool.find(j =>
           (j.noLambung || '').trim().toUpperCase() === targetLambung &&
           String(j.shift || 1) === targetShift &&
           (!targetCat || !j.cat || j.cat.toLowerCase().trim() === targetCat)
@@ -30799,21 +31284,16 @@ Oilman 1 & 2 : ${oilman}`;
             state.masterUsers = [];
             safeStorage.setItem('SE_MASTER_USERS', '[]');
           } else {
-            const uMap = new Map();
-            state.masterUsers.forEach(u => uMap.set(u.nrp, u));
-            supaUsers.forEach(su => {
-              uMap.set(su.nrp, {
-                id: su.id,
-                nrp: su.nrp,
-                nama: su.nama,
-                role: su.role,
-                jabatan: su.jabatan || 'Staff Operasional',
-                password: su.password,
-                noWa: su.no_wa || '',
-                statusAktif: (su.status_aktif !== false)
-              });
-            });
-            state.masterUsers = Array.from(uMap.values());
+            state.masterUsers = supaUsers.map(su => ({
+              id: su.id,
+              nrp: su.nrp,
+              nama: su.nama,
+              role: su.role,
+              jabatan: su.jabatan || 'Staff Operasional',
+              password: su.password,
+              noWa: su.no_wa || '',
+              statusAktif: (su.status_aktif !== false)
+            }));
             safeStorage.setItem('SE_MASTER_USERS', JSON.stringify(state.masterUsers));
           }
           if (state.masterActiveSection === 'accounts' && typeof renderMasterAccountsTable === 'function') {
@@ -30874,7 +31354,7 @@ Oilman 1 & 2 : ${oilman}`;
         }
       }
 
-      const assignedArmada = (state.clusterLtAssigned && (state.clusterLtAssigned[cluster] || state.clusterLtAssigned[getParentCluster(cluster)])?.split(',')[0]?.trim()) || 'LT2535';
+      const assignedArmada = (state.clusterLtAssigned && (state.clusterLtAssigned[cluster] || state.clusterLtAssigned[getParentCluster(cluster)])?.split(',')[0]?.trim()) || '-';
       const crew = getPersonnelForArmada(assignedArmada, cluster, shift, date);
 
       if (resOpt) resOpt.innerHTML = `<span class="font-bold">Nama OPT:</span> ${optName}`;
@@ -31509,8 +31989,9 @@ Oilman 1 & 2 : ${oilman}`;
           <td class="py-2 px-3">
             <span class="px-2 py-0.5 rounded-full text-[9px] font-bold ${acc.role === 'admin' ? 'bg-purple-100 text-purple-800' :
             acc.role === 'basecontrol' ? 'bg-amber-100 text-amber-800' :
-              acc.role === 'oilman' ? 'bg-emerald-100 text-emerald-800' :
-                acc.role === 'washingman' ? 'bg-cyan-100 text-cyan-800' : 'bg-slate-100 text-slate-800'
+              acc.role === 'track' ? 'bg-teal-100 text-teal-800' :
+                acc.role === 'oilman' ? 'bg-emerald-100 text-emerald-800' :
+                  acc.role === 'washingman' ? 'bg-cyan-100 text-cyan-800' : 'bg-slate-100 text-slate-800'
           }">${acc.role}</span>
           </td>
           <td class="py-2 px-3 text-slate-600">${acc.jabatan}</td>
@@ -32723,18 +33204,33 @@ Oilman 1 & 2 : ${oilman}`;
      * Menampilkan menu layar penuh 'Lainnya' sesuai role pengguna (Admin / MP)
      */
     function renderFullMoreMenu() {
-      const isMp = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'mp_wt' || state.currentUser?.role === 'oilman' || state.currentUser?.role === 'washingman');
-      const isOilman = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'oilman');
+      const role = state.currentUser?.role;
+      const isTrackOrBc = (role === 'track' || role === 'basecontrol' || role === 'base_control');
+      const isMp = (role === 'mp_lt' || role === 'mp_wt' || role === 'oilman' || role === 'washingman');
+      const isOilman = (role === 'mp_lt' || role === 'oilman');
+      const isWashingman = (role === 'mp_wt' || role === 'washingman' || state.currentUser?.nrp === 'wm');
+
+      const trackBcGrid = document.getElementById('more-full-track-bc-grid');
       const adminGrid = document.getElementById('more-full-admin-grid');
       const mpGrid = document.getElementById('more-full-mp-grid');
-      const mpAirCleaner = document.getElementById('more-mp-full-aircleaner');
-      const mpFlowMeter = document.getElementById('more-mp-full-flowmeter');
-      const mpWashChecklistFull = document.getElementById('more-mp-full-wash-checklist');
-      const isWashingman = (state.currentUser?.role === 'mp_wt' || state.currentUser?.role === 'washingman' || state.currentUser?.nrp === 'wm');
+      const bottomLogoutSec = document.getElementById('more-full-bottom-logout-section');
 
-      if (isMp) {
+      if (isTrackOrBc) {
+        // Mode HP Track & Base Control: HANYA menampilkan Profil, Form Order, Job Request, Tombol Keluar
+        if (trackBcGrid) trackBcGrid.classList.remove('hidden');
+        if (adminGrid) adminGrid.classList.add('hidden');
+        if (mpGrid) mpGrid.classList.add('hidden');
+        if (bottomLogoutSec) bottomLogoutSec.classList.add('hidden');
+      } else if (isMp) {
+        if (trackBcGrid) trackBcGrid.classList.add('hidden');
         if (adminGrid) adminGrid.classList.add('hidden');
         if (mpGrid) mpGrid.classList.remove('hidden');
+        if (bottomLogoutSec) bottomLogoutSec.classList.remove('hidden');
+
+        const mpAirCleaner = document.getElementById('more-mp-full-aircleaner');
+        const mpFlowMeter = document.getElementById('more-mp-full-flowmeter');
+        const mpWashChecklistFull = document.getElementById('more-mp-full-wash-checklist');
+
         if (mpAirCleaner) {
           if (isOilman) mpAirCleaner.classList.remove('hidden');
           else mpAirCleaner.classList.add('hidden');
@@ -32748,8 +33244,11 @@ Oilman 1 & 2 : ${oilman}`;
           else mpWashChecklistFull.classList.add('hidden');
         }
       } else {
+        // Mode Admin
+        if (trackBcGrid) trackBcGrid.classList.add('hidden');
         if (adminGrid) adminGrid.classList.remove('hidden');
         if (mpGrid) mpGrid.classList.add('hidden');
+        if (bottomLogoutSec) bottomLogoutSec.classList.remove('hidden');
       }
     }
     window.renderFullMoreMenu = renderFullMoreMenu;
@@ -33827,7 +34326,7 @@ Oilman 1 & 2 : ${oilman}`;
             console.log('[PWA] Service Worker terdaftar dengan scope:', reg.scope);
             // Paksa periksa update setiap kali aplikasi dibuka
             if (typeof reg.update === 'function') {
-              reg.update().catch(() => {});
+              reg.update().catch(() => { });
             }
             reg.onupdatefound = () => {
               const installingWorker = reg.installing;

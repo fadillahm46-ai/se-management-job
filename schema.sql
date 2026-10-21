@@ -1,224 +1,164 @@
 -- ==============================================================================
--- DATABASE SCHEMA: SE MANAGEMENT JOB - MINE OPERATIONS (SUPABASE COMPATIBLE)
--- ==============================================================================
--- Target Database : PostgreSQL / Supabase
--- Versi           : 2026.10 (Full Synchronization with index.html)
--- Keterangan      : Basis data terintegrasi penuh untuk manajemen jadwal Lubetruck &
---                   Water Truck, Data Master Armada, Populasi Unit Lapangan,
---                   Data Master Roster Bulanan, No OPT Produksi, Order Lapangan,
---                   Monitoring Saringan Udara (Air Cleaner), dan Log PICA Kendala.
--- CATATAN FOTO    : FOTO DOKUMENTASI TIDAK DISIMPAN DI DATABASE SUPABASE.
---                   Seluruh foto disimpan langsung ke Google Drive via Google Apps Script:
---                   Folder ID: 11EQ_NsZYeMmEKURpibXCRtyrQw5kKkh3
+-- SKEMA LENGKAP DATABASE SUPABASE: SE MANAGEMENT JOB - MINE OPERATIONS
+-- Versi       : v2.5.0 (Clean Architecture, Ultra-Low Egress, Zero-Zombie Data)
+-- Tanggal     : 2026-10-21
+-- Deskripsi   : Skrip DDL 100% mandiri dan bersih untuk inisialisasi akun / project baru Supabase.
+--               Mencakup 11 tabel utama, RLS, Realtime WebSocket Pub/Sub, Replica Identity,
+--               Trigger Audit Otomatis, dan Akun Pengguna Awal (Tanpa Data Dummy).
+-- Cara Pakai  : Buka Supabase Dashboard > SQL Editor > New Query > Paste Seluruh Skrip > Run (Ctrl+Enter)
 -- ==============================================================================
 
 -- ------------------------------------------------------------------------------
--- 1. EKSTENSI & PEMBERSIHAN TABEL LAMA
+-- 1. EKSTENSI POSTGRESQL WAJIB
 -- ------------------------------------------------------------------------------
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-DROP TABLE IF EXISTS fotos CASCADE;
-DROP TABLE IF EXISTS photos CASCADE;
-DROP TABLE IF EXISTS job_photos CASCADE;
+-- ==============================================================================
+-- 2. DDL TABEL DATABASE (11 TABEL UTAMA + 1 TABEL KOMPATIBILITAS)
+-- ==============================================================================
 
 -- ------------------------------------------------------------------------------
--- 2. TABEL USERS (Master Pengguna & Hak Akses Peran)
---    Mendukung role: admin, oilman, washingman, mp_lt, mp_wt, user, basecontrol
+-- 2.1 TABEL USERS (Manajemen Akun Pegawai & Hak Akses Multi-Role)
 -- ------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    nrp VARCHAR(50) UNIQUE NOT NULL,
+CREATE TABLE IF NOT EXISTS public.users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nrp VARCHAR(50) NOT NULL UNIQUE,
     nama VARCHAR(150) NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    role VARCHAR(30) NOT NULL CHECK (role IN ('admin', 'oilman', 'washingman', 'mp_lt', 'mp_wt', 'user', 'basecontrol', 'base_control')),
-    jabatan VARCHAR(100) DEFAULT 'Staff Operasional',
-    no_wa VARCHAR(30),
-    status_aktif BOOLEAN DEFAULT TRUE,
-    last_login_at TIMESTAMPTZ,
+    password VARCHAR(100) NOT NULL,
+    role VARCHAR(50) NOT NULL CHECK (role IN ('admin', 'planner', 'user', 'mp_lt', 'mp_wt', 'basecontrol', 'oilman', 'washingman', 'track')),
+    jabatan VARCHAR(100),
+    no_wa VARCHAR(50),
+    status_aktif BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_nrp ON users(nrp);
-CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
-
-DO $$ 
-BEGIN
-    ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
-    ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'oilman', 'washingman', 'mp_lt', 'mp_wt', 'user', 'basecontrol', 'base_control'));
-EXCEPTION
-    WHEN OTHERS THEN NULL;
-END $$;
-
 -- ------------------------------------------------------------------------------
--- 3. TABEL MASTER ARMADA (Unit Servis Lubetruck & Water Truck per Cluster)
---    Singkron dengan Data Master Armada di index.html
+-- 2.2 TABEL MASTER_ARMADA (Daftar Fisik Unit Armada Lubetruck & Water Truck)
 -- ------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS master_armada (
-    id VARCHAR(100) PRIMARY KEY, -- Contoh: 'ARM-01', 'ARM-1741234567'
-    unit VARCHAR(50) UNIQUE NOT NULL, -- Nomor Unit/Lambung: 'LT2535', 'WT101'
-    type_unit VARCHAR(50) NOT NULL, -- 'Lubetruck' atau 'Water Truck'
-    cluster VARCHAR(50) NOT NULL DEFAULT 'Selatan', -- 'Selatan', 'Tengah', 'Utara', 'ROM', dll.
-    status VARCHAR(30) NOT NULL DEFAULT 'Aktif', -- 'Aktif', 'Standby', 'Breakdown'
+CREATE TABLE IF NOT EXISTS public.master_armada (
+    id VARCHAR(50) PRIMARY KEY, -- 'ARM-01', 'ARM-02', dst.
+    unit VARCHAR(50) NOT NULL UNIQUE, -- 'LT2535', 'WT101', dst.
+    type_unit VARCHAR(50) NOT NULL CHECK (type_unit IN ('Lubetruck', 'Water Truck')),
+    cluster VARCHAR(50) NOT NULL DEFAULT 'Selatan',
+    status VARCHAR(50) NOT NULL DEFAULT 'Aktif' CHECK (status IN ('Aktif', 'Operasi', 'Standby', 'Breakdown', 'Maintenance', 'Non-Aktif')),
     keterangan TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Migrasi aman jika tabel sudah ada
-ALTER TABLE master_armada ADD COLUMN IF NOT EXISTS unit VARCHAR(50);
-ALTER TABLE master_armada ADD COLUMN IF NOT EXISTS type_unit VARCHAR(50);
-ALTER TABLE master_armada ADD COLUMN IF NOT EXISTS cluster VARCHAR(50) DEFAULT 'Selatan';
-ALTER TABLE master_armada ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'Aktif';
-
-CREATE INDEX IF NOT EXISTS idx_master_armada_unit ON master_armada(unit);
-CREATE INDEX IF NOT EXISTS idx_master_armada_type ON master_armada(type_unit);
-CREATE INDEX IF NOT EXISTS idx_master_armada_cluster ON master_armada(cluster);
-
 -- ------------------------------------------------------------------------------
--- 4. TABEL ARMADA CLUSTERS (Alokasi Gabungan Armada Bertugas per Cluster)
+-- 2.3 TABEL ARMADA_CLUSTERS (Alokasi & Penugasan Armada per Kluster Wilayah)
 -- ------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS armada_clusters (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    cluster_name VARCHAR(50) NOT NULL, -- 'Selatan', 'Tengah', 'Utara', 'ROM'
-    armada_type VARCHAR(20) NOT NULL, -- 'LT' (Lube Truck) atau 'WT' (Water Truck)
-    assigned_units TEXT NOT NULL, -- Contoh: 'LT2535, LT2622, LT2530'
+CREATE TABLE IF NOT EXISTS public.armada_clusters (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    cluster_name VARCHAR(50) NOT NULL,
+    armada_type VARCHAR(10) NOT NULL CHECK (armada_type IN ('LT', 'WT')),
+    assigned_units TEXT, -- Contoh: 'LT2530, LT2535, LT2622'
     updated_by VARCHAR(50),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    CONSTRAINT uq_cluster_armada UNIQUE(cluster_name, armada_type)
+    CONSTRAINT uq_cluster_armada UNIQUE (cluster_name, armada_type)
 );
 
 -- ------------------------------------------------------------------------------
--- 5. TABEL MASTER ROSTER (Jadwal Giliran Kerja Bulanan: OPT, OM, WM)
---    Singkron dengan Template & Parsing Roster di index.html
+-- 2.4 TABEL MASTER_UNITS (Populasi Unit Alat Berat Lapangan: Dozer, Exca, Shovel)
 -- ------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS master_roster (
-    id VARCHAR(100) PRIMARY KEY, -- Contoh: 'ROSTER-1741234567-1'
-    jenis VARCHAR(20) NOT NULL DEFAULT 'OPT', -- 'OPT' (Operator), 'OM' (Oilman), 'WM' (Washingman)
-    nrp VARCHAR(50) NOT NULL,
-    nik VARCHAR(50),
-    nama VARCHAR(150) NOT NULL,
-    unit VARCHAR(50), -- Unit batangan bawaan: 'LT2510', 'LT2535'
-    unit_efektif VARCHAR(50), -- Unit efektif (diperbarui jika personil spare)
-    periode VARCHAR(10), -- Format 'YYYY-MM', misal '2026-10'
-    tanggal DATE NOT NULL,
-    shift INT NOT NULL DEFAULT 1, -- 1 = Day (Siang), 2 = Night (Malam)
-    kode_shift VARCHAR(30) NOT NULL DEFAULT 'DWS', -- 'DWS', 'NWS', 'D514', 'N168', 'OOFF', 'CCUTI', 'INDR'
-    is_spare BOOLEAN DEFAULT FALSE,
-    keterangan TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Migrasi aman kolom roster jika tabel sudah pernah dibuat sebelumnya
-ALTER TABLE master_roster ADD COLUMN IF NOT EXISTS jenis VARCHAR(20) DEFAULT 'OPT';
-ALTER TABLE master_roster ADD COLUMN IF NOT EXISTS nik VARCHAR(50);
-ALTER TABLE master_roster ADD COLUMN IF NOT EXISTS unit VARCHAR(50);
-ALTER TABLE master_roster ADD COLUMN IF NOT EXISTS unit_efektif VARCHAR(50);
-ALTER TABLE master_roster ADD COLUMN IF NOT EXISTS shift INT DEFAULT 1;
-ALTER TABLE master_roster ADD COLUMN IF NOT EXISTS kode_shift VARCHAR(30) DEFAULT 'DWS';
-ALTER TABLE master_roster ADD COLUMN IF NOT EXISTS is_spare BOOLEAN DEFAULT FALSE;
-ALTER TABLE master_roster ADD COLUMN IF NOT EXISTS keterangan TEXT;
-
-DO $$ 
-BEGIN
-    ALTER TABLE master_roster DROP CONSTRAINT IF EXISTS uq_roster_entry;
-EXCEPTION
-    WHEN OTHERS THEN NULL;
-END $$;
-
-CREATE INDEX IF NOT EXISTS idx_roster_tanggal ON master_roster(tanggal);
-CREATE INDEX IF NOT EXISTS idx_roster_nrp ON master_roster(nrp);
-CREATE INDEX IF NOT EXISTS idx_roster_jenis ON master_roster(jenis);
-CREATE INDEX IF NOT EXISTS idx_roster_shift ON master_roster(shift);
-CREATE INDEX IF NOT EXISTS idx_roster_unit ON master_roster(unit);
-
--- ------------------------------------------------------------------------------
--- 6. TABEL MASTER UNITS (Populasi Unit Lapangan: Excavator, Dozer, Grader, Digger)
--- ------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS master_units (
-    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::text,
-    no_lambung VARCHAR(50) UNIQUE NOT NULL, -- 'EX001', 'DZ001', 'E2168'
-    type_model VARCHAR(100) NOT NULL, -- 'PC210-10M0', 'D85ESS-2', 'PC850-8R1'
-    kategori VARCHAR(50) NOT NULL DEFAULT 'coal', -- 'coal', 'non_coal', 'ob', 'support'
-    cluster VARCHAR(50) NOT NULL DEFAULT 'Selatan', -- 'Selatan', 'Tengah', 'Utara', 'ROM'
+CREATE TABLE IF NOT EXISTS public.master_units (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    no_lambung VARCHAR(50) NOT NULL UNIQUE, -- 'CT2514', 'DZ8589', 'EX2168'
+    type_model VARCHAR(100) NOT NULL, -- 'PC210-10M0', 'D85ESS-2', 'CAT395'
+    kategori VARCHAR(50) NOT NULL DEFAULT 'coal' CHECK (kategori IN ('coal', 'non_coal', 'big_digger')),
+    cluster VARCHAR(50) NOT NULL DEFAULT 'Selatan',
     lokasi VARCHAR(100) NOT NULL DEFAULT 'Pit Area',
-    status VARCHAR(30) NOT NULL DEFAULT 'Operasi', -- 'Operasi', 'Breakdown', 'Standby'
-    status_aktif BOOLEAN DEFAULT TRUE,
-    keterangan TEXT,
+    status VARCHAR(50) NOT NULL DEFAULT 'Operasi' CHECK (status IN ('Operasi', 'Breakdown', 'Standby')),
+    status_aktif BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE master_units ADD COLUMN IF NOT EXISTS no_lambung VARCHAR(50);
-ALTER TABLE master_units ADD COLUMN IF NOT EXISTS type_model VARCHAR(100);
-ALTER TABLE master_units ADD COLUMN IF NOT EXISTS kategori VARCHAR(50) DEFAULT 'coal';
-ALTER TABLE master_units ADD COLUMN IF NOT EXISTS cluster VARCHAR(50) DEFAULT 'Selatan';
-ALTER TABLE master_units ADD COLUMN IF NOT EXISTS lokasi VARCHAR(100) DEFAULT 'Pit Area';
-ALTER TABLE master_units ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'Operasi';
-ALTER TABLE master_units ADD COLUMN IF NOT EXISTS status_aktif BOOLEAN DEFAULT TRUE;
-
-CREATE INDEX IF NOT EXISTS idx_units_no_lambung ON master_units(no_lambung);
-CREATE INDEX IF NOT EXISTS idx_units_cluster ON master_units(cluster);
-CREATE INDEX IF NOT EXISTS idx_units_status ON master_units(status);
-
 -- ------------------------------------------------------------------------------
--- 7. TABEL MASTER OPERATORS (No OPT Produksi)
+-- 2.5 TABEL MASTER_OPERATORS (Kontak Produksi & Operator Alat Berat)
 -- ------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS master_operators (
-    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::text,
-    nrp VARCHAR(50) UNIQUE NOT NULL,
+CREATE TABLE IF NOT EXISTS public.master_operators (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nrp VARCHAR(50) NOT NULL UNIQUE,
     nama VARCHAR(150) NOT NULL,
-    no_wa VARCHAR(30),
-    jabatan VARCHAR(80) DEFAULT 'Operator',
+    no_wa VARCHAR(100),
+    jabatan VARCHAR(100) DEFAULT 'Operator',
     cluster VARCHAR(50) DEFAULT 'Selatan',
-    armada_unit VARCHAR(50),
-    status_aktif BOOLEAN DEFAULT TRUE,
-    avatar_url TEXT,
+    status_aktif BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE master_operators ADD COLUMN IF NOT EXISTS no_wa VARCHAR(30);
-ALTER TABLE master_operators ADD COLUMN IF NOT EXISTS status_aktif BOOLEAN DEFAULT TRUE;
-
-CREATE INDEX IF NOT EXISTS idx_operators_nrp ON master_operators(nrp);
-CREATE INDEX IF NOT EXISTS idx_operators_jabatan ON master_operators(jabatan);
+-- ------------------------------------------------------------------------------
+-- 2.6 TABEL MASTER_KONTAK_PRO (Kompatibilitas Ringkas Kontak Produksi)
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.master_kontak_pro (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nrp VARCHAR(50) NOT NULL UNIQUE,
+    nama VARCHAR(255) NOT NULL,
+    no_wa VARCHAR(100),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
 -- ------------------------------------------------------------------------------
--- 8. TABEL JOBS (Jadwal Terencana, Realisasi, & Unscheduled LT/WT)
+-- 2.7 TABEL MASTER_ROSTER (Roster Kerja Bulanan Manpower & Operator)
 -- ------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS jobs (
-    id VARCHAR(100) PRIMARY KEY, -- 'LT-01', 'WT-01', 'UNS-01'
-    job_type VARCHAR(30) NOT NULL DEFAULT 'lube', -- 'lube', 'water', 'unsch_lt', 'unsch_wt'
+CREATE TABLE IF NOT EXISTS public.master_roster (
+    id VARCHAR(100) PRIMARY KEY, -- 'RST-OPT-20261021-800101'
+    jenis VARCHAR(20) NOT NULL CHECK (jenis IN ('OPT', 'OM', 'WM', 'FL')),
+    nrp VARCHAR(50) NOT NULL,
+    nama VARCHAR(150) NOT NULL,
+    unit VARCHAR(50),
+    unit_efektif VARCHAR(50),
+    tanggal DATE NOT NULL,
+    shift INT NOT NULL DEFAULT 1 CHECK (shift IN (1, 2)),
+    kode_shift VARCHAR(20) NOT NULL DEFAULT 'DWS', -- 'DWS', 'NWS', 'OFF', 'R'
+    periode VARCHAR(50),
+    is_spare BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ------------------------------------------------------------------------------
+-- 2.8 TABEL JOBS (Jadwal & Riwayat Pekerjaan Aktif Transaksi Lapangan)
+--     Mencakup Greasing Small, Big Digger, Air Cleaner, Washing, & Unscheduled
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.jobs (
+    id VARCHAR(100) PRIMARY KEY, -- 'LT-SCH-20261021-EX2168-S1', 'UNS-20261021-001'
+    job_type VARCHAR(30) NOT NULL DEFAULT 'lube', -- 'lube', 'water', 'sch_lt', 'sch_wt', 'unsch_lt', 'unsch_wt'
     cat VARCHAR(50) NOT NULL DEFAULT 'small', -- 'small', 'digger', 'aircleaner', 'topup', 'coal', 'rom', 'non_coal', 'unscheduled'
     tanggal DATE NOT NULL,
-    shift INT NOT NULL DEFAULT 1, -- 1 = Siang, 2 = Malam
+    shift INT NOT NULL DEFAULT 1 CHECK (shift IN (1, 2)),
     washing_round INT DEFAULT 1, -- Putaran washing (1 / 2)
-    cluster VARCHAR(50) NOT NULL, -- 'Selatan', 'Tengah', 'Utara', 'ROM'
+    cluster VARCHAR(50) NOT NULL,
     waktu_rencana VARCHAR(50), -- '07:00 s/d 07:15'
     type_unit VARCHAR(100) NOT NULL,
     no_lambung VARCHAR(50) NOT NULL,
     lokasi VARCHAR(100) NOT NULL,
-    armada_unit VARCHAR(50) NOT NULL, -- Unit pelaksana: 'LT2535', 'WT101'
+    armada_unit VARCHAR(50) NOT NULL, -- 'LT2535', 'WT101'
     opt_name VARCHAR(150),
     mp1 VARCHAR(150),
     mp2 VARCHAR(150),
     
-    -- Realisasi Pelaksanaan Waktu Aktual
+    -- Realisasi Waktu & Hour Meter Aktual
     jam_start VARCHAR(10),
     jam_end VARCHAR(10),
     durasi NUMERIC(10, 1),
     hm_stop NUMERIC(10, 2),
     hm_ready NUMERIC(10, 2),
     
-    -- Status Eksekusi (scheduled, plan, ach, done, non_ach, pending, cancelled)
-    status VARCHAR(30) NOT NULL DEFAULT 'scheduled',
+    -- Status Eksekusi
+    status VARCHAR(30) NOT NULL DEFAULT 'scheduled', -- 'scheduled', 'plan', 'ach', 'done', 'non_ach', 'pending', 'cancelled'
     keterangan TEXT,
     is_pending BOOLEAN DEFAULT FALSE,
     ada_operator VARCHAR(10) DEFAULT 'Ya',
     
-    -- Detail Tambahan & Kendala Non-Ach
+    -- Detail Servis Lapangan & Kendala Non-ACH
     unit_condition VARCHAR(50),
     service_type VARCHAR(50),
     pemesan VARCHAR(150),
@@ -227,247 +167,343 @@ CREATE TABLE IF NOT EXISTS jobs (
     bd_notes TEXT,
     non_ach_category VARCHAR(100),
     non_ach_reason TEXT,
+    carry_count INT DEFAULT 0,
+    original_date DATE,
     
     created_by VARCHAR(50),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS cat VARCHAR(50) DEFAULT 'small';
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS durasi NUMERIC(10, 1);
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS service_type VARCHAR(50);
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS pemesan VARCHAR(150);
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS kondisi VARCHAR(100);
-ALTER TABLE jobs DROP COLUMN IF EXISTS fotos;
-
-CREATE INDEX IF NOT EXISTS idx_jobs_tanggal ON jobs(tanggal);
-CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
-CREATE INDEX IF NOT EXISTS idx_jobs_armada ON jobs(armada_unit);
-CREATE INDEX IF NOT EXISTS idx_jobs_no_lambung ON jobs(no_lambung);
-CREATE INDEX IF NOT EXISTS idx_jobs_cluster ON jobs(cluster);
-
 -- ------------------------------------------------------------------------------
--- 9. TABEL ORDER REQUESTS (Permintaan Layanan Servis Lapangan)
+-- 2.9 TABEL ORDER_REQUESTS (Permintaan Servis Lapangan Unscheduled / Darurat)
 -- ------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS order_requests (
-    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::text,
-    kode_order VARCHAR(50) UNIQUE,
+CREATE TABLE IF NOT EXISTS public.order_requests (
+    id VARCHAR(100) PRIMARY KEY, -- 'ORD-20261021-001'
+    kode_order VARCHAR(100),
+    service_type VARCHAR(50) NOT NULL, -- 'greasing', 'oil_topup', 'air_cleaner', 'washing'
+    type_unit VARCHAR(100) NOT NULL,
     tanggal DATE NOT NULL,
-    jam VARCHAR(10) NOT NULL,
+    shift INT NOT NULL DEFAULT 1 CHECK (shift IN (1, 2)),
+    jam VARCHAR(10),
     nama_pemesan VARCHAR(150) NOT NULL,
-    role_pemesan VARCHAR(30) NOT NULL DEFAULT 'user',
+    role_pemesan VARCHAR(50),
     nrp_pemesan VARCHAR(50),
     no_lambung VARCHAR(50) NOT NULL,
     cluster VARCHAR(50) NOT NULL,
     lokasi VARCHAR(100) NOT NULL,
-    keadaan_unit VARCHAR(100) NOT NULL,
-    deskripsi TEXT NOT NULL,
-    status VARCHAR(30) NOT NULL DEFAULT 'Pending',
-    catatan_admin TEXT,
-    handled_by VARCHAR(150),
+    keadaan_unit VARCHAR(100),
+    armada_unit VARCHAR(50),
+    opt_name VARCHAR(150),
+    mp1 VARCHAR(150),
+    mp2 VARCHAR(150),
+    hm_start NUMERIC(10, 2),
+    hm_end NUMERIC(10, 2),
+    jam_start VARCHAR(10),
+    jam_end VARCHAR(10),
+    durasi NUMERIC(10, 1),
+    tanggal_eksekusi DATE,
+    status VARCHAR(50) NOT NULL DEFAULT 'Open', -- 'Open', 'In Progress', 'Done', 'Cancelled'
+    is_locked BOOLEAN DEFAULT FALSE,
+    handled_by VARCHAR(100),
+    keterangan TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_orders_tanggal ON order_requests(tanggal);
-CREATE INDEX IF NOT EXISTS idx_orders_status ON order_requests(status);
-CREATE INDEX IF NOT EXISTS idx_orders_no_lambung ON order_requests(no_lambung);
-
 -- ------------------------------------------------------------------------------
--- 10. TABEL AIR CLEANER MONITORING (Pemantauan Saringan Udara Unit Lapangan)
+-- 2.10 TABEL AIR_CLEANER_MONITORING (Monitoring Siklus Pembersihan Filter Udara)
 -- ------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS air_cleaner_monitoring (
-    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::text,
-    no_lambung VARCHAR(50) UNIQUE NOT NULL,
+CREATE TABLE IF NOT EXISTS public.air_cleaner_monitoring (
+    id VARCHAR(50) PRIMARY KEY, -- 'AC-EX2168'
+    no_lambung VARCHAR(50) NOT NULL UNIQUE,
     type_model VARCHAR(100) NOT NULL,
-    cleans JSONB DEFAULT '[]'::jsonb,
-    service_code VARCHAR(50) DEFAULT '',
-    status VARCHAR(30) NOT NULL DEFAULT 'Baik',
+    cleans JSONB NOT NULL DEFAULT '[]'::jsonb, -- Array string tanggal/waktu semprotan ['21/10/2026', ...]
+    service_code VARCHAR(50),
+    status VARCHAR(50) NOT NULL DEFAULT 'Baik',
     last_cleaned_date DATE,
-    keterangan TEXT,
+    cluster VARCHAR(50),
+    lokasi VARCHAR(100),
+    evidence_url TEXT, -- URL Foto Evidence Pergantian Terakhir (Google Drive)
+    last_replaced_at TIMESTAMPTZ, -- Waktu pergantian filter terakhir oleh Tim Track / Admin
+    last_replaced_by VARCHAR(150), -- Nama PIC pergantian terakhir
+    replace_notes TEXT, -- Catatan teknis pergantian filter
+    created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_air_cleaner_no_lambung ON air_cleaner_monitoring(no_lambung);
-CREATE INDEX IF NOT EXISTS idx_air_cleaner_status ON air_cleaner_monitoring(status);
+-- ------------------------------------------------------------------------------
+-- 2.10.B TABEL AIR_CLEANER_REPLACEMENTS (Riwayat Pergantian Komponen Air Cleaner & Evidence)
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.air_cleaner_replacements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    no_lambung VARCHAR(50) NOT NULL,
+    type_model VARCHAR(100),
+    tanggal DATE NOT NULL DEFAULT CURRENT_DATE,
+    jam VARCHAR(20),
+    pic VARCHAR(150) NOT NULL,
+    pic_nrp VARCHAR(50),
+    keterangan TEXT,
+    evidence_url TEXT NOT NULL, -- Link Foto Google Drive
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
 
 -- ------------------------------------------------------------------------------
--- 11. TABEL PICA RECORDS (Problem Identification & Corrective Action)
+-- 2.11 TABEL PICA_RECORDS (Problem Identification & Corrective Action)
 -- ------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pica_records (
-    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::text,
-    job_id VARCHAR(100),
+CREATE TABLE IF NOT EXISTS public.pica_records (
+    id VARCHAR(100) PRIMARY KEY, -- 'PICA-LT-01'
+    job_id VARCHAR(100) NOT NULL,
     no_lambung VARCHAR(50) NOT NULL,
     tanggal DATE NOT NULL,
-    shift INT DEFAULT 1,
-    cluster VARCHAR(50),
-    kategori VARCHAR(80) NOT NULL,
+    shift INT NOT NULL DEFAULT 1 CHECK (shift IN (1, 2)),
+    cluster VARCHAR(50) NOT NULL,
+    kategori VARCHAR(100) NOT NULL,
     problem_description TEXT NOT NULL,
     root_cause TEXT,
     corrective_action TEXT,
     preventive_action TEXT,
     pic VARCHAR(150),
-    status VARCHAR(30) DEFAULT 'Open',
+    status VARCHAR(50) DEFAULT 'Open',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_pica_tanggal ON pica_records(tanggal);
-CREATE INDEX IF NOT EXISTS idx_pica_status ON pica_records(status);
+-- ------------------------------------------------------------------------------
+-- 2.12 TABEL JOB_HISTORY (Snapshot Riwayat Pekerjaan Terkunci / Immutable Audit)
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.job_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    job_id VARCHAR(100) NOT NULL,
+    no_lambung VARCHAR(50) NOT NULL,
+    type_unit VARCHAR(100),
+    cat VARCHAR(50) NOT NULL,
+    job_type VARCHAR(30) NOT NULL DEFAULT 'lube',
+    tanggal_rencana DATE NOT NULL,
+    shift_rencana INT NOT NULL DEFAULT 1,
+    waktu_rencana VARCHAR(50),
+    cluster VARCHAR(50) NOT NULL,
+    lokasi VARCHAR(100) NOT NULL,
+    armada_unit VARCHAR(50),
+    opt_name VARCHAR(150),
+    mp1 VARCHAR(150),
+    mp2 VARCHAR(150),
+    tanggal_eksekusi DATE,
+    jam_start VARCHAR(10),
+    jam_end VARCHAR(10),
+    durasi NUMERIC(10, 1),
+    status_final VARCHAR(30) NOT NULL CHECK (status_final IN ('ACHIEVED', 'NON_ACH', 'ach', 'non_ach', 'service', 'bd', 'done')),
+    keterangan TEXT,
+    non_ach_category VARCHAR(100),
+    non_ach_reason TEXT,
+    snapshot_data JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT uq_job_history_job_id UNIQUE (job_id)
+);
 
--- ------------------------------------------------------------------------------
--- 12. ROW LEVEL SECURITY (RLS) POLICIES - IZINKAN KONEKSI DARI INDEX.HTML
---     Mengatasi error 401 / 403 saat web app melakukan sinkronisasi dengan Supabase
--- ------------------------------------------------------------------------------
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE master_armada ENABLE ROW LEVEL SECURITY;
-ALTER TABLE armada_clusters ENABLE ROW LEVEL SECURITY;
-ALTER TABLE master_roster ENABLE ROW LEVEL SECURITY;
-ALTER TABLE master_units ENABLE ROW LEVEL SECURITY;
-ALTER TABLE master_operators ENABLE ROW LEVEL SECURITY;
-ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE order_requests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE air_cleaner_monitoring ENABLE ROW LEVEL SECURITY;
-ALTER TABLE pica_records ENABLE ROW LEVEL SECURITY;
+-- ==============================================================================
+-- 3. INDEX STRATEGIS (Kueri Cepat, Low-Egress, Anti-Lag)
+-- ==============================================================================
+CREATE INDEX IF NOT EXISTS idx_users_nrp ON public.users(nrp);
+CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
+
+CREATE INDEX IF NOT EXISTS idx_master_armada_unit ON public.master_armada(unit);
+CREATE INDEX IF NOT EXISTS idx_master_units_lambung ON public.master_units(no_lambung);
+CREATE INDEX IF NOT EXISTS idx_master_operators_nrp ON public.master_operators(nrp);
+
+CREATE INDEX IF NOT EXISTS idx_roster_composite ON public.master_roster(tanggal, shift, nrp);
+CREATE INDEX IF NOT EXISTS idx_roster_unit ON public.master_roster(unit);
+
+CREATE INDEX IF NOT EXISTS idx_jobs_tanggal ON public.jobs(tanggal);
+CREATE INDEX IF NOT EXISTS idx_jobs_status ON public.jobs(status);
+CREATE INDEX IF NOT EXISTS idx_jobs_is_pending ON public.jobs(is_pending);
+CREATE INDEX IF NOT EXISTS idx_jobs_armada ON public.jobs(armada_unit);
+CREATE INDEX IF NOT EXISTS idx_jobs_no_lambung ON public.jobs(no_lambung);
+CREATE INDEX IF NOT EXISTS idx_jobs_composite_hot ON public.jobs(tanggal, shift, status);
+
+CREATE INDEX IF NOT EXISTS idx_orders_tanggal ON public.order_requests(tanggal);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON public.order_requests(status);
+CREATE INDEX IF NOT EXISTS idx_orders_lambung ON public.order_requests(no_lambung);
+
+CREATE INDEX IF NOT EXISTS idx_ac_lambung ON public.air_cleaner_monitoring(no_lambung);
+CREATE INDEX IF NOT EXISTS idx_pica_job_id ON public.pica_records(job_id);
+CREATE INDEX IF NOT EXISTS idx_pica_tanggal ON public.pica_records(tanggal);
+
+CREATE INDEX IF NOT EXISTS idx_job_history_job_id ON public.job_history(job_id);
+CREATE INDEX IF NOT EXISTS idx_job_history_no_lambung ON public.job_history(no_lambung);
+CREATE INDEX IF NOT EXISTS idx_job_history_tanggal_eksekusi ON public.job_history(tanggal_eksekusi);
+CREATE INDEX IF NOT EXISTS idx_job_history_status_final ON public.job_history(status_final);
+
+-- ==============================================================================
+-- 4. REPLICA IDENTITY FULL (Wajib Realtime Supabase untuk Payload Lengkap saat DELETE/UPDATE)
+-- ==============================================================================
+ALTER TABLE public.users REPLICA IDENTITY FULL;
+ALTER TABLE public.master_armada REPLICA IDENTITY FULL;
+ALTER TABLE public.armada_clusters REPLICA IDENTITY FULL;
+ALTER TABLE public.master_units REPLICA IDENTITY FULL;
+ALTER TABLE public.master_operators REPLICA IDENTITY FULL;
+ALTER TABLE public.master_kontak_pro REPLICA IDENTITY FULL;
+ALTER TABLE public.master_roster REPLICA IDENTITY FULL;
+ALTER TABLE public.jobs REPLICA IDENTITY FULL;
+ALTER TABLE public.order_requests REPLICA IDENTITY FULL;
+ALTER TABLE public.air_cleaner_monitoring REPLICA IDENTITY FULL;
+ALTER TABLE public.air_cleaner_replacements REPLICA IDENTITY FULL;
+ALTER TABLE public.pica_records REPLICA IDENTITY FULL;
+ALTER TABLE public.job_history REPLICA IDENTITY FULL;
+
+-- ==============================================================================
+-- 5. ROW LEVEL SECURITY (RLS) & POLICY AKSES TERBUKA UNTUK APLIKASI WEB
+--    Memastikan aplikasi web dengan Anon Key dapat membaca dan menulis data
+-- ==============================================================================
+DO $$ 
+DECLARE
+    tbl TEXT;
+    tables TEXT[] := ARRAY[
+        'users', 'master_armada', 'armada_clusters', 'master_roster',
+        'master_units', 'master_operators', 'master_kontak_pro', 'jobs', 
+        'order_requests', 'air_cleaner_monitoring', 'air_cleaner_replacements', 'pica_records', 'job_history'
+    ];
+BEGIN
+    FOREACH tbl IN ARRAY tables LOOP
+        EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY;', tbl);
+        EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I;', 'allow_all_anon_' || tbl, tbl);
+        EXECUTE format(
+            'CREATE POLICY %I ON public.%I FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);',
+            'allow_all_anon_' || tbl, tbl
+        );
+    END LOOP;
+END $$;
+
+-- ==============================================================================
+-- 6. SUPABASE REALTIME WEBSOCKET (Publikasi Dua Arah Tanpa Polling)
+-- ==============================================================================
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+        CREATE PUBLICATION supabase_realtime;
+    END IF;
+END $$;
 
 DO $$ 
 DECLARE
     tbl TEXT;
     tables TEXT[] := ARRAY[
         'users', 'master_armada', 'armada_clusters', 'master_roster',
-        'master_units', 'master_operators', 'jobs', 'order_requests',
-        'air_cleaner_monitoring', 'pica_records'
+        'master_units', 'master_operators', 'master_kontak_pro', 'jobs', 
+        'order_requests', 'air_cleaner_monitoring', 'air_cleaner_replacements', 'pica_records', 'job_history'
     ];
 BEGIN
     FOREACH tbl IN ARRAY tables LOOP
-        EXECUTE format('DROP POLICY IF EXISTS %I ON %I;', 'allow_all_anon_' || tbl, tbl);
-        EXECUTE format(
-            'CREATE POLICY %I ON %I FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);',
-            'allow_all_anon_' || tbl, tbl
-        );
+        BEGIN
+            EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE public.%I;', tbl);
+        EXCEPTION
+            WHEN duplicate_object THEN
+                NULL;
+            WHEN OTHERS THEN
+                NULL;
+        END;
     END LOOP;
 END $$;
 
--- ------------------------------------------------------------------------------
--- 13. TRIGGER OTOMATIS UPDATED_AT TIMESTAMP
--- ------------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION update_timestamp_column()
+-- ==============================================================================
+-- 7. TRIGGER OTOMATIS UPDATED_AT TIMESTAMP
+-- ==============================================================================
+CREATE OR REPLACE FUNCTION public.update_timestamp_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
-DO $$
+DO $$ 
+DECLARE
+    tbl TEXT;
+    tables TEXT[] := ARRAY[
+        'users', 'master_armada', 'armada_clusters', 'master_roster',
+        'master_units', 'master_operators', 'master_kontak_pro', 'jobs', 
+        'order_requests', 'air_cleaner_monitoring', 'pica_records'
+    ];
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_users_updated_at') THEN
-        CREATE TRIGGER trg_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_armada_updated_at') THEN
-        CREATE TRIGGER trg_armada_updated_at BEFORE UPDATE ON master_armada FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_roster_updated_at') THEN
-        CREATE TRIGGER trg_roster_updated_at BEFORE UPDATE ON master_roster FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_units_updated_at') THEN
-        CREATE TRIGGER trg_units_updated_at BEFORE UPDATE ON master_units FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_jobs_updated_at') THEN
-        CREATE TRIGGER trg_jobs_updated_at BEFORE UPDATE ON jobs FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_orders_updated_at') THEN
-        CREATE TRIGGER trg_orders_updated_at BEFORE UPDATE ON order_requests FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
-    END IF;
+    FOREACH tbl IN ARRAY tables LOOP
+        EXECUTE format('DROP TRIGGER IF EXISTS %I ON public.%I;', 'trg_' || tbl || '_updated_at', tbl);
+        EXECUTE format(
+            'CREATE TRIGGER %I BEFORE UPDATE ON public.%I FOR EACH ROW EXECUTE FUNCTION public.update_timestamp_column();',
+            'trg_' || tbl || '_updated_at', tbl
+        );
+    END LOOP;
 END $$;
 
--- ------------------------------------------------------------------------------
--- 14. INITIAL SEED DATA (Singkron Penuh dengan Data Default di index.html)
--- ------------------------------------------------------------------------------
+-- ==============================================================================
+-- 8. TRIGGER OTOMATIS: SNAPSHOT RIWAYAT PEKERJAAN (IMMUTABLE JOB_HISTORY)
+--    Menyimpan snapshot otomatis saat job berubah status ke ACHIEVED / NON_ACH
+-- ==============================================================================
+CREATE OR REPLACE FUNCTION public.trg_lock_job_history_snapshot_fn()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_status_norm VARCHAR(30);
+BEGIN
+    v_status_norm := UPPER(COALESCE(NEW.status, ''));
+    IF v_status_norm IN ('ACH', 'ACHIEVED', 'DONE', 'SERVICE', 'BD') THEN
+        v_status_norm := 'ACHIEVED';
+    ELSIF v_status_norm IN ('NON_ACH', 'NON-ACH', 'CANCELLED', 'CANCEL') THEN
+        v_status_norm := 'NON_ACH';
+    ELSE
+        RETURN NEW;
+    END IF;
 
--- A. Data Pengguna Default (5 Role)
-INSERT INTO users (nrp, nama, password, role, jabatan, status_aktif)
-VALUES
-    ('admin',   'Admin Operasional',       'admin123', 'admin',       'Admin / Planner',    TRUE),
-    ('user',    'User Lapangan',           'user123',  'user',        'User Pemohon / Driver', TRUE),
-    ('om',      'Oilman (Lubetruck)',      'om123',    'mp_lt',       'Crew Lube Truck', TRUE),
-    ('wm',      'Washingman (Water Truck)','wm123',    'mp_wt',       'Crew Water Truck', TRUE),
-    ('bsc',     'Operator Base Control',   'bsc123',   'basecontrol', 'Radio Room / Dispatcher', TRUE),
-    ('ADMIN01', 'Admin Operasional',       'admin123', 'admin',       'Admin / Planner',    TRUE),
-    ('OM1001',  'Budi Santoso (Oilman)',   'om123',    'oilman',      'Crew Lube Truck', TRUE),
-    ('WM2001',  'Dedi Prasetyo (Washingman)','wm123',  'washingman',  'Crew Water Truck', TRUE),
-    ('USR3001', 'Agus Supriyadi (User)',   'user123',  'user',        'Foreman / Staff Lapangan', TRUE),
-    ('BC4001',  'Rian Setiawan (Base Control)', 'bsc123', 'basecontrol', 'Radio Dispatcher / Base Control', TRUE)
-ON CONFLICT (nrp) DO NOTHING;
+    INSERT INTO public.job_history (
+        job_id, no_lambung, type_unit, cat, job_type,
+        tanggal_rencana, shift_rencana, waktu_rencana,
+        cluster, lokasi, armada_unit, opt_name, mp1, mp2,
+        tanggal_eksekusi, jam_start, jam_end, durasi,
+        status_final, keterangan, non_ach_category, non_ach_reason,
+        snapshot_data, created_at
+    )
+    VALUES (
+        NEW.id, NEW.no_lambung, NEW.type_unit, NEW.cat, NEW.job_type,
+        NEW.tanggal, NEW.shift, NEW.waktu_rencana,
+        NEW.cluster, NEW.lokasi, NEW.armada_unit, NEW.opt_name, NEW.mp1, NEW.mp2,
+        COALESCE(NEW.tanggal, CURRENT_DATE), NEW.jam_start, NEW.jam_end, NEW.durasi,
+        v_status_norm, NEW.keterangan, NEW.non_ach_category, NEW.non_ach_reason,
+        to_jsonb(NEW), NOW()
+    )
+    ON CONFLICT (job_id) DO UPDATE SET
+        tanggal_eksekusi = EXCLUDED.tanggal_eksekusi,
+        jam_start = EXCLUDED.jam_start,
+        jam_end = EXCLUDED.jam_end,
+        durasi = EXCLUDED.durasi,
+        status_final = EXCLUDED.status_final,
+        keterangan = EXCLUDED.keterangan,
+        non_ach_category = EXCLUDED.non_ach_category,
+        non_ach_reason = EXCLUDED.non_ach_reason,
+        snapshot_data = EXCLUDED.snapshot_data;
 
--- B. Data Master Armada (Seluruh Armada Lubetruck & Water Truck)
-INSERT INTO master_armada (id, unit, type_unit, cluster, status)
-VALUES
-    -- Lubetruck
-    ('ARM-01', 'LT2535', 'Lubetruck', 'Selatan', 'Aktif'),
-    ('ARM-02', 'LT2622', 'Lubetruck', 'Selatan', 'Aktif'),
-    ('ARM-03', 'LT2530', 'Lubetruck', 'Selatan', 'Aktif'),
-    ('ARM-04', 'LT2514', 'Lubetruck', 'Tengah',  'Aktif'),
-    ('ARM-05', 'LT2518', 'Lubetruck', 'Tengah',  'Aktif'),
-    ('ARM-06', 'LT2510', 'Lubetruck', 'Utara',   'Aktif'),
-    ('ARM-07', 'LT2525', 'Lubetruck', 'Utara',   'Aktif'),
-    ('ARM-08', 'LT2515', 'Lubetruck', 'Selatan', 'Aktif'),
-    ('ARM-09', 'LT2536', 'Lubetruck', 'Selatan', 'Aktif'),
-    -- Water Truck
-    ('ARM-10', 'WT101',  'Water Truck', 'Selatan', 'Aktif'),
-    ('ARM-11', 'WT102',  'Water Truck', 'Tengah',  'Aktif'),
-    ('ARM-12', 'WT103',  'Water Truck', 'Utara',   'Aktif'),
-    ('ARM-13', 'WT104',  'Water Truck', 'Selatan', 'Aktif'),
-    ('ARM-14', 'WT105',  'Water Truck', 'Tengah',  'Aktif'),
-    ('ARM-15', 'WT2520', 'Water Truck', 'Selatan', 'Aktif'),
-    ('ARM-16', 'WT2644', 'Water Truck', 'Utara',   'Aktif'),
-    ('ARM-17', 'WT2645', 'Water Truck', 'ROM',     'Aktif')
-ON CONFLICT (unit) DO UPDATE SET
-    type_unit = EXCLUDED.type_unit,
-    cluster = EXCLUDED.cluster,
-    status = EXCLUDED.status;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
--- C. Alokasi Armada Bertugas per Cluster
-INSERT INTO armada_clusters (cluster_name, armada_type, assigned_units)
-VALUES
-    ('Selatan', 'LT', 'LT2535, LT2622, LT2530'),
-    ('Tengah',  'LT', 'LT2514, LT2518'),
-    ('Utara',   'LT', 'LT2510, LT2525'),
-    ('Selatan', 'WT', 'WT101, WT104, WT2520'),
-    ('Tengah',  'WT', 'WT102, WT105'),
-    ('Utara',   'WT', 'WT103, WT2644'),
-    ('ROM',     'WT', 'WT2645')
-ON CONFLICT (cluster_name, armada_type) DO UPDATE SET
-    assigned_units = EXCLUDED.assigned_units;
-
--- D. Contoh Master Populasi Unit Lapangan
-INSERT INTO master_units (no_lambung, type_model, kategori, cluster, lokasi, status)
-VALUES
-    ('EX2168', 'PC210-10M0', 'coal',     'Selatan', 'BALANAI',        'Operasi'),
-    ('EX2169', 'PC210-10M0', 'coal',     'Selatan', 'SIM E',          'Operasi'),
-    ('DZ8589', 'D85ESS-2',   'non_coal', 'Tengah',  'FRONT RAJAWALI', 'Operasi'),
-    ('EX8501', 'PC850-8R1',  'coal',     'Utara',   'PIT UTARA',      'Operasi'),
-    ('CT3951', 'CAT395',     'non_coal', 'ROM',     'ROM STOCKPILE',  'Operasi')
-ON CONFLICT (no_lambung) DO NOTHING;
-
--- E. Contoh Master Operator Produksi
-INSERT INTO master_operators (nrp, nama, no_wa, jabatan, cluster)
-VALUES
-    ('OPT3001', 'Budi Santoso',  '081234567801', 'Operator Excavator', 'Selatan'),
-    ('OPT3002', 'Joko Widodo',   '081234567802', 'Operator Dozer',     'Tengah'),
-    ('OPT3003', 'Slamet Riyadi', '081234567803', 'Operator Shovel',    'Utara')
-ON CONFLICT (nrp) DO NOTHING;
-
--- F. Contoh Roster Aktif
-INSERT INTO master_roster (id, jenis, nrp, nama, unit, unit_efektif, tanggal, shift, kode_shift, is_spare)
-VALUES
-    ('RST-01', 'OPT', '800101', 'Budi Santoso',  'LT2510', 'LT2510', CURRENT_DATE, 1, 'DWS',  FALSE),
-    ('RST-02', 'OPT', '800102', 'Joko Widodo',   'LT2510', 'LT2510', CURRENT_DATE, 2, 'NWS',  FALSE),
-    ('RST-03', 'OM',  '800201', 'Hendra Gunawan', 'LT2535', 'LT2535', CURRENT_DATE, 1, 'DWS',  FALSE),
-    ('RST-04', 'OM',  '800202', 'Doni Pratama',   'LT2535', 'LT2535', CURRENT_DATE, 1, 'DWS',  FALSE),
-    ('RST-05', 'WM',  '800301', 'Agus Setiawan',  'WT101',  'WT101',  CURRENT_DATE, 1, 'DWS',  FALSE)
-ON CONFLICT (id) DO NOTHING;
+DROP TRIGGER IF EXISTS trg_job_snapshot_lock ON public.jobs;
+CREATE TRIGGER trg_job_snapshot_lock
+    AFTER INSERT OR UPDATE OF status ON public.jobs
+    FOR EACH ROW
+    EXECUTE FUNCTION public.trg_lock_job_history_snapshot_fn();
 
 -- ==============================================================================
--- AKHIR SKEMA DATABASE SE MANAGEMENT JOB
+-- 9. SELESAI: SELURUH TABEL DIBUAT 100% KOSONG TANPA ISI DUMMY
+-- Semua tabel (users, armada, clusters, units, operators, jobs, orders, dsb)
+-- siap digunakan dalam keadaan bersih tanpa ada baris data awal.
 -- ==============================================================================
+
+
+-- ==============================================================================
+-- 9. SEED AKUN UTAMA TIM TRACK (Kredensial Resmi Sesuai Permintaan)
+-- ==============================================================================
+INSERT INTO public.users (nrp, nama, password, role, jabatan, status_aktif)
+VALUES
+    ('admin', 'Admin Operasional', 'admin123', 'admin', 'Admin / Planner', TRUE),
+    ('track', 'Tim Track Lapangan', 'track123', 'track', 'Tim Track', TRUE)
+ON CONFLICT (nrp) DO UPDATE SET
+    password = EXCLUDED.password,
+    role = EXCLUDED.role,
+    jabatan = EXCLUDED.jabatan;

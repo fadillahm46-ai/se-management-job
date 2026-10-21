@@ -1,0 +1,32 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Backup Files (*.bak)
+*.bak
+*.bak_*
+*.bak.*
+bak_*
+
+# Editor & IDE Settings
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Node & Package Managers
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+
+# Temporary & Cache Directories
+.tempmediaStorage/
+.user_uploaded/
+scratch/
+*.tmp
+*.log
+
+# Environment & Local Secrets
+.env
+.env.local
