@@ -25,7 +25,19 @@ const MIME_TYPES = {
 };
 
 
-const scheduler = require('./scheduler');
+// scheduler.js bersifat opsional: jika file tidak ada, server tetap berjalan.
+let scheduler;
+try {
+  scheduler = require('./scheduler');
+} catch (e) {
+  console.warn('[server] Modul scheduler tidak ditemukan, API scheduler dinonaktifkan:', e.message);
+  const notAvailable = () => Promise.reject(new Error('Scheduler tidak tersedia'));
+  scheduler = {
+    startSchedulerLoop: () => { },
+    evaluateShift1Cutoff: notAvailable,
+    evaluateDayCutoff: notAvailable
+  };
+}
 
 // Jalankan scheduler background loop
 try {

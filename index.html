@@ -53,7 +53,7 @@
     rel="stylesheet">
 
   <!-- Shared Role Router & Access Guard (6 Role Support) -->
-  <script src="shared.js"></script>
+  <!-- [Audit] shared.js dihapus: file tidak ada di proyek (sebelumnya 404 / HTML-sebagai-JS) -->
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -12069,7 +12069,13 @@
       }
       else if (sectionKey === 'armada') renderMasterArmadaTable();
       else if (sectionKey === 'operators') renderMasterOperatorsTable();
-      else if (sectionKey === 'accounts') renderMasterAccountsTable();
+      else if (sectionKey === 'accounts') {
+        renderMasterAccountsTable();
+        // [Audit] Tarik akun terbaru dari Supabase (cooldown 2 menit agar hemat egress)
+        if (state.supabaseClient && typeof refreshMasterUsersFromSupabase === 'function') {
+          refreshMasterUsersFromSupabase(false, 2 * 60 * 1000);
+        }
+      }
       else if (sectionKey === 'roster' && state.masterSubtab === 'database') {
         renderDatabaseRosterTable();
         if ((!state.masterRoster || state.masterRoster.length === 0) && state.supabaseClient) {
@@ -13384,6 +13390,19 @@
         created_at: new Date().toISOString()
       };
 
+      // [Audit Log Ingestion] Snapshot identik sudah ada -> lewati (tanpa tulis lokal & tanpa upsert cloud)
+      if (existingIdx !== -1) {
+        const ex = state.jobHistory[existingIdx];
+        if (ex && String(ex.status_final || '') === String(snapshotRecord.status_final || '') &&
+          String(ex.keterangan || '') === String(snapshotRecord.keterangan || '') &&
+          String(ex.non_ach_reason || '') === String(snapshotRecord.non_ach_reason || '') &&
+          String(ex.jam_start || '') === String(snapshotRecord.jam_start || '') &&
+          String(ex.jam_end || '') === String(snapshotRecord.jam_end || '') &&
+          (Array.isArray(ex.fotos) ? ex.fotos.length : 0) === (Array.isArray(job.fotos) ? job.fotos.length : 0)) {
+          return;
+        }
+      }
+
       if (Array.isArray(job.fotos) && job.fotos.length > 0) {
         safeStorage.setItem('SE_JOB_FOTOS_' + cleanId, JSON.stringify(job.fotos));
       }
@@ -13420,7 +13439,7 @@
             keterangan: snapshotRecord.keterangan,
             non_ach_category: snapshotRecord.non_ach_category,
             non_ach_reason: snapshotRecord.non_ach_reason,
-            snapshot_data: job,
+            snapshot_data: JSON.parse(JSON.stringify(job, (k, v) => (typeof v === 'string' && v.startsWith('data:image/')) ? '[base64-dihapus]' : v)),
             created_at: snapshotRecord.created_at
           }, { onConflict: 'job_id' });
           if (error) {
@@ -26362,7 +26381,7 @@ function openAchForm() {
             service_code: '',
             status: 'Baik',
             last_cleaned_date: tanggal,
-            evidence_url: driveUrl,
+            evidence_url: (typeof driveUrl === 'string' && driveUrl.startsWith('data:image/')) ? '' : driveUrl,
             last_replaced_at: new Date().toISOString(),
             last_replaced_by: pic,
             replace_notes: notes,
@@ -26377,7 +26396,7 @@ function openAchForm() {
             pic: pic,
             pic_nrp: picNrp,
             keterangan: notes,
-            evidence_url: driveUrl,
+            evidence_url: (typeof driveUrl === 'string' && driveUrl.startsWith('data:image/')) ? '' : driveUrl,
             created_at: new Date().toISOString()
           }]).catch(e => console.warn('[Supabase Replacements Insert]', e));
 
@@ -30760,6 +30779,30 @@ function openAchForm() {
       });
     }
 
+    // [Audit] PostgrestBuilder (supabase-js v2) hanya punya .then(), TIDAK punya .catch().
+    // Kode lama memanggil `supabaseClient.from(..).upsert(..).catch(..)` => TypeError sebelum request
+    // dikirim (builder bersifat lazy), sehingga simpan/hapus akun & update cluster armada tidak
+    // pernah sampai ke Supabase. Polyfill ini menambahkan .catch tanpa mengubah perilaku lainnya.
+    function patchPostgrestCatch(client) {
+      try {
+        let probe = client.from('__probe__').select(); // lazy: tidak mengirim request
+        while (probe && !Object.prototype.hasOwnProperty.call(probe, 'then')) {
+          probe = Object.getPrototypeOf(probe);
+        }
+        if (probe && typeof probe.catch !== 'function') {
+          probe.catch = function (onRejected) {
+            return this.then(function (res) {
+              if (res && res.error && typeof onRejected === 'function') onRejected(res.error);
+              return res;
+            }, onRejected);
+          };
+          console.log('[Audit] Polyfill .catch() untuk Supabase query builder terpasang.');
+        }
+      } catch (e) {
+        console.warn('[Audit] Gagal memasang polyfill .catch():', e);
+      }
+    }
+
     async function initSupabase() {
       // Prioritaskan konfigurasi langsung dari konstanta SUPABASE_CONFIG di atas
       const supaUrl = SUPABASE_CONFIG.url || safeStorage.getItem('SE_SUPA_URL');
@@ -30768,6 +30811,7 @@ function openAchForm() {
       if (supaUrl && supaKey && typeof supabase !== 'undefined') {
         try {
           state.supabaseClient = supabase.createClient(supaUrl, supaKey);
+          patchPostgrestCatch(state.supabaseClient);
           state.isOnlineSupabase = true;
           const statusEl = document.getElementById('header-db-status');
           if (statusEl) statusEl.textContent = 'Online';
@@ -31289,6 +31333,53 @@ function openAchForm() {
     }
     window.syncMasterOperatorsManual = syncMasterOperatorsManual;
 
+    // [Audit] Akun Pengguna punya TTL TERPISAH. Sebelumnya users hanya ikut tersinkron jika cache Kontak
+    // (24 jam) sudah kedaluwarsa, sehingga akun yang diisi langsung di Supabase tidak muncul di web.
+    const MASTER_USERS_TTL_MS = 15 * 60 * 1000; // 15 menit (users ~ratusan baris, egress kecil)
+    async function refreshMasterUsersFromSupabase(force = false, minIntervalMs = MASTER_USERS_TTL_MS) {
+      if (!state.supabaseClient) return false;
+      const lastTs = Number(safeStorage.getItem('SE_MASTER_USERS_TS') || 0);
+      const hasUsers = Array.isArray(state.masterUsers) && state.masterUsers.length > 0;
+      if (!force && hasUsers && (Date.now() - lastTs) < minIntervalMs) return false;
+      if (window._usersRefreshInFlight) return window._usersRefreshInFlight; // cegah request dobel
+
+      window._usersRefreshInFlight = (async () => {
+        try {
+          const supaUsers = await fetchEntireSupabaseTable('users', SUPABASE_USER_COLS, 'nrp');
+          if (!Array.isArray(supaUsers)) return false;
+          if (supaUsers.length === 0) {
+            state.masterUsers = [];
+            safeStorage.setItem('SE_MASTER_USERS', '[]');
+          } else {
+            state.masterUsers = supaUsers.map(su => ({
+              id: su.id,
+              nrp: su.nrp,
+              nama: su.nama,
+              role: su.role,
+              jabatan: su.jabatan || 'Staff Operasional',
+              password: su.password,
+              noWa: su.no_wa || '',
+              statusAktif: (su.status_aktif !== false)
+            }));
+            safeStorage.setItem('SE_MASTER_USERS', JSON.stringify(state.masterUsers));
+          }
+          safeStorage.setItem('SE_MASTER_USERS_TS', String(Date.now()));
+          if (state.masterActiveSection === 'accounts' && typeof renderMasterAccountsTable === 'function') {
+            renderMasterAccountsTable();
+          }
+          console.log('[Supabase Sync] Users tersinkronisasi lengkap:', state.masterUsers.length, 'pengguna');
+          return true;
+        } catch (e) {
+          console.warn('[refreshMasterUsersFromSupabase Error]', e);
+          return false;
+        } finally {
+          window._usersRefreshInFlight = null;
+        }
+      })();
+      return window._usersRefreshInFlight;
+    }
+    window.refreshMasterUsersFromSupabase = refreshMasterUsersFromSupabase;
+
     async function syncSupabaseMasterData(force = false) {
       if (!state.supabaseClient) return;
 
@@ -31361,7 +31452,10 @@ function openAchForm() {
         }
       }
 
-      // Master Data TTL Cache (12 Jam) khusus untuk Kontak & Users (ribuan baris)
+      // E. Akun Pengguna: TTL terpisah (15 menit), dijalankan SEBELUM cek TTL Kontak agar tidak ikut tertahan
+      try { await refreshMasterUsersFromSupabase(force); } catch (usrErr) { console.warn('[Users Sync Warning]', usrErr); }
+
+      // Master Data TTL Cache (24 Jam) khusus untuk Kontak (ribuan baris)
       const savedMasterTs = Number(safeStorage.getItem('SE_MASTER_DATA_TS') || 0);
       const isMasterFresh = (Date.now() - savedMasterTs) < MASTER_DATA_TTL_MS;
       if (!force && isMasterFresh && Array.isArray(state.masterOperators) && state.masterOperators.length > 0) {
@@ -31379,7 +31473,7 @@ function openAchForm() {
         }
 
         // E. Sinkronisasi Akun Pengguna (Users - Seluruh data tanpa batas 1.000)
-        const supaUsers = await fetchEntireSupabaseTable('users', SUPABASE_USER_COLS, 'nrp');
+        const supaUsers = null; // [Audit] users kini disinkronkan oleh refreshMasterUsersFromSupabase() di atas
         if (Array.isArray(supaUsers)) {
           if (supaUsers.length === 0) {
             state.masterUsers = [];
@@ -32660,7 +32754,12 @@ function openAchForm() {
     async function loadJobHistoryFromSupabase(silent = false) {
       if (!state.supabaseClient) return;
       try {
-        const { data, error } = await state.supabaseClient.from('job_history').select('*').order('created_at', { ascending: false }).limit(1000);
+        // [Audit Egress] snapshot_data tidak pernah dibaca UI -> tidak ikut ditarik. Fallback ke '*' bila kolom tak cocok.
+        const HISTORY_LIST_COLS = 'id,job_id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,status_final,keterangan,non_ach_category,non_ach_reason,created_at';
+        let { data, error } = await state.supabaseClient.from('job_history').select(HISTORY_LIST_COLS).order('created_at', { ascending: false }).limit(1000);
+        if (error && (error.code === '42703' || error.code === 'PGRST204' || /column/i.test(error.message || ''))) {
+          ({ data, error } = await state.supabaseClient.from('job_history').select('*').order('created_at', { ascending: false }).limit(1000));
+        }
         if (!error && Array.isArray(data)) {
           // Supabase adalah sumber kebenaran tunggal (Single Source of Truth).
           // Jika tabel di cloud kosong (pengguna menghapus riwayat di Supabase), kosongkan juga cache lokal anti zombie cache.
