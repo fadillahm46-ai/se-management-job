@@ -2948,10 +2948,8 @@
                   <label class="block text-slate-700 mb-1.5">Keadaan Unit</label>
                   <select id="order-keadaan-unit"
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-800 focus:outline-none focus:border-brand-500 bg-white">
-                    <option value="ADD">ADD</option>
-                    <option value="SERVICE">SERVICE</option>
-                    <option value="BREAKDOWN">BREAKDOWN</option>
-                    <option value="ACCIDENT">ACCIDENT</option>
+                    <option value="BREAKDOWN">Breakdown</option>
+                    <option value="SERVICE">Service / Maintenance</option>
                   </select>
                 </div>
               </div>
@@ -4802,12 +4800,12 @@
                       <span class="md:hidden">NO UNIT</span>
                       <span class="hidden md:inline">NO &amp; TYPE UNIT</span>
                     </th>
-                    <th class="py-2.5 px-2 text-center w-24 md:w-28 border-r border-white/10">CLEAN KE 1</th>
-                    <th class="py-2.5 px-2 text-center w-24 md:w-28 border-r border-white/10">CLEAN KE 2</th>
-                    <th class="py-2.5 px-2 text-center w-24 md:w-28 border-r border-white/10">CLEAN KE 3</th>
-                    <th class="py-2.5 px-2 text-center w-24 md:w-28 border-r border-white/10">CLEAN KE 4</th>
-                    <th class="py-2.5 px-2 text-center w-24 md:w-28 border-r border-white/10">CLEAN KE 5</th>
-                    <th class="py-2.5 px-2 text-center w-24 md:w-28 border-r border-white/10">CLEAN KE 6</th>
+                    <th class="py-2.5 px-2 text-center w-24 md:w-28 border-r border-white/10">KE 1</th>
+                    <th class="py-2.5 px-2 text-center w-24 md:w-28 border-r border-white/10">KE 2</th>
+                    <th class="py-2.5 px-2 text-center w-24 md:w-28 border-r border-white/10">KE 3</th>
+                    <th class="py-2.5 px-2 text-center w-24 md:w-28 border-r border-white/10">KE 4</th>
+                    <th class="py-2.5 px-2 text-center w-24 md:w-28 border-r border-white/10">KE 5</th>
+                    <th class="py-2.5 px-2 text-center w-24 md:w-28 border-r border-white/10">KE 6</th>
                     <th class="py-2.5 px-3 text-center w-32">STATUS</th>
                     <th id="th-aircleaner-action"
                       class="py-2.5 px-3 text-center w-24 md:w-28 border-l border-white/10 hidden">AKSI</th>
@@ -5450,27 +5448,36 @@
             </div>
           </div>
 
-          <!-- Baris Tambahan Khusus Job Request: Pilihan Job & Keadaan Unit -->
-          <div id="ach-job-keadaan-row" class="hidden grid grid-cols-2 gap-3">
+          <!-- Baris Tambahan Khusus Job Request: Keadaan Unit & Pilihan Job -->
+          <div id="ach-job-keadaan-row" class="hidden space-y-2.5">
             <div>
-              <label class="block text-slate-700 mb-1">Pilihan Job <span
+              <label class="block text-slate-800 font-bold text-xs mb-1">Keadaan / Jenis Permintaan <span
+                  class="text-rose-500 font-bold">*</span></label>
+              <select id="ach-unit-keadaan" onchange="handleAchKeadaanChange(this.value)"
+                class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-brand-500 shadow-2xs">
+                <option value="">-- Pilih Keadaan Unit --</option>
+                <option value="BREAKDOWN">Breakdown</option>
+                <option value="SERVICE">Service / Maintenance</option>
+              </select>
+            </div>
+            <!-- Sub-Pilihan Job Khusus Breakdown -->
+            <div id="ach-subjob-box" class="hidden p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <label class="block text-slate-700 text-[11px] font-bold">Pilihan Pekerjaan Breakdown <span
                   class="text-rose-500 font-bold">*</span></label>
               <select id="ach-job-type"
                 class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-brand-500 shadow-2xs">
-                <!-- Diisi dinamis sesuai tim Oilman atau Washing -->
+                <option value="">-- Pilih Pekerjaan Breakdown --</option>
+                <option value="Greasing">Greasing</option>
+                <option value="Clean Air Cleaner">Air Cleaner</option>
+                <option value="Top Up Oil">Top Up Oil</option>
               </select>
             </div>
-            <div>
-              <label class="block text-slate-700 mb-1">Keadaan Unit <span
-                  class="text-rose-500 font-bold">*</span></label>
-              <select id="ach-unit-keadaan"
-                class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-brand-500 shadow-2xs">
-                <option value="">-- Pilih Keadaan --</option>
-                <option value="ADD">ADD</option>
-                <option value="SERVICE">SERVICE</option>
-                <option value="BREAKDOWN">BREAKDOWN</option>
-                <option value="ACCIDENT">ACCIDENT</option>
-              </select>
+            <!-- Informasi jika memilih Service / Maintenance -->
+            <div id="ach-service-info-box" class="hidden p-2.5 rounded-xl bg-blue-50/80 border border-blue-200 text-blue-900 text-[11px] font-medium flex items-center space-x-2">
+              <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span><b>Service / Maintenance:</b> Otomatis mencakup <u>Greasing</u>, <u>Air Cleaner</u>, dan <u>Top Up Oil</u>.</span>
             </div>
           </div>
 
@@ -6944,7 +6951,7 @@
 
         <!-- Keterangan Teknis / Part Number -->
         <div>
-          <label class="block text-slate-700 font-bold text-[11px] mb-1">Keterangan / Part Number Filter</label>
+          <label class="block text-slate-700 font-bold text-[11px] mb-1">Keterangan Alasan Kenapa Diganti *</label>
           <textarea id="replace-ac-notes" rows="2"
             placeholder="Contoh: Pergantian filter saringan udara inner &amp; outer baru, part number P780621..."
             class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-medium text-slate-900 focus:outline-none focus:border-teal-500 resize-none"></textarea>
@@ -7056,6 +7063,12 @@
           <span
             class="font-bold font-mono text-emerald-800 text-xs px-2.5 py-1 bg-white rounded-lg border border-emerald-200/60 shadow-2xs"
             id="ac-detail-date">-</span>
+        </div>
+
+        <!-- Type Job (SCH / Breakdown / Service) -->
+        <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+          <span class="text-slate-500 font-semibold text-[11px]">Type Job:</span>
+          <span class="font-bold text-xs px-2.5 py-1 bg-white rounded-lg border border-slate-200/80 shadow-2xs text-slate-800" id="ac-detail-job-type">-</span>
         </div>
 
         <!-- Keterangan yang diisi oleh Oilman -->
@@ -25447,7 +25460,36 @@ Oilman 1 & 2 : ${oilman}`;
       }
     }
 
-    function openAchForm() {
+    
+    /**
+     * Handler Pilihan Keadaan Unit Lapangan (Job Request MP):
+     * 1. BREAKDOWN -> Tampilkan sub-pilihan: Greasing, Air Cleaner, Top Up Oil
+     * 2. SERVICE   -> Sembunyikan sub-pilihan karena Service otomatis mencakup ketiganya
+     */
+    function handleAchKeadaanChange(val) {
+      const subjobBox = document.getElementById('ach-subjob-box');
+      const serviceInfo = document.getElementById('ach-service-info-box');
+      const jobTypeSelect = document.getElementById('ach-job-type');
+
+      if (val === 'BREAKDOWN') {
+        if (subjobBox) subjobBox.classList.remove('hidden');
+        if (serviceInfo) serviceInfo.classList.add('hidden');
+        if (jobTypeSelect && jobTypeSelect.value === 'Service / Maintenance') {
+          jobTypeSelect.value = '';
+        }
+      } else if (val === 'SERVICE') {
+        if (subjobBox) subjobBox.classList.add('hidden');
+        if (serviceInfo) serviceInfo.classList.remove('hidden');
+        if (jobTypeSelect) {
+          jobTypeSelect.value = 'Service / Maintenance';
+        }
+      } else {
+        if (subjobBox) subjobBox.classList.add('hidden');
+        if (serviceInfo) serviceInfo.classList.add('hidden');
+      }
+    }
+    window.handleAchKeadaanChange = handleAchKeadaanChange;
+function openAchForm() {
       toggleModal('modal-action-decision', false);
       const job = findJobById(state.currentActionJobId);
       if (!job) return;
@@ -25521,8 +25563,13 @@ Oilman 1 & 2 : ${oilman}`;
         if (hmStopInput) hmStopInput.value = job.hmStop || job.hmStart || '';
         if (hmReadyInput) hmReadyInput.value = job.hmReady || job.hmEnd || '';
 
+        if (keadaanSelect) {
+          const initKondisi = String(job.kondisi || '').toUpperCase();
+          const defaultKeadaan = (initKondisi.includes('SERVICE')) ? 'SERVICE' : 'BREAKDOWN';
+          keadaanSelect.value = defaultKeadaan;
+        }
+
         if (jobTypeSelect) {
-          jobTypeSelect.innerHTML = '';
           if (isWashing) {
             jobTypeSelect.innerHTML = `
               <option value="">-- Pilih Job --</option>
@@ -25531,17 +25578,21 @@ Oilman 1 & 2 : ${oilman}`;
             `;
           } else {
             jobTypeSelect.innerHTML = `
-              <option value="">-- Pilih Job --</option>
+              <option value="">-- Pilih Pekerjaan Breakdown --</option>
               <option value="Greasing">Greasing</option>
-              <option value="Clean Air Cleaner">Clean Air Cleaner</option>
+              <option value="Clean Air Cleaner">Air Cleaner</option>
               <option value="Top Up Oil">Top Up Oil</option>
             `;
+            const reqJob = String(job.requestedJob || '').toLowerCase();
+            if (reqJob.includes('air')) jobTypeSelect.value = 'Clean Air Cleaner';
+            else if (reqJob.includes('greas')) jobTypeSelect.value = 'Greasing';
+            else if (reqJob.includes('oil') || reqJob.includes('top')) jobTypeSelect.value = 'Top Up Oil';
+            else jobTypeSelect.value = '';
           }
-          jobTypeSelect.value = '';
         }
 
-        if (keadaanSelect) {
-          keadaanSelect.value = (job.kondisi || 'ADD').toUpperCase();
+        if (typeof handleAchKeadaanChange === 'function' && keadaanSelect) {
+          handleAchKeadaanChange(keadaanSelect.value);
         }
       } else {
         if (photoContainer) photoContainer.classList.remove('hidden');
@@ -25799,15 +25850,20 @@ Oilman 1 & 2 : ${oilman}`;
           showToast('Jam start dan jam selesai wajib diisi!', 'warning');
           return;
         }
-        const selectedJobType = document.getElementById('ach-job-type')?.value;
         const selectedKeadaan = document.getElementById('ach-unit-keadaan')?.value;
-        if (!selectedJobType) {
-          showToast('Silakan pilih Pilihan Job (*)!', 'warning');
+        if (!selectedKeadaan) {
+          showToast('Silakan pilih Keadaan Unit (Breakdown atau Service / Maintenance)!', 'warning');
           return;
         }
-        if (!selectedKeadaan) {
-          showToast('Silakan pilih Keadaan Unit (*)!', 'warning');
-          return;
+
+        let selectedJobType = document.getElementById('ach-job-type')?.value;
+        if (selectedKeadaan === 'SERVICE') {
+          selectedJobType = 'Service / Maintenance';
+        } else if (selectedKeadaan === 'BREAKDOWN') {
+          if (!selectedJobType) {
+            showToast('Untuk Breakdown, silakan pilih Pekerjaan: Greasing, Air Cleaner, atau Top Up Oil!', 'warning');
+            return;
+          }
         }
 
         job.hmStop = document.getElementById('ach-hm-stop')?.value || '';
@@ -26245,8 +26301,15 @@ Oilman 1 & 2 : ${oilman}`;
       const picNrp = (document.getElementById('replace-ac-nrp')?.value || '').trim() || (state.currentUser?.nrp || 'track');
       const notes = (document.getElementById('replace-ac-notes')?.value || '').trim();
 
+      if (!notes) {
+        if (typeof showToast === 'function') showToast('Keterangan alasan kenapa diganti wajib diisi!', 'warning');
+        const notesEl = document.getElementById('replace-ac-notes');
+        if (notesEl) notesEl.focus();
+        return;
+      }
+
       if (!currentReplaceAcPhotoBase64) {
-        if (typeof showToast === 'function') showToast('Foto evidence pergantian air cleaner wajib diunggah!', 'warning');
+        if (typeof showToast === 'function') showToast('Foto evidence pergantian air cleaner wajib diunggah (1 foto)!', 'warning');
         return;
       }
 
@@ -26511,7 +26574,47 @@ Oilman 1 & 2 : ${oilman}`;
       const notesEl = document.getElementById('ac-detail-notes');
       const oilmanEl = document.getElementById('ac-detail-oilman');
 
-      if (titleEl) titleEl.textContent = `Clean Ke ${cleanIdx + 1}`;
+      // Deteksi Type Job (Schedule / Breakdown Request / Service)
+      let jobTypeLabel = 'Schedule (SCH)';
+      let jobTypeBadgeClass = 'bg-teal-50 text-teal-800 border-teal-200';
+
+      const targetJob = (sortedMatched && sortedMatched.length > 0) ? sortedMatched[0] : null;
+      if (targetJob) {
+        const s = String(targetJob.status || targetJob.status_final || '').toLowerCase();
+        const cond = String(targetJob.kondisi || targetJob.keadaan_unit || targetJob.unitCondition || '').toLowerCase();
+        const reqStr = String(targetJob.requestedJob || '').toLowerCase();
+        const descStr = String(targetJob.deskripsi || '').toLowerCase();
+        const ketStr = String(targetJob.keterangan || '').toLowerCase();
+
+        const isService = (s === 'service' || cond === 'service' || cond.includes('service') || reqStr.includes('service') || descStr.includes('service') || ketStr.includes('service'));
+        const isAcCat = (targetJob.cat === 'aircleaner' || targetJob.cat === 'air_cleaner');
+        const isBd = (cond === 'breakdown' || targetJob.kondisi === 'BREAKDOWN');
+
+        if (isService) {
+          jobTypeLabel = 'Service / Maintenance';
+          jobTypeBadgeClass = 'bg-purple-50 text-purple-800 border-purple-200';
+        } else if (isBd || (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(targetJob))) {
+          jobTypeLabel = 'Request Breakdown (Air Cleaner)';
+          jobTypeBadgeClass = 'bg-amber-50 text-amber-800 border-amber-200';
+        } else if (isAcCat) {
+          jobTypeLabel = 'Schedule (SCH)';
+          jobTypeBadgeClass = 'bg-teal-50 text-teal-800 border-teal-200';
+        }
+      } else {
+        const rawStr = String(rawClean || '').toUpperCase();
+        if (rawStr.includes('SERVICE') || rawStr.includes('PS')) {
+          jobTypeLabel = 'Service / Maintenance';
+          jobTypeBadgeClass = 'bg-purple-50 text-purple-800 border-purple-200';
+        }
+      }
+
+      const jobTypeEl = document.getElementById('ac-detail-job-type');
+      if (jobTypeEl) {
+        jobTypeEl.textContent = jobTypeLabel;
+        jobTypeEl.className = `font-bold text-xs px-2.5 py-1 rounded-lg border shadow-2xs ${jobTypeBadgeClass}`;
+      }
+
+      if (titleEl) titleEl.textContent = `Ke ${cleanIdx + 1}`;
       if (subtitleEl) subtitleEl.textContent = `No Unit: ${noLambung} (${item.unitModel || item.model || item.type || 'Unit'})`;
       if (dateEl) dateEl.textContent = actionDate || '-';
       if (notesEl) notesEl.textContent = oilmanNotes;
@@ -26566,15 +26669,13 @@ Oilman 1 & 2 : ${oilman}`;
       if (!cVal || cVal === '-' || (typeof cVal === 'string' && cVal.trim() === '')) {
         return `<span class="text-slate-300 font-bold">-</span>`;
       }
-      const isAdmin = (state.currentUser?.role === 'admin');
-      const innerContent = isAdmin
-        ? `<span class="font-black text-xs font-mono">${colIdx + 1}</span>`
-        : `<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>`;
+      // Terapkan centang untuk semua akses/role
+      const innerContent = `<svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>`;
 
       return `
         <button type="button" onclick="showAirCleanerActionDetail('${item.noLambung}', ${colIdx})"
           class="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-2xs hover:scale-110 active:scale-95 transition-all cursor-pointer mx-auto font-black text-xs font-mono"
-          title="Clean Ke ${colIdx + 1} - Klik untuk melihat tanggal action & keterangan oilman">
+          title="Ke ${colIdx + 1} - Klik untuk melihat detail pengerjaan (tanggal, type job, MP, foto)">
           ${innerContent}
         </button>
       `;
@@ -26725,7 +26826,7 @@ Oilman 1 & 2 : ${oilman}`;
               <svg class="w-3.5 h-3.5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
               </svg>
-              <span>Replace</span>
+              <span>Replace / Ganti</span>
             </button>
           </td>` : ''}
         `;
