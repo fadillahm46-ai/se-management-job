@@ -5473,11 +5473,14 @@
               </select>
             </div>
             <!-- Informasi jika memilih Service / Maintenance -->
-            <div id="ach-service-info-box" class="hidden p-2.5 rounded-xl bg-blue-50/80 border border-blue-200 text-blue-900 text-[11px] font-medium flex items-center space-x-2">
+            <div id="ach-service-info-box"
+              class="hidden p-2.5 rounded-xl bg-blue-50/80 border border-blue-200 text-blue-900 text-[11px] font-medium flex items-center space-x-2">
               <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
-              <span><b>Service / Maintenance:</b> Otomatis mencakup <u>Greasing</u>, <u>Air Cleaner</u>, dan <u>Top Up Oil</u>.</span>
+              <span><b>Service / Maintenance:</b> Otomatis mencakup <u>Greasing</u>, <u>Air Cleaner</u>, dan <u>Top Up
+                  Oil</u>.</span>
             </div>
           </div>
 
@@ -7068,7 +7071,9 @@
         <!-- Type Job (SCH / Breakdown / Service) -->
         <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
           <span class="text-slate-500 font-semibold text-[11px]">Type Job:</span>
-          <span class="font-bold text-xs px-2.5 py-1 bg-white rounded-lg border border-slate-200/80 shadow-2xs text-slate-800" id="ac-detail-job-type">-</span>
+          <span
+            class="font-bold text-xs px-2.5 py-1 bg-white rounded-lg border border-slate-200/80 shadow-2xs text-slate-800"
+            id="ac-detail-job-type">-</span>
         </div>
 
         <!-- Keterangan yang diisi oleh Oilman -->
@@ -25479,7 +25484,7 @@ Oilman 1 & 2 : ${oilman}`;
       }
     }
 
-    
+
     /**
      * Handler Pilihan Keadaan Unit Lapangan (Job Request MP):
      * 1. BREAKDOWN -> Tampilkan sub-pilihan: Greasing, Air Cleaner, Top Up Oil
@@ -25508,7 +25513,7 @@ Oilman 1 & 2 : ${oilman}`;
       }
     }
     window.handleAchKeadaanChange = handleAchKeadaanChange;
-function openAchForm() {
+    function openAchForm() {
       toggleModal('modal-action-decision', false);
       const job = findJobById(state.currentActionJobId);
       if (!job) return;
