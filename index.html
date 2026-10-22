@@ -8975,7 +8975,7 @@
     const SUPABASE_ARMADA_COLS = 'id,unit,type_unit,cluster,status,keterangan';
     const SUPABASE_USER_COLS = 'id,nrp,nama,password,role,jabatan,status_aktif';
     const SUPABASE_UNIT_COLS = 'id,no_lambung,type_model,kategori,cluster,lokasi,status,status_aktif';
-    const SUPABASE_ROSTER_COLS = 'id,nrp,nama,tanggal,shift,jenis,unit,unit_efektif,kode_shift,periode';
+    const SUPABASE_ROSTER_COLS = 'id,nrp,nama,tanggal,shift,jenis,unit,unit_efektif,kode_shift,periode,is_spare';
     const SUPABASE_AC_COLS = 'id,no_lambung,type_model,cleans,service_code,status,last_cleaned_date,updated_at';
 
     // Safe storage fallback if localStorage is sandboxed in iframe
@@ -12223,7 +12223,7 @@
       }
       else if (sectionKey === 'roster' && state.masterSubtab === 'database') {
         renderDatabaseRosterTable();
-        if ((!state.masterRoster || state.masterRoster.length === 0) && state.supabaseClient) {
+        if ((!state._isRosterFullyLoaded || !state.masterRoster || state.masterRoster.length === 0) && state.supabaseClient) {
           loadRosterFromSupabase(null, true);
         }
       }
@@ -13478,15 +13478,15 @@
     }
 
     function getJobCategoryRule(job) {
-      const cat = (job.cat || '').toLowerCase();
+      const cat = (job.cat || '').toLowerCase().trim();
       if (cat === 'small') return 'GREASING_SMALL';
       if (cat === 'digger') return 'BIG_DIGGER';
-      if (cat === 'aircleaner') {
+      if (cat === 'aircleaner' || cat === 'air_cleaner') {
         return isUnitCoal(job.noLambung, job) ? 'AIR_CLEANER_COAL' : 'AIR_CLEANER_NON_COAL';
       }
-      if (cat === 'topup') return 'TOP_UP_OIL';
+      if (cat === 'topup' || cat === 'top up oil' || cat === 'topup_oil') return 'TOP_UP_OIL';
       if (cat === 'coal' || cat === 'rom') return 'WASHING_COAL_ROM';
-      if (cat === 'non_coal') return 'WASHING_NON_COAL';
+      if (cat === 'non_coal' || cat === 'noncoal') return 'WASHING_NON_COAL';
       return 'GENERAL';
     }
 
@@ -13771,21 +13771,28 @@
     }
     window.getScheduleCategoryKey = getScheduleCategoryKey;
     function generateMonthlySchedule(baseJob, targetMonthStr, masterUnits = []) {
-      const targetMonth = targetMonthStr || (baseJob.tanggal ? baseJob.tanggal.slice(0, 7) : getEffectiveTodayString().slice(0, 7));
+      const todayStr = getEffectiveTodayString();
+      const currentMonthKey = todayStr.slice(0, 7);
+      const targetMonth = targetMonthStr || (baseJob.tanggal ? baseJob.tanggal.slice(0, 7) : currentMonthKey);
       const [yearStr, monthStr] = targetMonth.split('-');
       const year = parseInt(yearStr, 10);
       const month = parseInt(monthStr, 10);
       const daysInMonth = new Date(year, month, 0).getDate();
 
       const rule = getJobCategoryRule(baseJob);
-      const baseDate = baseJob.tanggal || `${yearStr}-${monthStr}-01`;
+      const baseDate = baseJob.tanggal || todayStr;
       const baseDayOfWeek = parseDateString(baseDate).getDay(); // 0 = Sun
       const baseDayNum = parseDateString(baseDate).getDate();
+      const todayDayNum = parseDateString(todayStr).getDate();
 
       const generatedJobs = [];
-      // Sesuai instruksi: autogenerate 1 bulan dimulai dari tanggal penambahan unit (baseDayNum)
-      // sampai dengan akhir bulan (daysInMonth), bukan dari tanggal 1
-      const startDay = Math.max(1, Math.min(daysInMonth, baseDayNum || 1));
+      // Sesuai aturan baru: autogenerate 1 bulan dihitung per hari ini (today), bukan dari tanggal 1.
+      // Jika bulan target adalah bulan berjalan, mulai minimal dari hari ini (todayDayNum) atau baseDayNum.
+      let startDay = baseDayNum || todayDayNum || 1;
+      if (targetMonth === currentMonthKey) {
+        startDay = Math.max(startDay, todayDayNum);
+      }
+      startDay = Math.max(1, Math.min(daysInMonth, startDay));
 
       for (let day = startDay; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -13842,8 +13849,8 @@
 
           case 'WASHING_COAL_ROM':
           case 'WASHING_NON_COAL': {
-            // Sesuai Foto 1 & Permintaan: Jika disetting 1 bulan full, duplikat ke seluruh hari dalam sebulan
-            shouldInclude = (dayOfWeek === baseDayOfWeek || true);
+            // Duplikat ke seluruh hari dalam sebulan mulai dari hari ini hingga akhir bulan
+            shouldInclude = true;
             break;
           }
 
@@ -17915,7 +17922,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         state.supabaseClient
           .from('master_roster')
           .select(SUPABASE_ROSTER_COLS)
-          .or('nrp.eq.' + uNrp + ',nik.eq.' + uNrp)
+          .eq('nrp', uNrp)
           .then(({ data, error }) => {
             state._isFetchingUserRoster = false;
             if (!error && Array.isArray(data) && data.length > 0) {
@@ -21149,10 +21156,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         console.warn('[Supabase Roster] Client belum siap');
         return false;
       }
-      // Master Data TTL Cache (12 Jam)
+      // Master Data TTL Cache (12 Jam): HANYA gunakan cache jika memori memiliki data LENGKAP dan masih segar
       const savedRosterTs = Number(safeStorage.getItem('SE_MASTER_ROSTER_TS') || 0);
       const isRosterFresh = (Date.now() - savedRosterTs) < MASTER_DATA_TTL_MS;
-      if (!force && !periodFilter && (isRosterFresh || (Array.isArray(state.masterRoster) && state.masterRoster.length > 0))) {
+      const hasFullCachedData = state._isRosterFullyLoaded && Array.isArray(state.masterRoster) && state.masterRoster.length > 0;
+      if (!force && !periodFilter && isRosterFresh && hasFullCachedData) {
         console.log('[Supabase Cache TTL] Master Roster fresh dari cache lokal (TTL 12 Jam):', state.masterRoster.length, 'jadwal');
         return true;
       }
@@ -21218,8 +21226,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             if (Array.isArray(data) && data.length > 0) {
               allRosterData = allRosterData.concat(data);
 
-              // PROGRESSIVE RENDERING: Setiap chunk langsung dipetakan & ditampilkan ke tabel
-              const partialMapped = allRosterData.map((r, idx) => {
+              // PROGRESSIVE RENDERING: Setiap chunk 1.000 data langsung dipetakan & ditampilkan ke tabel
+              const chunkMapped = data.map((r, idx) => {
                 const opInfo = opMap[String(r.nrp).trim()] || {};
                 const baseUnit = r.unit || opInfo.unit || '-';
                 let unitEfektif = r.unit_efektif || baseUnit;
@@ -21237,10 +21245,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                 const armMatch = (state.masterArmada || []).find(a => (a.unit || '').toUpperCase() === (unitEfektif || baseUnit).toUpperCase());
                 const resolvedCluster = armMatch?.cluster || opInfo.cluster || 'Selatan';
                 return {
-                  id: r.id || ('ROSTER-' + idx),
+                  id: r.id || ('ROSTER-' + (fromOffset + idx)),
                   jenis: r.jenis || r.tipe_karyawan || 'OPT',
                   nrp: r.nrp,
-                  nik: r.nik || r.nrp,
+                  nik: r.nrp,
                   nama: r.nama || opInfo.nama || '-',
                   unit: baseUnit,
                   unitEfektif: unitEfektif,
@@ -21253,11 +21261,16 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                 };
               });
 
-              state.masterRoster = partialMapped;
-              if (state.masterActiveSection === 'roster' && state.masterSubtab === 'database') {
+              if (iteration === 1) {
+                state.masterRoster = chunkMapped;
+              } else {
+                state.masterRoster = state.masterRoster.concat(chunkMapped);
+              }
+
+              if (document.getElementById('db-roster-tbody')) {
                 renderDatabaseRosterTable();
                 if (countLabel && exactTotal) {
-                  countLabel.innerHTML = `Memuat data Cloud: <strong class="text-brand-600">${allRosterData.length.toLocaleString('id-ID')}</strong> dari <strong class="text-slate-800">${exactTotal.toLocaleString('id-ID')}</strong> data...`;
+                  countLabel.innerHTML = `Memuat data Cloud: <strong class="text-brand-600">${state.masterRoster.length.toLocaleString('id-ID')}</strong> dari <strong class="text-slate-800">${exactTotal.toLocaleString('id-ID')}</strong> data...`;
                 }
               }
 
@@ -21273,50 +21286,19 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             }
           }
 
-          if (Array.isArray(allRosterData) && allRosterData.length > 0) {
-            state.masterRoster = allRosterData.map((r, idx) => {
-              const opInfo = opMap[String(r.nrp).trim()] || {};
-              const baseUnit = r.unit || opInfo.unit || '-';
-              let unitEfektif = r.unit_efektif || baseUnit;
-              const shiftCode = String(r.kode_shift || r.shift_code || 'DWS').trim();
-              const matchSpare = shiftCode.match(/^[DN](\d{2,5})$/i);
-              if (matchSpare) {
-                const resolvedUnit = resolveArmadaFromShiftCode(shiftCode, baseUnit, r.jenis || r.tipe_karyawan);
-                if (resolvedUnit && resolvedUnit !== '-') {
-                  unitEfektif = resolvedUnit;
-                }
-              } else if (unitEfektif === 'LT2520') {
-                unitEfektif = 'WT2520';
-              }
-              const shiftNum = r.shift || ((shiftCode.toUpperCase().startsWith('N')) ? 2 : 1);
-              return {
-                id: r.id || ('ROSTER-' + idx),
-                jenis: r.jenis || r.tipe_karyawan || 'OPT',
-                nrp: r.nrp,
-                nik: r.nik || r.nrp,
-                nama: r.nama || opInfo.nama || '-',
-                unit: baseUnit,
-                unitEfektif: unitEfektif,
-                cluster: opInfo.cluster || 'Selatan',
-                periode: r.periode,
-                tanggal: r.tanggal,
-                shift: shiftNum,
-                kodeShift: shiftCode,
-                isSpare: r.is_spare !== undefined ? Boolean(r.is_spare) : !!matchSpare
-              };
-            });
-
-            // Simpan cache lokal aman dari QuotaExceededError
+          if (Array.isArray(state.masterRoster) && state.masterRoster.length > 0) {
+            // Simpan cache lokal aman dari QuotaExceededError (RAM simpan 100% lengkap, localStorage simpan 300 baris terbaru)
             try {
-              safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster));
+              safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster.slice(-300)));
               safeStorage.setItem('SE_MASTER_ROSTER_TS', String(Date.now()));
             } catch (e) {
               try {
-                safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster.slice(0, 1000)));
+                safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster.slice(-100)));
                 safeStorage.setItem('SE_MASTER_ROSTER_TS', String(Date.now()));
               } catch (e2) { }
             }
 
+            state._isRosterFullyLoaded = true;
             console.log('[Supabase Roster] Berhasil memuat total ' + state.masterRoster.length + ' data roster dari Supabase (Lengkap Tanpa Batas).');
             renderDatabaseRosterTable();
 
@@ -21325,7 +21307,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
               autoHealRosterSpareUnitsToSupabase();
             }
             if (force) {
-              showToast('Sinkron berhasil', 'success');
+              showToast('Sinkron data roster berhasil (' + state.masterRoster.length + ' personil)', 'success');
             }
             return true;
           } else if (allRosterData.length === 0) {
@@ -21405,7 +21387,6 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             id: safeId,
             jenis: jenisClean,
             nrp: nrpClean,
-            nik: nrpClean,
             nama: String(r.nama || '').trim(),
             unit: String(r.unit || '-').trim(),
             unit_efektif: String(r.unitEfektif || r.unit || '-').trim(),
@@ -21417,8 +21398,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           };
         });
 
-        // Simpan dalam batch 100 per request
-        const BATCH_SIZE = 100;
+        // Simpan dalam batch 200 per request (cepat dan aman)
+        const BATCH_SIZE = 200;
         let savedCount = 0;
         for (let i = 0; i < allRows.length; i += BATCH_SIZE) {
           let batch = allRows.slice(i, i + BATCH_SIZE);
@@ -21473,7 +21454,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           id: r.id,
           jenis: r.jenis,
           nrp: r.nrp,
-          nik: r.nik,
+          nik: r.nrp,
           nama: r.nama,
           unit: r.unit,
           unitEfektif: r.unit_efektif,
@@ -21489,22 +21470,22 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           state.masterRoster = (state.masterRoster || []).filter(r => !(r.periode === periodVal && uploadJenisSet.includes(r.jenis)));
         }
         state.masterRoster = (state.masterRoster || []).concat(uploadedRosterItems);
-        safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster));
-
-        // 5. Muat verifikasi data segar langsung dari Supabase ke memori
         try {
-          await loadRosterFromSupabase(null, true);
-        } catch (loadErr) {
-          console.warn('[Sync After Upload Warning]', loadErr);
-        }
+          safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster.slice(-300)));
+          safeStorage.setItem('SE_MASTER_ROSTER_TS', String(Date.now()));
+        } catch (e) { }
+
+        // 5. Langsung beralih ke subtab Database Roster Aktif & render UI seketika
+        switchMasterSubtab('database');
+        renderDatabaseRosterTable();
 
         const roleNames = { 'OPT': 'Operator', 'OM': 'Oilman', 'WM': 'Washingman' };
         const uploadedLabels = uploadJenisSet.map(j => roleNames[j] || j).join(' & ');
         const totalRosterCount = (state.masterRoster || []).length;
+        showToast(`Sukses! ${savedCount} data Roster ${uploadedLabels} berhasil disimpan & ditampilkan! (Total database: ${totalRosterCount} personil)`, 'success');
 
-        showToast(`Sukses! ${savedCount} data Roster ${uploadedLabels} berhasil disimpan & digabungkan! (Total database: ${totalRosterCount} personil)`, 'success');
-        switchMasterSubtab('database');
-        renderDatabaseRosterTable();
+        // 6. Muat verifikasi data segar lengkap dari Cloud Supabase di background
+        loadRosterFromSupabase(null, true);
       } catch (err) {
         console.error('[Save Roster Error]', err);
         showToast('Gagal menyimpan ke Supabase: ' + err.message, 'error');
@@ -22646,11 +22627,14 @@ Oilman 1 & 2 : ${teamMps}`;
       if (subtitleEl) subtitleEl.textContent = `Shift ${shift}   ${effectiveCluster ? 'KGU ' + effectiveCluster : 'Semua Cluster'}${isWt ? `   Washing Ke ${washingRound}` : ''}`;
       if (armadaLabelEl) armadaLabelEl.textContent = isWt ? 'No WT Bertugas' : 'No LT Bertugas';
 
-      // Otomatis inisialisasi tanggal yang ditentukan dari filter toolbar aktif
-      const effectiveDate = (isWt ? state.watertruckState?.filterDate : state.lubetruckState?.filterDate) || getEffectiveTodayString();
+      // Otomatis inisialisasi tanggal yang ditentukan dari filter toolbar aktif (minimal hari ini)
+      const today = getEffectiveTodayString();
+      const activeFilterDate = isWt ? state.watertruckState?.filterDate : state.lubetruckState?.filterDate;
+      const effectiveDate = (activeFilterDate && activeFilterDate >= today) ? activeFilterDate : today;
       const dateInp = document.getElementById('add-job-tanggal');
       if (dateInp) {
         dateInp.value = effectiveDate;
+        dateInp.min = today; // Cegah admin memilih tanggal lampau saat menambah jadwal baru
       }
 
       // Otomatis tentukan kategori sesuai menu tab yang sedang aktif (Foto 3)
@@ -23540,7 +23524,7 @@ Oilman 1 & 2 : ${teamMps}`;
       const typeUnit = document.getElementById('add-job-type')?.value || getUnitTypeFromMaster(noLambung, 'Unit');
       const washingRound = parseInt(document.getElementById('add-job-washing-round')?.value || '1', 10);
       const isAdmin = (state.currentUser?.role === 'admin');
-      const isTopUp = (cat === 'topup' || cat === 'top up oil');
+      const isTopUp = (cat === 'topup' || cat === 'top up oil' || cat === 'topup_oil');
       const shouldGenerateMonth = isAdmin && !isTopUp && (document.getElementById('add-job-generate-month')?.checked !== false);
       const selectedPattern = document.getElementById('add-job-pattern')?.value || 'AUTO';
 
@@ -23550,7 +23534,10 @@ Oilman 1 & 2 : ${teamMps}`;
       }
 
       const isWt = (targetType === 'WT');
-      const targetDate = document.getElementById('add-job-tanggal')?.value || (isWt ? state.watertruckState.filterDate : state.lubetruckState.filterDate) || getEffectiveTodayString();
+      const today = getEffectiveTodayString();
+      const rawTargetDate = document.getElementById('add-job-tanggal')?.value;
+      const activeFilterDate = isWt ? state.watertruckState?.filterDate : state.lubetruckState?.filterDate;
+      const targetDate = rawTargetDate || (activeFilterDate && activeFilterDate >= today ? activeFilterDate : today);
 
       // Siklus Big Digger otomatis terhitung jika masih default AUTO
       let finalPattern = selectedPattern;
@@ -23637,8 +23624,8 @@ Oilman 1 & 2 : ${teamMps}`;
               if (existingJob && typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(existingJob)) {
                 return; // Lewati dari batch scheduled agar status selesai di Supabase tidak tertimpa
               }
-              const isSchWt = (targetId.startsWith('WT-SCH') || targetId.startsWith('WTJ') || job.targetType === 'WT' || (job.wtUnit && job.wtUnit !== '-') || ['coal', 'rom', 'non_coal'].includes(job.cat));
-              const isSchLt = (targetId.startsWith('LT-SCH') || targetId.startsWith('LTJ') || job.targetType === 'LT' || ['small', 'digger', 'aircleaner', 'topup'].includes(job.cat));
+              const isSchWt = (targetId.startsWith('WT-SCH') || targetId.startsWith('WTJ') || job.targetType === 'WT' || (job.wtUnit && job.wtUnit !== '-') || ['coal', 'rom', 'non_coal', 'noncoal'].includes(job.cat));
+              const isSchLt = (targetId.startsWith('LT-SCH') || targetId.startsWith('LTJ') || job.targetType === 'LT' || ['small', 'digger', 'aircleaner', 'air_cleaner', 'topup', 'top up oil', 'topup_oil'].includes(job.cat));
               const isUnschWt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-WT') || ((targetId.startsWith('UNS-') || targetId.startsWith('UNS_') || job.cat === 'unscheduled') && (job.serviceType === 'watertruck' || job.targetType === 'WT')));
               const isUnschLt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-LT') || ((targetId.startsWith('UNS-') || targetId.startsWith('UNS_') || job.cat === 'unscheduled') && (job.serviceType === 'lubetruck' || job.targetType === 'LT')));
               const isWtRow = isSchWt || isUnschWt;
@@ -25313,10 +25300,8 @@ Oilman 1 & 2 : ${teamMps}`;
         }
       });
       if (subtabKey === 'database') {
-        if (typeof renderDatabaseRosterTable === 'function') {
-          renderDatabaseRosterTable();
-        }
-        if ((!state.masterRoster || state.masterRoster.length === 0) && state.supabaseClient) {
+        renderDatabaseRosterTable();
+        if ((!state._isRosterFullyLoaded || !state.masterRoster || state.masterRoster.length === 0) && state.supabaseClient) {
           loadRosterFromSupabase(null, true);
         }
       }
@@ -27684,6 +27669,14 @@ Oilman 1 & 2 : ${teamMps}`;
       const selectAllCheckbox = document.getElementById('roster-select-all');
       if (!tbody) return;
 
+      if ((!state.masterRoster || state.masterRoster.length === 0) && state.supabaseClient && !_rosterLoadPromise) {
+        tbody.innerHTML = `<tr><td colspan="${state.isRosterSelectMode ? 11 : 10}" class="py-12 text-center text-slate-400 italic"><div class="flex flex-col items-center justify-center space-y-3"><svg class="w-8 h-8 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span class="font-medium text-slate-700 text-xs">Memuat data master roster dari Cloud Supabase...</span></div></td></tr>`;
+        const countLabel = document.getElementById('db-roster-count-label');
+        if (countLabel) countLabel.innerHTML = '<span class="text-brand-600 font-bold animate-pulse">Menghubungkan ke Cloud Supabase...</span>';
+        loadRosterFromSupabase(null, true);
+        return;
+      }
+
       const typeFilter = document.getElementById('db-roster-filter-type')?.value || 'ALL';
       const search = (document.getElementById('db-roster-search')?.value || '').toLowerCase().trim();
 
@@ -28082,7 +28075,7 @@ Oilman 1 & 2 : ${teamMps}`;
 
       state.selectedRosterIds.clear();
       toggleModal('modal-confirm-bulk-delete-roster', false);
-      await loadRosterFromSupabase();
+      await loadRosterFromSupabase(null, true);
       showToast(`Berhasil menghapus ${deleteCount} data roster dari database!`, 'success');
     }
 
@@ -30814,6 +30807,56 @@ Oilman 1 & 2 : ${teamMps}`;
       debouncedRefreshUI();
     }
 
+    function handleRealtimeRosterChange(payload) {
+      const event = payload.eventType;
+      const row = payload.new;
+      const oldRow = payload.old;
+
+      if (!Array.isArray(state.masterRoster)) state.masterRoster = [];
+
+      if (event === 'DELETE' && oldRow?.id) {
+        state.masterRoster = state.masterRoster.filter(r => String(r.id) !== String(oldRow.id));
+        try {
+          safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster.slice(-300)));
+          safeStorage.setItem('SE_MASTER_ROSTER_TS', String(Date.now()));
+        } catch (e) { }
+        if (typeof renderDatabaseRosterTable === 'function') renderDatabaseRosterTable();
+        return;
+      }
+
+      if (!row || !row.id) return;
+      const formatted = {
+        id: row.id,
+        jenis: row.jenis || 'OPT',
+        nrp: row.nrp || row.nik || '',
+        nama: row.nama || '',
+        unit: row.unit || '-',
+        unitEfektif: row.unit_efektif || row.unit || '-',
+        cluster: 'Selatan',
+        periode: row.periode || (row.tanggal ? row.tanggal.substring(0, 7) : ''),
+        tanggal: row.tanggal,
+        shift: row.shift,
+        kodeShift: row.kode_shift,
+        isSpare: Boolean(row.is_spare)
+      };
+
+      const idx = state.masterRoster.findIndex(r => String(r.id) === String(row.id));
+      if (idx !== -1) {
+        state.masterRoster[idx] = formatted;
+      } else {
+        state.masterRoster.push(formatted);
+      }
+
+      try {
+        safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster.slice(-300)));
+        safeStorage.setItem('SE_MASTER_ROSTER_TS', String(Date.now()));
+      } catch (e) { }
+
+      if (typeof renderDatabaseRosterTable === 'function') {
+        renderDatabaseRosterTable();
+      }
+    }
+
     function handleRealtimeClusterChange(payload) {
       const row = payload.new;
       if (!row || !row.cluster_name) return;
@@ -31472,6 +31515,7 @@ Oilman 1 & 2 : ${teamMps}`;
         .on('postgres_changes', { event: '*', schema: 'public', table: 'air_cleaner_monitoring' }, handleRealtimeAirCleanerChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_operators' }, handleRealtimeOperatorChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_units' }, handleRealtimeUnitChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'master_roster' }, handleRealtimeRosterChange)
         // Listener Postgres Changes Realtime untuk Mutasi Hapus & Tambah Langsung dari Database Supabase
         .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'order_requests' }, (payload) => {
           const delId = String(payload.old?.id || payload.old?.kode_order || '');
@@ -31686,7 +31730,7 @@ Oilman 1 & 2 : ${teamMps}`;
 
           // Catatan: syncSupabaseMasterData sudah memuat master units secara aman dengan TTL cache 24 jam
 
-          if (!hasMasterRoster) {
+          if (!hasMasterRoster || !state._isRosterFullyLoaded) {
             masterLoadTasks.push(typeof loadRosterFromSupabase === 'function' ? loadRosterFromSupabase(null, false) : Promise.resolve());
           }
 
