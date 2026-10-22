@@ -231,6 +231,66 @@
       color: #1E293B;
       overflow-x: hidden;
       touch-action: manipulation;
+      user-select: text !important;
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+    }
+
+    /* Mengaktifkan pemilihan teks secara global agar pengguna dapat memblok dan menyalin teks di web */
+    *,
+    html,
+    body,
+    main,
+    section,
+    article,
+    table,
+    tbody,
+    tr,
+    td,
+    p,
+    span,
+    div,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    input,
+    textarea,
+    pre,
+    code,
+    b,
+    strong,
+    i,
+    em {
+      user-select: text !important;
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+    }
+
+    /* Hanya tombol kontrol atau icon interaktif tertentu yang tidak perlu terblok saat diklik */
+    button,
+    svg,
+    .mob-nav-btn,
+    #mobile-bottom-nav {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Warna highlight saat teks diblok dengan kursor mouse (Terlihat jelas dan modern) */
+    ::selection {
+      background-color: #93C5FD !important;
+      /* Soft Sky Blue */
+      color: #0F172A !important;
+      /* Deep Slate 900 */
+    }
+
+    ::-moz-selection {
+      background-color: #93C5FD !important;
+      color: #0F172A !important;
     }
 
     /* Custom Scrollbar */
@@ -392,7 +452,7 @@
   </style>
 </head>
 
-<body class="min-h-screen flex flex-col antialiased select-none text-slate-800 bg-[#F1F5F9]">
+<body class="min-h-screen flex flex-col antialiased select-text text-slate-800 bg-[#F1F5F9]">
 
   <!-- ======================================================================== -->
   <!-- SPLASH SCREEN / LOADING PEMANIS (DENGAN ROTASI WALLPAPER & PROGRESS BAR) -->
@@ -7221,9 +7281,20 @@
         </div>
       </div>
 
-      <div class="pt-2 border-t border-slate-100 shrink-0">
+      <div class="pt-2.5 border-t border-slate-100 shrink-0 flex items-center gap-2">
+        <!-- Tombol Hapus Tindakan (Hanya Akses Admin) -->
+        <button type="button" id="btn-delete-ac-entry" onclick="deleteAirCleanerActionEntry()"
+          class="hidden py-2.5 px-3.5 rounded-xl bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-600 hover:text-rose-700 border border-rose-200/90 font-bold text-xs transition shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+          title="Hapus riwayat tindakan ini (Akses Admin)">
+          <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+            </path>
+          </svg>
+          <span>Hapus</span>
+        </button>
         <button type="button" onclick="toggleModal('modal-ac-detail', false)"
-          class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition shadow-xs cursor-pointer">
+          class="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition shadow-xs cursor-pointer text-center">
           Tutup
         </button>
       </div>
@@ -13456,8 +13527,10 @@
       const statusFinal = (normFinalStatus === 'ACH' || normFinalStatus === 'DONE') ? 'ACHIEVED' : ((normFinalStatus === 'NON-ACH' || normFinalStatus === 'NON_ACH') ? 'NON_ACH' : normFinalStatus);
 
       if (!state.jobHistory) state.jobHistory = [];
-      const cleanId = String(job.id);
-      const existingIdx = state.jobHistory.findIndex(h => h.job_id === cleanId);
+      const standardNoId = (typeof getJobNoId === 'function') ? getJobNoId(job) : String(job.id);
+      const cleanId = (standardNoId && standardNoId !== '-') ? standardNoId : String(job.id);
+      job.noId = cleanId;
+      const existingIdx = state.jobHistory.findIndex(h => h.job_id === cleanId || h.job_id === String(job.id));
 
       // Proteksi Anti-Downgrade: Jika job sudah pernah berstatus ACHIEVED / SERVICE / BREAKDOWN,
       // DILARANG KERAS ditimpa menjadi NON_ACH oleh evaluasi otomatis atau sinkronisasi background!
@@ -13473,6 +13546,7 @@
       const snapshotRecord = {
         id: 'HIST-' + cleanId + '-' + Date.now(),
         job_id: cleanId,
+        no_id: cleanId,
         no_lambung: job.noLambung || job.no_lambung || 'UNIT',
         type_unit: job.typeUnit || job.type_unit || 'Unit',
         cat: job.cat || 'small',
@@ -13905,8 +13979,9 @@
             const d = h.tanggal_eksekusi || h.tanggal_rencana || '';
             const u = String(h.no_lambung || '').trim().toUpperCase();
             const c = String(h.cat || '').toLowerCase().trim();
-            // Hanya greasing small yang menggunakan cross-job daily protection:
-            if (d && u && (c === 'small')) {
+            // Hanya greasing small yang 1x sehari (Kecualikan PC300 yang 2x sehari per shift):
+            const isPc300 = (typeof isExca300Unit === 'function') ? isExca300Unit(h) : (/PC\s*300/i.test(String(h.type_unit || h.typeUnit || '')) || /E347/i.test(u));
+            if (d && u && (c === 'small') && !isPc300) {
               achievedUnitDateMap.add(`${d}_${u}_${c}`);
             }
           }
@@ -13923,8 +13998,9 @@
             const d = j.tanggal || todayStr;
             const u = String(j.noLambung).trim().toUpperCase();
             const c = String(j.cat || '').toLowerCase().trim();
-            // Hanya greasing small:
-            if (c === 'small') {
+            // Hanya greasing small (Kecualikan PC300 yang 2x sehari per shift):
+            const isPc300 = (typeof isExca300Unit === 'function') ? isExca300Unit(j) : (/PC\s*300/i.test(String(j.typeUnit || '')) || /E347/i.test(u));
+            if (c === 'small' && !isPc300) {
               achievedUnitDateMap.add(`${d}_${u}_${c}`);
             }
           }
@@ -13985,12 +14061,13 @@
 
           const isWashingJob = (j.cat === 'coal' || j.cat === 'rom' || j.cat === 'non_coal' || j.targetType === 'WT' || String(j.id || '').startsWith('WT'));
           const isGreasingSmallJob = (j.cat === 'small' || (typeof getJobCategoryRule === 'function' && getJobCategoryRule(j) === 'GREASING_SMALL'));
+          const isPc300Unit = (typeof isExca300Unit === 'function') ? isExca300Unit(j) : (/PC\s*300/i.test(String(j.typeUnit || '')) || /E347/i.test(String(j.noLambung || '')));
 
           const jDate = j.tanggal || todayStr;
           const jCat = String(j.cat || '').toLowerCase().trim();
           const currentUnitDateKey = `${jDate}_${String(j.noLambung || '').trim().toUpperCase()}_small`;
-          // isUnitAlreadyAchieved HANYA berlaku untuk greasing small (1x sehari), DILARANG KERAS untuk washing, aircleaner, dan top up:
-          const isUnitAlreadyAchieved = (jCat === 'small') && achievedUnitDateMap.has(currentUnitDateKey);
+          // isUnitAlreadyAchieved HANYA berlaku untuk greasing small 1x sehari (BUKAN PC300 yang 2x sehari, BUKAN washing, aircleaner, topup):
+          const isUnitAlreadyAchieved = (jCat === 'small') && !isPc300Unit && achievedUnitDateMap.has(currentUnitDateKey);
 
           if (
             j.isLocked ||
@@ -14033,7 +14110,9 @@
             case 'GREASING_SMALL': {
               // Perlindungan Mutlak Greasing Small (D85ESS, PC210, dsb):
               // Jika unit sudah selesai/ACH pada tanggal ini, statusnya tetap terkunci ACH!
-              if (isUnitAlreadyAchieved) {
+              // PENTING: DILARANG KERAS untuk PC300 (isPc300Unit) yang beroperasi 2x sehari terpisah per shift,
+              // dan DILARANG KERAS mengubah job yang statusnya sudah non_ach menjadi ach!
+              if (isUnitAlreadyAchieved && !isPc300Unit && s !== 'non_ach' && s !== 'non-ach') {
                 j.isLocked = true;
                 j.isPending = false;
                 if (j.status !== 'ach' && j.status !== 'service' && j.status !== 'bd' && j.status !== 'done') {
@@ -24093,6 +24172,143 @@ Oilman 1 & 2 : ${teamMps}`;
     }
     window.getJobSchBadgeHtml = getJobSchBadgeHtml;
 
+    /**
+     * Mengembalikan tampilan teks Type Job polosan (tanpa kotak background) khusus mode desktop
+     */
+    function getJobSchPlainHtml(j) {
+      const code = getJobTypeCode(j);
+      const fullLabel = getJobSchLabel(j);
+      return `<span class="font-mono font-black text-xs text-slate-800 tracking-wider inline-block select-none" title="${fullLabel}">${code}</span>`;
+    }
+    window.getJobSchPlainHtml = getJobSchPlainHtml;
+
+    /**
+     * Mengubah tanggal ke format baku DDMMYYYY (contoh: 2026-10-22 -> 22102026)
+     */
+    function formatDateToDDMMYYYY(dateStr) {
+      if (!dateStr) {
+        const now = new Date();
+        const d = String(now.getDate()).padStart(2, '0');
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const y = String(now.getFullYear());
+        return `${d}${m}${y}`;
+      }
+      const s = String(dateStr).trim();
+      const mIso = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+      if (mIso) {
+        return `${mIso[3].padStart(2, '0')}${mIso[2].padStart(2, '0')}${mIso[1]}`;
+      }
+      const mDmy = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+      if (mDmy) {
+        return `${mDmy[1].padStart(2, '0')}${mDmy[2].padStart(2, '0')}${mDmy[3]}`;
+      }
+      const mDigits = s.replace(/\D/g, '');
+      if (mDigits.length === 8) {
+        if (mDigits.startsWith('20')) {
+          return `${mDigits.slice(6, 8)}${mDigits.slice(4, 6)}${mDigits.slice(0, 4)}`;
+        }
+        return mDigits;
+      }
+      return '22102026';
+    }
+    window.formatDateToDDMMYYYY = formatDateToDDMMYYYY;
+
+    /**
+     * Mengambil 4 digit jam dan menit HHmm dari jam saat ini atau jam yang sedang berjalan
+     * (Sesuai instruksi: BUKAN mengambil dari waktu rencana yang ditentukan, melainkan jam saat ini / jam berjalan)
+     */
+    function getJobTimeHHmm(j) {
+      // 1. Cek jamStart pengerjaan aktual yang sedang/sudah berjalan
+      if (j) {
+        const rawStart = String(j.jamStart || j.jam_start || '').trim();
+        const mStart = rawStart.match(/(\d{1,2})[:.](\d{2})/);
+        if (mStart) {
+          const hh = parseInt(mStart[1], 10);
+          const mm = parseInt(mStart[2], 10);
+          if (!isNaN(hh) && !isNaN(mm) && hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
+            return `${String(hh).padStart(2, '0')}${String(mm).padStart(2, '0')}`;
+          }
+        }
+        // 2. Cek waktu pencatatan created_at saat job dibuat di sistem
+        if (j.created_at) {
+          try {
+            const dCreated = new Date(j.created_at);
+            if (!isNaN(dCreated.getTime())) {
+              return `${String(dCreated.getHours()).padStart(2, '0')}${String(dCreated.getMinutes()).padStart(2, '0')}`;
+            }
+          } catch (e) { }
+        }
+      }
+
+      // 3. Jam saat ini atau jam yang sedang berjalan secara real-time
+      const now = new Date();
+      return `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+    }
+    window.getJobTimeHHmm = getJobTimeHHmm;
+
+    /**
+     * Menghasilkan string NO ID Baku Sesuai Permintaan Pengguna:
+     * Format: PLT-{TYPE_JOB}-{DDMMYYYY}-{SHIFT}-{HHmm}
+     * Contoh: PLT-GRS-22102026-1-0623 (jam 06, menit 23)
+     */
+    function getJobNoId(j) {
+      if (!j) return '-';
+      const curId = String(j.noId || j.no_id || j.id || j.job_id || '');
+      // Jika sudah memiliki No ID baru dan jam-menitnya BUKAN default waktu rencana ("0600" atau "1800")
+      if (/^(PLT|PWT)-[A-Z0-9]+-\d{8}-\d-(?!0600|1800)\d{4}/i.test(curId)) {
+        return curId.toUpperCase();
+      }
+
+      const isWt = (curId.startsWith('WT') || j.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(j.cat) || j.serviceType === 'watertruck');
+      const prefix = isWt ? 'PWT' : 'PLT';
+      const typeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(j) : 'GRS';
+      const tglStr = j.tanggal || j.tanggal_rencana || j.tanggalRealisasi || j.tanggal_eksekusi || '';
+      const datePart = formatDateToDDMMYYYY(tglStr);
+      const shiftPart = parseInt(j.shift || j.shift_rencana || 1, 10) || 1;
+      const timePart = getJobTimeHHmm(j);
+
+      const generatedNoId = `${prefix}-${typeCode}-${datePart}-${shiftPart}-${timePart}`;
+      if (j && typeof j === 'object') {
+        j.noId = generatedNoId;
+      }
+      return generatedNoId;
+    }
+    window.getJobNoId = getJobNoId;
+
+    /**
+     * Menghasilkan Job ID Baku Unik untuk pembuatan jadwal / job baru
+     */
+    function generateJobNoId(j, uniqueSuffix = '') {
+      const baseNoId = getJobNoId(j);
+      if (!uniqueSuffix) return baseNoId;
+      return `${baseNoId}-${uniqueSuffix}`;
+    }
+    window.generateJobNoId = generateJobNoId;
+
+    /**
+     * Mengembalikan durasi polosan teks khusus mode desktop
+     * Angka durasi dan teks satuan menit ditata proporsional (text-xs) dan diberi jarak rapi (tidak mepet)
+     */
+    function calculateDurationPlain(jamStart, jamEnd, fallbackDur = null) {
+      const diff = (typeof calculateDurationRaw === 'function') ? calculateDurationRaw(jamStart, jamEnd) : null;
+      let durVal = null;
+      if (diff !== null && !isNaN(diff)) {
+        durVal = diff;
+      } else if (fallbackDur !== null && fallbackDur !== undefined && fallbackDur !== '' && fallbackDur !== '-') {
+        const s = String(fallbackDur).replace(/<[^>]*>/g, '').replace(/mnt|menit/gi, '').trim();
+        if (s && !isNaN(parseFloat(s))) {
+          durVal = parseFloat(s);
+        } else if (s) {
+          return `<span class="font-mono font-medium text-xs text-slate-700">${s}</span>`;
+        }
+      }
+      if (durVal !== null && !isNaN(durVal)) {
+        return `<span class="inline-flex items-baseline justify-center font-mono select-text"><span class="font-bold text-xs text-slate-800 leading-none">${durVal}</span><span class="text-[10.5px] font-medium text-slate-500 ml-1 leading-none">mnt</span></span>`;
+      }
+      return `<span class="text-slate-300 font-mono text-xs font-medium">-</span>`;
+    }
+    window.calculateDurationPlain = calculateDurationPlain;
+
     function resetCompMiningWeekFilter() {
       const startEl = document.getElementById('comp-filter-start-date');
       const endEl = document.getElementById('comp-filter-end-date');
@@ -24283,12 +24499,23 @@ Oilman 1 & 2 : ${teamMps}`;
 
       // Gabungkan rekaman riwayat snapshot terkunci dari state.jobHistory
       if (Array.isArray(state.jobHistory) && state.jobHistory.length > 0) {
-        const existingJobMap = new Map(allCompleted.map(j => [String(j.id || ''), j]));
+        const existingJobMap = new Map();
+        allCompleted.forEach(j => {
+          if (j.id) existingJobMap.set(String(j.id), j);
+          if (typeof getJobNoId === 'function') {
+            const nid = getJobNoId(j);
+            if (nid && nid !== '-') existingJobMap.set(nid, j);
+          }
+        });
+
         state.jobHistory.forEach(h => {
-          const hid = String(h.job_id || '');
+          const hid = String(h.job_id || h.no_id || h.id || '');
           if (!hid) return;
           const ex = existingJobMap.get(hid);
-          if (ex) {
+          // PENGAMAN MUTLAK: Pencocokan hanya boleh jika shift-nya selaras (Shift 2 DILARANG menimpa Shift 1!)
+          const isShiftMatched = !ex || !h.shift_rencana || !ex.shift || String(ex.shift) === String(h.shift_rencana);
+
+          if (ex && isShiftMatched) {
             // Perkaya jam pelaksanaan & durasi dari job_history jika di job aktif masih kosong
             if ((!ex.jamStart || ex.jamStart === '-') && h.jam_start) ex.jamStart = h.jam_start;
             if ((!ex.jamEnd || ex.jamEnd === '-') && h.jam_end) ex.jamEnd = h.jam_end;
@@ -24302,9 +24529,12 @@ Oilman 1 & 2 : ${teamMps}`;
             if (!ex.unitSwing && h.unit_swing) ex.unitSwing = h.unit_swing;
             if ((!ex.fotos || ex.fotos.length === 0) && Array.isArray(h.fotos) && h.fotos.length > 0) ex.fotos = h.fotos;
             if (!ex.tanggalRealisasi && h.tanggal_eksekusi) ex.tanggalRealisasi = h.tanggal_eksekusi;
-          } else {
+            if (!ex.noId) ex.noId = (typeof getJobNoId === 'function') ? getJobNoId(h) : hid;
+          } else if (!ex) {
+            const finalNoId = (typeof getJobNoId === 'function') ? getJobNoId(h) : hid;
             const newJob = {
-              id: h.job_id,
+              id: h.job_id || h.id,
+              noId: finalNoId,
               noLambung: h.no_lambung,
               typeUnit: h.type_unit,
               cat: h.cat,
@@ -24407,6 +24637,7 @@ Oilman 1 & 2 : ${teamMps}`;
 
       if (searchVal) {
         filtered = filtered.filter(j =>
+          (typeof getJobNoId === 'function' && getJobNoId(j).toLowerCase().includes(searchVal)) ||
           (typeof getJobSchLabel === 'function' && getJobSchLabel(j).toLowerCase().includes(searchVal)) ||
           (typeof getJobTypeCode === 'function' && getJobTypeCode(j).toLowerCase().includes(searchVal)) ||
           (j.noLambung && j.noLambung.toLowerCase().includes(searchVal)) ||
@@ -24431,6 +24662,11 @@ Oilman 1 & 2 : ${teamMps}`;
               const codeA = (typeof getJobTypeCode === 'function') ? getJobTypeCode(a) : ((typeof getJobSchLabel === 'function') ? getJobSchLabel(a) : (a.cat || ''));
               const codeB = (typeof getJobTypeCode === 'function') ? getJobTypeCode(b) : ((typeof getJobSchLabel === 'function') ? getJobSchLabel(b) : (b.cat || ''));
               return sortDir * codeA.localeCompare(codeB);
+            }
+            case 'noId': {
+              const valA = (typeof getJobNoId === 'function') ? getJobNoId(a) : String(a.id || '');
+              const valB = (typeof getJobNoId === 'function') ? getJobNoId(b) : String(b.id || '');
+              return sortDir * valA.localeCompare(valB);
             }
             case 'waktu': {
               const valA = (a.tanggal || '') + ' ' + (a.waktu || '');
@@ -24507,68 +24743,74 @@ Oilman 1 & 2 : ${teamMps}`;
             <thead class="bg-slate-50/90 text-slate-500 uppercase text-[9.5px] tracking-wider border-b border-slate-200 font-extrabold select-none">
               <tr>
                 ${state.isCompSelectMode ? `
-                  <th class="py-2.5 px-2 w-[8%] md:w-[4%] text-center select-none" title="Pilih Semua yang Tampil">
+                  <th class="py-2.5 px-2 w-[8%] md:w-[3.5%] text-center select-none" title="Pilih Semua yang Tampil">
                     <input type="checkbox" id="comp-check-all" onchange="toggleSelectAllCompletedCheckboxes(this.checked)"
                       class="rounded text-rose-600 focus:ring-rose-500 cursor-pointer w-3.5 h-3.5">
                   </th>
                 ` : ''}
-                <th onclick="sortCompletedBy('sch')" class="hidden md:table-cell py-2.5 px-2 ${state.isCompSelectMode ? 'md:w-[10%]' : 'md:w-[11%]'} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Type Job">
+                <th onclick="sortCompletedBy('noId')" class="hidden md:table-cell py-2.5 pl-3 pr-1.5 ${state.isCompSelectMode ? (isAdmin ? 'md:w-[13%]' : 'md:w-[13.5%]') : (isAdmin ? 'md:w-[13.5%]' : 'md:w-[14%]')} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan No ID Unik">
+                  <div class="flex items-center space-x-0.5">
+                    <span>NO ID</span>
+                    ${renderCompletedSortIcon('noId')}
+                  </div>
+                </th>
+                <th onclick="sortCompletedBy('sch')" class="hidden md:table-cell py-2.5 px-1 ${state.isCompSelectMode ? 'md:w-[4.5%]' : 'md:w-[5%]'} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Type Job">
                   <div class="flex items-center space-x-0.5">
                     <span>TYPE JOB</span>
                     ${renderCompletedSortIcon('sch')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('waktu')" class="py-2 px-1.5 ${isAdmin ? 'w-[19%] md:w-[10%]' : 'w-[21%] md:w-[10%]'} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Waktu Rencana">
+                <th onclick="sortCompletedBy('waktu')" class="py-2 pl-1 pr-2 ${isAdmin ? (state.isCompSelectMode ? 'w-[19%] md:w-[8.5%]' : 'w-[19%] md:w-[9%]') : (state.isCompSelectMode ? 'w-[21%] md:w-[8.5%]' : 'w-[21%] md:w-[9%]')} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Waktu Rencana">
                   <div class="flex items-center space-x-0.5">
                     <span>WAKTU</span>
                     ${renderCompletedSortIcon('waktu')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('unit')" class="py-2 px-1.5 ${isAdmin ? 'w-[22%] md:w-[12%]' : 'w-[24%] md:w-[12%]'} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan No Lambung Unit">
+                <th onclick="sortCompletedBy('unit')" class="py-2 px-1.5 ${isAdmin ? (state.isCompSelectMode ? 'w-[22%] md:w-[10.5%]' : 'w-[22%] md:w-[11%]') : (state.isCompSelectMode ? 'w-[24%] md:w-[11%]' : 'w-[24%] md:w-[11.5%]')} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan No Lambung Unit">
                   <div class="flex items-center space-x-0.5">
                     <span class="md:hidden">NO UNIT</span>
                     <span class="hidden md:inline">${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
                     ${renderCompletedSortIcon('unit')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('cluster')" class="py-2 px-1.5 ${isAdmin ? 'w-[22%] md:w-[12%]' : 'w-[25%] md:w-[12%]'} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Cluster & Lokasi Pit">
+                <th onclick="sortCompletedBy('cluster')" class="py-2 px-1.5 ${isAdmin ? (state.isCompSelectMode ? 'w-[22%] md:w-[11%]' : 'w-[22%] md:w-[11.5%]') : (state.isCompSelectMode ? 'w-[25%] md:w-[12%]' : 'w-[25%] md:w-[12%]')} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Cluster & Lokasi Pit">
                   <div class="flex items-center space-x-0.5">
                     <span>CLUSTER & LOKASI</span>
                     ${renderCompletedSortIcon('cluster')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('armada')" class="py-2.5 px-1 w-[15%] md:w-[8%] text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Armada">
+                <th onclick="sortCompletedBy('armada')" class="py-2.5 px-1 w-[15%] ${state.isCompSelectMode ? 'md:w-[6.5%]' : (isAdmin ? 'md:w-[7%]' : 'md:w-[7%]')} text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Armada">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>ARMADA</span>
                     ${renderCompletedSortIcon('armada')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('personil')" class="hidden md:table-cell py-2.5 px-2 w-[13%] cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Personil Petugas">
+                <th onclick="sortCompletedBy('personil')" class="hidden md:table-cell py-2.5 px-2.5 ${state.isCompSelectMode ? (isAdmin ? 'md:w-[16%]' : 'md:w-[17%]') : (isAdmin ? 'md:w-[16.5%]' : 'md:w-[17.5%]')} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Personil Petugas">
                   <div class="flex items-center space-x-0.5">
                     <span>PERSONIL</span>
                     ${renderCompletedSortIcon('personil')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('realisasi')" class="hidden md:table-cell py-2.5 px-2.5 md:w-[13%] cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Tanggal & Jam Realisasi">
+                <th onclick="sortCompletedBy('realisasi')" class="hidden md:table-cell py-2.5 px-2 ${state.isCompSelectMode ? 'md:w-[11.5%]' : (isAdmin ? 'md:w-[11.5%]' : 'md:w-[12%]')} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Tanggal & Jam Realisasi">
                   <div class="flex items-center space-x-0.5">
                     <span>REALISASI</span>
                     ${renderCompletedSortIcon('realisasi')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('durasi')" class="hidden md:table-cell py-2.5 px-2 w-[8%] text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Durasi Pengerjaan">
+                <th onclick="sortCompletedBy('durasi')" class="hidden md:table-cell py-2.5 px-1 ${state.isCompSelectMode ? 'md:w-[5%]' : 'md:w-[5%]'} text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Durasi Pengerjaan">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>DURASI</span>
                     ${renderCompletedSortIcon('durasi')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('status')" class="py-2.5 px-1 w-[15%] md:w-[8%] text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Status (ACH / Non-ACH)">
+                <th onclick="sortCompletedBy('status')" class="py-2.5 px-1 w-[15%] ${state.isCompSelectMode ? 'md:w-[7%]' : 'md:w-[7%]'} text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Status (ACH / Non-ACH)">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>STATUS</span>
                     ${renderCompletedSortIcon('status')}
                   </div>
                 </th>
                 ${isAdmin ? `
-                  <th class="hidden md:table-cell py-2.5 px-2 md:w-[5%] text-center text-slate-500 font-extrabold uppercase text-[9.5px] tracking-wider select-none" title="Aksi Hapus Riwayat (Khusus Admin)">
+                  <th class="hidden md:table-cell py-2.5 px-1 ${state.isCompSelectMode ? 'md:w-[3.5%]' : 'md:w-[3.5%]'} text-center text-slate-500 font-extrabold uppercase text-[9.5px] tracking-wider select-none" title="Aksi Hapus Riwayat (Khusus Admin)">
                     <span>AKSI</span>
                   </th>
                 ` : ''}
@@ -24616,7 +24858,7 @@ Oilman 1 & 2 : ${teamMps}`;
             ? `Tidak ada riwayat pekerjaan ${emptyDateMsg}`
             : 'Belum ada riwayat pekerjaan selesai untuk kategori ini');
 
-        tbody.innerHTML = `<tr><td colspan="${(state.isCompSelectMode ? 1 : 0) + 9 + (isAdmin ? 1 : 0)}" class="py-8 text-center text-slate-400 italic text-xs">${emptyMsg}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${(state.isCompSelectMode ? 1 : 0) + 10 + (isAdmin ? 1 : 0)}" class="py-8 text-center text-slate-400 italic text-xs">${emptyMsg}</td></tr>`;
         const footerCount = container.querySelector('#completed-footer-count');
         if (footerCount) footerCount.textContent = 'Menampilkan 0 riwayat';
         renderCompletedPagination(0, 1);
@@ -24662,69 +24904,79 @@ Oilman 1 & 2 : ${teamMps}`;
                 class="rounded text-rose-600 focus:ring-rose-500 cursor-pointer w-3.5 h-3.5">
             </td>
           ` : ''}
-          <!-- KOLOM 0: SCH (DESKTOP ONLY, DI HP PINDAH KE ATAS WAKTU) -->
-          <td class="hidden md:table-cell py-2.5 px-2 break-words">
-            ${getJobSchBadgeHtml(job)}
+          <!-- KOLOM 0: NO ID (PERTAMA, DESKTOP ONLY, KODE MONOSPACE TEBAL POLOSAN) -->
+          <td class="hidden md:table-cell py-2.5 pl-3 pr-1.5 font-mono font-bold text-[11px] text-slate-800 break-all select-all tracking-tight leading-tight">
+            ${getJobNoId(job)}
           </td>
 
-          <!-- KOLOM 1: WAKTU (DI ATAS TANGGAL, DI BAWAH WAKTU RENCANA) -->
-          <td class="py-2.5 px-2 font-mono text-xs text-slate-700 break-words">
-            <div class="md:hidden mb-1">${getJobSchBadgeHtml(job)}</div>
+          <!-- KOLOM 1: TYPE JOB (SETELAH NO ID, DESKTOP ONLY, POLOSAN TANPA BACKGROUND WARNA) -->
+          <td class="hidden md:table-cell py-2.5 px-1 break-words">
+            ${getJobSchPlainHtml(job)}
+          </td>
+
+          <!-- KOLOM 2: WAKTU (RAPAT DENGAN KOLOM TYPE JOB & NO ID) -->
+          <td class="py-2.5 pl-1 pr-2 font-mono text-xs text-slate-700 break-words">
+            <div class="md:hidden flex items-center space-x-1.5 mb-1 flex-wrap">
+              <span class="font-mono text-[9.5px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 select-all tracking-tight">${getJobNoId(job)}</span>
+              <div>${getJobSchBadgeHtml(job)}</div>
+            </div>
             <div class="font-extrabold text-slate-900 text-[11px] leading-tight">${planDateDisplay}</div>
             <div class="text-slate-500 text-[10px] font-semibold mt-0.5 leading-tight">${job.waktu || '-'}</div>
           </td>
 
-          <!-- KOLOM 2: NO UNIT -->
-          <td class="py-2.5 px-2.5 break-words">
-            <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-900 font-mono hover:text-emerald-700 text-left cursor-pointer text-base leading-snug tracking-wide">
+          <!-- KOLOM 3: NO UNIT -->
+          <td class="py-2.5 px-2 break-words">
+            <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-900 font-mono hover:text-emerald-700 text-left cursor-pointer text-sm sm:text-base leading-snug tracking-wide">
               ${job.noLambung}
             </button>
             <span class="hidden md:block text-[9.5px] font-bold text-slate-400 uppercase tracking-tight mt-0.5">${unitType}</span>
           </td>
 
-          <!-- KOLOM 3: CLUSTER & LOKASI -->
-          <td class="py-2.5 px-2.5 break-words">
+          <!-- KOLOM 4: CLUSTER & LOKASI -->
+          <td class="py-2.5 px-2 break-words">
             <span class="font-black text-slate-800 text-xs block">${formatClusterLabel(job.cluster)}</span>
             <span class="text-[11px] text-slate-500 font-semibold uppercase mt-0.5 block">${job.lokasi}</span>
           </td>
 
-          <!-- KOLOM 4: ARMADA (TAMPIL DI HP & DESKTOP SEMUA AKSES, SEJAJAR CENTER) -->
+          <!-- KOLOM 5: ARMADA (POLOSAN TANPA BACKGROUND WARNA DI DESKTOP) -->
           <td class="py-2.5 px-1 text-center align-middle break-words">
             <div class="flex items-center justify-center">
-              <span class="inline-flex items-center justify-center min-w-[50px] md:min-w-[62px] px-1.5 py-0.5 rounded font-mono font-bold text-[11px] md:text-[12px] text-center ${finalArmada !== '-' ? (isThisJobWt ? 'bg-cyan-50 border border-cyan-200 text-cyan-800' : 'bg-emerald-50 border border-emerald-200 text-emerald-800') : 'text-slate-300'}">
+              <span class="font-mono font-extrabold text-xs md:text-[12px] text-center ${finalArmada !== '-' ? 'text-slate-800' : 'text-slate-300'}">
                 ${finalArmada}
               </span>
             </div>
           </td>
 
-          <!-- KOLOM 5: PERSONIL (TAMPILKAN LENGKAP OPT DAN MP 1 & 2 DENGAN FALLBACK ROSTER) -->
-          <td class="hidden md:table-cell py-2 px-2 break-words text-[10.5px]">
-            <div class="leading-tight">
+          <!-- KOLOM 6: PERSONIL (LEBIH LUAS AGAR NAMA LEGA TIDAK MUDAH TERPOTONG) -->
+          <td class="hidden md:table-cell py-2 px-2.5 break-words text-[11px]">
+            <div class="leading-tight space-y-0.5">
               <div class="truncate" title="Operator (OPT): ${optDisplay}">
-                <span class="text-slate-400 font-bold text-[9px] uppercase">OPT:</span>
-                <span class="font-extrabold text-slate-900">${optDisplay}</span>
+                <span class="text-slate-400 font-bold text-[9px] uppercase tracking-wider">OPT:</span>
+                <span class="font-extrabold text-slate-900 ml-0.5">${optDisplay}</span>
               </div>
-              <div class="mt-0.5 truncate text-slate-600" title="Manpower (MP): ${mpCombined}">
-                <span class="text-slate-400 font-bold text-[9px] uppercase">MP:</span>
-                <span class="font-semibold text-slate-700">${mpCombined}</span>
+              <div class="truncate text-slate-600" title="Manpower (MP): ${mpCombined}">
+                <span class="text-slate-400 font-bold text-[9px] uppercase tracking-wider">MP:</span>
+                <span class="font-semibold text-slate-700 ml-0.5">${mpCombined}</span>
               </div>
             </div>
           </td>
 
-          <!-- KOLOM 6: REALISASI (DESKTOP ONLY, DI HP BISA CEK DETAIL) -->
-          <td class="hidden md:table-cell py-2.5 px-2.5 font-mono text-xs text-slate-700 break-words">
+          <!-- KOLOM 7: REALISASI (DESKTOP ONLY, DI HP BISA CEK DETAIL) -->
+          <td class="hidden md:table-cell py-2.5 px-2 font-mono text-xs text-slate-700 break-words">
             <div class="font-extrabold text-emerald-700 text-[11px] leading-tight">${realisasiDateDisplay}</div>
             <div class="text-slate-700 text-[10px] font-semibold mt-0.5 leading-tight">
               ${(job.jamStart && job.jamEnd) ? `${job.jamStart} s/d ${job.jamEnd}` : (job.jamStart ? `Start: ${job.jamStart}` : '-')}
             </div>
           </td>
 
-          <!-- KOLOM 7: DURASI -->
-          <td class="hidden md:table-cell py-2.5 px-2 text-center font-mono text-[11px] font-bold text-slate-700 break-words">
-            ${calculateDuration(job.jamStart, job.jamEnd, job.durasi)}
+          <!-- KOLOM 8: DURASI (ANGKA DIPERBESAR SESUAI UKURAN ANGKA LAIN AGAR SIMETRIS) -->
+          <td class="hidden md:table-cell py-2.5 px-1 text-center font-mono break-words align-middle">
+            <div class="flex items-center justify-center">
+              ${calculateDurationPlain(job.jamStart, job.jamEnd, job.durasi)}
+            </div>
           </td>
 
-          <!-- KOLOM 8: STATUS (SEJAJAR CENTER DENGAN KOLOM ARMADA) -->
+          <!-- KOLOM 8: STATUS (TETAP ADA BACKGROUND WARNA UNTUK PEMBEDA) -->
           <td class="py-2.5 px-1 md:px-2 text-center align-middle">
             <div class="flex items-center justify-center">
               ${String(job.status || '').toLowerCase() === 'service' || job.status_final === 'SERVICE'
@@ -24741,7 +24993,7 @@ Oilman 1 & 2 : ${teamMps}`;
 
           <!-- KOLOM 9: AKSI HAPUS (KHUSUS AKSES ADMIN DI DESKTOP ONLY, DI HP HILANG KARENA ADA DI DETAIL JOB) -->
           ${isAdmin ? `
-            <td class="hidden md:table-cell py-2.5 px-2 text-center align-middle">
+            <td class="hidden md:table-cell py-2.5 px-1 text-center align-middle">
               <button type="button" onclick="event.stopPropagation(); promptDeleteJob('${job.id}')"
                 title="Hapus data riwayat unit ${job.noLambung || ''}"
                 class="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 hover:border-rose-600 transition shadow-2xs cursor-pointer inline-flex items-center justify-center" aria-label="Hapus Riwayat">
@@ -26948,6 +27200,13 @@ Oilman 1 & 2 : ${teamMps}`;
         return (stdJDate && stdJDate === stdActionDate) || (jDate && jDate === actionDate);
       });
 
+      // Urutkan matchedJobs kronologis berdasarkan jam start / jam pengerjaan
+      const chronoJobs = [...matchedJobs].sort((a, b) => {
+        const tA = String(a.jamStart || a.jam || a.created_at || a.id || '');
+        const tB = String(b.jamStart || b.jam || b.created_at || b.id || '');
+        return tA.localeCompare(tB);
+      });
+
       // Prioritaskan job Air Cleaner jika ada, baru fallback ke job lainnya pada unit & tanggal yang sama
       const sortedMatched = [...matchedJobs].sort((a, b) => {
         const isAcA = (a.cat === 'aircleaner' || a.cat === 'air_cleaner' || String(a.requestedJob || '').toLowerCase().includes('air') || String(a.deskripsi || '').toLowerCase().includes('air')) ? 2 : 1;
@@ -26955,11 +27214,49 @@ Oilman 1 & 2 : ${teamMps}`;
         return isAcB - isAcA;
       });
 
+      // Hitung kemunculan ke berapa tanggal ini di riwayat cleans hingga index saat ini
+      let occIndex = 0;
+      for (let i = 0; i < cleanIdx; i++) {
+        const cPrev = String(item.cleans[i] || '').replace(/\s*\(?PS\s*\d*\)?/gi, '').replace(/\s*\(?SERVICE\)?/gi, '').trim();
+        const cCur = String(actionDate || '').trim();
+        if (cPrev === cCur) occIndex++;
+      }
+
+      const rawCleanUpper = String(rawClean || '').toUpperCase();
+      const isRawService = rawCleanUpper.includes('SERVICE') || rawCleanUpper.includes('PS');
+
+      let targetJob = null;
+      if (isRawService) {
+        // Entri mengindikasikan service: prioritaskan job berstatus/kondisi service
+        targetJob = matchedJobs.find(j => {
+          const s = String(j.status || j.status_final || '').toLowerCase();
+          const cond = String(j.kondisi || j.keadaan_unit || j.unitCondition || '').toLowerCase();
+          const reqStr = String(j.requestedJob || '').toLowerCase();
+          const descStr = String(j.deskripsi || '').toLowerCase();
+          const ketStr = String(j.keterangan || '').toLowerCase();
+          return (s === 'service' || cond.includes('service') || reqStr.includes('service') || descStr.includes('service') || ketStr.includes('service'));
+        });
+      } else {
+        // Entri semprot biasa: prioritaskan job non-service air cleaner
+        targetJob = matchedJobs.find(j => {
+          const s = String(j.status || j.status_final || '').toLowerCase();
+          const cond = String(j.kondisi || j.keadaan_unit || j.unitCondition || '').toLowerCase();
+          const isAcCat = (j.cat === 'aircleaner' || j.cat === 'air_cleaner');
+          return isAcCat && s !== 'service' && !cond.includes('service');
+        });
+      }
+
+      // Fallback ke urutan kronologis atau prioritas umum jika tidak ketemu spesifik
+      if (!targetJob) {
+        targetJob = chronoJobs[occIndex] || sortedMatched[0] || null;
+      }
+
+      const jobsToSearch = targetJob ? [targetJob, ...sortedMatched.filter(j => j !== targetJob)] : sortedMatched;
       let foundPhotos = [];
 
-      if (sortedMatched.length > 0) {
+      if (jobsToSearch.length > 0) {
         // 1. Ekstrak keterangan oilman yang bersih (bukan string metadata foto seperti PHOTOS_ATTACHED_COUNT_3)
-        for (const j of sortedMatched) {
+        for (const j of jobsToSearch) {
           const rawKet = (j.keterangan && j.keterangan !== '-') ? j.keterangan : (j.deskripsi || '');
           if (rawKet && !rawKet.startsWith('PHOTOS') && !rawKet.startsWith('[')) {
             oilmanNotes = rawKet.replace(/\bPS\s*1000\b/gi, '').replace(/\[SERVICE\]:\s*/gi, '').replace(/\s*\(?PS\s*\d*\)?/gi, '').trim();
@@ -26968,7 +27265,7 @@ Oilman 1 & 2 : ${teamMps}`;
         }
 
         // 2. Ekstrak nama personil yang bertugas
-        for (const j of sortedMatched) {
+        for (const j of jobsToSearch) {
           const mps = [j.mp1, j.mp2].filter(m => m && m !== '-' && m !== '');
           if (mps.length > 0) {
             oilmanName = mps.join(' & ');
@@ -26979,8 +27276,8 @@ Oilman 1 & 2 : ${teamMps}`;
           }
         }
 
-        // 3. Kumpulkan bukti foto pengerjaan dari seluruh job yang cocok untuk unit ini pada tanggal tersebut
-        for (const j of sortedMatched) {
+        // 3. Kumpulkan bukti foto pengerjaan dari seluruh job yang cocok untuk unit ini pada tanggal tersebut (utamakan targetJob)
+        for (const j of jobsToSearch) {
           if (Array.isArray(j.fotos) && j.fotos.length > 0) {
             const valid = j.fotos.filter(p => p && typeof p === 'string' && p.trim() !== '');
             if (valid.length > 0) { foundPhotos = valid; break; }
@@ -27030,7 +27327,6 @@ Oilman 1 & 2 : ${teamMps}`;
       let jobTypeLabel = 'Schedule (SCH)';
       let jobTypeBadgeClass = 'bg-teal-50 text-teal-800 border-teal-200';
 
-      const targetJob = (sortedMatched && sortedMatched.length > 0) ? sortedMatched[0] : null;
       if (targetJob) {
         const s = String(targetJob.status || targetJob.status_final || '').toLowerCase();
         const cond = String(targetJob.kondisi || targetJob.keadaan_unit || targetJob.unitCondition || '').toLowerCase();
@@ -27112,9 +27408,105 @@ Oilman 1 & 2 : ${teamMps}`;
         }
       }
 
+      // Simpan konteks aksi untuk fitur delete
+      window.__currentAcDetailTarget = {
+        noLambung: item.noLambung,
+        cleanIdx: Number(cleanIdx),
+        actionDate: actionDate || '',
+        rawClean: rawClean || ''
+      };
+
+      // Tampilkan tombol Hapus HANYA untuk role Admin (Aturan Pengguna)
+      const btnDelete = document.getElementById('btn-delete-ac-entry');
+      if (btnDelete) {
+        if (state.currentUser?.role === 'admin') {
+          btnDelete.classList.remove('hidden');
+        } else {
+          btnDelete.classList.add('hidden');
+        }
+      }
+
       toggleModal('modal-ac-detail', true);
     }
     window.showAirCleanerActionDetail = showAirCleanerActionDetail;
+
+    async function deleteAirCleanerActionEntry() {
+      // 1. Validasi Otorisasi: Fitur Hapus HANYA untuk role Admin
+      if (state.currentUser?.role !== 'admin') {
+        if (typeof showToast === 'function') {
+          showToast('Fitur hapus riwayat Air Cleaner hanya dapat diakses oleh Administrator.', 'warning');
+        }
+        return;
+      }
+
+      if (!window.__currentAcDetailTarget) {
+        if (typeof showToast === 'function') {
+          showToast('Data rincian Air Cleaner tidak ditemukan.', 'warning');
+        }
+        return;
+      }
+
+      const { noLambung, cleanIdx, actionDate } = window.__currentAcDetailTarget;
+      const item = (state.airCleanerMonitor || []).find(m => String(m.noLambung || '').trim().toUpperCase() === String(noLambung || '').trim().toUpperCase());
+      if (!item || !Array.isArray(item.cleans) || cleanIdx < 0 || cleanIdx >= item.cleans.length) {
+        if (typeof showToast === 'function') {
+          showToast('Catatan riwayat Air Cleaner tidak valid atau sudah dihapus.', 'warning');
+        }
+        return;
+      }
+
+      const cleanLabel = `Ke ${cleanIdx + 1}` + (actionDate ? ` (${actionDate})` : '');
+      const confirmMsg = `Apakah Anda yakin ingin menghapus catatan penyemprotan ${cleanLabel} untuk unit ${noLambung}?\n\nCatatan berikutnya akan otomatis bergeser maju mengisi urutan tanpa meninggalkan kolom kosong.`;
+      if (!confirm(confirmMsg)) {
+        return;
+      }
+
+      // 2. Hapus entri dari array cleans pada indeks ini
+      // Dengan splice, entri berikutnya otomatis bergeser maju mengisi kekosongan sehingga berjajar rapi
+      item.cleans.splice(cleanIdx, 1);
+
+      // 3. Evaluasi ulang status unit sesuai jumlah cleans terbaru:
+      // Clean 0 s/d 4: Baik
+      // Clean 5: Peringatan (5x)
+      // Clean 6: Di Ganti / Masa Pergantian (6x)
+      const count = item.cleans.length;
+      if (count <= 4) {
+        item.status = 'Baik';
+      } else if (count === 5) {
+        item.status = 'Peringatan';
+      } else if (count >= 6) {
+        item.status = 'Di Ganti';
+      }
+
+      if (count === 0) {
+        item.serviceCode = '';
+      }
+
+      // 4. Simpan perubahan ke safeStorage
+      try {
+        safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(state.airCleanerMonitor));
+      } catch (e) { }
+
+      // 5. Sinkronkan ke Supabase Cloud tabel air_cleaner_monitoring
+      if (typeof syncAirCleanerToSupabase === 'function') {
+        try {
+          await syncAirCleanerToSupabase(item);
+        } catch (err) {
+          console.warn('[deleteAirCleanerActionEntry Supabase sync error]', err);
+        }
+      }
+
+      // 6. Re-render tabel monitoring air cleaner & tutup modal
+      if (typeof renderAirCleanerMonitorTable === 'function') {
+        renderAirCleanerMonitorTable();
+      }
+      toggleModal('modal-ac-detail', false);
+
+      if (typeof showToast === 'function') {
+        showToast(`Catatan penyemprotan ${cleanLabel} unit ${noLambung} berhasil dihapus & urutan telah disesuaikan!`, 'success');
+      }
+    }
+    window.deleteAirCleanerActionEntry = deleteAirCleanerActionEntry;
 
     function renderCleanCell(item, colIdx) {
       const cVal = (item.cleans && item.cleans[colIdx]) ? item.cleans[colIdx] : null;
@@ -33145,6 +33537,10 @@ Oilman 1 & 2 : ${teamMps}`;
     window.resetAirCleanerWeeklyCycle = resetAirCleanerWeeklyCycle;
     window.resetUnitAirCleanerCycle = resetUnitAirCleanerCycle;
     window.updateAirCleanerRecord = updateAirCleanerRecord;
+    window.showAirCleanerActionDetail = showAirCleanerActionDetail;
+    window.deleteAirCleanerActionEntry = deleteAirCleanerActionEntry;
+    window.getJobSchPlainHtml = getJobSchPlainHtml;
+    window.calculateDurationPlain = calculateDurationPlain;
     window.handleLoginSubmit = handleLoginSubmit;
     window.fillQuickAuth = fillQuickAuth;
     window.handleLogout = handleLogout;
@@ -34096,9 +34492,10 @@ Oilman 1 & 2 : ${teamMps}`;
       }
 
       // Format kolom tabel Excel yang dipisah sesuai permintaan pengguna:
-      // No, Jenis Job, Plan, Waktu, Shift, Type Unit, No Unit, Cluster, Lokasi, Tgl Action, Start, End, Durasi, Status, Temuan/Kendala, Armada, OPT, MP 1, MP 2
+      // No, No ID, Jenis Job, Plan, Waktu, Shift, Type Unit, No Unit, Cluster, Lokasi, Tgl Action, Start, End, Durasi, Status, Temuan/Kendala, Armada, OPT, MP 1, MP 2
       const headers = [
         'No',
+        'No ID',
         'Jenis Job',
         'Plan',
         'Waktu',
@@ -34120,6 +34517,7 @@ Oilman 1 & 2 : ${teamMps}`;
       ];
 
       const rows = jobs.map((j, idx) => {
+        const noId = (typeof getJobNoId === 'function') ? getJobNoId(j) : (j.noId || j.id || '-');
         const plan = j.tanggal || '-';
         const waktu = j.waktu || '-';
         const shift = j.shift ? `Shift ${j.shift}` : '-';
@@ -34169,6 +34567,7 @@ Oilman 1 & 2 : ${teamMps}`;
 
         return [
           idx + 1,
+          noId,
           jenisJob,
           plan,
           waktu,
