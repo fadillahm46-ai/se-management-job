@@ -24459,16 +24459,13 @@ Oilman 1 & 2 : ${oilman}`;
                     ${renderCompletedSortIcon('realisasi')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('durasi')" class="hidden md:table-cell py-2.5 px-2 w-[7%] text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Durasi Pengerjaan">
+                <th onclick="sortCompletedBy('durasi')" class="hidden md:table-cell py-2.5 px-2 w-[8%] text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Durasi Pengerjaan">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>DURASI</span>
                     ${renderCompletedSortIcon('durasi')}
                   </div>
                 </th>
-                <th class="hidden md:table-cell py-2.5 px-2 w-[5%] text-center text-slate-400">
-                  <span>FOTO</span>
-                </th>
-                <th onclick="sortCompletedBy('status')" class="py-2.5 px-1 w-[15%] md:w-[7%] text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Status (ACH / Non-ACH)">
+                <th onclick="sortCompletedBy('status')" class="py-2.5 px-1 w-[15%] md:w-[8%] text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Status (ACH / Non-ACH)">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>STATUS</span>
                     ${renderCompletedSortIcon('status')}
@@ -24523,7 +24520,7 @@ Oilman 1 & 2 : ${oilman}`;
             ? `Tidak ada riwayat pekerjaan ${emptyDateMsg}`
             : 'Belum ada riwayat pekerjaan selesai untuk kategori ini');
 
-        tbody.innerHTML = `<tr><td colspan="${(state.isCompSelectMode ? 1 : 0) + 10 + (isAdmin ? 1 : 0)}" class="py-8 text-center text-slate-400 italic text-xs">${emptyMsg}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${(state.isCompSelectMode ? 1 : 0) + 9 + (isAdmin ? 1 : 0)}" class="py-8 text-center text-slate-400 italic text-xs">${emptyMsg}</td></tr>`;
         const footerCount = container.querySelector('#completed-footer-count');
         if (footerCount) footerCount.textContent = 'Menampilkan 0 riwayat';
         renderCompletedPagination(0, 1);
@@ -24631,18 +24628,7 @@ Oilman 1 & 2 : ${oilman}`;
             ${calculateDuration(job.jamStart, job.jamEnd)}
           </td>
 
-          <!-- KOLOM 8: FOTO -->
-          <td class="hidden md:table-cell py-2.5 px-2 text-center text-[10.5px]">
-            ${job.fotos && job.fotos.length > 0
-            ? `<button type="button" onclick="openFotoPreviewModal('${job.id}')" class="inline-flex items-center justify-center p-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition cursor-pointer" title="Lihat Foto (${job.fotos.length})">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                  </svg>
-                </button>`
-            : `<span class="text-slate-300">-</span>`}
-          </td>
-
-          <!-- KOLOM 9: STATUS (SEJAJAR CENTER DENGAN KOLOM ARMADA) -->
+          <!-- KOLOM 8: STATUS (SEJAJAR CENTER DENGAN KOLOM ARMADA) -->
           <td class="py-2.5 px-1 md:px-2 text-center align-middle">
             <div class="flex items-center justify-center">
               ${String(job.status || '').toLowerCase() === 'service' || job.status_final === 'SERVICE'
@@ -24657,7 +24643,7 @@ Oilman 1 & 2 : ${oilman}`;
             </div>
           </td>
 
-          <!-- KOLOM 10: AKSI HAPUS (KHUSUS AKSES ADMIN DI DESKTOP ONLY, DI HP HILANG KARENA ADA DI DETAIL JOB) -->
+          <!-- KOLOM 9: AKSI HAPUS (KHUSUS AKSES ADMIN DI DESKTOP ONLY, DI HP HILANG KARENA ADA DI DETAIL JOB) -->
           ${isAdmin ? `
             <td class="hidden md:table-cell py-2.5 px-2 text-center align-middle">
               <button type="button" onclick="event.stopPropagation(); promptDeleteJob('${job.id}')"
