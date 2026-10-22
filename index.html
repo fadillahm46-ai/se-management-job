@@ -342,12 +342,33 @@
 
   <style id="sidebar-compact-plain">
     /* Sidebar polos & rapat: ikon abu-abu saat tidak aktif, warna asli ikon saat menu aktif (bg hijau) */
-    aside nav { padding: 0.5rem 0.75rem !important; }
-    aside nav > * + * { margin-top: 0.5rem !important; }
-    aside nav .space-y-1 > * + * { margin-top: 0.125rem !important; }
-    aside nav button, aside nav a { padding-top: 0.4rem !important; padding-bottom: 0.4rem !important; }
-    aside nav button:not(.bg-brand-200) svg, aside nav a:not(.bg-brand-200) svg { filter: grayscale(1) opacity(0.8); }
-    aside nav button.bg-brand-200 svg, aside nav a.bg-brand-200 svg { filter: none; }
+    aside nav {
+      padding: 0.5rem 0.75rem !important;
+    }
+
+    aside nav>*+* {
+      margin-top: 0.5rem !important;
+    }
+
+    aside nav .space-y-1>*+* {
+      margin-top: 0.125rem !important;
+    }
+
+    aside nav button,
+    aside nav a {
+      padding-top: 0.4rem !important;
+      padding-bottom: 0.4rem !important;
+    }
+
+    aside nav button:not(.bg-brand-200) svg,
+    aside nav a:not(.bg-brand-200) svg {
+      filter: grayscale(1) opacity(0.8);
+    }
+
+    aside nav button.bg-brand-200 svg,
+    aside nav a.bg-brand-200 svg {
+      filter: none;
+    }
 
     /* Pastikan tombol sub-kategori tab (Greasing Small, Big Digger, Air Cleaner, Top Up) tidak membesar atau ber-outline hitam saat diklik */
     #tab-lt-schedule button[id^="btn-lt-cat-"],
@@ -357,6 +378,7 @@
       box-sizing: border-box !important;
       line-height: 1.25rem !important;
     }
+
     #tab-lt-schedule button[id^="btn-lt-cat-"]:focus,
     #tab-lt-schedule button[id^="btn-lt-cat-"]:focus-visible,
     #tab-lt-schedule button[id^="btn-lt-cat-"]:active,
@@ -984,6 +1006,23 @@
                       d="M12 12l3-3m-6 3a3 3 0 116 0 3 3 0 01-6 0z"></path>
                   </svg>
                   <span>Flow meter</span>
+                </div>
+                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                </svg>
+              </a>
+
+              <a href="https://plant.ppabib.com/pems/wash/load3.php" target="_blank" rel="noopener noreferrer"
+                id="nav-btn-admin-wash-checklist"
+                class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+                <div class="flex items-center space-x-3">
+                  <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                    </path>
+                  </svg>
+                  <span>Ceklist Washing</span>
                 </div>
                 <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -2122,10 +2161,10 @@
                   <!-- Badge Jam Regulasi -->
                   <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
                     <div class="px-3 py-1 rounded-xl bg-blue-50 text-blue-800 border border-blue-200/80">
-                      <span class="text-blue-500 font-semibold">Shift 1:</span> 11:55 - 12:10 &amp; 12:55 - 13:10
+                      <span class="text-blue-500 font-semibold">Shift 1:</span> 11:55 - 13:10
                     </div>
                     <div class="px-3 py-1 rounded-xl bg-indigo-50 text-indigo-800 border border-indigo-200/80">
-                      <span class="text-indigo-500 font-semibold">Shift 2:</span> 23:55 - 00:10 &amp; 00:55 - 01:10
+                      <span class="text-indigo-500 font-semibold">Shift 2:</span> 23:55 - 01:10
                     </div>
                   </div>
                 </div>
@@ -4591,6 +4630,28 @@
                 <h4 class="text-xs font-black text-slate-900 leading-tight">Kontak Pro</h4>
               </div>
             </div>
+
+            <!-- 9. Ceklist Washing (Persegi - Akses Admin Mode HP) -->
+            <a href="https://plant.ppabib.com/pems/wash/load3.php" target="_blank" rel="noopener noreferrer"
+              class="bg-white hover:bg-slate-50 border border-slate-200/80 active:scale-[0.98] transition rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer space-y-3">
+              <div
+                class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100/80 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                  </path>
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-xs font-black text-slate-900 leading-tight flex items-center space-x-1">
+                  <span>Ceklist Washing</span>
+                  <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                  </svg>
+                </h4>
+              </div>
+            </a>
           </div>
 
           <!-- Grid Menu Kartu 2 Kolom untuk Manpower (MP: Oilman & Washingman) -->
@@ -5110,7 +5171,7 @@
 
         <!-- 5. Flow Meter Sounding App Link -->
         <a href="https://sounding-fm.vercel.app/" target="_blank" rel="noopener noreferrer"
-          class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-slate-50 hover:bg-cyan-50/70 border border-slate-200/70 hover:border-cyan-300 transition active:scale-95 cursor-pointer text-center group shadow-2xs col-span-2">
+          class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-slate-50 hover:bg-cyan-50/70 border border-slate-200/70 hover:border-cyan-300 transition active:scale-95 cursor-pointer text-center group shadow-2xs">
           <div
             class="w-10 h-10 rounded-2xl bg-cyan-100 text-cyan-600 flex items-center justify-center mb-1 group-hover:scale-105 transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -5120,7 +5181,27 @@
             </svg>
           </div>
           <span class="font-extrabold text-slate-900 text-xs flex items-center space-x-1">
-            <span>Sounding Flow Meter</span>
+            <span>Flow Meter</span>
+            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+            </svg>
+          </span>
+        </a>
+
+        <!-- 6. Ceklist Washing Link -->
+        <a href="https://plant.ppabib.com/pems/wash/load3.php" target="_blank" rel="noopener noreferrer"
+          class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50/70 border border-slate-200/70 hover:border-blue-300 transition active:scale-95 cursor-pointer text-center group shadow-2xs">
+          <div
+            class="w-10 h-10 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mb-1 group-hover:scale-105 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+              </path>
+            </svg>
+          </div>
+          <span class="font-extrabold text-slate-900 text-xs flex items-center space-x-1">
+            <span>Ceklist Washing</span>
             <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
@@ -5549,7 +5630,7 @@
           <!-- Lampiran Foto: Polosan Bersih Background Putih Sesuai Permintaan -->
           <div id="ach-photo-container" class="space-y-2">
             <div>
-              <label class="block text-slate-700 font-bold text-xs">Lampiran Foto Evidence <span
+              <label class="block text-slate-700 font-bold text-xs">Lampiran Foto Eviden <span
                   class="text-rose-500">*</span></label>
             </div>
 
@@ -6513,12 +6594,11 @@
                   <span>Auto-Generate Jadwal 1 Bulan Penuh</span>
                 </span>
                 <span
-                  class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-200 text-emerald-900 uppercase">Auto-Fill
-                  30/31 Hari</span>
+                  class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-200 text-emerald-900 uppercase">Hingga
+                  Akhir Bulan</span>
               </label>
-              <p class="text-[10.5px] text-emerald-800 font-medium leading-tight">Otomatis membentuk jadwal 1 bulan
-                penuh
-                berulang sesuai frekuensi unit (harian / siklus 3 hari / mingguan). Reset otomatis setiap tanggal 1.</p>
+              <p class="text-[10.5px] text-emerald-800 font-medium leading-tight">Otomatis membentuk jadwal berulang
+                mulai tanggal input sampai akhir bulan sesuai frekuensi unit (harian / siklus 3 hari / mingguan).</p>
             </div>
             <input type="checkbox" id="add-job-generate-month" checked
               class="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer shrink-0">
@@ -6984,8 +7064,7 @@
         <!-- Keterangan Teknis / Part Number -->
         <div>
           <label class="block text-slate-700 font-bold text-[11px] mb-1">Keterangan Alasan Kenapa Diganti *</label>
-          <textarea id="replace-ac-notes" rows="2"
-            placeholder="Contoh: Pergantian filter saringan udara inner &amp; outer baru, part number P780621..."
+          <textarea id="replace-ac-notes" rows="2" placeholder=""
             class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-medium text-slate-900 focus:outline-none focus:border-teal-500 resize-none"></textarea>
         </div>
 
@@ -7000,11 +7079,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
               </svg>
-              <span>Foto Evidence Pergantian Komponen *</span>
+              <span>Foto Eviden Pergantian *</span>
             </span>
             <span
-              class="text-[9.5px] font-medium text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded-md border border-teal-200/60">Upload
-              ke Google Drive</span>
+              class="text-[9.5px] font-medium text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded-md border border-teal-200/60">Upload</span>
           </label>
 
           <input type="file" id="replace-ac-photo-file" accept="image/*" capture="environment"
@@ -7018,15 +7096,14 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
               </svg>
             </div>
-            <span class="text-xs font-bold text-teal-900">Ambil Foto / Pilih Berkas Evidence</span>
-            <span class="text-[10px] text-slate-400">Format JPG/PNG, otomatis dikompres &amp; diunggah ke Google
-              Drive</span>
+            <span class="text-xs font-bold text-teal-900">Ambil Foto / Pilih Berkas Eviden</span>
+            <span class="text-[10px] text-slate-400">Format JPG/PNG</span>
           </div>
 
           <!-- Area Preview Foto yang Dipilih -->
           <div id="replace-ac-preview-container"
             class="relative rounded-2xl overflow-hidden border border-slate-200 hidden bg-slate-900">
-            <img id="replace-ac-preview-img" src="" alt="Evidence Air Cleaner" class="w-full h-40 object-cover">
+            <img id="replace-ac-preview-img" src="" alt="Eviden Air Cleaner" class="w-full h-40 object-cover">
             <div
               class="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-between text-white text-[11px] font-bold">
               <span class="flex items-center gap-1">
@@ -7056,7 +7133,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
-            <span id="btn-submit-replace-ac-text">Simpan &amp; Upload Evidence</span>
+            <span id="btn-submit-replace-ac-text">Simpan &amp; Upload Eviden</span>
           </button>
         </div>
       </form>
@@ -7132,7 +7209,7 @@
                   d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
                 </path>
               </svg>
-              <span>Dokumentasi Foto Evidence</span>
+              <span>Dokumentasi Foto Eviden</span>
             </span>
             <span id="ac-detail-photo-count"
               class="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 shadow-2xs">0
@@ -7326,7 +7403,7 @@
         <div id="detail-modal-evidence-container">
           <div class="flex items-center justify-between mb-1">
             <span class="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider">Dokumentasi Foto Pekerjaan
-              (Evidence)</span>
+              (Eviden)</span>
             <div id="detail-modal-sync-container"></div>
           </div>
           <div id="detail-modal-fotos"
@@ -8088,7 +8165,7 @@
       <div class="flex items-center space-x-2.5 min-w-0 pr-2">
         <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
         <h4 id="photo-preview-title" class="text-xs sm:text-sm font-bold tracking-tight truncate text-slate-200">
-          Preview Foto Evidence
+          Preview Foto Eviden
         </h4>
         <span id="photo-preview-counter"
           class="hidden px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] sm:text-[11px] font-bold border border-emerald-500/30 whitespace-nowrap shrink-0">
@@ -8152,7 +8229,7 @@
       </button>
 
       <!-- Foto Element -->
-      <img id="photo-preview-img" src="" alt="Evidence Foto"
+      <img id="photo-preview-img" src="" alt="Eviden Foto"
         class="max-h-[82vh] max-w-[92vw] object-contain rounded-2xl shadow-2xl transition-transform duration-100 ease-out pointer-events-none select-none"
         style="transform: translate(0px, 0px) scale(1);">
     </div>
@@ -9840,7 +9917,7 @@
       unitLabel: ''
     };
 
-    function openPhotoPreview(imgSrcOrList, title = 'Preview Foto Evidence', initialIndex = 0, unitLabel = '') {
+    function openPhotoPreview(imgSrcOrList, title = 'Preview Foto Eviden', initialIndex = 0, unitLabel = '') {
       if (!imgSrcOrList) return;
       const modal = document.getElementById('modal-photo-preview');
       const img = document.getElementById('photo-preview-img');
@@ -9857,7 +9934,7 @@
 
       photoViewerState.photos = photoList;
       photoViewerState.currentIndex = Math.max(0, Math.min(initialIndex, photoList.length - 1));
-      photoViewerState.unitLabel = unitLabel || (typeof title === 'string' ? title.replace(/^Evidence Foto\s*-?\s*/i, '').replace(/\s*\(\d+\s*dari\s*\d+\)$/i, '').trim() : '');
+      photoViewerState.unitLabel = unitLabel || (typeof title === 'string' ? title.replace(/^(?:Evidence|Eviden) Foto\s*-?\s*/i, '').replace(/\s*\(\d+\s*dari\s*\d+\)$/i, '').trim() : '');
 
       renderPhotoViewerCurrent();
 
@@ -9888,8 +9965,8 @@
       const unitText = photoViewerState.unitLabel ? ` - ${photoViewerState.unitLabel}` : '';
       if (titleEl) {
         titleEl.textContent = total > 1
-          ? `Evidence Foto${unitText} (${idx + 1} dari ${total})`
-          : `Evidence Foto${unitText}`;
+          ? `Eviden Foto${unitText} (${idx + 1} dari ${total})`
+          : `Eviden Foto${unitText}`;
       }
 
       if (counterEl) {
@@ -9967,20 +10044,20 @@
     }
 
     /**
-     * Membuka foto evidence langsung dari tombol foto di tabel Riwayat Selesai
+     * Membuka foto eviden langsung dari tombol foto di tabel Riwayat Selesai
      */
     function openFotoPreviewModal(jobId) {
       const job = findJobById(jobId);
       if (!job || !job.fotos || !Array.isArray(job.fotos) || job.fotos.length === 0) {
-        showToast('Tidak ada foto evidence untuk pekerjaan ini', 'info');
+        showToast('Tidak ada foto eviden untuk pekerjaan ini', 'info');
         return;
       }
       const validPhotos = job.fotos.filter(p => p && typeof p === 'string' && p.trim() !== '');
       if (validPhotos.length === 0) {
-        showToast('Tidak ada foto evidence untuk pekerjaan ini', 'info');
+        showToast('Tidak ada foto eviden untuk pekerjaan ini', 'info');
         return;
       }
-      openPhotoPreview(validPhotos, `Evidence Foto - ${job.noLambung || ''}`, 0, job.noLambung || '');
+      openPhotoPreview(validPhotos, `Eviden Foto - ${job.noLambung || ''}`, 0, job.noLambung || '');
     }
     window.openFotoPreviewModal = openFotoPreviewModal;
 
@@ -10593,14 +10670,10 @@
         if (isNaN(h) || isNaN(min)) return false;
         const totalMin = h * 60 + min;
 
-        // Window 1: 11:55 (715m) - 12:10 (730m)
-        if (totalMin >= 715 && totalMin <= 730) return true;
-        // Window 2: 12:55 (775m) - 13:10 (790m)
-        if (totalMin >= 775 && totalMin <= 790) return true;
-        // Window 3: 23:55 (1435m) - 00:10 (10m)
-        if (totalMin >= 1435 || totalMin <= 10) return true;
-        // Window 4: 00:55 (55m) - 01:10 (70m)
-        if (totalMin >= 55 && totalMin <= 70) return true;
+        // Shift 1: 11:55 s/d 13:10 (715m s/d 790m)
+        if (totalMin >= 715 && totalMin <= 790) return true;
+        // Shift 2: 23:55 s/d 01:10 (1435m s/d 70m)
+        if (totalMin >= 1435 || totalMin <= 70) return true;
 
         return false;
       }
@@ -10610,9 +10683,10 @@
         return isOpportunityWindow(t);
       });
 
-      const scheduledOppList = allWt.filter(j => {
-        if (j.cat !== 'coal') return false;
-        const executionStart = j.jamStart || (j.status === 'ach' ? j.waktu : '');
+      const allWashingSch = [...allWt, ...histSch.filter(j => String(j.id || '').startsWith('WT-SCH') || j.cat === 'coal' || j.cat === 'non_coal' || j.cat === 'rom')];
+      const scheduledOppList = allWashingSch.filter(j => {
+        if (j.cat !== 'coal' && j.cat !== 'non_coal' && j.cat !== 'rom') return false;
+        const executionStart = j.jamStart || j.start || (j.status === 'ach' ? j.waktu : '');
         return isOpportunityWindow(executionStart);
       });
 
@@ -13617,9 +13691,9 @@
       const baseDayNum = parseDateString(baseDate).getDate();
 
       const generatedJobs = [];
-      // Sesuai permintaan pengguna: Jika setting 1 bulan full, jangan potong hari lampau bulan ini,
-      // buat penuh 1 bulan dari tanggal 1 sampai akhir bulan (daysInMonth)
-      const startDay = 1;
+      // Sesuai instruksi: autogenerate 1 bulan dimulai dari tanggal penambahan unit (baseDayNum)
+      // sampai dengan akhir bulan (daysInMonth), bukan dari tanggal 1
+      const startDay = Math.max(1, Math.min(daysInMonth, baseDayNum || 1));
 
       for (let day = startDay; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -13662,10 +13736,15 @@
             break;
           }
 
-          case 'AIR_CLEANER_NON_COAL':
-          case 'TOP_UP_OIL': {
+          case 'AIR_CLEANER_NON_COAL': {
             // Frekuensi 1 minggu sekali (berulang pada hari yang sama setiap minggunya)
             if (dayOfWeek === baseDayOfWeek) shouldInclude = true;
+            break;
+          }
+
+          case 'TOP_UP_OIL': {
+            // Sesuai permintaan admin: Top Up Oil belum memiliki jadwal 1 bulan full, tidak di-autogenerate
+            shouldInclude = (dateStr === baseDate);
             break;
           }
 
@@ -14969,7 +15048,7 @@
 
       const { targetCat, targetType, selectedDate, sourceJobs } = pending;
       const isWt = (targetType === 'WT');
-      const autoMonth = document.getElementById('apply-yesterday-auto-month')?.checked !== false;
+      const autoMonth = (targetCat !== 'topup') && (document.getElementById('apply-yesterday-auto-month')?.checked !== false);
       const targetMonthKey = selectedDate.slice(0, 7);
 
       const confirmBtn = document.getElementById('btn-apply-yesterday-confirm');
@@ -22490,16 +22569,27 @@ Oilman 1 & 2 : ${oilman}`;
         });
       }
 
-      // Khusus Hak Akses Admin Saja: Siklus & Auto-Generate 1 Bulan (Berlaku di Semua Schedule)
+      // Khusus Hak Akses Admin Saja: Siklus & Auto-Generate 1 Bulan (Kecuali Top Up Oil)
       const isAdmin = (state.currentUser?.role === 'admin');
       const adminControls = document.getElementById('add-job-admin-controls');
+      const monthContainer = document.getElementById('add-job-generate-month-container');
       const chkMonth = document.getElementById('add-job-generate-month');
+      const isTopUp = (currentActiveCat === 'topup' || currentActiveCat === 'top up oil');
+
       if (adminControls) {
         if (isAdmin) {
           adminControls.classList.remove('hidden');
-          if (chkMonth) chkMonth.checked = true;
         } else {
           adminControls.classList.add('hidden');
+        }
+      }
+
+      if (monthContainer) {
+        if (isAdmin && !isTopUp) {
+          monthContainer.classList.remove('hidden');
+          if (chkMonth) chkMonth.checked = true;
+        } else {
+          monthContainer.classList.add('hidden');
           if (chkMonth) chkMonth.checked = false;
         }
       }
@@ -23062,6 +23152,22 @@ Oilman 1 & 2 : ${oilman}`;
         }
       }
 
+      // Atur visibilitas Auto-Generate 1 Bulan: hilangkan untuk Top Up Oil sesuai instruksi admin
+      const monthContainer = document.getElementById('add-job-generate-month-container');
+      const chkMonth = document.getElementById('add-job-generate-month');
+      const isAdmin = (state.currentUser?.role === 'admin');
+      const isTopUp = (val === 'topup' || val === 'top up oil');
+
+      if (monthContainer) {
+        if (isAdmin && !isTopUp) {
+          monthContainer.classList.remove('hidden');
+          if (chkMonth) chkMonth.checked = true;
+        } else {
+          monthContainer.classList.add('hidden');
+          if (chkMonth) chkMonth.checked = false;
+        }
+      }
+
       // Update preset jam secara otomatis sesuai kategori yang dipilih
       if (typeof updateAddJobTimePresets === 'function') {
         const shift = document.getElementById('add-job-shift')?.value || 1;
@@ -23279,7 +23385,8 @@ Oilman 1 & 2 : ${oilman}`;
       const typeUnit = document.getElementById('add-job-type')?.value || getUnitTypeFromMaster(noLambung, 'Unit');
       const washingRound = parseInt(document.getElementById('add-job-washing-round')?.value || '1', 10);
       const isAdmin = (state.currentUser?.role === 'admin');
-      const shouldGenerateMonth = isAdmin && (document.getElementById('add-job-generate-month')?.checked !== false);
+      const isTopUp = (cat === 'topup' || cat === 'top up oil');
+      const shouldGenerateMonth = isAdmin && !isTopUp && (document.getElementById('add-job-generate-month')?.checked !== false);
       const selectedPattern = document.getElementById('add-job-pattern')?.value || 'AUTO';
 
       if (!noLambung || !lokasi) {
@@ -24536,10 +24643,10 @@ Oilman 1 & 2 : ${oilman}`;
             : (['bd', 'breakdown'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'BREAKDOWN'
               ? `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-orange-100 text-orange-800 font-extrabold text-[10px] tracking-wide uppercase text-center" title="${job.bdNotes || job.keterangan || '-'}">BD</span>`
               : ['ach', 'achieved', 'done'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'ACHIEVED'
-            ? `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] tracking-wide uppercase text-center">ACH</span>`
-            : (['non_ach', 'non-ach'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'NON_ACH'
-              ? `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-rose-100 text-rose-800 font-extrabold text-[10px] tracking-wide uppercase text-center" title="${job.alasanNonAch || job.keterangan || '-'}">NON-ACH</span>`
-              : `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-amber-100 text-amber-800 font-extrabold text-[10px] tracking-wide uppercase text-center">${job.status || 'DONE'}</span>`))}
+                ? `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] tracking-wide uppercase text-center">ACH</span>`
+                : (['non_ach', 'non-ach'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'NON_ACH'
+                  ? `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-rose-100 text-rose-800 font-extrabold text-[10px] tracking-wide uppercase text-center" title="${job.alasanNonAch || job.keterangan || '-'}">NON-ACH</span>`
+                  : `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-amber-100 text-amber-800 font-extrabold text-[10px] tracking-wide uppercase text-center">${job.status || 'DONE'}</span>`))}
             </div>
           </td>
 
