@@ -7378,9 +7378,9 @@
           </div>
         </div>
 
-        <!-- Grid 3B: Detail Kondisi Lapangan (Khusus Job Washing: Ada Operator, Unit Turun, Unit Swing) -->
+        <!-- Grid 3B: Detail Kondisi Lapangan (Khusus Job Washing: Ada Operator, Unit Turun, Unit Swing, HM Start & End) -->
         <div id="detail-modal-washing-box"
-          class="hidden px-2.5 py-1.5 rounded-xl bg-cyan-50/70 border border-cyan-200/80 space-y-1">
+          class="hidden px-2.5 py-1.5 rounded-xl bg-cyan-50/70 border border-cyan-200/80 space-y-1.5">
           <span class="text-[9.5px] font-black text-cyan-900 uppercase tracking-wider block">Kondisi Lapangan Pencucian
             (Washing)</span>
           <div class="grid grid-cols-3 gap-1.5 text-center text-xs">
@@ -7395,6 +7395,17 @@
             <div class="p-1 rounded-lg bg-white border border-cyan-100 shadow-2xs">
               <span class="text-[8.5px] text-slate-400 block font-semibold">Unit Swing</span>
               <span id="detail-modal-wash-swing" class="font-black text-slate-900 text-xs">-</span>
+            </div>
+          </div>
+          <!-- HM Start & End Khusus Job Washing (WT) -->
+          <div class="grid grid-cols-2 gap-1.5 text-center text-xs pt-1 border-t border-cyan-200/60">
+            <div class="p-1 rounded-lg bg-white border border-cyan-100 shadow-2xs">
+              <span class="text-[8.5px] text-cyan-700 block font-bold uppercase tracking-wide">HM Start</span>
+              <span id="detail-modal-wash-hm-start" class="font-mono font-black text-cyan-950 text-xs">-</span>
+            </div>
+            <div class="p-1 rounded-lg bg-white border border-cyan-100 shadow-2xs">
+              <span class="text-[8.5px] text-cyan-700 block font-bold uppercase tracking-wide">HM End</span>
+              <span id="detail-modal-wash-hm-end" class="font-mono font-black text-cyan-950 text-xs">-</span>
             </div>
           </div>
         </div>
@@ -9001,6 +9012,14 @@
         jamStart: row.jam_start || '',
         jamEnd: row.jam_end || '',
         durasi: (row.durasi !== null && row.durasi !== undefined) ? parseFloat(row.durasi) : null,
+        hmStop: row.hm_stop || row.hm_start || null,
+        hmReady: row.hm_ready || row.hm_end || null,
+        hmStart: row.hm_start || row.hm_stop || null,
+        hmEnd: row.hm_end || row.hm_ready || null,
+        hmUnit: (row.hm_start && row.hm_end) ? `${row.hm_start} s/d ${row.hm_end}` : ((row.hm_stop && row.hm_ready) ? `${row.hm_stop} s/d ${row.hm_ready}` : (row.hm_start || row.hm_stop || null)),
+        adaOperator: row.ada_operator || 'Ya',
+        unitTurun: row.unit_turun || 'Ya',
+        unitSwing: row.unit_swing || 'Tidak',
         status: row.status || 'scheduled',
         keterangan: row.keterangan || '',
         isPending: Boolean(row.is_pending),
@@ -12484,11 +12503,17 @@
     }
     window.formatDurationBadge = formatDurationBadge;
 
-    function calculateDuration(jamStart, jamEnd) {
+    function calculateDuration(jamStart, jamEnd, fallbackDur = null) {
       const diff = calculateDurationRaw(jamStart, jamEnd);
-      if (diff === null) return '-';
-      return `<span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200/80">${diff} mnt</span>`;
+      if (diff !== null && !isNaN(diff)) {
+        return `<span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200/80">${diff} mnt</span>`;
+      }
+      if (fallbackDur !== null && fallbackDur !== undefined && fallbackDur !== '' && fallbackDur !== '-') {
+        return formatDurationBadge(fallbackDur);
+      }
+      return '-';
     }
+    window.calculateDuration = calculateDuration;
 
     function updateMobileHamburgerVisibility(tabKey = state.activeTab) {
       const btn = document.getElementById('btn-mobile-drawer');
@@ -13465,9 +13490,14 @@
         jam_start: job.jamStart || job.jam_start || '',
         jam_end: job.jamEnd || job.jam_end || '',
         durasi: (typeof calculateDurationRaw === 'function') ? (calculateDurationRaw(job.jamStart, job.jamEnd) || job.durasi || null) : (job.durasi || null),
+        hm_start: (job.hmStart !== null && job.hmStart !== undefined && job.hmStart !== '') ? parseFloat(job.hmStart) : ((job.hmStop !== null && job.hmStop !== undefined && job.hmStop !== '') ? parseFloat(job.hmStop) : null),
+        hm_end: (job.hmEnd !== null && job.hmEnd !== undefined && job.hmEnd !== '') ? parseFloat(job.hmEnd) : ((job.hmReady !== null && job.hmReady !== undefined && job.hmReady !== '') ? parseFloat(job.hmReady) : null),
         hm_stop: job.hmStop || job.hmStart || null,
         hm_ready: job.hmReady || job.hmEnd || null,
         hm_unit: job.hmUnit || null,
+        ada_operator: job.adaOperator || 'Ya',
+        unit_turun: job.unitTurun || 'Ya',
+        unit_swing: job.unitSwing || 'Tidak',
         status_final: statusFinal,
         keterangan: reason || job.keterangan || '',
         non_ach_category: job.nonAchCategory || job.non_ach_category || 'Operasional',
@@ -13503,7 +13533,7 @@
       // Kunci ke Supabase tabel job_history jika online dan tabel tersedia di schema database
       if (state.supabaseClient && window._supabaseHasJobHistory !== false) {
         try {
-          const { error } = await state.supabaseClient.from('job_history').upsert({
+          const histPayload = {
             job_id: snapshotRecord.job_id,
             no_lambung: snapshotRecord.no_lambung,
             type_unit: snapshotRecord.type_unit,
@@ -13521,13 +13551,23 @@
             tanggal_eksekusi: snapshotRecord.tanggal_eksekusi,
             jam_start: snapshotRecord.jam_start,
             jam_end: snapshotRecord.jam_end,
+            durasi: snapshotRecord.durasi,
+            hm_start: snapshotRecord.hm_start,
+            hm_end: snapshotRecord.hm_end,
             status_final: snapshotRecord.status_final,
             keterangan: snapshotRecord.keterangan,
             non_ach_category: snapshotRecord.non_ach_category,
             non_ach_reason: snapshotRecord.non_ach_reason,
             snapshot_data: JSON.parse(JSON.stringify(job, (k, v) => (typeof v === 'string' && v.startsWith('data:image/')) ? '[base64-dihapus]' : v)),
             created_at: snapshotRecord.created_at
-          }, { onConflict: 'job_id' });
+          };
+          let { error } = await state.supabaseClient.from('job_history').upsert(histPayload, { onConflict: 'job_id' });
+          if (error && (/hm_start/i.test(error.message || '') || /hm_end/i.test(error.message || '') || error.code === '42703' || error.code === 'PGRST204')) {
+            delete histPayload.hm_start;
+            delete histPayload.hm_end;
+            const resFallback = await state.supabaseClient.from('job_history').upsert(histPayload, { onConflict: 'job_id' });
+            error = resFallback.error;
+          }
           if (error) {
             if (error.code === 'PGRST205' || error.code === '42P01' || (error.message && (error.message.includes('not find the table') || error.message.includes('does not exist')))) {
               window._supabaseHasJobHistory = false;
@@ -17534,6 +17574,13 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           jamStart: hist.jam_start,
           jamEnd: hist.jam_end,
           durasi: hist.durasi,
+          hmStart: hist.hm_start || hist.hm_stop || (hist.snapshot_data ? (hist.snapshot_data.hmStart || hist.snapshot_data.hmStop || hist.snapshot_data.hm_start || hist.snapshot_data.hm_stop) : null),
+          hmEnd: hist.hm_end || hist.hm_ready || (hist.snapshot_data ? (hist.snapshot_data.hmEnd || hist.snapshot_data.hmReady || hist.snapshot_data.hm_end || hist.snapshot_data.hm_ready) : null),
+          hmStop: hist.hm_stop || hist.hm_start || (hist.snapshot_data ? (hist.snapshot_data.hmStop || hist.snapshot_data.hmStart) : null),
+          hmReady: hist.hm_ready || hist.hm_end || (hist.snapshot_data ? (hist.snapshot_data.hmReady || hist.snapshot_data.hmEnd) : null),
+          adaOperator: hist.ada_operator || (hist.snapshot_data ? (hist.snapshot_data.adaOperator || hist.snapshot_data.ada_operator) : 'Ya'),
+          unitTurun: hist.unit_turun || (hist.snapshot_data ? (hist.snapshot_data.unitTurun || hist.snapshot_data.unit_turun) : 'Ya'),
+          unitSwing: hist.unit_swing || (hist.snapshot_data ? (hist.snapshot_data.unitSwing || hist.snapshot_data.unit_swing) : 'Tidak'),
           status: hist.status_final,
           keterangan: hist.keterangan,
           fotos: histFotos
@@ -21468,11 +21515,13 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         deskripsi = catMap[job.cat] || job.cat || (typeof getJobSchLabel === 'function' ? getJobSchLabel(job) : 'Scheduled Service');
       }
 
-      const hmStopReady = (job.hmStart && job.hmEnd)
-        ? `${job.hmStart} s/d ${job.hmEnd}`
-        : ((job.hmStop && job.hmReady)
-          ? `${job.hmStop} s/d ${job.hmReady}`
-          : (job.hmUnit || job.hm || '-'));
+      const isWt = (job.cat === 'coal' || job.cat === 'rom' || job.cat === 'non_coal' || (job.id && String(job.id).includes('WT')) || job.serviceType === 'watertruck' || job.targetType === 'WT');
+
+      const hmStartVal = (job.hmStart !== null && job.hmStart !== undefined && job.hmStart !== '') ? job.hmStart : ((job.hmStop !== null && job.hmStop !== undefined && job.hmStop !== '') ? job.hmStop : '');
+      const hmEndVal = (job.hmEnd !== null && job.hmEnd !== undefined && job.hmEnd !== '') ? job.hmEnd : ((job.hmReady !== null && job.hmReady !== undefined && job.hmReady !== '') ? job.hmReady : '');
+      const hmStartEnd = (hmStartVal && hmEndVal)
+        ? `${hmStartVal} s/d ${hmEndVal}`
+        : (hmStartVal || hmEndVal || job.hmUnit || '-');
 
       const startFinish = (job.jamStart || job.jamEnd)
         ? `${job.jamStart || '-'} s/d ${job.jamEnd || '-'}`
@@ -21504,20 +21553,35 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         : (job.optName && job.optName !== '-' ? job.optName : '-');
 
       const mps = [job.mp1, job.mp2].filter(m => m && m !== '-' && m !== '');
-      const oilman = (mps.length > 0)
+      const teamMps = (mps.length > 0)
         ? mps.join(' & ')
         : (job.mp && job.mp !== '-' ? job.mp : '-');
 
-      const textToCopy = `${headerText}
+      let textToCopy = '';
+      if (isWt) {
+        // KHUSUS JOB WASHING (WT): Tampilkan HM Start & End dan label Washingman
+        textToCopy = `${headerText}
 Kode Unit : ${kodeUnit}
 Deskripsi : ${deskripsi}
-Hm Stop & ready : ${hmStopReady}
+HM Start & End : ${hmStartEnd}
 Jam Start & Finish : ${startFinish}
 Status : ${statusStr}
 Keterangan : ${keterangan}
 Armada : ${armada}
-operator : ${operator}
-Oilman 1 & 2 : ${oilman}`;
+Operator : ${operator}
+Washingman 1 & 2 : ${teamMps}`;
+      } else {
+        // KHUSUS JOB LT: Tanpa HM (sesuai instruksi pengguna), label Oilman
+        textToCopy = `${headerText}
+Kode Unit : ${kodeUnit}
+Deskripsi : ${deskripsi}
+Jam Start & Finish : ${startFinish}
+Status : ${statusStr}
+Keterangan : ${keterangan}
+Armada : ${armada}
+Operator : ${operator}
+Oilman 1 & 2 : ${teamMps}`;
+      }
 
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(textToCopy).then(() => {
@@ -21734,7 +21798,7 @@ Oilman 1 & 2 : ${oilman}`;
         durasiEl.innerHTML = durasiHtml; // innerHTML agar tag badge ditampilkan sebagai badge, bukan teks mentah
       }
 
-      // 8. Kondisi Lapangan Khusus Washing
+      // 8. Kondisi Lapangan Khusus Washing (WT)
       const washBox = document.getElementById('detail-modal-washing-box');
       if (washBox) {
         if (isWt && !isJobRequest) {
@@ -21745,6 +21809,13 @@ Oilman 1 & 2 : ${oilman}`;
           if (wOpt) wOpt.textContent = job.adaOperator || 'Ya';
           if (wTurun) wTurun.textContent = job.unitTurun || 'Ya';
           if (wSwing) wSwing.textContent = job.unitSwing || 'Tidak';
+
+          const wHmStart = document.getElementById('detail-modal-wash-hm-start');
+          const wHmEnd = document.getElementById('detail-modal-wash-hm-end');
+          const startVal = (job.hmStart !== null && job.hmStart !== undefined && job.hmStart !== '') ? job.hmStart : ((job.hmStop !== null && job.hmStop !== undefined && job.hmStop !== '') ? job.hmStop : '-');
+          const endVal = (job.hmEnd !== null && job.hmEnd !== undefined && job.hmEnd !== '') ? job.hmEnd : ((job.hmReady !== null && job.hmReady !== undefined && job.hmReady !== '') ? job.hmReady : '-');
+          if (wHmStart) wHmStart.textContent = startVal;
+          if (wHmEnd) wHmEnd.textContent = endVal;
         } else {
           washBox.classList.add('hidden');
         }
@@ -24212,10 +24283,27 @@ Oilman 1 & 2 : ${oilman}`;
 
       // Gabungkan rekaman riwayat snapshot terkunci dari state.jobHistory
       if (Array.isArray(state.jobHistory) && state.jobHistory.length > 0) {
-        const existingJobIds = new Set(allCompleted.map(j => String(j.id || '')));
+        const existingJobMap = new Map(allCompleted.map(j => [String(j.id || ''), j]));
         state.jobHistory.forEach(h => {
-          if (!existingJobIds.has(String(h.job_id || ''))) {
-            allCompleted.push({
+          const hid = String(h.job_id || '');
+          if (!hid) return;
+          const ex = existingJobMap.get(hid);
+          if (ex) {
+            // Perkaya jam pelaksanaan & durasi dari job_history jika di job aktif masih kosong
+            if ((!ex.jamStart || ex.jamStart === '-') && h.jam_start) ex.jamStart = h.jam_start;
+            if ((!ex.jamEnd || ex.jamEnd === '-') && h.jam_end) ex.jamEnd = h.jam_end;
+            if ((ex.durasi === null || ex.durasi === undefined || ex.durasi === '' || ex.durasi === '-') && h.durasi) ex.durasi = h.durasi;
+            if ((!ex.hmStart || ex.hmStart === '-') && (h.hm_start || h.hm_stop)) ex.hmStart = h.hm_start || h.hm_stop;
+            if ((!ex.hmEnd || ex.hmEnd === '-') && (h.hm_end || h.hm_ready)) ex.hmEnd = h.hm_end || h.hm_ready;
+            if ((!ex.hmStop || ex.hmStop === '-') && (h.hm_stop || h.hm_start)) ex.hmStop = h.hm_stop || h.hm_start;
+            if ((!ex.hmReady || ex.hmReady === '-') && (h.hm_ready || h.hm_end)) ex.hmReady = h.hm_ready || h.hm_end;
+            if (!ex.adaOperator && h.ada_operator) ex.adaOperator = h.ada_operator;
+            if (!ex.unitTurun && h.unit_turun) ex.unitTurun = h.unit_turun;
+            if (!ex.unitSwing && h.unit_swing) ex.unitSwing = h.unit_swing;
+            if ((!ex.fotos || ex.fotos.length === 0) && Array.isArray(h.fotos) && h.fotos.length > 0) ex.fotos = h.fotos;
+            if (!ex.tanggalRealisasi && h.tanggal_eksekusi) ex.tanggalRealisasi = h.tanggal_eksekusi;
+          } else {
+            const newJob = {
               id: h.job_id,
               noLambung: h.no_lambung,
               typeUnit: h.type_unit,
@@ -24236,13 +24324,21 @@ Oilman 1 & 2 : ${oilman}`;
               jamStart: h.jam_start,
               jamEnd: h.jam_end,
               durasi: h.durasi,
+              hmStart: h.hm_start || h.hm_stop || (h.snapshot_data ? (h.snapshot_data.hmStart || h.snapshot_data.hmStop || h.snapshot_data.hm_start || h.snapshot_data.hm_stop) : null),
+              hmEnd: h.hm_end || h.hm_ready || (h.snapshot_data ? (h.snapshot_data.hmEnd || h.snapshot_data.hmReady || h.snapshot_data.hm_end || h.snapshot_data.hm_ready) : null),
+              hmStop: h.hm_stop || h.hm_start || (h.snapshot_data ? (h.snapshot_data.hmStop || h.snapshot_data.hmStart) : null),
+              hmReady: h.hm_ready || h.hm_end || (h.snapshot_data ? (h.snapshot_data.hmReady || h.snapshot_data.hmEnd) : null),
+              adaOperator: h.ada_operator || (h.snapshot_data ? (h.snapshot_data.adaOperator || h.snapshot_data.ada_operator) : 'Ya'),
+              unitTurun: h.unit_turun || (h.snapshot_data ? (h.snapshot_data.unitTurun || h.snapshot_data.unit_turun) : 'Ya'),
+              unitSwing: h.unit_swing || (h.snapshot_data ? (h.snapshot_data.unitSwing || h.snapshot_data.unit_swing) : 'Tidak'),
               status: String(h.status_final || '').toLowerCase(),
               status_final: h.status_final,
               keterangan: h.keterangan,
               alasanNonAch: h.non_ach_reason,
               fotos: (Array.isArray(h.fotos) && h.fotos.length > 0) ? h.fotos : (JSON.parse(safeStorage.getItem('SE_JOB_FOTOS_' + h.job_id) || '[]'))
-            });
-            existingJobIds.add(String(h.job_id || ''));
+            };
+            allCompleted.push(newJob);
+            existingJobMap.set(hid, newJob);
           }
         });
       }
@@ -24625,7 +24721,7 @@ Oilman 1 & 2 : ${oilman}`;
 
           <!-- KOLOM 7: DURASI -->
           <td class="hidden md:table-cell py-2.5 px-2 text-center font-mono text-[11px] font-bold text-slate-700 break-words">
-            ${calculateDuration(job.jamStart, job.jamEnd)}
+            ${calculateDuration(job.jamStart, job.jamEnd, job.durasi)}
           </td>
 
           <!-- KOLOM 8: STATUS (SEJAJAR CENTER DENGAN KOLOM ARMADA) -->
@@ -26303,6 +26399,9 @@ Oilman 1 & 2 : ${oilman}`;
       job.mp2 = mp2Val;
       job.jamStart = jamStart;
       job.jamEnd = jamEnd;
+      const rawDur = (typeof calculateDurationRaw === 'function') ? calculateDurationRaw(jamStart, jamEnd) : null;
+      job.durasi = rawDur;
+      job.durasiMins = rawDur;
       const actionDate = getEffectiveTodayString();
       job.tanggalRealisasi = actionDate;
       if (!job.tanggal) job.tanggal = actionDate;
@@ -29650,9 +29749,13 @@ Oilman 1 & 2 : ${oilman}`;
           opt_name: job.opt || job.optName || '-',
           mp1: job.mp1 || '-',
           mp2: job.mp2 || '-',
-          jam_start: job.jamStart || '',
-          jam_end: job.jamEnd || '',
-          durasi: job.durasi ? parseFloat(job.durasi) : null,
+          jam_start: job.jamStart || job.jam_start || '',
+          jam_end: job.jamEnd || job.jam_end || '',
+          durasi: (function () {
+            const calculated = (typeof calculateDurationRaw === 'function') ? calculateDurationRaw(job.jamStart || job.jam_start, job.jamEnd || job.jam_end) : null;
+            if (calculated !== null && !isNaN(calculated)) return calculated;
+            return (job.durasi !== null && job.durasi !== undefined && !isNaN(job.durasi)) ? parseFloat(job.durasi) : null;
+          })(),
           hm_stop: job.hmStop || job.hmStart || null,
           hm_ready: job.hmReady || job.hmEnd || null,
           status: job.status || 'scheduled',
