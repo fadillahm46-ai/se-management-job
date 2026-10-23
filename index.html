@@ -3226,7 +3226,7 @@
             <div class="overflow-x-auto">
               <table class="w-full table-fixed text-left text-xs">
                 <thead
-                  class="bg-slate-50/90 text-slate-400 uppercase text-[9px] tracking-wider border-b border-slate-100 font-bold">
+                  class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-200 font-extrabold">
                   <tr>
                     <th class="py-2.5 px-3 w-[25%] md:w-[11%]">WAKTU KENDALA</th>
                     <th class="py-2.5 px-3 w-[27%] md:w-[13%]"><span class="md:hidden">UNIT</span><span
@@ -3561,7 +3561,7 @@
                 <div class="overflow-x-auto overflow-y-auto flex-1 max-h-[calc(100vh-270px)] min-h-[480px]">
                   <table class="w-full text-left text-xs">
                     <thead
-                      class="bg-slate-50 text-slate-400 uppercase text-[10px] tracking-wider sticky top-0 border-b border-slate-100 font-bold z-10 shadow-2xs">
+                      class="bg-slate-50 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider sticky top-0 border-b border-slate-100 font-extrabold z-10 shadow-2xs">
                       <tr>
                         <th id="th-roster-select" class="hidden py-3 px-3 text-center w-12 bg-slate-50">
                           <input type="checkbox" id="roster-select-all" onchange="toggleSelectAllRoster(this.checked)"
@@ -3755,7 +3755,7 @@
               <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
                   <thead
-                    class="bg-slate-50 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-100 font-bold">
+                    class="bg-slate-50 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold">
                     <tr>
                       <th id="th-units-select" class="hidden py-3 px-3 text-center w-12">
                         <input type="checkbox" id="units-select-all" onchange="toggleSelectAllUnits(this.checked)"
@@ -3897,7 +3897,7 @@
               <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
                   <thead
-                    class="bg-slate-50 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-100 font-bold">
+                    class="bg-slate-50 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold">
                     <tr>
                       <th id="th-operators-select" class="hidden py-3 px-3 text-center w-12">
                         <input type="checkbox" id="operators-select-all"
@@ -4172,7 +4172,7 @@
               <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
                   <thead
-                    class="bg-slate-50 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-100 font-bold">
+                    class="bg-slate-50 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold">
                     <tr>
                       <th class="py-3 px-3 text-center hidden" id="th-armada-select">
                         <input type="checkbox" id="armada-select-all" onchange="toggleSelectAllArmada(this.checked)"
@@ -4943,7 +4943,7 @@
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs border-collapse">
                 <thead
-                  class="bg-gradient-to-r from-emerald-700 to-teal-800 text-white uppercase text-[10px] tracking-wider font-bold">
+                  class="bg-gradient-to-r from-emerald-700 to-teal-800 text-white uppercase text-[10.5px] md:text-[11px] tracking-wider font-extrabold">
                   <tr>
                     <th class="py-2.5 px-3 text-center w-12 border-r border-white/10">NO</th>
                     <th class="py-2.5 px-3 md:px-4 w-32 md:w-52 border-r border-white/10">
@@ -13593,8 +13593,24 @@
         }
       }
 
+      if (!Array.isArray(job.fotos) || job.fotos.length === 0) {
+        try {
+          const sRaw = safeStorage.getItem('SE_JOB_FOTOS_' + (job.id || '')) || safeStorage.getItem('SE_JOB_FOTOS_' + cleanId);
+          if (sRaw) {
+            const p = JSON.parse(sRaw);
+            if (Array.isArray(p) && p.length > 0) {
+              job.fotos = p;
+              snapshotRecord.fotos = p;
+            }
+          }
+        } catch (e) { }
+      }
+
       if (Array.isArray(job.fotos) && job.fotos.length > 0) {
         safeStorage.setItem('SE_JOB_FOTOS_' + cleanId, JSON.stringify(job.fotos));
+        if (job.id && job.id !== cleanId) {
+          safeStorage.setItem('SE_JOB_FOTOS_' + job.id, JSON.stringify(job.fotos));
+        }
       }
 
       if (existingIdx !== -1) {
@@ -13652,6 +13668,21 @@
           } else {
             window._supabaseHasJobHistory = true;
             console.log('[Snapshot History Locked OK]', cleanId);
+
+            // ATURAN PENGGUNA: Setelah tercatat di job_history, HAPUS dari tabel jobs & order_requests Supabase agar isi tabel tidak menumpuk!
+            const originalJobId = String(job.id || '');
+            if (originalJobId) {
+              try {
+                await Promise.allSettled([
+                  state.supabaseClient.from('jobs').delete().eq('id', originalJobId),
+                  state.supabaseClient.from('order_requests').delete().or(`id.eq.${originalJobId},kode_order.eq.${originalJobId}`)
+                ]);
+                console.log('[Supabase Move Job/Order OK] Berhasil memindahkan ' + originalJobId + ' ke job_history dan menghapus dari tabel jobs & order_requests.');
+              } catch (delEx) { }
+              if (typeof _jobSyncQueue !== 'undefined' && _jobSyncQueue.has(originalJobId)) {
+                _jobSyncQueue.delete(originalJobId);
+              }
+            }
           }
         } catch (err) {
           window._supabaseHasJobHistory = false;
@@ -14567,16 +14598,16 @@
 
       if (isAdmin) {
         return `
-          <button type="button" onclick="openQuickArmadaSelector('${job.id}', '${assigned ? armadaName : ''}', ${isWt})" class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg ${assigned ? (isWt ? 'bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200') : 'bg-slate-100 hover:bg-slate-200 text-slate-400 border border-slate-200'} font-mono font-bold text-[12px] transition shadow-2xs" title="${assigned ? 'Klik untuk ganti armada' : 'Klik untuk tentukan armada'}">
+          <button type="button" onclick="openQuickArmadaSelector('${job.id}', '${assigned ? armadaName : ''}', ${isWt})" class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg ${assigned ? (isWt ? 'bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200') : 'bg-slate-100 hover:bg-slate-200 text-slate-400 border border-slate-200'} font-mono font-bold text-[11.5px] transition shadow-2xs" title="${assigned ? 'Klik untuk ganti armada' : 'Klik untuk tentukan armada'}">
             <span>${armadaName}</span>
             <svg class="w-2.5 h-2.5 ${assigned ? (isWt ? 'text-cyan-600' : 'text-emerald-600') : 'text-slate-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
           </button>
         `;
       } else {
         if (assigned) {
-          return `<span class="font-mono font-bold ${isWt ? 'text-cyan-800' : 'text-emerald-800'} text-[12px]">${armadaName}</span>`;
+          return `<span class="font-mono font-bold ${isWt ? 'text-cyan-800' : 'text-emerald-800'} text-[11.5px]">${armadaName}</span>`;
         }
-        return `<span class="text-slate-300 font-bold text-xs">-</span>`;
+        return `<span class="text-slate-300 font-bold text-[11.5px]">-</span>`;
       }
     }
     window.renderArmadaCell = renderArmadaCell;
@@ -14588,15 +14619,15 @@
 
       if (isAdmin) {
         return `
-          <button type="button" onclick="openQuickArmadaSelector('${job.id}', '${assigned ? armadaName : ''}', ${isWt})" class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-lg ${assigned ? (isWt ? 'bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200') : 'bg-slate-100 hover:bg-slate-200 text-slate-400 border border-slate-200'} font-mono font-bold text-[11px] transition shadow-2xs truncate max-w-full" title="${assigned ? 'Klik untuk ganti armada' : 'Klik untuk tentukan armada'}">
+          <button type="button" onclick="openQuickArmadaSelector('${job.id}', '${assigned ? armadaName : ''}', ${isWt})" class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-lg ${assigned ? (isWt ? 'bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200') : 'bg-slate-100 hover:bg-slate-200 text-slate-400 border border-slate-200'} font-mono font-bold text-[11.5px] transition shadow-2xs truncate max-w-full" title="${assigned ? 'Klik untuk ganti armada' : 'Klik untuk tentukan armada'}">
             <span>${armadaName}</span>
           </button>
         `;
       } else {
         if (assigned) {
-          return `<span class="inline-block px-1.5 py-0.5 rounded-lg font-mono font-bold ${isWt ? 'text-cyan-800 bg-cyan-50/90 border border-cyan-200' : 'text-emerald-800 bg-emerald-50/90 border border-emerald-200'} text-[11px] shadow-2xs">${armadaName}</span>`;
+          return `<span class="inline-block px-1.5 py-0.5 rounded-lg font-mono font-bold ${isWt ? 'text-cyan-800 bg-cyan-50/90 border border-cyan-200' : 'text-emerald-800 bg-emerald-50/90 border border-emerald-200'} text-[11.5px] shadow-2xs">${armadaName}</span>`;
         }
-        return `<span class="text-slate-300 font-bold text-xs">-</span>`;
+        return `<span class="text-slate-300 font-bold text-[11.5px]">-</span>`;
       }
     }
     window.renderArmadaOnlyCell = renderArmadaOnlyCell;
@@ -14625,7 +14656,7 @@
 
     function renderPersonnelCell(job) {
       if (!isArmadaAssigned(job)) {
-        return `<div class="text-center font-bold text-slate-300 text-xs">-</div>`;
+        return `<div class="text-center font-bold text-slate-300 text-[11.5px]">-</div>`;
       }
 
       const isWt = (job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat) || String(job.id || '').startsWith('WT'));
@@ -14658,11 +14689,11 @@
       }
 
       return `
-        <div class="text-slate-700 leading-tight text-[10px]">
-          <span class="text-slate-400 font-semibold">OPT:</span> <span class="font-bold text-slate-800">${optName}</span>
+        <div class="text-slate-700 leading-tight text-[11px]">
+          <span class="text-slate-400 font-semibold text-[10.5px]">OPT:</span> <span class="font-bold text-slate-800 text-[11px]">${optName}</span>
         </div>
-        <div class="text-slate-600 leading-tight mt-0.5 text-[10px]">
-          <span class="text-slate-400 font-semibold">MP:</span> ${mpText}
+        <div class="text-slate-600 leading-tight mt-0.5 text-[11px]">
+          <span class="text-slate-400 font-semibold text-[10.5px]">MP:</span> <span class="font-semibold text-slate-700 text-[11px]">${mpText}</span>
         </div>
       `;
     }
@@ -14882,34 +14913,34 @@
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/80 transition align-top';
         tr.innerHTML = `
-          <td class="py-2.5 px-3 font-mono text-[10px] md:text-[10.5px] text-slate-700 break-words">
-            <div class="font-bold text-slate-800">${job.tanggal || '2026-09-27'}</div>
-            <div class="text-slate-400 text-[10px] mt-0.5">${job.jamStart || job.waktu || '07:40'} WITA</div>
+          <td class="py-2.5 px-3 font-mono text-[11px] text-slate-700 break-words">
+            <div class="font-extrabold text-slate-900 text-[11px] leading-tight">${job.tanggal || '2026-09-27'}</div>
+            <div class="text-slate-500 text-[11px] font-semibold mt-0.5 leading-tight">${job.jamStart || job.waktu || '07:40'} WITA</div>
           </td>
           <td class="py-2.5 px-3 break-words">
-            <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-900 font-mono hover:text-emerald-700 text-left cursor-pointer text-[14.5px] leading-snug">
+            <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-bold text-slate-900 font-mono hover:text-emerald-700 text-left cursor-pointer text-[11.5px] md:text-xs leading-snug tracking-wide">
               ${job.noLambung}
             </button>
-            <span class="text-[9px] font-bold text-slate-400 block uppercase tracking-tight leading-tight mt-0.5">${unitType}</span>
+            <span class="text-[11px] font-semibold text-slate-500 block uppercase tracking-tight leading-tight mt-0.5">${unitType}</span>
           </td>
           <td class="py-2.5 px-3 break-words">
-            <span class="font-bold text-slate-800 text-[10.5px] block">KGU ${job.cluster || 'Selatan'}</span>
-            <span class="text-[9px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block truncate">${job.lokasi || '-'}</span>
+            <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">KGU ${job.cluster || 'Selatan'}</span>
+            <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block truncate">${job.lokasi || '-'}</span>
           </td>
-          <td class="hidden md:table-cell py-2.5 px-3 text-center">
+          <td class="hidden md:table-cell py-2.5 px-3 text-center align-middle">
             ${renderArmadaCell(job, isWt)}
           </td>
-          <td class="hidden md:table-cell py-2.5 px-3 break-words text-[10px]">
+          <td class="hidden md:table-cell py-2.5 px-3 break-words text-[11px]">
             ${renderPersonnelCell(job)}
           </td>
-          <td class="hidden md:table-cell py-2.5 px-3 text-center text-[10px]">
-            <span class="inline-block px-1.5 py-0.5 rounded bg-slate-100 font-mono font-bold text-slate-600">${job.fotos ? job.fotos.length : 0}/4</span>
+          <td class="hidden md:table-cell py-2.5 px-3 text-center text-[11px] align-middle">
+            <span class="inline-block px-2 py-0.5 rounded bg-slate-100 font-mono font-bold text-slate-700 text-[11px]">${job.fotos ? job.fotos.length : 0}/4</span>
           </td>
-          <td class="hidden md:table-cell py-2.5 px-3 text-xs text-rose-700 font-semibold break-words">
+          <td class="hidden md:table-cell py-2.5 px-3 text-[11.5px] text-rose-700 font-medium break-words">
             ${job.keterangan || job.alasanNonAch || 'Kendala operasional di pit tambang'}
           </td>
-          <td class="py-2.5 px-3 text-center">
-            <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs">NON-ACH</span>
+          <td class="py-2.5 px-3 text-center align-middle">
+            <span class="inline-flex items-center justify-center min-w-[54px] px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs">NON-ACH</span>
           </td>
         `;
         tbody.appendChild(tr);
@@ -16452,7 +16483,7 @@
           const table = document.createElement('table');
           table.className = 'w-full table-fixed text-left text-xs';
           table.innerHTML = `
-            <thead class="bg-slate-50/90 text-slate-400 uppercase text-[9px] tracking-wider border-b border-slate-100 font-bold">
+            <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold">
               <tr>
                 ${state.isLtSchedSelectMode ? `<th class="py-1.5 px-1.5 w-[5%] md:w-[4%] text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'LT')" title="Pilih Semua di Cluster Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
                 <th class="py-1.5 px-1.5 ${state.isLtSchedSelectMode ? 'w-[14%] md:w-[8%]' : 'w-[15%] md:w-[9%]'}">WAKTU</th>
@@ -16529,39 +16560,39 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                     <input type="checkbox" ${state.selectedSchedJobIds.has(job.id) ? 'checked' : ''} onchange="toggleSelectSchedJobRow('${job.id}', this.checked, 'LT')" class="rounded border-slate-300 text-brand-600 cursor-pointer">
                   </td>
                 ` : ''}
-                <td class="py-1 px-1.5 md:py-1.5 md:px-2 font-mono text-[10px] text-slate-700 break-words">${job.waktu || '08:00 s/d 08:30'}</td>
-                <td class="py-1 px-1.5 md:py-1.5 md:px-2 break-words">
+                <td class="py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">${job.waktu || '08:00 s/d 08:30'}</td>
+                <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
                   <div class="flex items-center flex-wrap gap-1">
-                    <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-900 font-mono hover:text-emerald-700 text-left cursor-pointer text-[14.5px] leading-snug">
+                    <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-bold text-slate-900 font-mono hover:text-emerald-700 text-left cursor-pointer text-[11.5px] md:text-xs leading-snug tracking-wide">
                       ${job.noLambung}
                     </button>
-                    ${hasAcJob ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-black font-sans ml-1 tracking-tight shadow-2xs cursor-default" title="Unit ini juga memiliki jadwal Clean Air Cleaner hari ini">+ AC</span>` : ''}
+                    ${hasAcJob ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 text-[10.5px] font-bold font-sans ml-1 tracking-tight shadow-2xs cursor-default" title="Unit ini juga memiliki jadwal Clean Air Cleaner hari ini">+ AC</span>` : ''}
                   </div>
-                  ${isAdmin ? `<span class="text-[8px] font-bold text-slate-400 block uppercase tracking-tight leading-tight mt-0.5">${unitType}</span>` : ''}
+                  ${isAdmin ? `<span class="text-[11px] font-semibold text-slate-500 block uppercase tracking-tight leading-tight mt-0.5">${unitType}</span>` : ''}
                 </td>
-                <td class="py-1 px-1.5 md:py-1.5 md:px-2 break-words">
-                  <span class="font-bold text-slate-800 text-[10px] block">${formatClusterLabel(job.cluster)}</span>
-                  <span class="text-[9px] text-slate-500 font-semibold uppercase">${job.lokasi}</span>
+                <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
+                  <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
+                  <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
                 </td>
-                <td class="py-1 px-1 text-center font-mono font-bold text-emerald-800 text-[11px] align-middle">
+                <td class="py-1.5 px-1 text-center font-mono font-bold text-emerald-800 text-[11.5px] align-middle">
                   ${renderArmadaOnlyCell(job, false)}
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 break-words text-[10px]">
+                <td class="hidden md:table-cell py-1.5 px-2 break-words text-[11px]">
                   ${renderPersonnelCell(job)}
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 font-mono text-[10px] text-slate-600 break-words">
+                <td class="hidden md:table-cell py-1.5 px-2 font-mono text-[11px] text-slate-700 break-words">
                   <div>Start: ${job.jamStart || '-'}</div>
                   <div>End: ${job.jamEnd || '-'}</div>
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 text-center font-mono text-[10px] font-bold text-slate-700 break-words">
+                <td class="hidden md:table-cell py-1.5 px-2 text-center font-mono text-[11.5px] font-bold text-slate-700 break-words align-middle">
                   ${calculateDuration(job.jamStart, job.jamEnd)}
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 text-center text-[10px]">
+                <td class="hidden md:table-cell py-1.5 px-2 text-center text-[11px] align-middle">
                   <span class="inline-block px-1.5 py-0.5 rounded bg-slate-100 font-mono font-bold text-slate-600">${job.fotos ? job.fotos.length : 0}/4</span>
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-500 break-words">${formatKendalaText(job.keterangan)}</td>
+                <td class="hidden md:table-cell py-1.5 px-2 text-[11px] text-slate-600 break-words">${formatKendalaText(job.keterangan)}</td>
                 ${!isAdmin ? `
-                <td class="py-1 px-1.5 md:py-1.5 md:px-2 text-center">
+                <td class="py-1.5 px-1.5 md:py-2 md:px-2 text-center align-middle">
                   ${renderJobActionCell(job)}
                 </td>
                 ` : ''}
@@ -16650,7 +16681,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           const table = document.createElement('table');
           table.className = 'w-full table-fixed text-left text-xs';
           table.innerHTML = `
-            <thead class="bg-slate-50/90 text-slate-400 uppercase text-[9px] tracking-wider border-b border-slate-100 font-bold">
+            <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold">
               <tr>
                 ${state.isLtSchedSelectMode ? `<th class="py-1.5 px-2 w-[4%] text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'LT', ${shiftNum})" title="Pilih Semua di Cluster & Shift Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
                 <th class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[10%] md:w-[8%]' : 'w-[11%] md:w-[9%]'}">WAKTU</th>
@@ -16733,42 +16764,42 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                     <input type="checkbox" ${state.selectedSchedJobIds.has(job.id) ? 'checked' : ''} onchange="toggleSelectSchedJobRow('${job.id}', this.checked, 'LT')" class="rounded border-slate-300 text-brand-600 cursor-pointer">
                   </td>
                 ` : ''}
-                <td class="py-1 px-1.5 md:py-1.5 md:px-2 font-mono text-[10px] text-slate-700 break-words">
+                <td class="py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">
                   <div>${job.waktu || '07:00 s/d 07:15'}</div>
-                  ${isPendingJob ? `<span class="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[8px] font-extrabold bg-amber-200/80 text-amber-950 uppercase tracking-tighter">PENDING S1</span>` : ''}
+                  ${isPendingJob ? `<span class="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9.5px] font-extrabold bg-amber-200/80 text-amber-950 uppercase tracking-tighter">PENDING S1</span>` : ''}
                 </td>
-                <td class="py-1 px-1.5 md:py-1.5 md:px-2 break-words">
+                <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
                   <div class="flex items-center flex-wrap gap-1">
-                    <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-900 font-mono hover:text-emerald-700 text-left cursor-pointer text-[14.5px] leading-snug">
+                    <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-bold text-slate-900 font-mono hover:text-emerald-700 text-left cursor-pointer text-[11.5px] md:text-xs leading-snug tracking-wide">
                       ${job.noLambung}
                     </button>
-                    ${hasAcJob ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-black font-sans ml-1 tracking-tight shadow-2xs cursor-default" title="Unit ini juga memiliki jadwal Clean Air Cleaner hari ini">+ AC</span>` : ''}
+                    ${hasAcJob ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 text-[10.5px] font-bold font-sans ml-1 tracking-tight shadow-2xs cursor-default" title="Unit ini juga memiliki jadwal Clean Air Cleaner hari ini">+ AC</span>` : ''}
                   </div>
-                  ${isAdmin ? `<span class="text-[8px] font-bold text-slate-400 block uppercase tracking-tight leading-tight mt-0.5">${unitType}</span>` : ''}
+                  ${isAdmin ? `<span class="text-[11px] font-semibold text-slate-500 block uppercase tracking-tight leading-tight mt-0.5">${unitType}</span>` : ''}
                 </td>
-                <td class="py-1 px-1.5 md:py-1.5 md:px-2 break-words">
-                  <span class="font-bold text-slate-800 text-[10px] block">${formatClusterLabel(job.cluster)}</span>
-                  <span class="text-[9px] text-slate-500 font-semibold uppercase">${job.lokasi}</span>
+                <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
+                  <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
+                  <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 text-center">
+                <td class="hidden md:table-cell py-1.5 px-2 text-center align-middle">
                   ${renderArmadaCell(job, false)}
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 break-words text-[10px]">
+                <td class="hidden md:table-cell py-1.5 px-2 break-words text-[11px]">
                   ${renderPersonnelCell(job)}
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 font-mono text-[10px] text-slate-600 break-words">
+                <td class="hidden md:table-cell py-1.5 px-2 font-mono text-[11px] text-slate-700 break-words">
                   <div>Start: ${job.jamStart || '-'}</div>
                   <div>End: ${job.jamEnd || '-'}</div>
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 text-center font-mono text-[10px] font-bold text-slate-700 break-words">
+                <td class="hidden md:table-cell py-1.5 px-2 text-center font-mono text-[11.5px] font-bold text-slate-700 break-words align-middle">
                   ${calculateDuration(job.jamStart, job.jamEnd)}
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 text-center text-[10px]">
+                <td class="hidden md:table-cell py-1.5 px-2 text-center text-[11px] align-middle">
                   <span class="inline-block px-1.5 py-0.5 rounded bg-slate-100 font-mono font-bold text-slate-600">${job.fotos ? job.fotos.length : 0}/4</span>
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-500 break-words">${formatKendalaText(job.keterangan)}</td>
+                <td class="hidden md:table-cell py-1.5 px-2 text-[11px] text-slate-600 break-words">${formatKendalaText(job.keterangan)}</td>
                 ${!isAdmin ? `
-                <td class="py-1 px-1.5 md:py-1.5 md:px-2 text-center">
+                <td class="py-1.5 px-1.5 md:py-2 md:px-2 text-center align-middle">
                   ${renderJobActionCell(job)}
                 </td>
                 ` : ''}
@@ -17025,7 +17056,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           const table = document.createElement('table');
           table.className = 'w-full table-fixed text-left text-xs';
           table.innerHTML = `
-            <thead class="bg-slate-50/90 text-slate-400 uppercase text-[9px] tracking-wider border-b border-slate-100 font-bold">
+            <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold">
               <tr>
                 ${state.isWtSchedSelectMode ? `<th class="py-1.5 px-1.5 w-[5%] md:w-[4%] text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'WT')" title="Pilih Semua di Cluster Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
                 <th class="py-1.5 px-1.5 ${state.isWtSchedSelectMode ? 'w-[14%] md:w-[8%]' : 'w-[15%] md:w-[9%]'}">WAKTU</th>
@@ -17102,36 +17133,36 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                     <input type="checkbox" ${state.selectedSchedJobIds.has(job.id) ? 'checked' : ''} onchange="toggleSelectSchedJobRow('${job.id}', this.checked, 'WT')" class="rounded border-slate-300 text-brand-600 cursor-pointer">
                   </td>
                 ` : ''}
-                <td class="py-1 px-1.5 md:py-1.5 md:px-2 font-mono text-[10px] text-slate-700 break-words">${job.waktu || '08:00 s/d 09:00'}</td>
-                <td class="py-1 px-1.5 md:py-1.5 md:px-2 break-words">
-                  <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-900 font-mono hover:text-cyan-700 text-left cursor-pointer text-[14.5px] leading-snug">
+                <td class="py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">${job.waktu || '08:00 s/d 09:00'}</td>
+                <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
+                  <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-bold text-slate-900 font-mono hover:text-cyan-700 text-left cursor-pointer text-[11.5px] md:text-xs leading-snug tracking-wide">
                     ${job.noLambung}
                   </button>
-                  ${isAdmin ? `<span class="text-[8px] font-bold text-slate-400 block uppercase tracking-tight leading-tight mt-0.5">${unitType}</span>` : ''}
+                  ${isAdmin ? `<span class="text-[11px] font-semibold text-slate-500 block uppercase tracking-tight leading-tight mt-0.5">${unitType}</span>` : ''}
                 </td>
-                <td class="py-1 px-1.5 md:py-1.5 md:px-2 break-words">
-                  <span class="font-bold text-slate-800 text-[10px] block">${formatClusterLabel(job.cluster)}</span>
-                  <span class="text-[9px] text-slate-500 font-semibold uppercase">${job.lokasi}</span>
+                <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
+                  <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
+                  <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
                 </td>
-                <td class="py-1 px-1 text-center font-mono font-bold text-cyan-800 text-[11px] align-middle">
+                <td class="py-1.5 px-1 text-center font-mono font-bold text-cyan-800 text-[11.5px] align-middle">
                   ${renderArmadaOnlyCell(job, true)}
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 break-words text-[10px]">
+                <td class="hidden md:table-cell py-1.5 px-2 break-words text-[11px]">
                   ${renderPersonnelCell(job)}
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 font-mono text-[10px] text-slate-600 break-words">
+                <td class="hidden md:table-cell py-1.5 px-2 font-mono text-[11px] text-slate-700 break-words">
                   <div>Start: ${job.jamStart || '-'}</div>
                   <div>End: ${job.jamEnd || '-'}</div>
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 text-center font-mono text-[10px] font-bold text-slate-700 break-words">
+                <td class="hidden md:table-cell py-1.5 px-2 text-center font-mono text-[11.5px] font-bold text-slate-700 break-words align-middle">
                   ${calculateDuration(job.jamStart, job.jamEnd)}
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 text-center text-[10px]">
+                <td class="hidden md:table-cell py-1.5 px-2 text-center text-[11px] align-middle">
                   <span class="inline-block px-1.5 py-0.5 rounded bg-slate-100 font-mono font-bold text-slate-600">${job.fotos ? job.fotos.length : 0}/4</span>
                 </td>
-                <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-500 break-words">${formatKendalaText(job.keterangan)}</td>
+                <td class="hidden md:table-cell py-1.5 px-2 text-[11px] text-slate-600 break-words">${formatKendalaText(job.keterangan)}</td>
                 ${!isAdmin ? `
-                <td class="py-1 px-1.5 md:py-1.5 md:px-2 text-center">
+                <td class="py-1.5 px-1.5 md:py-2 md:px-2 text-center align-middle">
                   ${renderJobActionCell(job)}
                 </td>
                 ` : ''}
@@ -17242,7 +17273,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             const table = document.createElement('table');
             table.className = 'w-full table-fixed text-left text-xs';
             table.innerHTML = `
-              <thead class="bg-slate-50/90 text-slate-400 uppercase text-[9px] tracking-wider border-b border-slate-100 font-bold">
+              <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold">
                 <tr>
                   ${state.isWtSchedSelectMode ? `<th class="py-1.5 px-2 w-[4%] text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'WT', ${shiftNum})" title="Pilih Semua di Cluster & Shift Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
                   <th class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[10%] md:w-[8%]' : 'w-[11%] md:w-[9%]'}">WAKTU</th>
@@ -17277,36 +17308,36 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                       <input type="checkbox" ${state.selectedSchedJobIds.has(job.id) ? 'checked' : ''} onchange="toggleSelectSchedJobRow('${job.id}', this.checked, 'WT')" class="rounded border-slate-300 text-brand-600 cursor-pointer">
                     </td>
                   ` : ''}
-                  <td class="py-1 px-1.5 md:py-1.5 md:px-2 font-mono text-[10px] text-slate-700 break-words">${job.waktu || round.defaultTime}</td>
-                  <td class="py-1 px-1.5 md:py-1.5 md:px-2 break-words">
-                    <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-900 font-mono hover:text-cyan-700 text-left cursor-pointer text-[14.5px] leading-snug">
+                  <td class="py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">${job.waktu || round.defaultTime}</td>
+                  <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
+                    <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-bold text-slate-900 font-mono hover:text-cyan-700 text-left cursor-pointer text-[11.5px] md:text-xs leading-snug tracking-wide">
                       ${job.noLambung}
                     </button>
-                    ${isAdmin ? `<span class="text-[8px] font-bold text-slate-400 block uppercase tracking-tight leading-tight mt-0.5">${unitType}</span>` : ''}
+                    ${isAdmin ? `<span class="text-[11px] font-semibold text-slate-500 block uppercase tracking-tight leading-tight mt-0.5">${unitType}</span>` : ''}
                   </td>
-                  <td class="py-1 px-1.5 md:py-1.5 md:px-2 break-words">
-                    <span class="font-bold text-slate-800 text-[10px] block">${formatClusterLabel(job.cluster)}</span>
-                    <span class="text-[9px] text-slate-500 font-semibold uppercase">${job.lokasi}</span>
+                  <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
+                    <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
+                    <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
                   </td>
-                  <td class="hidden md:table-cell py-1.5 px-2 text-center">
+                  <td class="hidden md:table-cell py-1.5 px-2 text-center align-middle">
                     ${renderArmadaCell(job, true)}
                   </td>
-                  <td class="hidden md:table-cell py-1.5 px-2 break-words text-[10px]">
+                  <td class="hidden md:table-cell py-1.5 px-2 break-words text-[11px]">
                     ${renderPersonnelCell(job)}
                   </td>
-                  <td class="hidden md:table-cell py-1.5 px-2 font-mono text-[10px] text-slate-600 break-words">
+                  <td class="hidden md:table-cell py-1.5 px-2 font-mono text-[11px] text-slate-700 break-words">
                     <div>Start: ${job.jamStart || '-'}</div>
                     <div>End: ${job.jamEnd || '-'}</div>
                   </td>
-                  <td class="hidden md:table-cell py-1.5 px-2 text-center font-mono text-[10px] font-bold text-slate-700 break-words">
+                  <td class="hidden md:table-cell py-1.5 px-2 text-center font-mono text-[11.5px] font-bold text-slate-700 break-words align-middle">
                     ${calculateDuration(job.jamStart, job.jamEnd)}
                   </td>
-                  <td class="hidden md:table-cell py-1.5 px-2 text-center text-[10px]">
+                  <td class="hidden md:table-cell py-1.5 px-2 text-center text-[11px] align-middle">
                     <span class="inline-block px-1.5 py-0.5 rounded bg-slate-100 font-mono font-bold text-slate-600">${job.fotos ? job.fotos.length : 0}/4</span>
                   </td>
-                  <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-500 break-words">${formatKendalaText(job.keterangan)}</td>
+                  <td class="hidden md:table-cell py-1.5 px-2 text-[11px] text-slate-600 break-words">${formatKendalaText(job.keterangan)}</td>
                   ${!isAdmin ? `
-                  <td class="py-1 px-1.5 md:py-1.5 md:px-2 text-center">
+                  <td class="py-1.5 px-1.5 md:py-2 md:px-2 text-center align-middle">
                     ${renderJobActionCell(job)}
                   </td>
                   ` : ''}
@@ -17380,7 +17411,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       container.innerHTML = `
         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
           <table class="w-full table-fixed text-left text-xs">
-            <thead class="bg-slate-50/90 text-slate-500 uppercase text-[9.5px] tracking-wider border-b border-slate-200 font-extrabold">
+            <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-200 font-extrabold">
               <tr>
                 <th class="py-2 px-1.5 w-[25%] md:w-[10%]">TGL & WAKTU</th>
                 <th class="py-2 px-2 w-[30%] md:w-[12%]">
@@ -17411,53 +17442,53 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       jobs.forEach(job => {
         const unitType = getUnitTypeFromMaster(job.noLambung, job.typeUnit || 'Unit');
         const pelaksanaanHtml = (job.jamStart && job.jamEnd)
-          ? `<div class="font-mono text-[10px] text-slate-800 font-semibold leading-tight"><div>Start: ${job.jamStart}</div><div>End: ${job.jamEnd}</div></div>`
-          : (job.jamStart ? `<div class="font-mono text-[10px] text-slate-800 font-semibold leading-tight">Start: ${job.jamStart}</div>` : `<span class="text-slate-400 font-bold">-</span>`);
+          ? `<div class="font-mono text-[11px] text-slate-800 font-semibold leading-tight"><div>Start: ${job.jamStart}</div><div>End: ${job.jamEnd}</div></div>`
+          : (job.jamStart ? `<div class="font-mono text-[11px] text-slate-800 font-semibold leading-tight">Start: ${job.jamStart}</div>` : `<span class="text-slate-400 font-bold">-</span>`);
 
         const isActioned = (job.status === 'done' || job.status === 'ach' || job.status === 'cancel');
 
         const tr = document.createElement('tr');
         tr.className = `hover:bg-slate-50/80 transition align-top ${job.status === 'done' || job.status === 'ach' ? 'bg-emerald-50/20' : (job.status === 'cancel' ? 'bg-rose-50/20' : '')}`;
         tr.innerHTML = `
-          <td class="py-1 px-1.5 md:py-1.5 md:px-2 font-mono text-[10px] text-slate-700 break-words">
-            <div class="font-bold text-slate-800">${job.tanggal || '2026-09-27'}</div>
-            <div class="text-slate-500 text-[9.5px]">${job.waktu || '-'}</div>
+          <td class="py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] text-slate-700 break-words">
+            <div class="font-bold text-slate-800 leading-tight">${job.tanggal || '2026-09-27'}</div>
+            <div class="text-slate-500 text-[11px] font-semibold mt-0.5 leading-tight">${job.waktu || '-'}</div>
           </td>
-          <td class="py-1 px-1.5 md:py-1.5 md:px-2 break-words">
-            <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-900 font-mono hover:text-emerald-700 text-left cursor-pointer text-[14.5px] leading-snug">
+          <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
+            <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-bold text-slate-900 font-mono hover:text-emerald-700 text-left cursor-pointer text-[11.5px] md:text-xs leading-snug tracking-wide">
               ${job.noLambung}
             </button>
-            <span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-bold ${job.kondisi === 'BREAKDOWN' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-900'} ml-1">
+            <span class="inline-block px-1.5 py-0.2 rounded text-[9.5px] font-bold ${job.kondisi === 'BREAKDOWN' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-900'} ml-1">
               ${job.kondisi}
             </span>
-            ${isAdmin ? `<span class="text-[8px] font-bold text-slate-400 block uppercase tracking-tight leading-tight mt-0.5">${unitType}</span>` : ''}
+            ${isAdmin ? `<span class="text-[11px] font-semibold text-slate-500 block uppercase tracking-tight leading-tight mt-0.5">${unitType}</span>` : ''}
           </td>
-          <td class="py-1 px-1.5 md:py-1.5 md:px-2 break-words">
-            <span class="font-bold text-slate-800 text-[10px] block">${formatClusterLabel(job.cluster)}</span>
-            <span class="text-[9.5px] text-slate-500 font-semibold uppercase">${job.lokasi}</span>
+          <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
+            <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
+            <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
           </td>
-          <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-600 break-words">
+          <td class="hidden md:table-cell py-1.5 px-2 text-[11px] text-slate-700 break-words">
             <div class="line-clamp-2">${job.deskripsi || '-'}</div>
-            ${job.namaPemesan ? `<div class="text-[8.5px] text-slate-400 font-semibold mt-0.5">Pemesan: ${job.namaPemesan}</div>` : ''}
+            ${job.namaPemesan ? `<div class="text-[10px] text-slate-500 font-semibold mt-0.5">Pemesan: ${job.namaPemesan}</div>` : ''}
           </td>
-          <td class="hidden md:table-cell py-1.5 px-2 text-center">
+          <td class="hidden md:table-cell py-1.5 px-2 text-center align-middle">
             ${renderArmadaCell(job, false)}
           </td>
-          <td class="hidden md:table-cell py-1.5 px-2 break-words text-[10.5px]">
+          <td class="hidden md:table-cell py-1.5 px-2 break-words text-[11px]">
             ${renderPersonnelCell(job)}
           </td>
-          <td class="hidden md:table-cell py-1.5 px-2 font-mono text-[10px] text-slate-700 break-words">${job.hmUnit || '-'}</td>
+          <td class="hidden md:table-cell py-1.5 px-2 font-mono text-[11.5px] font-bold text-slate-800 break-words">${job.hmUnit || '-'}</td>
           <td class="hidden md:table-cell py-1.5 px-2 break-words">${pelaksanaanHtml}</td>
-          <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-600 break-words">
+          <td class="hidden md:table-cell py-1.5 px-2 text-[11px] text-slate-600 break-words">
             <div class="line-clamp-2">${(job.status === 'done' || job.status === 'ach') ? (job.keterangan || '-') : '-'}</div>
           </td>
-          <td class="py-1.5 px-2 md:py-1.5 md:px-2 text-center">
+          <td class="py-1.5 px-2 md:py-2 md:px-2 text-center align-middle">
             ${isAdmin || isBc || isUser || isActioned ? `
               <div class="flex items-center justify-center">
                 ${getJobRequestStatusBadge(job)}
               </div>
             ` : `
-              <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95">
+              <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-bold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95">
                 ACTION
               </button>
             `}
@@ -17519,7 +17550,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       container.innerHTML = `
         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
           <table class="w-full table-fixed text-left text-xs">
-            <thead class="bg-slate-50/90 text-slate-500 uppercase text-[9.5px] tracking-wider border-b border-slate-200 font-extrabold">
+            <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-200 font-extrabold">
               <tr>
                 <th class="py-2 px-1.5 w-[25%] md:w-[10%]">TGL & WAKTU</th>
                 <th class="py-2 px-2 w-[30%] md:w-[12%]">
@@ -17550,8 +17581,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       jobs.forEach(job => {
         const unitType = getUnitTypeFromMaster(job.noLambung, job.typeUnit || 'Unit');
         const pelaksanaanHtml = (job.jamStart && job.jamEnd)
-          ? `<div class="font-mono text-[10px] text-slate-800 font-semibold leading-tight"><div>Start: ${job.jamStart}</div><div>End: ${job.jamEnd}</div></div>`
-          : (job.jamStart ? `<div class="font-mono text-[10px] text-slate-800 font-semibold leading-tight">Start: ${job.jamStart}</div>` : `<span class="text-slate-400 font-bold">-</span>`);
+          ? `<div class="font-mono text-[11px] text-slate-800 font-semibold leading-tight"><div>Start: ${job.jamStart}</div><div>End: ${job.jamEnd}</div></div>`
+          : (job.jamStart ? `<div class="font-mono text-[11px] text-slate-800 font-semibold leading-tight">Start: ${job.jamStart}</div>` : `<span class="text-slate-400 font-bold">-</span>`);
 
         const isActioned = (job.status === 'done' || job.status === 'ach' || job.status === 'cancel');
 
@@ -17564,45 +17595,45 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         const tr = document.createElement('tr');
         tr.className = `hover:bg-slate-50/80 transition align-top ${job.status === 'done' || job.status === 'ach' ? 'bg-cyan-50/20' : (job.status === 'cancel' ? 'bg-rose-50/20' : '')}`;
         tr.innerHTML = `
-          <td class="py-1 px-1.5 md:py-1.5 md:px-2 font-mono text-[10px] text-slate-700 break-words">
-            <div class="font-bold text-slate-800">${job.tanggal || '2026-09-27'}</div>
-            <div class="text-slate-500 text-[9.5px]">${job.waktu || '-'}</div>
+          <td class="py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] text-slate-700 break-words">
+            <div class="font-bold text-slate-800 leading-tight">${job.tanggal || '2026-09-27'}</div>
+            <div class="text-slate-500 text-[11px] font-semibold mt-0.5 leading-tight">${job.waktu || '-'}</div>
           </td>
-          <td class="py-1 px-1.5 md:py-1.5 md:px-2 break-words">
-            <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-900 font-mono hover:text-cyan-700 text-left cursor-pointer text-[14.5px] leading-snug">
+          <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
+            <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-bold text-slate-900 font-mono hover:text-cyan-700 text-left cursor-pointer text-[11.5px] md:text-xs leading-snug tracking-wide">
               ${job.noLambung}
             </button>
-            <span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-bold ${badgeKondisiClass} ml-1">
+            <span class="inline-block px-1.5 py-0.2 rounded text-[9.5px] font-bold ${badgeKondisiClass} ml-1">
               ${job.kondisi}
             </span>
-            ${isAdmin ? `<span class="text-[8px] font-bold text-slate-400 block uppercase tracking-tight leading-tight mt-0.5">${unitType}</span>` : ''}
+            ${isAdmin ? `<span class="text-[11px] font-semibold text-slate-500 block uppercase tracking-tight leading-tight mt-0.5">${unitType}</span>` : ''}
           </td>
-          <td class="py-1 px-1.5 md:py-1.5 md:px-2 break-words">
-            <span class="font-bold text-slate-800 text-[10px] block">${formatClusterLabel(job.cluster)}</span>
-            <span class="text-[9.5px] text-slate-500 font-semibold uppercase">${job.lokasi}</span>
+          <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
+            <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
+            <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
           </td>
-          <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-600 break-words">
+          <td class="hidden md:table-cell py-1.5 px-2 text-[11px] text-slate-700 break-words">
             <div class="line-clamp-2">${job.deskripsi || '-'}</div>
-            ${job.namaPemesan ? `<div class="text-[8.5px] text-slate-400 font-semibold mt-0.5">Pemesan: ${job.namaPemesan}</div>` : ''}
+            ${job.namaPemesan ? `<div class="text-[10px] text-slate-500 font-semibold mt-0.5">Pemesan: ${job.namaPemesan}</div>` : ''}
           </td>
-          <td class="hidden md:table-cell py-1.5 px-2 text-center">
+          <td class="hidden md:table-cell py-1.5 px-2 text-center align-middle">
             ${renderArmadaCell(job, true)}
           </td>
-          <td class="hidden md:table-cell py-1.5 px-2 break-words text-[10.5px]">
+          <td class="hidden md:table-cell py-1.5 px-2 break-words text-[11px]">
             ${renderPersonnelCell(job)}
           </td>
-          <td class="hidden md:table-cell py-1.5 px-2 font-mono text-[10px] text-slate-700 break-words">${job.hmUnit || '-'}</td>
+          <td class="hidden md:table-cell py-1.5 px-2 font-mono text-[11.5px] font-bold text-slate-800 break-words">${job.hmUnit || '-'}</td>
           <td class="hidden md:table-cell py-1.5 px-2 break-words">${pelaksanaanHtml}</td>
-          <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-600 break-words">
+          <td class="hidden md:table-cell py-1.5 px-2 text-[11px] text-slate-600 break-words">
             <div class="line-clamp-2">${(job.status === 'done' || job.status === 'ach') ? (job.keterangan || '-') : '-'}</div>
           </td>
-          <td class="py-1.5 px-2 md:py-1.5 md:px-2 text-center">
+          <td class="py-1.5 px-2 md:py-2 md:px-2 text-center align-middle">
             ${isAdmin || isActioned ? `
               <div class="flex items-center justify-center">
                 ${getJobRequestStatusBadge(job)}
               </div>
             ` : `
-              <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95">
+              <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-bold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95">
                 ACTION
               </button>
             `}
@@ -21755,11 +21786,12 @@ Oilman 1 & 2 : ${teamMps}`;
 
       const subLabelEl = document.getElementById('detail-modal-category') || document.getElementById('detail-modal-sub-label');
       if (subLabelEl) {
+        const noIdTag = (typeof getJobNoId === 'function' && getJobNoId(job) !== '-') ? `[${getJobNoId(job)}] ` : '';
         if (isJobRequest) {
-          subLabelEl.textContent = `Job Request (${job.kondisi || 'Request Lapangan'}) • Shift ${job.shift || '1'}`;
+          subLabelEl.textContent = `${noIdTag}Job Request (${job.kondisi || 'Request Lapangan'}) • Shift ${job.shift || '1'}`;
         } else {
           const schName = (typeof getJobSchLabel === 'function') ? getJobSchLabel(job) : (job.cat || 'Scheduled');
-          subLabelEl.textContent = `${schName} • Shift ${job.shift || '1'}`;
+          subLabelEl.textContent = `${noIdTag}${schName} • Shift ${job.shift || '1'}`;
         }
       }
 
@@ -21930,21 +21962,39 @@ Oilman 1 & 2 : ${teamMps}`;
               'Foto 4: Area / Selesai'
             ];
             let fotosArray = (Array.isArray(job.fotos) && job.fotos.some(p => p && p.trim())) ? job.fotos : [];
-            if (fotosArray.length === 0 && job.id) {
+            const standardNoId = (typeof getJobNoId === 'function') ? getJobNoId(job) : (job.noId || job.no_id);
+            if (fotosArray.length === 0) {
               try {
-                const savedFotos = safeStorage.getItem('SE_JOB_FOTOS_' + job.id);
-                if (savedFotos) {
-                  const parsed = JSON.parse(savedFotos);
-                  if (Array.isArray(parsed) && parsed.some(p => p && p.trim())) {
-                    fotosArray = parsed;
-                    job.fotos = parsed;
+                if (standardNoId && standardNoId !== '-') {
+                  const savedNoId = safeStorage.getItem('SE_JOB_FOTOS_' + standardNoId);
+                  if (savedNoId) {
+                    const parsed = JSON.parse(savedNoId);
+                    if (Array.isArray(parsed) && parsed.some(p => p && p.trim())) {
+                      fotosArray = parsed;
+                      job.fotos = parsed;
+                    }
+                  }
+                }
+                if (fotosArray.length === 0 && job.id) {
+                  const savedFotos = safeStorage.getItem('SE_JOB_FOTOS_' + job.id);
+                  if (savedFotos) {
+                    const parsed = JSON.parse(savedFotos);
+                    if (Array.isArray(parsed) && parsed.some(p => p && p.trim())) {
+                      fotosArray = parsed;
+                      job.fotos = parsed;
+                    }
                   }
                 }
               } catch (e) { }
             }
-            if (fotosArray.length === 0 && job.id && state.jobPhotosMap && state.jobPhotosMap[job.id]) {
-              fotosArray = state.jobPhotosMap[job.id];
-              job.fotos = fotosArray;
+            if (fotosArray.length === 0 && state.jobPhotosMap) {
+              if (standardNoId && state.jobPhotosMap[standardNoId]) {
+                fotosArray = state.jobPhotosMap[standardNoId];
+                job.fotos = fotosArray;
+              } else if (job.id && state.jobPhotosMap[job.id]) {
+                fotosArray = state.jobPhotosMap[job.id];
+                job.fotos = fotosArray;
+              }
             }
             if (fotosArray.length === 0 && job.noLambung && state.unitDatePhotosMap) {
               const uKey = `${job.noLambung}_${job.tanggal || getEffectiveTodayString()}`;
@@ -21967,7 +22017,7 @@ Oilman 1 & 2 : ${teamMps}`;
               if (!state._sheetPhotosLoading || (Date.now() - state._sheetPhotosLoading > 4000)) {
                 state._sheetPhotosLoading = Date.now();
                 setTimeout(() => {
-                  loadRemotePhotoLogsFromGoogleSheet(job.id);
+                  loadRemotePhotoLogsFromGoogleSheet(standardNoId || job.id);
                 }, 100);
               }
             }
@@ -24165,7 +24215,7 @@ Oilman 1 & 2 : ${teamMps}`;
     function getJobSchPlainHtml(j) {
       const code = getJobTypeCode(j);
       const fullLabel = getJobSchLabel(j);
-      return `<span class="font-mono font-black text-xs text-slate-800 tracking-wider inline-block select-none" title="${fullLabel}">${code}</span>`;
+      return `<span class="font-bold text-[10px] text-slate-800 tracking-wider inline-block select-none" title="${fullLabel}">${code}</span>`;
     }
     window.getJobSchPlainHtml = getJobSchPlainHtml;
 
@@ -24286,13 +24336,13 @@ Oilman 1 & 2 : ${teamMps}`;
         if (s && !isNaN(parseFloat(s))) {
           durVal = parseFloat(s);
         } else if (s) {
-          return `<span class="font-mono font-medium text-xs text-slate-700">${s}</span>`;
+          return `<span class="font-bold text-[10px] text-slate-700">${s}</span>`;
         }
       }
       if (durVal !== null && !isNaN(durVal)) {
-        return `<span class="inline-flex items-baseline justify-center font-mono select-text"><span class="font-bold text-xs text-slate-800 leading-none">${durVal}</span><span class="text-[10.5px] font-medium text-slate-500 ml-1 leading-none">mnt</span></span>`;
+        return `<span class="inline-flex items-baseline justify-center select-text"><span class="font-bold text-[10px] text-slate-800 leading-none">${durVal}</span><span class="text-[10px] font-medium text-slate-500 ml-1 leading-none">mnt</span></span>`;
       }
-      return `<span class="text-slate-300 font-mono text-xs font-medium">-</span>`;
+      return `<span class="text-slate-300 text-[10px] font-medium">-</span>`;
     }
     window.calculateDurationPlain = calculateDurationPlain;
 
@@ -24415,6 +24465,13 @@ Oilman 1 & 2 : ${teamMps}`;
       const isWt = (userRole === 'mp_wt');
 
       renderCompletedCategories();
+
+      if ((!Array.isArray(state.jobHistory) || state.jobHistory.length === 0) && state.supabaseClient) {
+        if (!state._jobHistoryLoading || (Date.now() - state._jobHistoryLoading > 5000)) {
+          state._jobHistoryLoading = Date.now();
+          loadJobHistoryFromSupabase(true);
+        }
+      }
 
       // Ambil filter rentang tanggal (Dari & Sampai)
       const compStartDateInput = document.getElementById('comp-filter-start-date');
@@ -24727,7 +24784,7 @@ Oilman 1 & 2 : ${teamMps}`;
       container.innerHTML = `
         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
           <table class="w-full table-fixed text-left text-xs">
-            <thead class="bg-slate-50/90 text-slate-500 uppercase text-[9.5px] tracking-wider border-b border-slate-200 font-extrabold select-none">
+            <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-200 font-extrabold select-none">
               <tr>
                 ${state.isCompSelectMode ? `
                   <th class="py-2.5 px-2 w-[8%] md:w-[3.5%] text-center select-none" title="Pilih Semua yang Tampil">
@@ -24741,32 +24798,32 @@ Oilman 1 & 2 : ${teamMps}`;
                     ${renderCompletedSortIcon('noId')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('sch')" class="hidden md:table-cell py-2.5 px-1 ${state.isCompSelectMode ? 'md:w-[4.5%]' : 'md:w-[5%]'} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Type Job">
-                  <div class="flex items-center space-x-0.5">
+                <th onclick="sortCompletedBy('sch')" class="py-2.5 px-1 ${state.isCompSelectMode ? 'w-[15%] md:w-[4.5%]' : 'w-[16%] md:w-[5%]'} text-center md:text-left cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Type Job">
+                  <div class="flex items-center justify-center md:justify-start space-x-0.5">
                     <span>TYPE JOB</span>
                     ${renderCompletedSortIcon('sch')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('waktu')" class="py-2 pl-1 pr-2 ${isAdmin ? (state.isCompSelectMode ? 'w-[19%] md:w-[8.5%]' : 'w-[19%] md:w-[9%]') : (state.isCompSelectMode ? 'w-[21%] md:w-[8.5%]' : 'w-[21%] md:w-[9%]')} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Waktu Rencana">
+                <th onclick="sortCompletedBy('waktu')" class="hidden md:table-cell py-2 pl-1 pr-2 ${isAdmin ? (state.isCompSelectMode ? 'md:w-[8.5%]' : 'md:w-[9%]') : (state.isCompSelectMode ? 'md:w-[8.5%]' : 'md:w-[9%]')} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Waktu Rencana">
                   <div class="flex items-center space-x-0.5">
                     <span>WAKTU</span>
                     ${renderCompletedSortIcon('waktu')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('unit')" class="py-2 px-1.5 ${isAdmin ? (state.isCompSelectMode ? 'w-[22%] md:w-[10.5%]' : 'w-[22%] md:w-[11%]') : (state.isCompSelectMode ? 'w-[24%] md:w-[11%]' : 'w-[24%] md:w-[11.5%]')} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan No Lambung Unit">
+                <th onclick="sortCompletedBy('unit')" class="py-2 px-1.5 ${isAdmin ? (state.isCompSelectMode ? 'w-[21%] md:w-[10.5%]' : 'w-[22%] md:w-[11%]') : (state.isCompSelectMode ? 'w-[23%] md:w-[11%]' : 'w-[23%] md:w-[11.5%]')} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan No Lambung Unit">
                   <div class="flex items-center space-x-0.5">
                     <span class="md:hidden">NO UNIT</span>
                     <span class="hidden md:inline">${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
                     ${renderCompletedSortIcon('unit')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('cluster')" class="py-2 px-1.5 ${isAdmin ? (state.isCompSelectMode ? 'w-[22%] md:w-[11%]' : 'w-[22%] md:w-[11.5%]') : (state.isCompSelectMode ? 'w-[25%] md:w-[12%]' : 'w-[25%] md:w-[12%]')} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Cluster & Lokasi Pit">
+                <th onclick="sortCompletedBy('cluster')" class="py-2 px-1.5 ${isAdmin ? (state.isCompSelectMode ? 'w-[31%] md:w-[11%]' : 'w-[32%] md:w-[11.5%]') : (state.isCompSelectMode ? 'w-[33%] md:w-[12%]' : 'w-[33%] md:w-[12%]')} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Cluster & Lokasi Pit">
                   <div class="flex items-center space-x-0.5">
                     <span>CLUSTER & LOKASI</span>
                     ${renderCompletedSortIcon('cluster')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('armada')" class="py-2.5 px-1 w-[15%] ${state.isCompSelectMode ? 'md:w-[6.5%]' : (isAdmin ? 'md:w-[7%]' : 'md:w-[7%]')} text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Armada">
+                <th onclick="sortCompletedBy('armada')" class="py-2.5 px-1 ${state.isCompSelectMode ? 'w-[14%] md:w-[6.5%]' : (isAdmin ? 'w-[14%] md:w-[7%]' : 'w-[14%] md:w-[7%]')} text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Armada">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>ARMADA</span>
                     ${renderCompletedSortIcon('armada')}
@@ -24790,14 +24847,14 @@ Oilman 1 & 2 : ${teamMps}`;
                     ${renderCompletedSortIcon('durasi')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('status')" class="py-2.5 px-1 w-[15%] ${state.isCompSelectMode ? 'md:w-[7%]' : 'md:w-[7%]'} text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Status (ACH / Non-ACH)">
+                <th onclick="sortCompletedBy('status')" class="py-2.5 px-1 ${state.isCompSelectMode ? 'w-[14%] md:w-[7%]' : 'w-[15%] md:w-[7%]'} text-center cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Status (ACH / Non-ACH)">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>STATUS</span>
                     ${renderCompletedSortIcon('status')}
                   </div>
                 </th>
                 ${isAdmin ? `
-                  <th class="hidden md:table-cell py-2.5 px-1 ${state.isCompSelectMode ? 'md:w-[3.5%]' : 'md:w-[3.5%]'} text-center text-slate-500 font-extrabold uppercase text-[9.5px] tracking-wider select-none" title="Aksi Hapus Riwayat (Khusus Admin)">
+                  <th class="hidden md:table-cell py-2.5 px-1 ${state.isCompSelectMode ? 'md:w-[3.5%]' : 'md:w-[3.5%]'} text-center text-slate-500 font-extrabold uppercase text-[10.5px] md:text-[11px] tracking-wider select-none" title="Aksi Hapus Riwayat (Khusus Admin)">
                     <span>AKSI</span>
                   </th>
                 ` : ''}
@@ -24892,73 +24949,70 @@ Oilman 1 & 2 : ${teamMps}`;
             </td>
           ` : ''}
           <!-- KOLOM 0: NO ID (PERTAMA, DESKTOP ONLY, KODE MONOSPACE TEBAL POLOSAN) -->
-          <td class="hidden md:table-cell py-2.5 pl-3 pr-1.5 font-mono font-bold text-[11px] text-slate-800 break-all select-all tracking-tight leading-tight">
+          <td class="hidden md:table-cell py-2.5 pl-3 pr-1.5 font-mono font-bold text-[10px] text-slate-800 break-all select-all tracking-tight leading-tight">
             ${getJobNoId(job)}
           </td>
 
-          <!-- KOLOM 1: TYPE JOB (SETELAH NO ID, DESKTOP ONLY, POLOSAN TANPA BACKGROUND WARNA) -->
-          <td class="hidden md:table-cell py-2.5 px-1 break-words">
-            ${getJobSchPlainHtml(job)}
+          <!-- KOLOM 1: TYPE JOB (TAMPIL DI HP DENGAN BADGE, DESKTOP TEKS POLOSAN) -->
+          <td class="py-2.5 px-1 text-center md:text-left align-middle break-words">
+            <span class="md:hidden flex items-center justify-center cursor-pointer" onclick="openJobDetailModal('${job.id}')" title="Klik untuk lihat detail">${getJobSchBadgeHtml(job)}</span>
+            <span class="hidden md:inline">${getJobSchPlainHtml(job)}</span>
           </td>
 
-          <!-- KOLOM 2: WAKTU (RAPAT DENGAN KOLOM TYPE JOB & NO ID) -->
-          <td class="py-2.5 pl-1 pr-2 font-mono text-xs text-slate-700 break-words">
-            <div class="md:hidden flex items-center space-x-1.5 mb-1 flex-wrap">
-              <span class="font-mono text-[9.5px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 select-all tracking-tight">${getJobNoId(job)}</span>
-              <div>${getJobSchBadgeHtml(job)}</div>
-            </div>
-            <div class="font-extrabold text-slate-900 text-[11px] leading-tight">${planDateDisplay}</div>
+          <!-- KOLOM 2: WAKTU (DESKTOP ONLY, DI HP CUKUP TYPE JOB & BISA KLIK UNIT/BADGE UNTUK DETAIL) -->
+          <td class="hidden md:table-cell py-2.5 pl-1 pr-2 text-slate-700 break-words">
+            <div class="font-bold text-slate-900 text-[10px] leading-tight">${planDateDisplay}</div>
             <div class="text-slate-500 text-[10px] font-semibold mt-0.5 leading-tight">${job.waktu || '-'}</div>
           </td>
 
           <!-- KOLOM 3: NO UNIT -->
           <td class="py-2.5 px-2 break-words">
-            <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-900 font-mono hover:text-emerald-700 text-left cursor-pointer text-sm sm:text-base leading-snug tracking-wide">
+            <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-bold text-slate-900 hover:text-emerald-700 text-left cursor-pointer text-[10px] leading-snug tracking-wide">
               ${job.noLambung}
             </button>
-            <span class="hidden md:block text-[9.5px] font-bold text-slate-400 uppercase tracking-tight mt-0.5">${unitType}</span>
+            <span class="hidden md:block text-[10px] font-semibold text-slate-500 uppercase tracking-tight mt-0.5">${unitType}</span>
           </td>
 
           <!-- KOLOM 4: CLUSTER & LOKASI -->
           <td class="py-2.5 px-2 break-words">
-            <span class="font-black text-slate-800 text-xs block">${formatClusterLabel(job.cluster)}</span>
-            <span class="text-[11px] text-slate-500 font-semibold uppercase mt-0.5 block">${job.lokasi}</span>
+            <span class="font-bold text-slate-800 text-[10px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
+            <span class="text-[10px] text-slate-500 font-semibold uppercase mt-0.5 block leading-tight">${job.lokasi}</span>
           </td>
 
           <!-- KOLOM 5: ARMADA (POLOSAN TANPA BACKGROUND WARNA DI DESKTOP) -->
           <td class="py-2.5 px-1 text-center align-middle break-words">
             <div class="flex items-center justify-center">
-              <span class="font-mono font-extrabold text-xs md:text-[12px] text-center ${finalArmada !== '-' ? 'text-slate-800' : 'text-slate-300'}">
+              <span class="font-bold text-[10px] text-center ${finalArmada !== '-' ? 'text-slate-800' : 'text-slate-300'}">
                 ${finalArmada}
               </span>
             </div>
           </td>
 
           <!-- KOLOM 6: PERSONIL (LEBIH LUAS AGAR NAMA LEGA TIDAK MUDAH TERPOTONG) -->
-          <td class="hidden md:table-cell py-2 px-2.5 break-words text-[11px]">
+          <td class="hidden md:table-cell py-2 px-2.5 break-words text-[10px]">
             <div class="leading-tight space-y-0.5">
               <div class="truncate" title="Operator (OPT): ${optDisplay}">
-                <span class="text-slate-400 font-bold text-[9px] uppercase tracking-wider">OPT:</span>
-                <span class="font-extrabold text-slate-900 ml-0.5">${optDisplay}</span>
+                <span class="text-slate-400 font-semibold text-[9.5px] uppercase tracking-wider">OPT:</span>
+                <span class="font-bold text-slate-800 text-[10px] ml-0.5">${optDisplay}</span>
               </div>
               <div class="truncate text-slate-600" title="Manpower (MP): ${mpCombined}">
-                <span class="text-slate-400 font-bold text-[9px] uppercase tracking-wider">MP:</span>
-                <span class="font-semibold text-slate-700 ml-0.5">${mpCombined}</span>
+                <span class="text-slate-400 font-semibold text-[9.5px] uppercase tracking-wider">MP:</span>
+                <span class="font-semibold text-slate-700 text-[10px] ml-0.5">${mpCombined}</span>
               </div>
             </div>
           </td>
 
           <!-- KOLOM 7: REALISASI (DESKTOP ONLY, DI HP BISA CEK DETAIL) -->
-          <td class="hidden md:table-cell py-2.5 px-2 font-mono text-xs text-slate-700 break-words">
-            <div class="font-extrabold text-emerald-700 text-[11px] leading-tight">${realisasiDateDisplay}</div>
-            <div class="text-slate-700 text-[10px] font-semibold mt-0.5 leading-tight">
+          <td class="hidden md:table-cell py-2.5 px-2 text-slate-700 break-words">
+            <div class="font-bold text-emerald-700 text-[10px] leading-tight">${realisasiDateDisplay}</div>
+            <div class="text-slate-600 text-[10px] font-semibold mt-0.5 leading-tight">
               ${(job.jamStart && job.jamEnd) ? `${job.jamStart} s/d ${job.jamEnd}` : (job.jamStart ? `Start: ${job.jamStart}` : '-')}
             </div>
           </td>
 
           <!-- KOLOM 8: DURASI (ANGKA DIPERBESAR SESUAI UKURAN ANGKA LAIN AGAR SIMETRIS) -->
-          <td class="hidden md:table-cell py-2.5 px-1 text-center font-mono break-words align-middle">
-            <div class="flex items-center justify-center">
+          <td class="hidden md:table-cell py-2.5 px-1 text-center break-words align-middle">
+            <div class="flex items-center justify-center text-[10px]">
               ${calculateDurationPlain(job.jamStart, job.jamEnd, job.durasi)}
             </div>
           </td>
@@ -24967,14 +25021,14 @@ Oilman 1 & 2 : ${teamMps}`;
           <td class="py-2.5 px-1 md:px-2 text-center align-middle">
             <div class="flex items-center justify-center">
               ${String(job.status || '').toLowerCase() === 'service' || job.status_final === 'SERVICE'
-            ? `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-amber-100 text-amber-800 font-extrabold text-[10px] tracking-wide uppercase text-center" title="${job.serviceNotes || job.keterangan || '-'}">SERVICE</span>`
+            ? `<span class="inline-flex items-center justify-center min-w-[44px] md:min-w-[48px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px] tracking-wide uppercase text-center" title="${job.serviceNotes || job.keterangan || '-'}">SERVICE</span>`
             : (['bd', 'breakdown'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'BREAKDOWN'
-              ? `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-orange-100 text-orange-800 font-extrabold text-[10px] tracking-wide uppercase text-center" title="${job.bdNotes || job.keterangan || '-'}">BD</span>`
+              ? `<span class="inline-flex items-center justify-center min-w-[44px] md:min-w-[48px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold text-[10px] tracking-wide uppercase text-center" title="${job.bdNotes || job.keterangan || '-'}">BD</span>`
               : ['ach', 'achieved', 'done'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'ACHIEVED'
-                ? `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] tracking-wide uppercase text-center">ACH</span>`
+                ? `<span class="inline-flex items-center justify-center min-w-[44px] md:min-w-[48px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] tracking-wide uppercase text-center">ACH</span>`
                 : (['non_ach', 'non-ach'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'NON_ACH'
-                  ? `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-rose-100 text-rose-800 font-extrabold text-[10px] tracking-wide uppercase text-center" title="${job.alasanNonAch || job.keterangan || '-'}">NON-ACH</span>`
-                  : `<span class="inline-flex items-center justify-center min-w-[46px] md:min-w-[56px] px-2 py-0.5 md:py-1 rounded-full bg-amber-100 text-amber-800 font-extrabold text-[10px] tracking-wide uppercase text-center">${job.status || 'DONE'}</span>`))}
+                  ? `<span class="inline-flex items-center justify-center min-w-[44px] md:min-w-[48px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold text-[10px] tracking-wide uppercase text-center" title="${job.alasanNonAch || job.keterangan || '-'}">NON-ACH</span>`
+                  : `<span class="inline-flex items-center justify-center min-w-[44px] md:min-w-[48px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px] tracking-wide uppercase text-center">${job.status || 'DONE'}</span>`))}
             </div>
           </td>
 
@@ -25370,10 +25424,14 @@ Oilman 1 & 2 : ${teamMps}`;
       const reason = document.getElementById('cancel-jobreq-reason')?.value.trim() || 'Dibatalkan di lapangan';
       job.status = 'cancel';
       job.isPending = false;
+      job.isLocked = true;
       job.keterangan = `[CANCEL]: ${reason}`;
+      if (typeof lockJobHistorySnapshot === 'function') {
+        lockJobHistorySnapshot(job, 'CANCEL', job.keterangan);
+      }
       toggleModal('modal-jobreq-cancel', false);
-      showToast(`Job Request unit ${job.noLambung} telah dibatalkan (CANCEL)`, 'warning');
-      notifyDataChanged({ source: 'cancel_jobreq', jobId: job.id });
+      showToast(`Job Request unit ${job.noLambung} telah dibatalkan (CANCEL) & dipindahkan ke Riwayat!`, 'warning');
+      notifyDataChanged({ source: 'cancel_jobreq', jobId: job.id, orderId: job.id });
     }
 
     // Helper untuk mengubah URL Google Drive ke direct view CDN yang cepat dan otomatis tampil di browser
@@ -25538,6 +25596,13 @@ Oilman 1 & 2 : ${teamMps}`;
 
           if (state.currentActionJobId) {
             safeStorage.setItem('SE_JOB_FOTOS_' + state.currentActionJobId, JSON.stringify(state.currentAchPhotos));
+            const actJob = (typeof findJobById === 'function') ? findJobById(state.currentActionJobId) : null;
+            if (actJob) {
+              const actNoId = (typeof getJobNoId === 'function') ? getJobNoId(actJob) : (actJob.noId || actJob.no_id);
+              if (actNoId && actNoId !== '-' && actNoId !== state.currentActionJobId) {
+                safeStorage.setItem('SE_JOB_FOTOS_' + actNoId, JSON.stringify(state.currentAchPhotos));
+              }
+            }
           }
 
           // Unggah otomatis ke Google Drive di latar belakang jika endpoint tersedia
@@ -25550,6 +25615,13 @@ Oilman 1 & 2 : ${teamMps}`;
                   renderAchPhotoSlots();
                   if (state.currentActionJobId) {
                     safeStorage.setItem('SE_JOB_FOTOS_' + state.currentActionJobId, JSON.stringify(state.currentAchPhotos));
+                    const actJob = (typeof findJobById === 'function') ? findJobById(state.currentActionJobId) : null;
+                    if (actJob) {
+                      const actNoId = (typeof getJobNoId === 'function') ? getJobNoId(actJob) : (actJob.noId || actJob.no_id);
+                      if (actNoId && actNoId !== '-' && actNoId !== state.currentActionJobId) {
+                        safeStorage.setItem('SE_JOB_FOTOS_' + actNoId, JSON.stringify(state.currentAchPhotos));
+                      }
+                    }
                   }
                 }
               })
@@ -25571,18 +25643,46 @@ Oilman 1 & 2 : ${teamMps}`;
     window.handleMultipleAchPhotoSelect = handleMultipleAchPhotoSelect;
 
     // HELPER: Upload satu foto Base64 ke Google Drive via Google Apps Script
+    // Memastikan kolom Job ID di Google Spreadsheet mengikuti NO ID baku yang ada pada Job Story / Riwayat Selesai
     async function uploadBase64PhotoToDrive(photoDataUrl, unit, category, slotIdx, jobId) {
       const endpointUrl = APPS_SCRIPT_CONFIG.uploadEndpointUrl || safeStorage.getItem('SE_APPS_SCRIPT_URL') || '';
       if (!endpointUrl || !endpointUrl.trim().startsWith('http')) {
         throw new Error('URL Google Apps Script belum terpasang.');
       }
 
+      // Pastikan Job ID yang dikirim ke spreadsheet adalah NO ID baku yang ada pada Job Story / Riwayat Selesai
+      let finalJobId = '';
+      let targetJob = jobId ? ((typeof findJobById === 'function') ? findJobById(jobId) : null) : null;
+      if (!targetJob && jobId && Array.isArray(state.jobHistory)) {
+        targetJob = state.jobHistory.find(h => String(h.job_id) === String(jobId) || String(h.no_id) === String(jobId) || String(h.id) === String(jobId));
+      }
+
+      if (targetJob) {
+        if (typeof getJobNoId === 'function') {
+          const generated = getJobNoId(targetJob);
+          if (generated && generated !== '-') finalJobId = generated;
+        }
+        if (!finalJobId && targetJob.noId && targetJob.noId !== '-') finalJobId = targetJob.noId;
+        if (!finalJobId && targetJob.no_id && targetJob.no_id !== '-') finalJobId = targetJob.no_id;
+        if (!finalJobId && targetJob.job_id && targetJob.job_id !== '-') finalJobId = targetJob.job_id;
+      }
+
+      // Jika jobId yang dioper sudah berupa No ID baku (PLT-... atau PWT-...)
+      if (!finalJobId && jobId && /^(PLT|PWT)-/i.test(String(jobId))) {
+        finalJobId = String(jobId).toUpperCase();
+      }
+
+      // Fallback jika tidak ditemukan objek job: gunakan jobId asli
+      if (!finalJobId) {
+        finalJobId = (typeof jobId === 'string' ? jobId : '') || '';
+      }
+
       const payload = {
         base64: photoDataUrl,
-        unit: unit || 'UNIT',
-        category: category || 'ACH',
+        unit: unit || (targetJob ? targetJob.noLambung : 'UNIT'),
+        category: category || (targetJob ? targetJob.cat : 'ACH'),
         slot: (typeof slotIdx === 'number' ? slotIdx + 1 : 1),
-        jobId: jobId || ''
+        jobId: finalJobId
       };
 
       const res = await fetch(endpointUrl, {
@@ -25593,8 +25693,21 @@ Oilman 1 & 2 : ${teamMps}`;
       });
 
       const resData = await res.json();
-      if (resData && (resData.status === 'success' || resData.url || resData.directUrl)) {
-        return resData.url || resData.directUrl;
+      const directUrl = resData && (resData.url || resData.directUrl);
+      if (directUrl) {
+        const slotZeroIdx = (typeof slotIdx === 'number' ? Math.max(0, slotIdx) : 0);
+        if (!state.jobPhotosMap) state.jobPhotosMap = {};
+        if (finalJobId) {
+          if (!state.jobPhotosMap[finalJobId]) state.jobPhotosMap[finalJobId] = ['', '', '', '', ''];
+          state.jobPhotosMap[finalJobId][slotZeroIdx] = directUrl;
+          try { safeStorage.setItem('SE_JOB_FOTOS_' + finalJobId, JSON.stringify(state.jobPhotosMap[finalJobId])); } catch (e) { }
+        }
+        if (jobId && jobId !== finalJobId) {
+          if (!state.jobPhotosMap[jobId]) state.jobPhotosMap[jobId] = ['', '', '', '', ''];
+          state.jobPhotosMap[jobId][slotZeroIdx] = directUrl;
+          try { safeStorage.setItem('SE_JOB_FOTOS_' + jobId, JSON.stringify(state.jobPhotosMap[jobId])); } catch (e) { }
+        }
+        return directUrl;
       }
       throw new Error(resData?.message || 'Gagal menyimpan foto ke Google Drive');
     }
@@ -25670,8 +25783,24 @@ Oilman 1 & 2 : ${teamMps}`;
           if (!photoUrl || !photoUrl.startsWith('http')) continue;
 
           if (jobId && jobId !== '-') {
-            if (!state.jobPhotosMap[jobId]) state.jobPhotosMap[jobId] = ['', '', '', ''];
+            if (!state.jobPhotosMap[jobId]) state.jobPhotosMap[jobId] = ['', '', '', '', ''];
             state.jobPhotosMap[jobId][slotIdx] = photoUrl;
+
+            // Hubungkan dengan ID pasangannya (jika jobId adalah No ID PLT/PWT, hubungkan ke raw job id; dan sebaliknya)
+            const matchedJob = (typeof findJobById === 'function' ? findJobById(jobId) : null) ||
+              (Array.isArray(state.jobHistory) ? state.jobHistory.find(h => String(h.job_id) === jobId || String(h.no_id) === jobId || String(h.id) === jobId) : null);
+            if (matchedJob) {
+              const matchedNoId = (typeof getJobNoId === 'function') ? getJobNoId(matchedJob) : (matchedJob.noId || matchedJob.no_id);
+              if (matchedNoId && matchedNoId !== '-' && matchedNoId !== jobId) {
+                if (!state.jobPhotosMap[matchedNoId]) state.jobPhotosMap[matchedNoId] = ['', '', '', '', ''];
+                state.jobPhotosMap[matchedNoId][slotIdx] = photoUrl;
+              }
+              const matchedRawId = String(matchedJob.id || matchedJob.job_id || '');
+              if (matchedRawId && matchedRawId !== jobId) {
+                if (!state.jobPhotosMap[matchedRawId]) state.jobPhotosMap[matchedRawId] = ['', '', '', '', ''];
+                state.jobPhotosMap[matchedRawId][slotIdx] = photoUrl;
+              }
+            }
           }
 
           if (unit && idxWaktu !== -1) {
@@ -25683,7 +25812,7 @@ Oilman 1 & 2 : ${teamMps}`;
               const y = tglMatch[3];
               const dateIso = `${y}-${m}-${d}`;
               const unitKey = `${unit}_${dateIso}`;
-              if (!state.unitDatePhotosMap[unitKey]) state.unitDatePhotosMap[unitKey] = ['', '', '', ''];
+              if (!state.unitDatePhotosMap[unitKey]) state.unitDatePhotosMap[unitKey] = ['', '', '', '', ''];
               state.unitDatePhotosMap[unitKey][slotIdx] = photoUrl;
             }
           }
@@ -25693,19 +25822,32 @@ Oilman 1 & 2 : ${teamMps}`;
           ...(state.lubetruckState?.jobs || []),
           ...(state.watertruckState?.jobs || []),
           ...(state.unscheduledLtJobs || []),
-          ...(state.unscheduledWtJobs || [])
+          ...(state.unscheduledWtJobs || []),
+          ...(Array.isArray(state.jobHistory) ? state.jobHistory : [])
         ];
 
         allJobs.forEach(j => {
-          if (!j || !j.id) return;
-          const photos = state.jobPhotosMap[j.id] || state.unitDatePhotosMap[`${j.noLambung}_${j.tanggal}`];
+          if (!j) return;
+          const noId = (typeof getJobNoId === 'function') ? getJobNoId(j) : (j.noId || j.no_id || j.job_id || '');
+          const rawId = String(j.id || j.job_id || '');
+          const uKey = (j.noLambung || j.no_lambung) ? `${j.noLambung || j.no_lambung}_${j.tanggal || j.tanggal_rencana || j.tanggal_eksekusi || ''}` : '';
+
+          const photos = (noId && state.jobPhotosMap[noId]) ||
+            (rawId && state.jobPhotosMap[rawId]) ||
+            (uKey && state.unitDatePhotosMap[uKey]);
+
           if (photos && photos.some(p => p && p.trim() !== '')) {
             if (!Array.isArray(j.fotos) || j.fotos.filter(p => p && p.trim() !== '').length < photos.filter(p => p && p.trim() !== '').length) {
               j.fotos = [...photos];
-              safeStorage.setItem('SE_JOB_FOTOS_' + j.id, JSON.stringify(photos));
             }
+            if (rawId) safeStorage.setItem('SE_JOB_FOTOS_' + rawId, JSON.stringify(photos));
+            if (noId && noId !== '-' && noId !== rawId) safeStorage.setItem('SE_JOB_FOTOS_' + noId, JSON.stringify(photos));
           }
         });
+
+        if (state.activeTab === 'completed' && typeof renderCompletedTable === 'function') {
+          renderCompletedTable();
+        }
 
         if (targetJobId && state.currentDetailJobId === targetJobId) {
           openJobDetailModal(targetJobId);
@@ -25759,6 +25901,10 @@ Oilman 1 & 2 : ${teamMps}`;
 
         job.fotos = fotosArray;
         safeStorage.setItem(savedKey, JSON.stringify(fotosArray));
+        const stdNoId = (typeof getJobNoId === 'function') ? getJobNoId(job) : (job.noId || job.no_id);
+        if (stdNoId && stdNoId !== '-' && stdNoId !== job.id) {
+          safeStorage.setItem('SE_JOB_FOTOS_' + stdNoId, JSON.stringify(fotosArray));
+        }
 
         if (uploadSuccessCount > 0) {
           // Silent: showToast(`${uploadSuccessCount} foto berhasil masuk ke Google Drive!`, 'success');
@@ -25785,7 +25931,8 @@ Oilman 1 & 2 : ${teamMps}`;
         ...(state.lubetruckState?.jobs || []),
         ...(state.watertruckState?.jobs || []),
         ...(state.unscheduledLtJobs || []),
-        ...(state.unscheduledWtJobs || [])
+        ...(state.unscheduledWtJobs || []),
+        ...(Array.isArray(state.jobHistory) ? state.jobHistory : [])
       ];
 
       for (const job of allJobs) {
@@ -25820,6 +25967,10 @@ Oilman 1 & 2 : ${teamMps}`;
           if (updated) {
             job.fotos = fotos;
             safeStorage.setItem(savedKey, JSON.stringify(fotos));
+            const stdNoId = (typeof getJobNoId === 'function') ? getJobNoId(job) : (job.noId || job.no_id);
+            if (stdNoId && stdNoId !== '-' && stdNoId !== job.id) {
+              safeStorage.setItem('SE_JOB_FOTOS_' + stdNoId, JSON.stringify(fotos));
+            }
             if (state.currentDetailJobId === job.id) {
               openJobDetailModal(job.id);
             }
@@ -25862,9 +26013,16 @@ Oilman 1 & 2 : ${teamMps}`;
           state.currentAchPhotos[slotIdx] = photoDataUrl;
           renderAchPhotoSlots();
 
-          // Simpan cadangan foto lokal agar tidak hilang
+          // Simpan cadangan foto lokal agar tidak hilang (pada raw ID dan No ID)
           if (state.currentActionJobId) {
             safeStorage.setItem('SE_JOB_FOTOS_' + state.currentActionJobId, JSON.stringify(state.currentAchPhotos));
+            const actJob = (typeof findJobById === 'function') ? findJobById(state.currentActionJobId) : null;
+            if (actJob) {
+              const actNoId = (typeof getJobNoId === 'function') ? getJobNoId(actJob) : (actJob.noId || actJob.no_id);
+              if (actNoId && actNoId !== '-' && actNoId !== state.currentActionJobId) {
+                safeStorage.setItem('SE_JOB_FOTOS_' + actNoId, JSON.stringify(state.currentAchPhotos));
+              }
+            }
           }
 
           // Dapatkan URL Apps Script (dari memory atau safeStorage)
@@ -25872,22 +26030,20 @@ Oilman 1 & 2 : ${teamMps}`;
 
           if (endpointUrl && endpointUrl.trim().startsWith('http')) {
             try {
-              // Silent: showToast(`Mengunggah Foto ${slotIdx + 1} ke Google Drive...`, 'info');
               const job = findJobById(state.currentActionJobId);
-              const payload = {
-                base64: photoDataUrl,
-                unit: job ? job.noLambung : 'UNIT',
-                category: job ? (job.cat || 'ACH') : 'ACH',
-                slot: slotIdx + 1,
-                jobId: state.currentActionJobId || ''
-              };
-
               const directUrl = await uploadBase64PhotoToDrive(photoDataUrl, job ? job.noLambung : 'UNIT', job ? (job.cat || 'ACH') : 'ACH', slotIdx, state.currentActionJobId);
               if (directUrl) {
                 state.currentAchPhotos[slotIdx] = directUrl;
                 renderAchPhotoSlots();
                 if (state.currentActionJobId) {
                   safeStorage.setItem('SE_JOB_FOTOS_' + state.currentActionJobId, JSON.stringify(state.currentAchPhotos));
+                  const actJob = (typeof findJobById === 'function') ? findJobById(state.currentActionJobId) : null;
+                  if (actJob) {
+                    const actNoId = (typeof getJobNoId === 'function') ? getJobNoId(actJob) : (actJob.noId || actJob.no_id);
+                    if (actNoId && actNoId !== '-' && actNoId !== state.currentActionJobId) {
+                      safeStorage.setItem('SE_JOB_FOTOS_' + actNoId, JSON.stringify(state.currentAchPhotos));
+                    }
+                  }
                 }
                 showToast(`Foto ${slotIdx + 1} berhasil masuk Google Drive!`, 'success');
               }
@@ -26454,7 +26610,7 @@ Oilman 1 & 2 : ${teamMps}`;
         }
         toggleModal('modal-ach-form', false);
         showToast(`Unit ${job.noLambung} dicatat status BD (Breakdown)!`, 'warning');
-        notifyDataChanged({ source: 'bd_status', jobId: job.id });
+        notifyDataChanged({ source: 'bd_status', jobId: job.id, orderId: isJobRequest ? job.id : null });
         return;
       }
 
@@ -27622,8 +27778,8 @@ Oilman 1 & 2 : ${teamMps}`;
           <td class="py-2.5 px-3 text-center text-slate-400 font-mono text-[11px] border-r border-slate-100 font-bold">${idx + 1}</td>
           <td class="py-2.5 px-3 md:px-4 border-r border-slate-100">
             <div class="flex items-baseline flex-wrap gap-x-1.5 gap-y-0.5">
-              <span class="text-sm sm:text-base font-black font-mono text-slate-900 tracking-tight">${item.noLambung}</span>
-              <span class="hidden md:inline text-[10px] text-slate-400 font-medium">(${item.type})</span>
+              <span class="text-xs md:text-sm font-bold font-mono text-slate-900 tracking-tight">${item.noLambung}</span>
+              <span class="hidden md:inline text-[11px] text-slate-500 font-semibold">(${item.type})</span>
             </div>
           </td>
           <td class="py-2.5 px-2 text-center border-r border-slate-100 ${item.cleans && item.cleans[0] ? 'bg-teal-50/40' : ''}">${renderCleanCell(item, 0)}</td>
@@ -27637,7 +27793,7 @@ Oilman 1 & 2 : ${teamMps}`;
               ${statusBadge}
               ${(item.lastEvidenceUrl || item.evidence_url || item.evidenceUrl) ? `
               <button type="button" onclick="openPhotoPreview('${item.lastEvidenceUrl || item.evidence_url || item.evidenceUrl}', 'Evidence Replace ${item.noLambung}')"
-                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-800 text-[9px] font-bold border border-teal-200 transition cursor-pointer"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold border border-teal-200 transition cursor-pointer"
                 title="Lihat foto evidence pergantian terakhir">
                 <svg class="w-3 h-3 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
@@ -27746,22 +27902,22 @@ Oilman 1 & 2 : ${teamMps}`;
         const isOff = ['OOFF', 'OFF', 'CCUTI', 'CUTI'].includes(kode);
         const isTraining = ['INDR', 'INDK', 'TR', 'HR'].includes(kode);
 
-        // UKURAN NO LAMBUNG UNIT BATANGAN: Dibuat lebih besar, tegas, dan mencolok
+        // UKURAN NO LAMBUNG UNIT BATANGAN: Dibuat tegas, rapi, dan proporsional
         const unitBatanganDisplay = (r.unit && r.unit !== '-') ?
-          `<span class="inline-block font-mono font-black text-sm md:text-base text-slate-900 bg-slate-100/90 px-3 py-1 rounded-lg border border-slate-200/90 shadow-2xs tracking-wider">${r.unit}</span>` :
+          `<span class="inline-block font-mono font-black text-xs md:text-sm text-slate-900 bg-slate-100/90 px-2.5 py-0.5 rounded-lg border border-slate-200/90 shadow-2xs tracking-wider">${r.unit}</span>` :
           `<span class="font-mono text-xs text-slate-400 font-semibold">-</span>`;
 
-        // UKURAN NO LAMBUNG UNIT EFEKTIF: Dibuat lebih besar, tegas, dan mencolok
-        let unitEfektifBadge = `<span class="inline-block font-mono font-black text-sm md:text-base text-blue-950 bg-blue-50/80 px-3 py-1 rounded-lg border border-blue-200/80 shadow-2xs tracking-wider">${r.unitEfektif || r.unit || '-'}</span>`;
+        // UKURAN NO LAMBUNG UNIT EFEKTIF: Dibuat tegas, rapi, dan proporsional
+        let unitEfektifBadge = `<span class="inline-block font-mono font-black text-xs md:text-sm text-blue-950 bg-blue-50/80 px-2.5 py-0.5 rounded-lg border border-blue-200/80 shadow-2xs tracking-wider">${r.unitEfektif || r.unit || '-'}</span>`;
         if (isSpare) {
-          unitEfektifBadge = `<span class="inline-flex items-center gap-1.5 font-mono font-black text-sm md:text-base text-emerald-950 bg-emerald-100/90 px-3 py-1 rounded-lg border border-emerald-300 shadow-2xs tracking-wider">${r.unitEfektif || r.unit} <span class="font-sans font-extrabold text-[10px] bg-emerald-600 text-white px-1.5 py-0.5 rounded shadow-2xs">SPARE</span></span>`;
+          unitEfektifBadge = `<span class="inline-flex items-center gap-1.5 font-mono font-black text-xs md:text-sm text-emerald-950 bg-emerald-100/90 px-2.5 py-0.5 rounded-lg border border-emerald-300 shadow-2xs tracking-wider">${r.unitEfektif || r.unit} <span class="font-sans font-extrabold text-[10px] bg-emerald-600 text-white px-1.5 py-0.2 rounded shadow-2xs">SPARE</span></span>`;
         } else if (isOff) {
-          unitEfektifBadge = `<span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">Off / Cuti</span>`;
+          unitEfektifBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">Off / Cuti</span>`;
         } else if (isTraining) {
-          unitEfektifBadge = `<span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">Induksi/Training</span>`;
+          unitEfektifBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">Induksi/Training</span>`;
         }
 
-        let kodeShiftBadge = `<span class="font-mono font-bold text-slate-700">${kode}</span>`;
+        let kodeShiftBadge = `<span class="font-mono font-bold text-slate-700 text-xs">${kode}</span>`;
         if (kode === 'DWS') {
           kodeShiftBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">DWS (Siang)</span>`;
         } else if (kode === 'NWS') {
@@ -27775,7 +27931,7 @@ Oilman 1 & 2 : ${teamMps}`;
         }
 
         const tr = document.createElement('tr');
-        tr.className = `hover:bg-slate-50 transition font-medium ${isChecked ? 'bg-amber-50/60' : ''}`;
+        tr.className = `hover:bg-slate-50 transition font-medium text-xs ${isChecked ? 'bg-amber-50/60' : ''}`;
         tr.innerHTML = `
           ${state.isRosterSelectMode ? `
             <td class="py-2.5 px-3 text-center">
@@ -27788,10 +27944,10 @@ Oilman 1 & 2 : ${teamMps}`;
               >
             </td>
           ` : ''}
-          <td class="py-2.5 px-4 text-center font-mono text-[11px] text-slate-400">${rowNumber}</td>
-          <td class="py-2.5 px-4 font-bold"><span class="px-2 py-0.5 rounded text-[10px] ${r.jenis === 'OPT' ? 'bg-amber-100 text-amber-800' : (r.jenis === 'OM' ? 'bg-emerald-100 text-emerald-800' : 'bg-cyan-100 text-cyan-800')}">${r.jenis}</span></td>
+          <td class="py-2.5 px-4 text-center font-mono text-[11px] text-slate-400 font-semibold">${rowNumber}</td>
+          <td class="py-2.5 px-4 font-bold"><span class="px-2 py-0.5 rounded text-[11px] font-bold ${r.jenis === 'OPT' ? 'bg-amber-100 text-amber-800' : (r.jenis === 'OM' ? 'bg-emerald-100 text-emerald-800' : 'bg-cyan-100 text-cyan-800')}">${r.jenis}</span></td>
           <td class="py-2.5 px-4 font-mono text-[11px] font-bold text-slate-900">${r.nrp || r.nik}</td>
-          <td class="py-2.5 px-4 text-slate-900 font-semibold">${r.nama}</td>
+          <td class="py-2.5 px-4 text-slate-900 font-bold text-xs">${r.nama}</td>
           <td class="py-2.5 px-4">${unitBatanganDisplay}</td>
           <td class="py-2.5 px-4">${unitEfektifBadge}</td>
           <td class="py-2.5 px-4 font-mono text-[11px] text-slate-600">${r.tanggal}</td>
@@ -30074,8 +30230,14 @@ Oilman 1 & 2 : ${teamMps}`;
         clearTimeout(_jobSyncTimer);
         _jobSyncTimer = null;
       }
-      const rowsToSync = Array.from(_jobSyncQueue.values());
+      // ATURAN PENGGUNA: Filter hanya job aktif (belum di-action) yang boleh di-upsert ke tabel jobs
+      const rowsToSync = Array.from(_jobSyncQueue.values()).filter(supaRow => {
+        const s = String(supaRow.status || '').toLowerCase().trim();
+        return !['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s);
+      });
       _jobSyncQueue.clear();
+
+      if (rowsToSync.length === 0) return;
 
       try {
         console.log(`[Supabase Batch Outbound] Mengirim ${rowsToSync.length} baris mutasi dalam 1 HTTP request (Ultra-Low Egress & Log)...!`);
@@ -30112,6 +30274,28 @@ Oilman 1 & 2 : ${teamMps}`;
       if (!state.supabaseClient || !job || !job.id) return;
       try {
         const targetId = String(job.id);
+        const s = String(job.status || '').toLowerCase().trim();
+        const isActioned = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) || (job.status_final !== undefined && job.status_final !== null && String(job.status_final).trim() !== '') || Boolean(job.isLocked);
+
+        // ATURAN PENGGUNA: Jika job sudah di-action (ACH, SERVICE, BD, NON-ACH),
+        // job HARUS berada di job_history dan DILARANG disimpan/di-upsert ke tabel jobs agar tabel jobs tidak menumpuk!
+        if (isActioned) {
+          if (typeof _jobSyncQueue !== 'undefined' && _jobSyncQueue.has(targetId)) {
+            _jobSyncQueue.delete(targetId);
+          }
+          if (typeof lockJobHistorySnapshot === 'function') {
+            await lockJobHistorySnapshot(job, job.status_final || job.status || 'ACHIEVED');
+          }
+          // Hapus dari tabel jobs dan order_requests di Supabase
+          try {
+            await Promise.allSettled([
+              state.supabaseClient.from('jobs').delete().eq('id', targetId),
+              state.supabaseClient.from('order_requests').delete().or(`id.eq.${targetId},kode_order.eq.${targetId}`)
+            ]);
+            console.log('[Supabase Move Job] Job/Order ' + targetId + ' (status ' + s + ') dipindahkan ke job_history & dihapus dari tabel jobs & order_requests.');
+          } catch (delEx) { }
+          return;
+        }
         const isSchWt = (targetId.startsWith('WT-SCH') || targetId.startsWith('WTJ') || (!targetId.startsWith('UNS') && (job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat) || (job.wtUnit && job.wtUnit !== '-'))));
         const isSchLt = (targetId.startsWith('LT-SCH') || targetId.startsWith('LTJ') || (!targetId.startsWith('UNS') && (job.targetType === 'LT' || ['small', 'digger', 'aircleaner', 'topup'].includes(job.cat))));
         const isUnschWt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-WT') || ((targetId.startsWith('UNS-') || targetId.startsWith('UNS_') || job.cat === 'unscheduled') && (job.serviceType === 'watertruck' || job.targetType === 'WT')));
@@ -30246,10 +30430,29 @@ Oilman 1 & 2 : ${teamMps}`;
     async function syncOrderToSupabase(order) {
       if (!state.supabaseClient || !order || !order.id) return;
       try {
-        const isWt = String(order.id).startsWith('UNS-WT') || order.serviceType === 'watertruck' || order.service_type === 'watertruck';
+        const orderId = String(order.id);
+        const s = String(order.status || '').toLowerCase().trim();
+        const isActioned = ['done', 'ach', 'achieved', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled', 'reject', 'rejected'].includes(s) || (order.status_final !== undefined && order.status_final !== null && String(order.status_final).trim() !== '') || Boolean(order.isLocked);
+
+        // ATURAN PENGGUNA: Jika order request sudah di-action, pindahkan ke job_history dan HAPUS dari order_requests & jobs agar tabel order_requests tidak menumpuk!
+        if (isActioned) {
+          if (typeof lockJobHistorySnapshot === 'function') {
+            await lockJobHistorySnapshot(order, order.status_final || order.status || 'ACHIEVED');
+          }
+          try {
+            await Promise.allSettled([
+              state.supabaseClient.from('order_requests').delete().or(`id.eq.${orderId},kode_order.eq.${orderId}`),
+              state.supabaseClient.from('jobs').delete().eq('id', orderId)
+            ]);
+            console.log('[Supabase Move Order OK] Order Request ' + orderId + ' (status ' + s + ') dipindahkan ke job_history & dihapus dari order_requests.');
+          } catch (delEx) { }
+          return;
+        }
+
+        const isWt = orderId.startsWith('UNS-WT') || order.serviceType === 'watertruck' || order.service_type === 'watertruck';
         const supaOrderRow = {
-          id: String(order.id),
-          kode_order: String(order.id),
+          id: orderId,
+          kode_order: orderId,
           tanggal: order.tanggal || getEffectiveTodayString(),
           jam: order.waktu || '08:00',
           nama_pemesan: order.namaPemesan || order.pemesan || 'Pemohon Lapangan',
@@ -31156,13 +31359,21 @@ Oilman 1 & 2 : ${teamMps}`;
             }
           }
 
-          // Masukkan seluruh order aktual dari Supabase
+          // Masukkan seluruh order aktual dari Supabase (jika sudah di-action, pastikan ke job_history & hapus dari order_requests)
           cloudOrders.forEach(row => {
             const mappedOrder = mapSupabaseOrderRowToModel(row);
             if (mappedOrder && mappedOrder.id) {
               const sid = String(mappedOrder.id);
-              window.globalDataCache.orderRequests.set(sid, mappedOrder);
-              window.globalDataCache.jobs.set(sid, mappedOrder);
+              const s = String(mappedOrder.status || '').toLowerCase();
+              if (['done', 'ach', 'achieved', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) || mappedOrder.isLocked) {
+                if (typeof lockJobHistorySnapshot === 'function') {
+                  lockJobHistorySnapshot(mappedOrder, mappedOrder.status || 'ACHIEVED');
+                }
+                state.supabaseClient.from('order_requests').delete().or(`id.eq.${sid},kode_order.eq.${sid}`).catch(() => { });
+              } else {
+                window.globalDataCache.orderRequests.set(sid, mappedOrder);
+                window.globalDataCache.jobs.set(sid, mappedOrder);
+              }
             }
           });
 
@@ -31547,6 +31758,33 @@ Oilman 1 & 2 : ${teamMps}`;
             debouncedRefreshUI();
           }
         })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'job_history' }, (payload) => {
+          if (!payload) return;
+          console.log('[Realtime Postgres job_history]', payload.eventType);
+          if (payload.eventType === 'DELETE') {
+            const delHistId = String(payload.old?.job_id || payload.old?.id || '');
+            if (delHistId && Array.isArray(state.jobHistory)) {
+              state.jobHistory = state.jobHistory.filter(h => String(h.job_id || h.id) !== delHistId);
+              safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
+              if (state.activeTab === 'completed' && typeof renderCompletedTable === 'function') {
+                renderCompletedTable();
+              }
+            }
+          } else if (payload.new) {
+            const newHist = payload.new;
+            if (!Array.isArray(state.jobHistory)) state.jobHistory = [];
+            const exIdx = state.jobHistory.findIndex(h => String(h.job_id || h.id) === String(newHist.job_id || newHist.id));
+            if (exIdx !== -1) {
+              state.jobHistory[exIdx] = newHist;
+            } else {
+              state.jobHistory.unshift(newHist);
+            }
+            safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
+            if (state.activeTab === 'completed' && typeof renderCompletedTable === 'function') {
+              renderCompletedTable();
+            }
+          }
+        })
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'order_requests' }, (payload) => {
           if (payload.new) {
             const mappedObj = mapSupabaseOrderRowToModel(payload.new);
@@ -31566,11 +31804,22 @@ Oilman 1 & 2 : ${teamMps}`;
             const mappedObj = mapSupabaseOrderRowToModel(payload.new);
             if (mappedObj && mappedObj.id) {
               const sid = String(mappedObj.id);
-              if (window.globalDataCache) {
-                window.globalDataCache.orderRequests?.set(sid, mappedObj);
-                window.globalDataCache.jobs?.set(sid, mappedObj);
+              const s = String(mappedObj.status || '').toLowerCase();
+              if (['done', 'ach', 'achieved', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) || mappedObj.isLocked) {
+                if (window.globalDataCache) {
+                  window.globalDataCache.orderRequests?.delete(sid);
+                  window.globalDataCache.jobs?.delete(sid);
+                }
+                if (state.unscheduledLtJobs) state.unscheduledLtJobs = state.unscheduledLtJobs.filter(j => String(j.id) !== sid);
+                if (state.unscheduledWtJobs) state.unscheduledWtJobs = state.unscheduledWtJobs.filter(j => String(j.id) !== sid);
+                if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
+              } else {
+                if (window.globalDataCache) {
+                  window.globalDataCache.orderRequests?.set(sid, mappedObj);
+                  window.globalDataCache.jobs?.set(sid, mappedObj);
+                }
+                syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
               }
-              syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
               debouncedRefreshUI();
             }
           }
