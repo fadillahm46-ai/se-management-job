@@ -13864,8 +13864,7 @@
               try {
                 await Promise.allSettled([
                   state.supabaseClient.from('jobs_lt').delete().eq('id', originalJobId),
-                  state.supabaseClient.from('jobs_wt').delete().eq('id', originalJobId),
-                  state.supabaseClient.from('jobs').delete().eq('id', originalJobId)
+                  state.supabaseClient.from('jobs_wt').delete().eq('id', originalJobId)
                 ]);
                 console.log('[Supabase Move Job OK] Berhasil memindahkan ' + originalJobId + ' ke ' + targetHistTable + ' dan menghapus dari tabel jobs aktif.');
               } catch (delEx) { }
@@ -19753,8 +19752,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           const chunkSize = 100;
           for (let i = 0; i < nrpsToDelete.length; i += chunkSize) {
             const chunk = nrpsToDelete.slice(i, i + chunkSize);
-            await state.supabaseClient.from("master_operators").delete().in("nrp", chunk);
-            // master_kontak_pro omitted
+            await Promise.allSettled([
+              state.supabaseClient.from("master_operators").delete().in("nrp", chunk),
+              state.supabaseClient.from("master_kontak_pro").delete().in("nrp", chunk)
+            ]);
           }
           console.log(`[Supabase Bulk Delete OK] ${nrpsToDelete.length} kontak terhapus dari cloud.`);
         } catch (supaErr) {
@@ -19918,8 +19919,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       if (state.supabaseClient && target && target.nrp) {
         try {
-          await state.supabaseClient.from("master_operators").delete().eq("nrp", target.nrp);
-          // master_kontak_pro omitted
+          await Promise.allSettled([
+            state.supabaseClient.from("master_operators").delete().eq("nrp", target.nrp),
+            state.supabaseClient.from("master_kontak_pro").delete().eq("nrp", target.nrp)
+          ]);
           console.log("[Supabase Delete Operator OK]", target.nrp);
         } catch (delErr) {
           console.warn("[Supabase Delete Operator Warning]", delErr);
@@ -22703,15 +22706,39 @@ Oilman 1 & 2 : ${teamMps}`;
       const job = findJobById(deletedId);
       const noLambung = job ? job.noLambung : '';
 
-      // Helper kecocokan baris HANYA untuk ID spesifik yang dipilih pengguna (mencegah job lain unit yang sama ikut terhapus)
+      // Kumpulkan seluruh alias identifier dari job ini (id, job_id, noId, no_id, snapshot_data.id)
+      const targetIds = new Set();
+      targetIds.add(deletedId);
+      if (job) {
+        if (job.id) targetIds.add(String(job.id));
+        if (job.job_id) targetIds.add(String(job.job_id));
+        if (job.noId) targetIds.add(String(job.noId));
+        if (job.no_id) targetIds.add(String(job.no_id));
+        if (job.kode_order) targetIds.add(String(job.kode_order));
+        if (job.snapshot_data?.id) targetIds.add(String(job.snapshot_data.id));
+      }
+      if (Array.isArray(state.jobHistory)) {
+        state.jobHistory.forEach(h => {
+          if (targetIds.has(String(h.job_id)) || targetIds.has(String(h.id)) || targetIds.has(String(h.no_id))) {
+            if (h.id) targetIds.add(String(h.id));
+            if (h.job_id) targetIds.add(String(h.job_id));
+            if (h.no_id) targetIds.add(String(h.no_id));
+            if (h.snapshot_data?.id) targetIds.add(String(h.snapshot_data.id));
+          }
+        });
+      }
+
+      // Helper kecocokan baris untuk SEMUA variasi ID yang bersangkutan
       const isTargetMatch = (j) => {
         if (!j) return false;
         const jId = String(j.id || '');
+        const jJobId = String(j.job_id || '');
+        const jNoId = String(j.noId || j.no_id || '');
         const jCode = String(j.kode_order || '');
-        return jId === deletedId || (jCode && jCode === deletedId);
+        return targetIds.has(jId) || targetIds.has(jJobId) || targetIds.has(jNoId) || targetIds.has(jCode);
       };
 
-      // 1. Hapus HANYA item spesifik dari seluruh state lokal (Lubetruck, Watertruck, Job Requests, dan Job History)
+      // 1. Hapus item spesifik dari seluruh state lokal (Lubetruck, Watertruck, Job Requests, dan Job History)
       ['unscheduledLtJobs', 'unscheduledWtJobs'].forEach(k => {
         if (state[k]) state[k] = state[k].filter(j => !isTargetMatch(j));
       });
@@ -22722,17 +22749,15 @@ Oilman 1 & 2 : ${teamMps}`;
         state.watertruckState.jobs = state.watertruckState.jobs.filter(j => !isTargetMatch(j));
       }
       if (Array.isArray(state.jobHistory)) {
-        state.jobHistory = state.jobHistory.filter(h => !isTargetMatch(h) && String(h.job_id || h.id) !== deletedId);
+        state.jobHistory = state.jobHistory.filter(h => !isTargetMatch(h));
       }
 
-      // 2. Hapus bersih dari RAM cache HANYA untuk ID yang dihapus
+      // 2. Hapus bersih dari RAM cache untuk SEMUA ID yang bersangkutan
       if (window.globalDataCache) {
-        if (window.globalDataCache.jobs) {
-          window.globalDataCache.jobs.delete(deletedId);
-        }
-        if (window.globalDataCache.orderRequests) {
-          window.globalDataCache.orderRequests.delete(deletedId);
-        }
+        targetIds.forEach(tId => {
+          if (window.globalDataCache.jobs) window.globalDataCache.jobs.delete(tId);
+          if (window.globalDataCache.orderRequests) window.globalDataCache.orderRequests.delete(tId);
+        });
       }
 
       // 3. Tutup modal konfirmasi dan modal detail job
@@ -25494,24 +25519,44 @@ Oilman 1 & 2 : ${teamMps}`;
         confirmBtn.innerHTML = "<span>Menghapus...</span>";
       }
 
-      const deleteSet = new Set(deleteIds.map(String));
+      // Kumpulkan seluruh variasi ID dari riwayat terpilih (id, job_id, no_id, snapshot_data.id)
+      const allTargetIds = new Set(deleteIds.map(String));
+      if (Array.isArray(state.jobHistory)) {
+        state.jobHistory.forEach(h => {
+          if (allTargetIds.has(String(h.job_id)) || allTargetIds.has(String(h.id)) || allTargetIds.has(String(h.no_id))) {
+            if (h.id) allTargetIds.add(String(h.id));
+            if (h.job_id) allTargetIds.add(String(h.job_id));
+            if (h.no_id) allTargetIds.add(String(h.no_id));
+            if (h.snapshot_data?.id) allTargetIds.add(String(h.snapshot_data.id));
+          }
+        });
+      }
+      const deleteSet = allTargetIds;
 
       try {
         // 1. Hapus dari state lokal
+        const matchesDel = (item) => {
+          if (!item) return false;
+          return deleteSet.has(String(item.id || '')) ||
+            deleteSet.has(String(item.job_id || '')) ||
+            deleteSet.has(String(item.noId || item.no_id || '')) ||
+            deleteSet.has(String(item.kode_order || ''));
+        };
+
         if (state.lubetruckState && Array.isArray(state.lubetruckState.jobs)) {
-          state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => !deleteSet.has(String(j.id)));
+          state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => !matchesDel(j));
         }
         if (state.watertruckState && Array.isArray(state.watertruckState.jobs)) {
-          state.watertruckState.jobs = state.watertruckState.jobs.filter(j => !deleteSet.has(String(j.id)));
+          state.watertruckState.jobs = state.watertruckState.jobs.filter(j => !matchesDel(j));
         }
         if (Array.isArray(state.unscheduledLtJobs)) {
-          state.unscheduledLtJobs = state.unscheduledLtJobs.filter(j => !deleteSet.has(String(j.id)));
+          state.unscheduledLtJobs = state.unscheduledLtJobs.filter(j => !matchesDel(j));
         }
         if (Array.isArray(state.unscheduledWtJobs)) {
-          state.unscheduledWtJobs = state.unscheduledWtJobs.filter(j => !deleteSet.has(String(j.id)));
+          state.unscheduledWtJobs = state.unscheduledWtJobs.filter(j => !matchesDel(j));
         }
         if (Array.isArray(state.jobHistory)) {
-          state.jobHistory = state.jobHistory.filter(h => !deleteSet.has(String(h.job_id || h.id)));
+          state.jobHistory = state.jobHistory.filter(h => !matchesDel(h));
         }
 
         saveDatabaseSync();
@@ -25526,15 +25571,21 @@ Oilman 1 & 2 : ${teamMps}`;
           safeSaveTrimmedJobsToStorage();
         }
 
-        // 2. Hapus dari Supabase cloud jika online (hapus dari jobs, job_history, dan pica_records)
+        // 2. Hapus dari Supabase cloud secara permanen dari tabel fisik
         if (state.supabaseClient) {
           try {
-            for (let i = 0; i < deleteIds.length; i += 50) {
-              const chunk = deleteIds.slice(i, i + 50);
+            const fullList = Array.from(allTargetIds);
+            for (let i = 0; i < fullList.length; i += 50) {
+              const chunk = fullList.slice(i, i + 50);
               await Promise.allSettled([
-                state.supabaseClient.from("jobs").delete().in("id", chunk),
-                state.supabaseClient.from("job_history").delete().in("job_id", chunk),
-                state.supabaseClient.from("pica_records").delete().in("job_id", chunk)
+                state.supabaseClient.from("jobs_lt").delete().in("id", chunk),
+                state.supabaseClient.from("jobs_wt").delete().in("id", chunk),
+                state.supabaseClient.from("job_history_lt").delete().in("job_id", chunk),
+                state.supabaseClient.from("job_history_lt").delete().in("id", chunk),
+                state.supabaseClient.from("job_history_wt").delete().in("job_id", chunk),
+                state.supabaseClient.from("job_history_wt").delete().in("id", chunk),
+                state.supabaseClient.from("pica_records").delete().in("job_id", chunk),
+                state.supabaseClient.from("pica_records").delete().in("id", chunk)
               ]);
             }
             console.log("[Supabase Bulk Delete Riwayat] " + deleteIds.length + " data riwayat berhasil dihapus dari cloud.");
@@ -30708,8 +30759,7 @@ Oilman 1 & 2 : ${teamMps}`;
           try {
             await Promise.allSettled([
               state.supabaseClient.from('jobs_lt').delete().eq('id', targetId),
-              state.supabaseClient.from('jobs_wt').delete().eq('id', targetId),
-              state.supabaseClient.from('jobs').delete().eq('id', targetId)
+              state.supabaseClient.from('jobs_wt').delete().eq('id', targetId)
             ]);
             console.log('[Supabase Move Job] Job ' + targetId + ' (status ' + s + ') dipindahkan ke job_history & dihapus dari tabel jobs aktif.');
           } catch (delEx) { }
@@ -30814,32 +30864,51 @@ Oilman 1 & 2 : ${teamMps}`;
         const cleanJobId = String(jobId);
         const job = jobRef || findJobById(cleanJobId);
 
-        // 1. Hapus berdasarkan ID dari tabel jobs aktif (jobs_lt, jobs_wt, jobs)
+        // Kumpulkan seluruh kemungkinan ID / key yang merujuk ke record ini
+        const targetIds = new Set();
+        targetIds.add(cleanJobId);
+        if (job) {
+          if (job.id) targetIds.add(String(job.id));
+          if (job.job_id) targetIds.add(String(job.job_id));
+          if (job.noId) targetIds.add(String(job.noId));
+          if (job.no_id) targetIds.add(String(job.no_id));
+          if (job.kode_order) targetIds.add(String(job.kode_order));
+          if (job.snapshot_data?.id) targetIds.add(String(job.snapshot_data.id));
+        }
+        if (Array.isArray(state.jobHistory)) {
+          state.jobHistory.forEach(h => {
+            if (targetIds.has(String(h.job_id)) || targetIds.has(String(h.id)) || targetIds.has(String(h.no_id))) {
+              if (h.id) targetIds.add(String(h.id));
+              if (h.job_id) targetIds.add(String(h.job_id));
+              if (h.no_id) targetIds.add(String(h.no_id));
+              if (h.snapshot_data?.id) targetIds.add(String(h.snapshot_data.id));
+            }
+          });
+        }
+
+        const idList = Array.from(targetIds);
+
+        // Hapus tuntas langsung dari seluruh tabel fisik Supabase:
         await Promise.allSettled([
-          state.supabaseClient.from('jobs_lt').delete().eq('id', cleanJobId),
-          state.supabaseClient.from('jobs_wt').delete().eq('id', cleanJobId),
-          state.supabaseClient.from('jobs').delete().eq('id', cleanJobId)
+          state.supabaseClient.from('jobs_lt').delete().in('id', idList),
+          state.supabaseClient.from('jobs_wt').delete().in('id', idList),
+          state.supabaseClient.from('job_history_lt').delete().in('job_id', idList),
+          state.supabaseClient.from('job_history_lt').delete().in('id', idList),
+          state.supabaseClient.from('job_history_wt').delete().in('job_id', idList),
+          state.supabaseClient.from('job_history_wt').delete().in('id', idList),
+          state.supabaseClient.from('pica_records').delete().in('job_id', idList),
+          state.supabaseClient.from('pica_records').delete().in('id', idList)
         ]);
 
-        // 2. Hapus juga dari job_history & pica_records agar tidak tertinggal sebagai data zombie
-        try {
-          await Promise.allSettled([
-            state.supabaseClient.from('job_history_lt').delete().eq('job_id', cleanJobId),
-            state.supabaseClient.from('job_history_wt').delete().eq('job_id', cleanJobId),
-            state.supabaseClient.from('job_history').delete().eq('job_id', cleanJobId),
-            state.supabaseClient.from('pica_records').delete().eq('job_id', cleanJobId)
-          ]);
-        } catch (eRel) { }
+        console.log('[Supabase Outbound Job Deleted OK]', idList);
 
-        console.log('[Supabase Outbound Job Deleted OK]', cleanJobId);
-
-        // 3. Pancarkan event Realtime Broadcast Instan (0 ms latency) agar semua perangkat tersinkronisasi
+        // Pancarkan event Realtime Broadcast Instan (0 ms latency) agar semua perangkat tersinkronisasi
         if (realtimeChannel && typeof realtimeChannel.send === 'function') {
           try {
             realtimeChannel.send({
               type: 'broadcast',
               event: 'JOB_DELETED',
-              payload: { id: cleanJobId, noLambung: job?.noLambung, tanggal: job?.tanggal }
+              payload: { id: cleanJobId, ids: idList, noLambung: job?.noLambung, tanggal: job?.tanggal }
             }).catch(() => { });
           } catch (eBc) { }
         }
@@ -34548,10 +34617,15 @@ Oilman 1 & 2 : ${teamMps}`;
 
       if (state.supabaseClient) {
         const ids = toDelete.map(j => String(j.id));
+        const targetTable = isWt ? 'jobs_wt' : 'jobs_lt';
         try {
           for (let i = 0; i < ids.length; i += 50) {
             const chunk = ids.slice(i, i + 50);
-            await state.supabaseClient.from('jobs').delete().in('id', chunk);
+            await Promise.allSettled([
+              state.supabaseClient.from(targetTable).delete().in('id', chunk),
+              state.supabaseClient.from('jobs_lt').delete().in('id', chunk),
+              state.supabaseClient.from('jobs_wt').delete().in('id', chunk)
+            ]);
           }
           console.log(`[Supabase Bulk Delete] ${ids.length} jadwal dihapus dari cloud.`);
         } catch (e) {
@@ -34733,12 +34807,17 @@ Oilman 1 & 2 : ${teamMps}`;
       }
       safeSaveTrimmedJobsToStorage();
 
-      // Sinkronisasi hapus ke Supabase
+      // Sinkronisasi hapus ke Supabase langsung ke tabel fisik
       if (state.supabaseClient) {
+        const targetTable = isWt ? 'jobs_wt' : 'jobs_lt';
         try {
           for (let i = 0; i < deleteIds.length; i += 50) {
             const chunk = deleteIds.slice(i, i + 50);
-            await state.supabaseClient.from('jobs').delete().in('id', chunk);
+            await Promise.allSettled([
+              state.supabaseClient.from(targetTable).delete().in('id', chunk),
+              state.supabaseClient.from('jobs_lt').delete().in('id', chunk),
+              state.supabaseClient.from('jobs_wt').delete().in('id', chunk)
+            ]);
           }
           console.log(`[Supabase Delete Selected] ${deleteIds.length} jadwal berhasil dihapus.`);
         } catch (e) {
