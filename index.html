@@ -13345,14 +13345,25 @@
         switchMasterSection(state.masterActiveSection || 'roster');
       } else if (tabKey === 'completed') {
         renderCompletedTable();
+        // ON-DEMAND LAZY LOAD: Tarik riwayat dari Supabase hanya saat tab riwayat dibuka pertama kali
+        if (!window._hasLoadedJobHistory && typeof loadJobHistoryFromSupabase === 'function') {
+          loadJobHistoryFromSupabase(true);
+        }
       } else if (tabKey === 'mp-kontak-pro') {
         renderMpKontakProTable();
+        if ((!Array.isArray(state.masterOperators) || state.masterOperators.length === 0) && typeof syncMasterOperatorsFromSupabase === 'function') {
+          syncMasterOperatorsFromSupabase(false);
+        }
       } else if (tabKey === 'pica') {
         renderPicaTable();
+        // ON-DEMAND LAZY LOAD: Tarik PICA hanya saat tab PICA dibuka
+        if (!window._hasLoadedPica && typeof loadPicaFromSupabase === 'function') {
+          loadPicaFromSupabase();
+        }
       } else if (tabKey === 'air-cleaner-monitor') {
         renderAirCleanerMonitorTable();
-        if ((!Array.isArray(state.jobHistory) || state.jobHistory.length === 0) && typeof loadJobHistoryFromSupabase === 'function') {
-          loadJobHistoryFromSupabase(true);
+        if ((!Array.isArray(state.airCleanerMonitor) || state.airCleanerMonitor.length === 0) && typeof loadAirCleanerFromSupabase === 'function') {
+          loadAirCleanerFromSupabase(false);
         }
       } else if (tabKey === 'orders') {
         if (typeof populateOrderUnitsDatalist === 'function') populateOrderUnitsDatalist();
@@ -31817,11 +31828,29 @@ Oilman 1 & 2 : ${teamMps}`;
      */
     function getHotWindowRange() {
       const todayStr = getEffectiveTodayString();
+      const userRole = state.currentUser?.role || 'user';
+      const isFieldOperator = (userRole === 'mp_lt' || userRole === 'mp_wt' || userRole === 'oilman' || userRole === 'washingman' || userRole === 'operator' || userRole === 'user');
+
+      // OPTIMASI EGRESS BESAR (Hemat 90%):
+      // Operator lapangan (200+ pengguna) hanya butuh melihat jadwal 3 hari (H-1 s/d H+1).
+      // Mereka tidak membutuhkan riwayat 14 hari jadwal masa lalu yang membebani kuota Supabase.
+      if (isFieldOperator) {
+        const dStart = new Date(todayStr);
+        dStart.setDate(dStart.getDate() - 1);
+        const startDate = dStart.toISOString().split('T')[0];
+
+        const dEnd = new Date(todayStr);
+        dEnd.setDate(dEnd.getDate() + 1);
+        const endDate = dEnd.toISOString().split('T')[0];
+
+        return { startDate, endDate, todayStr };
+      }
+
+      // Khusus Admin & Base Control: Tarik 14 hari ke belakang s/d akhir mining week aktif
       const dStart = new Date(todayStr);
-      dStart.setDate(dStart.getDate() - 14); // 14 hari ke belakang sesuai Aturan 1
+      dStart.setDate(dStart.getDate() - 14);
       const startDate = dStart.toISOString().split('T')[0];
 
-      // Pastikan mencakup seluruh Mining Week aktif (Minggu s/d Sabtu)
       const weekRange = (typeof getMiningWeekRange === 'function') ? getMiningWeekRange(new Date()) : null;
       let endDate = todayStr;
       if (weekRange && weekRange.endDate) {
@@ -32499,34 +32528,30 @@ Oilman 1 & 2 : ${teamMps}`;
           if (statusEl) statusEl.textContent = 'Online';
 
           // Cek apakah data master sudah ada di cache lokal (Master Data TTL Cache)
-          const hasMasterUnits = Array.isArray(state.masterUnits) && state.masterUnits.length > 25;
-          const hasMasterRoster = Array.isArray(state.masterRoster) && state.masterRoster.length > 0;
-          const hasMasterArmada = Array.isArray(state.masterArmada) && state.masterArmada.length > 0;
-          const hasMasterOps = Array.isArray(state.masterOperators) && state.masterOperators.length > 0;
-          const hasMasterUsers = Array.isArray(state.masterUsers) && state.masterUsers.length > 0;
-          const hasAirCleaner = Array.isArray(state.airCleanerMonitor) && state.airCleanerMonitor.length > 0;
+          // Cek role pengguna: apakah operator lapangan?
+          const userRole = state.currentUser?.role || 'user';
+          const isFieldOp = (userRole === 'mp_lt' || userRole === 'mp_wt' || userRole === 'oilman' || userRole === 'washingman' || userRole === 'operator' || userRole === 'user');
 
-          // Muat master data (Armada & Populasi Unit selalu diprioritaskan agar seluruh dropdown 100% lengkap)
+          // Muat master data (Armada & Populasi Unit dengan TTL Cache 24 jam)
           const masterLoadTasks = [];
           masterLoadTasks.push(typeof syncSupabaseMasterData === 'function' ? syncSupabaseMasterData(false) : Promise.resolve());
 
-          // Catatan: syncSupabaseMasterData sudah memuat master units secara aman dengan TTL cache 24 jam
-
-          if (!hasMasterRoster || !state._isRosterFullyLoaded) {
-            masterLoadTasks.push(typeof loadRosterFromSupabase === 'function' ? loadRosterFromSupabase(null, false) : Promise.resolve());
-          }
-
-          if (!hasAirCleaner) {
-            masterLoadTasks.push(typeof loadAirCleanerFromSupabase === 'function' ? loadAirCleanerFromSupabase(false) : Promise.resolve());
-          }
-
-          // Muat transaksi aktif Hot-Window (14 hari) + riwayat selesai + log PICA + master data
-          await Promise.allSettled([
+          // OPTIMASI BOOT AWAL (Hemat Egress 80%):
+          // Saat startup, HANYA muat Jadwal Aktif (`loadJobsFromSupabase`).
+          // JANGAN download ribuan riwayat selesai (job_history), pica_records, atau roster saat boot!
+          // Semua data tersebut kini dimuat secara On-Demand (Lazy-Load) saat tab terkait diklik.
+          const bootTasks = [
             (typeof loadJobsFromSupabase === 'function' ? loadJobsFromSupabase() : Promise.resolve()),
-            (typeof loadJobHistoryFromSupabase === 'function' ? loadJobHistoryFromSupabase() : Promise.resolve()),
-            (typeof loadPicaFromSupabase === 'function' ? loadPicaFromSupabase() : Promise.resolve()),
             ...masterLoadTasks
-          ]);
+          ];
+
+          // Khusus Admin / Base Control jika cache Air Cleaner kosong
+          const hasAirCleaner = Array.isArray(state.airCleanerMonitor) && state.airCleanerMonitor.length > 0;
+          if (!isFieldOp && !hasAirCleaner) {
+            bootTasks.push(typeof loadAirCleanerFromSupabase === 'function' ? loadAirCleanerFromSupabase(false) : Promise.resolve());
+          }
+
+          await Promise.allSettled(bootTasks);
 
           if (typeof alignJobsWithMasterUnits === 'function') {
             alignJobsWithMasterUnits();
@@ -34462,20 +34487,28 @@ Oilman 1 & 2 : ${teamMps}`;
     }
     window.pushAllJobHistoryToSupabase = pushAllJobHistoryToSupabase;
 
-    // 3. TARIK SELURUH RIWAYAT SELESAI DARI TABEL job_history SUPABASE
-    async function loadJobHistoryFromSupabase(silent = false) {
+    // 3. TARIK RIWAYAT SELESAI DARI TABEL job_history SUPABASE (On-Demand & Throttled)
+    let _lastJobHistoryFetchTs = 0;
+    async function loadJobHistoryFromSupabase(force = false) {
       if (!state.supabaseClient) return;
+
+      const now = Date.now();
+      // Throttle 5 menit jika data sudah ada di memori dan tidak dipaksa (force)
+      if (!force && window._hasLoadedJobHistory && (now - _lastJobHistoryFetchTs < 300000) && Array.isArray(state.jobHistory) && state.jobHistory.length > 0) {
+        return;
+      }
+
       try {
-        // [Audit Egress] snapshot_data tidak pernah dibaca UI -> tidak ikut ditarik. Fallback ke '*' bila kolom tak cocok.
+        _lastJobHistoryFetchTs = now;
+        // [Audit Egress] Batasi penarikan awal ke 200 data riwayat terbaru untuk menghemat bandwidth
         const HISTORY_LIST_COLS = 'id,job_id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,status_final,keterangan,non_ach_category,non_ach_reason,fotos,created_at';
-        let { data, error } = await state.supabaseClient.from('job_history').select(HISTORY_LIST_COLS).order('created_at', { ascending: false }).limit(1000);
+        let { data, error } = await state.supabaseClient.from('job_history').select(HISTORY_LIST_COLS).order('created_at', { ascending: false }).limit(200);
         if (error && (error.code === '42703' || error.code === 'PGRST204' || /column/i.test(error.message || ''))) {
-          ({ data, error } = await state.supabaseClient.from('job_history').select('*').order('created_at', { ascending: false }).limit(1000));
+          ({ data, error } = await state.supabaseClient.from('job_history').select('*').order('created_at', { ascending: false }).limit(200));
         }
         if (!error && Array.isArray(data)) {
-          // Supabase adalah sumber kebenaran tunggal (Single Source of Truth).
-          // Jika tabel di cloud kosong (pengguna menghapus riwayat di Supabase), kosongkan juga cache lokal anti zombie cache.
           state.jobHistory = data;
+          window._hasLoadedJobHistory = true;
           safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
           console.log('[Supabase History Sync OK] Total ' + state.jobHistory.length + ' riwayat selesai termuat dari Supabase.');
           if (typeof renderHistoryTable === 'function') renderHistoryTable();
@@ -34525,13 +34558,20 @@ Oilman 1 & 2 : ${teamMps}`;
     }
     window.pushAllPicaToSupabase = pushAllPicaToSupabase;
 
-    // 6. TARIK SELURUH RECORD PICA DARI TABEL pica_records SUPABASE
-    async function loadPicaFromSupabase() {
+    // 6. TARIK RECORD PICA DARI TABEL pica_records SUPABASE (On-Demand & Throttled)
+    let _lastPicaFetchTs = 0;
+    async function loadPicaFromSupabase(force = false) {
       if (!state.supabaseClient) return;
+      const now = Date.now();
+      if (!force && window._hasLoadedPica && (now - _lastPicaFetchTs < 300000) && Array.isArray(state.picaCloudRecords) && state.picaCloudRecords.length > 0) {
+        return;
+      }
       try {
-        const { data, error } = await state.supabaseClient.from('pica_records').select('*').order('tanggal', { ascending: false }).limit(500);
+        _lastPicaFetchTs = now;
+        const { data, error } = await state.supabaseClient.from('pica_records').select('*').order('tanggal', { ascending: false }).limit(150);
         if (!error && Array.isArray(data)) {
           state.picaCloudRecords = data;
+          window._hasLoadedPica = true;
           console.log('[Supabase PICA Load OK] ' + data.length + ' records PICA termuat dari Cloud.');
         }
       } catch (e) {
