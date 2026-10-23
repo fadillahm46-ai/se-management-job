@@ -9552,26 +9552,20 @@
         saveDatabaseSync();
         safeStorage.setItem('SE_SYNC_TIMESTAMP', String(Date.now()));
 
-        // Outbound Realtime Sync ke Supabase
+        // Outbound Realtime Sync ke Supabase (Seluruh job dan order langsung ke tabel jobs_lt/jobs_wt)
         if (state.supabaseClient && info) {
           if (info.jobId && typeof syncJobToSupabase === 'function') {
             const j = findJobById(info.jobId);
             if (j) {
               syncJobToSupabase(j);
-              if ((info.orderId || (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(j)) || String(j.id || '').startsWith('UNS')) && typeof syncOrderToSupabase === 'function') {
-                syncOrderToSupabase(j);
-              }
-              // Catatan: syncJobToSupabase sudah memancarkan JOB_SIGNAL WebSocket lengkap dengan payload objek data.
-              // Jangan pancarkan ulang sinyal tanpa data di sini agar tab lain tidak memicu query HTTP fallback .single()
               if (realtimeBroadcastBus) {
                 try { realtimeBroadcastBus.postMessage({ type: 'DATA_MUTATED', source: info.source || 'job_sync', job: j }); } catch (e) { }
               }
             }
           }
-          if (info.orderId && typeof syncOrderToSupabase === 'function') {
+          if (info.orderId && typeof syncJobToSupabase === 'function') {
             const ord = findJobById(info.orderId);
             if (ord) {
-              syncOrderToSupabase(ord);
               syncJobToSupabase(ord);
               if (realtimeBroadcastBus) {
                 try { realtimeBroadcastBus.postMessage({ type: 'DATA_MUTATED', source: 'order_sync', job: ord }); } catch (e) { }
@@ -13676,30 +13670,37 @@
     async function lockJobHistorySnapshot(job, finalStatus, reason = '') {
       if (!job || !job.id) return;
 
-      // ATURAN PENGGUNA: Khusus Order Request (Unscheduled), jika job di-action TIDAK PERLU pindah ke history.
-      // Cukup 1 tabel (order_requests) untuk merubah data di dalamnya jika job selesai!
-      const isOrderReq = (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(job)) ||
-        String(job.id || '').startsWith('ORD-') ||
-        String(job.id || '').startsWith('UNS-') ||
-        Boolean(job.kodeOrder) ||
-        job.createdByRole === 'user';
-
-      if (isOrderReq) {
-        job.isLocked = true;
-        if (typeof syncOrderToSupabase === 'function') {
-          await syncOrderToSupabase(job);
-        }
-        return;
-      }
-
       job.isLocked = true;
       const normFinalStatus = (finalStatus || job.status || 'ACHIEVED').toUpperCase();
       const statusFinal = (normFinalStatus === 'ACH' || normFinalStatus === 'DONE') ? 'ACHIEVED' : ((normFinalStatus === 'NON-ACH' || normFinalStatus === 'NON_ACH') ? 'NON_ACH' : normFinalStatus);
 
       if (!state.jobHistory) state.jobHistory = [];
-      const standardNoId = (typeof getJobNoId === 'function') ? getJobNoId(job) : String(job.id);
-      const cleanId = (standardNoId && standardNoId !== '-') ? standardNoId : String(job.id);
+
+      // Dapatkan base ID baku: LT/WT-{type job}-{ddmmyyyy}-{shift}
+      const isWt = isJobWaterTruck(job);
+      const prefix = isWt ? 'WT' : 'LT';
+      const typeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(job) : (isWt ? 'WSC' : 'GRS');
+      const tglStr = job.tanggalRealisasi || job.tanggal || job.tanggal_rencana || getEffectiveTodayString();
+      const datePart = (typeof formatDateToDDMMYYYY === 'function') ? formatDateToDDMMYYYY(tglStr) : '23102026';
+      const shiftPart = parseInt(job.shift || job.shift_rencana || 1, 10) || 1;
+      const baseId = `${prefix}-${typeCode}-${datePart}-${shiftPart}`;
+
+      // Waktu eksekusi jam-menit saat close / di-action (contoh: 1858)
+      let timePart = '';
+      const rawTime = String(job.jamEnd || job.jamStart || '').trim();
+      const mTime = rawTime.match(/(\d{1,2})[:.](\d{2})/);
+      if (mTime) {
+        timePart = `${String(parseInt(mTime[1], 10)).padStart(2, '0')}${String(parseInt(mTime[2], 10)).padStart(2, '0')}`;
+      } else {
+        const now = new Date();
+        timePart = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+      }
+
+      // Format akhir di job_history sesuai permintaan: LT-GRS-23102026-1-1858
+      const cleanId = `${baseId}-${timePart}`;
       job.noId = cleanId;
+      job.job_id = cleanId;
+
       const existingIdx = state.jobHistory.findIndex(h => h.job_id === cleanId || h.job_id === String(job.id));
 
       // Proteksi Anti-Downgrade: Jika job sudah pernah berstatus ACHIEVED / SERVICE / BREAKDOWN,
@@ -13716,7 +13717,6 @@
       const snapshotRecord = {
         id: 'HIST-' + cleanId + '-' + Date.now(),
         job_id: cleanId,
-        no_id: cleanId,
         no_lambung: job.noLambung || job.no_lambung || 'UNIT',
         type_unit: job.typeUnit || job.type_unit || 'Unit',
         cat: job.cat || 'small',
@@ -13790,14 +13790,24 @@
       }
       safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
 
-      // Kunci ke Supabase tabel job_history jika online dan tabel tersedia di schema database
+      // Bersihkan job dari antrean lokal (baik unscheduled maupun scheduled)
+      const origId = String(job.id || '');
+      if (state.unscheduledLtJobs) state.unscheduledLtJobs = state.unscheduledLtJobs.filter(j => String(j.id) !== origId && String(j.id) !== cleanId);
+      if (state.unscheduledWtJobs) state.unscheduledWtJobs = state.unscheduledWtJobs.filter(j => String(j.id) !== origId && String(j.id) !== cleanId);
+      if (state.lubetruckState?.jobs) state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => String(j.id) !== origId && String(j.id) !== cleanId);
+      if (state.watertruckState?.jobs) state.watertruckState.jobs = state.watertruckState.jobs.filter(j => String(j.id) !== origId && String(j.id) !== cleanId);
+      if (window.globalDataCache) {
+        window.globalDataCache.jobs?.delete(origId);
+        window.globalDataCache.jobs?.delete(cleanId);
+        window.globalDataCache.orderRequests?.delete(origId);
+      }
+
       // Kunci ke Supabase tabel job_history (atau tabel split job_history_lt / job_history_wt)
       if (state.supabaseClient && window._supabaseHasJobHistory !== false) {
         try {
           const histPayload = {
             id: snapshotRecord.id || ('HIST-' + cleanId + '-' + Date.now()),
             job_id: snapshotRecord.job_id,
-            no_id: snapshotRecord.no_id || cleanId,
             no_lambung: snapshotRecord.no_lambung,
             type_unit: snapshotRecord.type_unit,
             cat: snapshotRecord.cat,
@@ -21880,12 +21890,10 @@ Oilman 1 & 2 : ${teamMps}`;
     // Helper On-Demand Fetch: Mengambil kolom berat (deskripsi panjang, log, foto) HANYA saat modal detail dibuka (Aturan 1)
     async function fetchJobDetailPayload(jobId) {
       if (!state.supabaseClient || !jobId) return;
-      const isOrder = (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(jobId)) || String(jobId).startsWith('UNS');
-      const targetTable = isOrder ? 'order_requests' : 'jobs';
-      const detailCols = isOrder ? 'id, deskripsi, keterangan, fotos, catatan_admin, alasan_non_ach' : 'id, keterangan, service_notes, bd_notes, non_ach_reason';
+      const detailCols = 'id, keterangan, service_notes, bd_notes, non_ach_reason';
       try {
         const { data, error } = await state.supabaseClient
-          .from(targetTable)
+          .from('jobs')
           .select(detailCols)
           .eq('id', jobId)
           .single();
@@ -22747,7 +22755,7 @@ Oilman 1 & 2 : ${teamMps}`;
 
       // Pancarkan sinyal realtime ke seluruh tab & perangkat
       if (typeof emitJobBroadcastSignal === 'function') {
-        emitJobBroadcastSignal(deletedId, 'DELETE', job?.serviceType === 'watertruck' ? 'order_requests' : 'jobs');
+        emitJobBroadcastSignal(deletedId, 'DELETE', 'jobs');
       }
 
       if (typeof notifyDataChanged === 'function') {
@@ -24484,7 +24492,7 @@ Oilman 1 & 2 : ${teamMps}`;
      */
     function getJobNoId(j) {
       if (!j) return '-';
-      let curId = String(j.noId || j.no_id || j.id || j.job_id || '').trim();
+      let curId = String(j.job_id || j.noId || j.no_id || j.id || '').trim();
 
       // Migrasi otomatis data lama: ubah awalan PLT- -> LT- dan PWT- -> WT-
       if (/^PLT-/i.test(curId)) {
@@ -24493,10 +24501,13 @@ Oilman 1 & 2 : ${teamMps}`;
         curId = curId.replace(/^PWT-/i, 'WT-');
       }
 
-      // Jika sudah memiliki No ID baru berawalan LT- atau WT- dan jam-menitnya BUKAN default waktu rencana ("0600" atau "1800")
-      if (/^(LT|WT)-[A-Z0-9]+-\d{8}-\d-(?!0600|1800)\d{4}/i.test(curId)) {
+      // Jika sudah memiliki No ID baku dengan jam-menit 4 digit di ujungnya (misal LT-GRS-23102026-1-1858)
+      if (/^(LT|WT)-[A-Z0-9]+-\d{8}-\d-\d{4}/i.test(curId)) {
         const standardId = curId.toUpperCase();
-        if (j && typeof j === 'object') j.noId = standardId;
+        if (j && typeof j === 'object') {
+          j.job_id = standardId;
+          j.noId = standardId;
+        }
         return standardId;
       }
 
@@ -24506,13 +24517,25 @@ Oilman 1 & 2 : ${teamMps}`;
       const tglStr = j.tanggal || j.tanggal_rencana || j.tanggalRealisasi || j.tanggal_eksekusi || '';
       const datePart = formatDateToDDMMYYYY(tglStr);
       const shiftPart = parseInt(j.shift || j.shift_rencana || 1, 10) || 1;
-      const timePart = getJobTimeHHmm(j);
+      const baseNoId = `${prefix}-${typeCode}-${datePart}-${shiftPart}`;
 
-      const generatedNoId = `${prefix}-${typeCode}-${datePart}-${shiftPart}-${timePart}`;
-      if (j && typeof j === 'object') {
-        j.noId = generatedNoId;
+      // Cek apakah job sudah di-action/close (memiliki jam realisasi atau status selesai di riwayat)
+      const isActioned = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(String(j.status || j.status_final || '').toLowerCase().trim());
+      if (isActioned || j.jamStart || j.jamEnd) {
+        const timePart = getJobTimeHHmm(j);
+        const fullId = `${baseNoId}-${timePart}`;
+        if (j && typeof j === 'object') {
+          j.job_id = fullId;
+          j.noId = fullId;
+        }
+        return fullId;
       }
-      return generatedNoId;
+
+      // Jika masih jadwal/order aktif belum di-action: format murni tanpa jam (LT-GRS-23102026-1)
+      if (j && typeof j === 'object') {
+        j.noId = baseNoId;
+      }
+      return baseNoId;
     }
     window.getJobNoId = getJobNoId;
 
@@ -30627,29 +30650,36 @@ Oilman 1 & 2 : ${teamMps}`;
       if (rowsToSync.length === 0) return;
 
       try {
-        console.log(`[Supabase Batch Outbound] Mengirim ${rowsToSync.length} baris mutasi dalam 1 HTTP request (Ultra-Low Egress & Log)...!`);
-        const { error } = await state.supabaseClient.from('jobs').upsert(rowsToSync, { onConflict: 'id' });
-        if (error) {
-          console.warn('[Supabase Batch Outbound Error]', error.message);
-        } else {
-          // Pancarkan Broadcast Realtime WebSocket Instan untuk setiap baris yang berhasil di-upsert
-          if (realtimeChannel && typeof realtimeChannel.send === 'function') {
-            rowsToSync.forEach(supaRow => {
-              try {
-                const broadcastPayload = { ...supaRow };
-                if (broadcastPayload.service_notes && broadcastPayload.service_notes.startsWith('PHOTOS:')) {
-                  broadcastPayload.service_notes = '';
-                } else if (broadcastPayload.service_notes && broadcastPayload.service_notes.length > 300) {
-                  broadcastPayload.service_notes = broadcastPayload.service_notes.substring(0, 300);
-                }
-                realtimeChannel.send({
-                  type: 'broadcast',
-                  event: 'JOB_SIGNAL',
-                  payload: { id: supaRow.id, action: 'UPDATE', table: 'jobs', data: broadcastPayload, sender: (typeof APP_CLIENT_ID !== 'undefined' ? APP_CLIENT_ID : 'cli_web') }
-                }).catch(() => { });
-              } catch (eBc) { }
-            });
-          }
+        console.log(`[Supabase Batch Outbound] Mengirim ${rowsToSync.length} baris mutasi ke tabel jobs_lt & jobs_wt...!`);
+        const ltRows = rowsToSync.filter(r => !String(r.id || '').toUpperCase().startsWith('WT'));
+        const wtRows = rowsToSync.filter(r => String(r.id || '').toUpperCase().startsWith('WT'));
+
+        if (ltRows.length > 0) {
+          const resLt = await state.supabaseClient.from('jobs_lt').upsert(ltRows, { onConflict: 'id' });
+          if (resLt?.error) console.warn('[Supabase Batch Outbound LT Error]', resLt.error.message);
+        }
+        if (wtRows.length > 0) {
+          const resWt = await state.supabaseClient.from('jobs_wt').upsert(wtRows, { onConflict: 'id' });
+          if (resWt?.error) console.warn('[Supabase Batch Outbound WT Error]', resWt.error.message);
+        }
+
+        // Pancarkan Broadcast Realtime WebSocket Instan untuk setiap baris yang berhasil di-upsert
+        if (realtimeChannel && typeof realtimeChannel.send === 'function') {
+          rowsToSync.forEach(supaRow => {
+            try {
+              const broadcastPayload = { ...supaRow };
+              if (broadcastPayload.service_notes && broadcastPayload.service_notes.startsWith('PHOTOS:')) {
+                broadcastPayload.service_notes = '';
+              } else if (broadcastPayload.service_notes && broadcastPayload.service_notes.length > 300) {
+                broadcastPayload.service_notes = broadcastPayload.service_notes.substring(0, 300);
+              }
+              realtimeChannel.send({
+                type: 'broadcast',
+                event: 'JOB_SIGNAL',
+                payload: { id: supaRow.id, action: 'UPDATE', table: 'jobs', data: broadcastPayload, sender: (typeof APP_CLIENT_ID !== 'undefined' ? APP_CLIENT_ID : 'cli_web') }
+              }).catch(() => { });
+            } catch (eBc) { }
+          });
         }
       } catch (err) {
         console.warn('[Supabase Batch Outbound Exception]', err);
@@ -30671,23 +30701,6 @@ Oilman 1 & 2 : ${teamMps}`;
             _jobSyncQueue.delete(targetId);
           }
 
-          const isOrder = (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(job)) ||
-            targetId.startsWith('ORD-') || targetId.startsWith('UNS-') || Boolean(job.kodeOrder) || job.createdByRole === 'user';
-
-          if (isOrder) {
-            // ATURAN PENGGUNA: Khusus Order Request, jika job selesai TIDAK PERLU pindah ke history.
-            // Cukup 1 tabel (order_requests) untuk merubah data di dalamnya jika job selesai!
-            if (typeof syncOrderToSupabase === 'function') {
-              await syncOrderToSupabase(job);
-            }
-            try {
-              state.supabaseClient.from('jobs_lt').delete().eq('id', targetId).catch(() => { });
-              state.supabaseClient.from('jobs_wt').delete().eq('id', targetId).catch(() => { });
-              state.supabaseClient.from('jobs').delete().eq('id', targetId).catch(() => { });
-            } catch (e) { }
-            return;
-          }
-
           if (typeof lockJobHistorySnapshot === 'function') {
             await lockJobHistorySnapshot(job, job.status_final || job.status || 'ACHIEVED');
           }
@@ -30702,8 +30715,8 @@ Oilman 1 & 2 : ${teamMps}`;
           } catch (delEx) { }
           return;
         }
-        const isSchWt = (targetId.startsWith('WT-SCH') || targetId.startsWith('WTJ') || (!targetId.startsWith('UNS') && (job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat) || (job.wtUnit && job.wtUnit !== '-'))));
-        const isSchLt = (targetId.startsWith('LT-SCH') || targetId.startsWith('LTJ') || (!targetId.startsWith('UNS') && (job.targetType === 'LT' || ['small', 'digger', 'aircleaner', 'topup'].includes(job.cat))));
+        const isSchWt = (targetId.startsWith('WT-') || targetId.startsWith('WTJ') || (job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat) || (job.wtUnit && job.wtUnit !== '-')));
+        const isSchLt = (targetId.startsWith('LT-') || targetId.startsWith('LTJ') || (job.targetType === 'LT' || ['small', 'digger', 'aircleaner', 'topup'].includes(job.cat)));
         const isUnschWt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-WT') || ((targetId.startsWith('UNS-') || targetId.startsWith('UNS_') || job.cat === 'unscheduled') && (job.serviceType === 'watertruck' || job.targetType === 'WT')));
         const isUnschLt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-LT') || ((targetId.startsWith('UNS-') || targetId.startsWith('UNS_') || job.cat === 'unscheduled') && (job.serviceType === 'lubetruck' || job.targetType === 'LT')));
         const isWt = isSchWt || isUnschWt;
@@ -30760,12 +30773,14 @@ Oilman 1 & 2 : ${teamMps}`;
         }
         _lastSyncedJobState.set(targetId, currentSig);
 
+        const targetTable = isWt ? 'jobs_wt' : 'jobs_lt';
+
         if (immediate) {
-          const res = await state.supabaseClient.from('jobs').upsert(supaRow, { onConflict: 'id' });
+          const res = await state.supabaseClient.from(targetTable).upsert(supaRow, { onConflict: 'id' });
           if (res?.error) {
             console.warn('[Supabase Outbound Job Error]', res.error.message);
           } else {
-            console.log('[Supabase Outbound Job OK]', targetId);
+            console.log('[Supabase Outbound Job OK]', targetId, '->', targetTable);
             if (realtimeChannel && typeof realtimeChannel.send === 'function') {
               try {
                 const broadcastPayload = { ...supaRow };
@@ -30799,19 +30814,18 @@ Oilman 1 & 2 : ${teamMps}`;
         const cleanJobId = String(jobId);
         const job = jobRef || findJobById(cleanJobId);
 
-        // 1. Hapus HANYA berdasarkan primary key ID spesifik dari tabel jobs
-        const { error: errJob } = await state.supabaseClient.from('jobs').delete().eq('id', cleanJobId);
-        if (errJob) {
-          console.warn('[Supabase Delete Job Error by ID]:', errJob.message);
-        }
+        // 1. Hapus berdasarkan ID dari tabel jobs aktif (jobs_lt, jobs_wt, jobs)
+        await Promise.allSettled([
+          state.supabaseClient.from('jobs_lt').delete().eq('id', cleanJobId),
+          state.supabaseClient.from('jobs_wt').delete().eq('id', cleanJobId),
+          state.supabaseClient.from('jobs').delete().eq('id', cleanJobId)
+        ]);
 
-        // 2. Hapus juga dari order_requests jika pekerjaan merupakan order request
-        const { error: errOrder } = await state.supabaseClient.from('order_requests').delete().or('id.eq.' + cleanJobId + ',kode_order.eq.' + cleanJobId);
-        if (errOrder) console.warn('[Supabase Delete Order Error]:', errOrder.message);
-
-        // 3. Hapus juga dari job_history & pica_records agar tidak tertinggal sebagai data zombie
+        // 2. Hapus juga dari job_history & pica_records agar tidak tertinggal sebagai data zombie
         try {
           await Promise.allSettled([
+            state.supabaseClient.from('job_history_lt').delete().eq('job_id', cleanJobId),
+            state.supabaseClient.from('job_history_wt').delete().eq('job_id', cleanJobId),
             state.supabaseClient.from('job_history').delete().eq('job_id', cleanJobId),
             state.supabaseClient.from('pica_records').delete().eq('job_id', cleanJobId)
           ]);
@@ -30834,74 +30848,10 @@ Oilman 1 & 2 : ${teamMps}`;
       }
     }
 
+    // Wrapper kompatibilitas: order lapangan langsung masuk dan disinkronkan ke jobs_lt / jobs_wt
     async function syncOrderToSupabase(order) {
-      if (!state.supabaseClient || !order || !order.id) return;
-      try {
-        const orderId = String(order.id);
-        const s = String(order.status || '').toLowerCase().trim();
-        const isActioned = ['done', 'ach', 'achieved', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled', 'reject', 'rejected'].includes(s) || (order.status_final !== undefined && order.status_final !== null && String(order.status_final).trim() !== '') || Boolean(order.isLocked);
-
-        const isWt = orderId.startsWith('UNS-WT') || order.serviceType === 'watertruck' || order.service_type === 'watertruck';
-
-        // ATURAN PENGGUNA: Khusus Order Request, jika job selesai TIDAK PERLU pindah ke history.
-        // Cukup 1 tabel (order_requests) untuk merubah data di dalamnya jika job selesai!
-        let orderStatus = order.status || 'Pending';
-        if (['done', 'ach', 'achieved'].includes(s) || order.status_final === 'ACHIEVED') orderStatus = 'Done';
-        else if (['cancel', 'cancelled', 'reject', 'rejected'].includes(s) || order.status_final === 'CANCEL') orderStatus = 'Cancelled';
-        else if (order.status === '-') orderStatus = 'Pending';
-
-        const supaOrderRow = {
-          id: orderId,
-          kode_order: order.noId || order.no_id || order.kode_order || orderId,
-          tanggal: order.tanggal || getEffectiveTodayString(),
-          jam: order.waktu || '08:00',
-          nama_pemesan: order.namaPemesan || order.pemesan || 'Pemohon Lapangan',
-          role_pemesan: order.createdByRole || 'user',
-          nrp_pemesan: order.createdByNrp || '',
-          no_lambung: order.noLambung || '',
-          type_unit: order.typeUnit || '',
-          cluster: order.cluster || 'Selatan',
-          lokasi: order.lokasi || '',
-          keadaan_unit: order.kondisi || 'ADD',
-          deskripsi: order.deskripsi || order.keterangan || '',
-          status: orderStatus,
-          is_locked: isActioned,
-          armada_unit: order.armada || order.ltUnit || order.wtUnit || '-',
-          opt_name: order.opt || '-',
-          mp1: order.mp1 || '-',
-          mp2: order.mp2 || '-',
-          hm_start: order.hmUnit || order.hmStart || '-',
-          hm_end: order.hmEnd || '-',
-          jam_start: order.jamStart || '',
-          jam_end: order.jamEnd || '',
-          durasi: (order.durasi !== null && order.durasi !== undefined && !isNaN(order.durasi)) ? parseFloat(order.durasi) : null,
-          tanggal_eksekusi: order.tanggalRealisasi || order.tanggal || getEffectiveTodayString(),
-          handled_by: order.opt || order.mp1 || state.currentUser?.nama || '',
-          keterangan: order.keterangan || order.alasanNonAch || '',
-          service_type: isWt ? 'watertruck' : 'lubetruck',
-          updated_at: new Date().toISOString()
-        };
-
-        await state.supabaseClient.from('order_requests').upsert(supaOrderRow, { onConflict: 'id' });
-
-        // Hapus salinan bayangan dari tabel jobs_lt / jobs_wt / jobs jika ada
-        try {
-          state.supabaseClient.from('jobs_lt').delete().eq('id', orderId).catch(() => { });
-          state.supabaseClient.from('jobs_wt').delete().eq('id', orderId).catch(() => { });
-          state.supabaseClient.from('jobs').delete().eq('id', orderId).catch(() => { });
-        } catch (delEx) { }
-        if (realtimeChannel && typeof realtimeChannel.send === 'function') {
-          try {
-            realtimeChannel.send({
-              type: 'broadcast',
-              event: 'JOB_SIGNAL',
-              payload: { id: String(order.id), action: 'UPDATE', table: 'order_requests', data: supaOrderRow, sender: APP_CLIENT_ID }
-            }).catch(() => { });
-          } catch (eBc) { }
-        }
-      } catch (err) {
-        console.warn('[Supabase Outbound Order Exception]', err);
-      }
+      if (!state.supabaseClient || !order) return;
+      return syncJobToSupabase(order, true);
     }
 
     async function syncAirCleanerToSupabase(item) {
@@ -31768,59 +31718,15 @@ Oilman 1 & 2 : ${teamMps}`;
           }
         }
 
-        // Tarik data paralel: pending jobs di luar rentang dan seluruh order requests
-        const [pendingJobsRes, ordersRes] = await Promise.all([
-          state.supabaseClient
-            .from('jobs')
-            .select(SUPABASE_JOB_LIST_COLS)
-            .or('is_pending.eq.true,status.eq.scheduled,status.eq.pending,status.eq.open,status.eq.in_progress')
-            .lt('tanggal', startDate)
-            .limit(500),
-          state.supabaseClient
-            .from('order_requests')
-            .select(SUPABASE_ORDER_LIST_COLS)
-            .order('tanggal', { ascending: false })
-            .limit(300)
-        ]);
+        // Tarik pending jobs di luar rentang tanggal aktif
+        const pendingJobsRes = await state.supabaseClient
+          .from('jobs')
+          .select(SUPABASE_JOB_LIST_COLS)
+          .or('is_pending.eq.true,status.eq.scheduled,status.eq.pending,status.eq.open,status.eq.in_progress')
+          .lt('tanggal', startDate)
+          .limit(500);
 
         if (pendingJobsRes.error) console.warn('[Supabase Sync Error pendingJobs]:', pendingJobsRes.error.message);
-        if (ordersRes.error) console.warn('[Supabase Sync Error order_requests]:', ordersRes.error.message);
-
-        // =========================================================================
-        // REKONSILIASI 1: ORDER REQUESTS (MENGHAPUS TUNTAS ORDER HANTU / DATA KOSONG)
-        // =========================================================================
-        if (!ordersRes.error && Array.isArray(ordersRes.data)) {
-          const cloudOrders = ordersRes.data || [];
-          const cloudOrderIds = new Set(cloudOrders.map(r => String(r.id || r.kode_order)));
-
-          // Hapus semua order di RAM cache yang TIDAK ADA LAGI di Supabase Cloud (sudah di-delete)
-          for (const ordId of Array.from(window.globalDataCache.orderRequests.keys())) {
-            if (!cloudOrderIds.has(ordId)) {
-              window.globalDataCache.orderRequests.delete(ordId);
-              window.globalDataCache.jobs.delete(ordId);
-            }
-          }
-          // Hapus juga dari jobs jika ada job unscheduled berawalan UNS- yang tidak ada di cloudOrderIds
-          for (const [jId, jObj] of Array.from(window.globalDataCache.jobs.entries())) {
-            if (String(jId).startsWith('UNS-') && !cloudOrderIds.has(jId)) {
-              window.globalDataCache.jobs.delete(jId);
-            }
-          }
-
-          // Masukkan seluruh order aktual dari Supabase (cukup 1 tabel order_requests, tidak dipindah ke history & tidak dihapus)
-          cloudOrders.forEach(row => {
-            const mappedOrder = mapSupabaseOrderRowToModel(row);
-            if (mappedOrder && mappedOrder.id) {
-              const sid = String(mappedOrder.id);
-              window.globalDataCache.orderRequests.set(sid, mappedOrder);
-              window.globalDataCache.jobs.set(sid, mappedOrder);
-            }
-          });
-
-          // Perbarui LocalStorage SE_ORDERS_CACHE dengan data riil database
-          safeStorage.setItem('SE_ORDERS_CACHE', JSON.stringify(Array.from(window.globalDataCache.orderRequests.values())));
-          console.log('[Supabase Order Sync OK] ' + cloudOrders.length + ' order requests aktif terverifikasi.');
-        }
 
         // =========================================================================
         // REKONSILIASI 2: JOBS (GREASING, AIR CLEANER, WATER TRUCK LENGKAP & REKONSILIASI)
@@ -31963,33 +31869,6 @@ Oilman 1 & 2 : ${teamMps}`;
           }
         }
 
-        // Tarik juga order_requests jika ada filter tanggal
-        if (startDate) {
-          try {
-            let qOrder = state.supabaseClient.from('order_requests').select(SUPABASE_ORDER_LIST_COLS).gte('tanggal', startDate);
-            if (endDate) qOrder = qOrder.lte('tanggal', endDate);
-            const { data: orderData } = await qOrder.limit(500);
-            if (Array.isArray(orderData)) {
-              orderData.forEach(row => {
-                const orderId = String(row.id || row.kode_order);
-                window.globalDataCache.orderRequests.set(orderId, {
-                  id: orderId,
-                  tanggal: row.tanggal || getEffectiveTodayString(),
-                  waktu: row.jam || '08:00',
-                  namaPemesan: row.nama_pemesan || 'Pemohon Lapangan',
-                  createdByRole: row.role_pemesan || 'user',
-                  createdByNrp: row.nrp_pemesan || '',
-                  noLambung: row.no_lambung || '',
-                  cluster: row.cluster || 'Selatan',
-                  lokasi: row.lokasi || '',
-                  kondisi: row.keadaan_unit || 'ADD',
-                  deskripsi: row.deskripsi || '',
-                  status: row.status || 'Pending'
-                });
-              });
-            }
-          } catch (eOrder) { }
-        }
 
         // Gabungkan ke RAM cache
         fetchedRows.forEach(row => {
@@ -32081,16 +31960,16 @@ Oilman 1 & 2 : ${teamMps}`;
             return;
           }
 
-          const isOrder = (table === 'order_requests' || String(id).startsWith('UNS'));
-
           // 3. JIKA BROADCAST MEMBAWA DATA OBJEK LENGKAP: LANGSUNG UPDATE TANPA HTTP QUERY KE SUPABASE (0 PostgREST Log!)
           if (data && (action === 'INSERT' || action === 'UPDATE')) {
-            const mappedObj = isOrder ? mapSupabaseOrderRowToModel(data) : mapSupabaseJobRowToModel(data);
+            const mappedObj = mapSupabaseJobRowToModel(data);
             if (mappedObj && mappedObj.id) {
               const sid = String(mappedObj.id);
               if (window.globalDataCache) {
                 window.globalDataCache.jobs?.set(sid, mappedObj);
-                if (isOrder) window.globalDataCache.orderRequests?.set(sid, mappedObj);
+                if (mappedObj.cat === 'unscheduled' || sid.includes('-REQ-') || sid.startsWith('UNS')) {
+                  window.globalDataCache.orderRequests?.set(sid, mappedObj);
+                }
               }
               syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
               if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
@@ -32099,24 +31978,23 @@ Oilman 1 & 2 : ${teamMps}`;
             }
           }
 
-          // 4. FALLBACK HANYA JIKA DATA TIDAK TERSEDIA: Fetch 1 baris spesifik via .single()
-          const targetTable = isOrder ? 'order_requests' : 'jobs';
-          const cols = isOrder ? SUPABASE_ORDER_LIST_COLS : SUPABASE_JOB_LIST_COLS;
-
+          // 4. FALLBACK HANYA JIKA DATA TIDAK TERSEDIA: Fetch 1 baris spesifik via .single() dari view jobs
           try {
             const { data: fetchedData, error } = await state.supabaseClient
-              .from(targetTable)
-              .select(cols)
+              .from('jobs')
+              .select(SUPABASE_JOB_LIST_COLS)
               .eq('id', id)
               .single();
 
             if (!error && fetchedData) {
-              const mappedObj = isOrder ? mapSupabaseOrderRowToModel(fetchedData) : mapSupabaseJobRowToModel(fetchedData);
+              const mappedObj = mapSupabaseJobRowToModel(fetchedData);
               if (mappedObj && mappedObj.id) {
                 const sid = String(mappedObj.id);
                 if (window.globalDataCache) {
                   window.globalDataCache.jobs?.set(sid, mappedObj);
-                  if (isOrder) window.globalDataCache.orderRequests?.set(sid, mappedObj);
+                  if (mappedObj.cat === 'unscheduled' || sid.includes('-REQ-') || sid.startsWith('UNS')) {
+                    window.globalDataCache.orderRequests?.set(sid, mappedObj);
+                  }
                 }
                 syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
                 if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
@@ -32167,20 +32045,31 @@ Oilman 1 & 2 : ${teamMps}`;
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_operators' }, handleRealtimeOperatorChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_units' }, handleRealtimeUnitChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_roster' }, handleRealtimeRosterChange)
-        // Listener Postgres Changes Realtime untuk Mutasi Hapus & Tambah Langsung dari Database Supabase
-        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'order_requests' }, (payload) => {
-          const delId = String(payload.old?.id || payload.old?.kode_order || '');
+        // Listener Postgres Changes Realtime untuk Mutasi Hapus Langsung dari Database Supabase
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'jobs_lt' }, (payload) => {
+          const delId = String(payload.old?.id || '');
           if (delId) {
-            console.log('[Realtime Postgres DELETE order_requests]', delId);
+            console.log('[Realtime Postgres DELETE jobs_lt]', delId);
             if (window.globalDataCache) {
-              window.globalDataCache.orderRequests?.delete(delId);
               window.globalDataCache.jobs?.delete(delId);
+              window.globalDataCache.orderRequests?.delete(delId);
             }
+            if (state.lubetruckState?.jobs) state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => String(j.id) !== delId);
             if (state.unscheduledLtJobs) state.unscheduledLtJobs = state.unscheduledLtJobs.filter(j => String(j.id) !== delId);
-            if (state.unscheduledWtJobs) state.unscheduledWtJobs = state.unscheduledWtJobs.filter(j => String(j.id) !== delId);
-            if (window.globalDataCache?.orderRequests) {
-              safeStorage.setItem('SE_ORDERS_CACHE', JSON.stringify(Array.from(window.globalDataCache.orderRequests.values())));
+            if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
+            debouncedRefreshUI();
+          }
+        })
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'jobs_wt' }, (payload) => {
+          const delId = String(payload.old?.id || '');
+          if (delId) {
+            console.log('[Realtime Postgres DELETE jobs_wt]', delId);
+            if (window.globalDataCache) {
+              window.globalDataCache.jobs?.delete(delId);
+              window.globalDataCache.orderRequests?.delete(delId);
             }
+            if (state.watertruckState?.jobs) state.watertruckState.jobs = state.watertruckState.jobs.filter(j => String(j.id) !== delId);
+            if (state.unscheduledWtJobs) state.unscheduledWtJobs = state.unscheduledWtJobs.filter(j => String(j.id) !== delId);
             if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
             debouncedRefreshUI();
           }
@@ -32191,9 +32080,12 @@ Oilman 1 & 2 : ${teamMps}`;
             console.log('[Realtime Postgres DELETE jobs]', delId);
             if (window.globalDataCache) {
               window.globalDataCache.jobs?.delete(delId);
+              window.globalDataCache.orderRequests?.delete(delId);
             }
             if (state.lubetruckState?.jobs) state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => String(j.id) !== delId);
             if (state.watertruckState?.jobs) state.watertruckState.jobs = state.watertruckState.jobs.filter(j => String(j.id) !== delId);
+            if (state.unscheduledLtJobs) state.unscheduledLtJobs = state.unscheduledLtJobs.filter(j => String(j.id) !== delId);
+            if (state.unscheduledWtJobs) state.unscheduledWtJobs = state.unscheduledWtJobs.filter(j => String(j.id) !== delId);
             if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
             debouncedRefreshUI();
           }
@@ -32229,45 +32121,6 @@ Oilman 1 & 2 : ${teamMps}`;
             const isAc = (newHist.cat === 'aircleaner' || newHist.cat === 'air_cleaner');
             if (isAc && typeof loadAirCleanerFromSupabase === 'function') {
               loadAirCleanerFromSupabase(true);
-            }
-          }
-        })
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'order_requests' }, (payload) => {
-          if (payload.new) {
-            const mappedObj = mapSupabaseOrderRowToModel(payload.new);
-            if (mappedObj && mappedObj.id) {
-              const sid = String(mappedObj.id);
-              if (window.globalDataCache) {
-                window.globalDataCache.orderRequests?.set(sid, mappedObj);
-                window.globalDataCache.jobs?.set(sid, mappedObj);
-              }
-              syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
-              debouncedRefreshUI();
-            }
-          }
-        })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'order_requests' }, (payload) => {
-          if (payload.new) {
-            const mappedObj = mapSupabaseOrderRowToModel(payload.new);
-            if (mappedObj && mappedObj.id) {
-              const sid = String(mappedObj.id);
-              const s = String(mappedObj.status || '').toLowerCase();
-              if (['done', 'ach', 'achieved', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) || mappedObj.isLocked) {
-                if (window.globalDataCache) {
-                  window.globalDataCache.orderRequests?.delete(sid);
-                  window.globalDataCache.jobs?.delete(sid);
-                }
-                if (state.unscheduledLtJobs) state.unscheduledLtJobs = state.unscheduledLtJobs.filter(j => String(j.id) !== sid);
-                if (state.unscheduledWtJobs) state.unscheduledWtJobs = state.unscheduledWtJobs.filter(j => String(j.id) !== sid);
-                if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
-              } else {
-                if (window.globalDataCache) {
-                  window.globalDataCache.orderRequests?.set(sid, mappedObj);
-                  window.globalDataCache.jobs?.set(sid, mappedObj);
-                }
-                syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
-              }
-              debouncedRefreshUI();
             }
           }
         })
@@ -32727,25 +32580,43 @@ Oilman 1 & 2 : ${teamMps}`;
       const orderNrp = state.currentUser ? state.currentUser.nrp : '';
       const orderNama = nama || (state.currentUser ? state.currentUser.nama : 'Pemohon Lapangan');
 
-      // ID unik bebas tabrakan (Timestamp + Random 4 digit)
-      const uniqueSuffix = Date.now().toString().slice(-6) + Math.floor(1000 + Math.random() * 9000);
+      // ID Baku Unik: LT/WT-{type job}-{ddmmyyyy}-{shift} (contoh: LT-GRS-23102026-1 atau WT-WSC-23102026-1)
       const isWtService = (serviceType === 'watertruck');
-      const orderPrefix = isWtService ? 'WT-REQ-' : 'LT-REQ-';
+      const prefix = isWtService ? 'WT' : 'LT';
+      const typeCode = isWtService ? 'WSC' : 'GRS';
       const datePart = (typeof formatDateToDDMMYYYY === 'function') ? formatDateToDDMMYYYY(tanggal) : '23102026';
-      const timePart = (typeof getJobTimeHHmm === 'function') ? getJobTimeHHmm(null) : '0800';
-      const standardOrderNoId = `${orderPrefix}${datePart}-1-${timePart}`;
-      const orderId = (isWtService ? 'UNS-WT-' : 'UNS-LT-') + uniqueSuffix;
+      const shiftPart = parseInt(state.currentShift || 1, 10) || 1;
+      const baseOrderId = `${prefix}-${typeCode}-${datePart}-${shiftPart}`;
+
+      // Cek apakah baseOrderId sudah ada di antrean aktif agar tidak menimpa record lain pada hari & shift yang sama
+      let finalOrderId = baseOrderId;
+      const existingList = isWtService ? (state.unscheduledWtJobs || []) : (state.unscheduledLtJobs || []);
+      const isIdTaken = (candidate) => {
+        if (existingList.some(j => String(j.id) === candidate || String(j.job_id) === candidate)) return true;
+        if (window.globalDataCache?.jobs?.has(candidate)) return true;
+        return false;
+      };
+
+      if (isIdTaken(finalOrderId)) {
+        let seq = 2;
+        while (isIdTaken(`${baseOrderId}-${String(seq).padStart(2, '0')}`)) {
+          seq++;
+        }
+        finalOrderId = `${baseOrderId}-${String(seq).padStart(2, '0')}`;
+      }
 
       const newOrder = {
-        id: orderId,
-        noId: standardOrderNoId,
-        no_id: standardOrderNoId,
-        kodeOrder: standardOrderNoId,
-        kode_order: standardOrderNoId,
+        id: finalOrderId,
+        job_id: finalOrderId,
+        noId: finalOrderId,
+        kodeOrder: finalOrderId,
+        kode_order: finalOrderId,
         tanggal,
         waktu: jam,
         serviceType,
-        shift: 1,
+        targetType: isWtService ? 'WT' : 'LT',
+        cat: 'unscheduled',
+        shift: shiftPart,
         cluster,
         kondisi: keadaan,
         typeUnit: getUnitTypeFromMaster(lambung, 'HAUL TRUCK'),
@@ -32778,8 +32649,8 @@ Oilman 1 & 2 : ${teamMps}`;
       }
 
       if (window.globalDataCache) {
-        if (window.globalDataCache.orderRequests) window.globalDataCache.orderRequests.set(orderId, newOrder);
-        if (window.globalDataCache.jobs) window.globalDataCache.jobs.set(orderId, newOrder);
+        if (window.globalDataCache.orderRequests) window.globalDataCache.orderRequests.set(finalOrderId, newOrder);
+        if (window.globalDataCache.jobs) window.globalDataCache.jobs.set(finalOrderId, newOrder);
       }
 
       // Pastikan unit produksi dari order tercatat di Populasi Unit
@@ -32802,10 +32673,9 @@ Oilman 1 & 2 : ${teamMps}`;
       // Update state lokal in-memory (tanpa residu cache localStorage)
       saveDatabaseSync();
 
-      // SINKRONISASI SENTRAL: Simpan langsung ke Supabase (order_requests dan jobs)
+      // SINKRONISASI SENTRAL: Simpan langsung ke Supabase (jobs_lt / jobs_wt)
       if (state.supabaseClient) {
-        if (typeof syncOrderToSupabase === 'function') syncOrderToSupabase(newOrder);
-        if (typeof syncJobToSupabase === 'function') syncJobToSupabase(newOrder);
+        if (typeof syncJobToSupabase === 'function') syncJobToSupabase(newOrder, true);
       }
 
       showToast(`Permintaan order unit ${lambung} berhasil dikirim!`, 'success');
