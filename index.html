@@ -7259,9 +7259,8 @@
             id="ac-detail-notes">-</p>
         </div>
 
-        <!-- Dokumentasi Foto Evidence (Jika Ada) -->
-        <div id="ac-detail-photo-container"
-          class="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2 hidden">
+        <!-- Dokumentasi Foto Evidence -->
+        <div id="ac-detail-photo-container" class="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2.5">
           <div class="flex items-center justify-between">
             <span class="text-[11px] font-bold text-slate-800 flex items-center space-x-1.5">
               <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -7271,12 +7270,46 @@
               </svg>
               <span>Dokumentasi Foto Eviden</span>
             </span>
-            <span id="ac-detail-photo-count"
-              class="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 shadow-2xs">0
-              Foto</span>
+            <div class="flex items-center space-x-1.5">
+              <span id="ac-detail-photo-count"
+                class="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 shadow-2xs">0
+                Foto</span>
+              <!-- Tombol Tambah Foto untuk SEMUA AKSES -->
+              <button type="button" onclick="triggerAirCleanerPhotoInput()"
+                class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10.5px] font-bold transition shadow-2xs cursor-pointer active:scale-95"
+                title="Tambah / Upload Foto Eviden Pengerjaan (Tersedia untuk semua akses)">
+                <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>+ Tambah Foto</span>
+              </button>
+            </div>
           </div>
-          <div id="ac-detail-photos" class="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1 pb-1">
+
+          <!-- Hidden Input File untuk upload foto -->
+          <input type="file" id="ac-detail-photo-file-input" accept="image/*" multiple
+            onchange="handleAirCleanerDetailPhotoUpload(event)" class="hidden">
+
+          <!-- Container Grid Foto Eviden -->
+          <div id="ac-detail-photos" class="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1 pb-1 hidden">
             <!-- Foto dynamically rendered di sini -->
+          </div>
+
+          <!-- Empty State jika belum ada foto (Bisa diklik untuk upload langsung) -->
+          <div id="ac-detail-photo-empty" onclick="triggerAirCleanerPhotoInput()"
+            class="p-4 text-center border-2 border-dashed border-slate-200 hover:border-emerald-300 rounded-xl bg-white hover:bg-emerald-50/40 transition cursor-pointer group">
+            <svg class="w-7 h-7 mx-auto text-slate-400 group-hover:text-emerald-500 mb-1 transition" fill="none"
+              stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+              </path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <div class="text-[11.5px] font-bold text-slate-700 group-hover:text-emerald-900 transition">Belum ada foto
+              eviden pengerjaan</div>
+            <div class="text-[10px] text-emerald-600 font-semibold mt-0.5">+ Klik di sini untuk unggah foto eviden
+              (Kamera atau Galeri)</div>
           </div>
         </div>
       </div>
@@ -13169,6 +13202,9 @@
         renderPicaTable();
       } else if (tabKey === 'air-cleaner-monitor') {
         renderAirCleanerMonitorTable();
+        if ((!Array.isArray(state.jobHistory) || state.jobHistory.length === 0) && typeof loadJobHistoryFromSupabase === 'function') {
+          loadJobHistoryFromSupabase(true);
+        }
       } else if (tabKey === 'orders') {
         if (typeof populateOrderUnitsDatalist === 'function') populateOrderUnitsDatalist();
         const orderDateInput = document.getElementById('order-tanggal');
@@ -27421,7 +27457,12 @@ Oilman 1 & 2 : ${teamMps}`;
         for (const j of jobsToSearch) {
           if (Array.isArray(j.fotos) && j.fotos.length > 0) {
             const valid = j.fotos.filter(p => p && typeof p === 'string' && p.trim() !== '');
-            if (valid.length > 0) { foundPhotos = valid; break; }
+            if (valid.length > 0) { foundPhotos.push(...valid); break; }
+          }
+          // Ambil dari snapshot_data.fotos (format penyimpanan Supabase job_history)
+          if (j.snapshot_data?.fotos && Array.isArray(j.snapshot_data.fotos) && j.snapshot_data.fotos.length > 0) {
+            const valid = j.snapshot_data.fotos.filter(p => p && typeof p === 'string' && p.trim() !== '');
+            if (valid.length > 0) { foundPhotos.push(...valid); break; }
           }
           const jId = String(j.id || j.job_id || '');
           if (jId) {
@@ -27431,13 +27472,13 @@ Oilman 1 & 2 : ${teamMps}`;
                 const parsed = JSON.parse(sf);
                 if (Array.isArray(parsed) && parsed.length > 0) {
                   const valid = parsed.filter(p => p && typeof p === 'string' && p.trim() !== '');
-                  if (valid.length > 0) { foundPhotos = valid; break; }
+                  if (valid.length > 0) { foundPhotos.push(...valid); break; }
                 }
               }
             } catch (e) { }
             if (state.jobPhotosMap && state.jobPhotosMap[jId]) {
               const valid = state.jobPhotosMap[jId].filter(p => p && typeof p === 'string' && p.trim() !== '');
-              if (valid.length > 0) { foundPhotos = valid; break; }
+              if (valid.length > 0) { foundPhotos.push(...valid); break; }
             }
           }
           if (j.serviceNotes && j.serviceNotes.includes('PHOTOS:')) {
@@ -27446,12 +27487,35 @@ Oilman 1 & 2 : ${teamMps}`;
               const parsed = JSON.parse(raw);
               if (Array.isArray(parsed) && parsed.length > 0) {
                 const valid = parsed.filter(p => p && typeof p === 'string' && p.trim() !== '');
-                if (valid.length > 0) { foundPhotos = valid; break; }
+                if (valid.length > 0) { foundPhotos.push(...valid); break; }
               }
             } catch (e) { }
           }
         }
       }
+
+      // 4. Kumpulkan juga dari entri clean itu sendiri jika ada payload #PHOTOS# atau objek
+      if (typeof rawClean === 'string' && rawClean.includes('#PHOTOS#')) {
+        try {
+          const p = JSON.parse(rawClean.split('#PHOTOS#')[1]);
+          if (Array.isArray(p)) foundPhotos.push(...p);
+        } catch (e) { }
+      } else if (typeof rawClean === 'object' && rawClean !== null) {
+        if (Array.isArray(rawClean.fotos)) foundPhotos.push(...rawClean.fotos);
+        if (Array.isArray(rawClean.photos)) foundPhotos.push(...rawClean.photos);
+      }
+
+      // 5. Kumpulkan dari cache lokal khusus Clean Air Cleaner
+      try {
+        const savedAc = safeStorage.getItem('SE_AC_CLEAN_PHOTOS_' + noLambung + '_' + cleanIdx);
+        if (savedAc) {
+          const p = JSON.parse(savedAc);
+          if (Array.isArray(p)) foundPhotos.push(...p);
+        }
+      } catch (e) { }
+
+      // Bersihkan dan deduplikasi foto
+      foundPhotos = Array.from(new Set(foundPhotos.filter(p => p && typeof p === 'string' && p.trim() !== '')));
 
       if (!oilmanNotes || oilmanNotes === '-' || oilmanNotes.startsWith('PHOTOS_ATTACHED') || oilmanNotes.startsWith('PHOTOS:')) {
         oilmanNotes = 'Pembersihan filter air cleaner selesai sesuai SOP.';
@@ -27511,51 +27575,43 @@ Oilman 1 & 2 : ${teamMps}`;
         oilmanEl.textContent = oilmanName ? `Oilman: ${oilmanName}` : '';
       }
 
-      // Render foto evidence jika tersedia
-      window.__currentAcDetailPhotos = foundPhotos;
-      const photoContainer = document.getElementById('ac-detail-photo-container');
-      const photoGrid = document.getElementById('ac-detail-photos');
-      const photoCount = document.getElementById('ac-detail-photo-count');
-
-      if (photoContainer && photoGrid) {
-        if (foundPhotos && foundPhotos.length > 0) {
-          photoContainer.classList.remove('hidden');
-          if (photoCount) photoCount.textContent = `${foundPhotos.length} Foto`;
-          photoGrid.innerHTML = foundPhotos.map((src, i) => {
-            const label = `Foto ${i + 1}`;
-            const directImgSrc = (typeof formatDriveImageUrl === 'function') ? formatDriveImageUrl(src) : src;
-            return `
-              <div onclick="if(typeof openPhotoPreview==='function'){openPhotoPreview(window.__currentAcDetailPhotos, 'Foto Clean Air Cleaner - ${noLambung}', ${i}, '')}"
-                class="group relative rounded-xl overflow-hidden border border-slate-200 bg-slate-900 cursor-pointer shadow-2xs hover:shadow-md transition">
-                <div class="h-24 sm:h-28 w-full overflow-hidden bg-slate-950 flex items-center justify-center">
-                  <img src="${directImgSrc}" alt="${label}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'text-white text-xs p-2 text-center\\'>Gagal memuat foto</div>';">
-                </div>
-                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition p-1 text-center">
-                  <svg class="w-4 h-4 text-white mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
-                  </svg>
-                  <span class="text-[8.5px] text-white font-bold leading-tight">Perbesar</span>
-                </div>
-                <div class="absolute bottom-0 inset-x-0 bg-slate-950/80 backdrop-blur-xs py-0.5 px-2 flex items-center justify-between">
-                  <span class="text-[8.5px] font-bold text-white truncate">${label}</span>
-                  <span class="text-[8px] font-semibold text-emerald-400">Lihat Full</span>
-                </div>
-              </div>
-            `;
-          }).join('');
-        } else {
-          photoContainer.classList.add('hidden');
-          photoGrid.innerHTML = '';
-        }
-      }
-
-      // Simpan konteks aksi untuk fitur delete
+      // Simpan konteks aksi untuk fitur delete & upload foto
       window.__currentAcDetailTarget = {
         noLambung: item.noLambung,
         cleanIdx: Number(cleanIdx),
         actionDate: actionDate || '',
         rawClean: rawClean || ''
       };
+
+      // Simpan & render foto evidence ke UI modal
+      window.__currentAcDetailPhotos = foundPhotos;
+      renderAirCleanerDetailPhotosUI(foundPhotos, noLambung, cleanIdx);
+
+      // Jika di memori foto masih kosong, cari secara asinkron dari Supabase job_history
+      if (foundPhotos.length === 0 && state.supabaseClient) {
+        state.supabaseClient
+          .from('job_history')
+          .select('job_id,no_lambung,snapshot_data,tanggal_eksekusi,keterangan')
+          .eq('no_lambung', noLambung)
+          .order('created_at', { ascending: false })
+          .limit(10)
+          .then(({ data }) => {
+            if (Array.isArray(data) && data.length > 0) {
+              for (const row of data) {
+                const rowDate = normalizeDateToStandard(row.tanggal_eksekusi);
+                const snapPhotos = row.snapshot_data?.fotos;
+                if (rowDate === stdActionDate && Array.isArray(snapPhotos) && snapPhotos.length > 0) {
+                  const valid = snapPhotos.filter(p => p && typeof p === 'string' && p.trim() !== '');
+                  if (valid.length > 0) {
+                    window.__currentAcDetailPhotos = valid;
+                    renderAirCleanerDetailPhotosUI(valid, noLambung, cleanIdx);
+                    break;
+                  }
+                }
+              }
+            }
+          }).catch(() => { });
+      }
 
       // Tampilkan tombol Hapus HANYA untuk role Admin (Aturan Pengguna)
       const btnDelete = document.getElementById('btn-delete-ac-entry');
@@ -27570,6 +27626,151 @@ Oilman 1 & 2 : ${teamMps}`;
       toggleModal('modal-ac-detail', true);
     }
     window.showAirCleanerActionDetail = showAirCleanerActionDetail;
+
+    function renderAirCleanerDetailPhotosUI(photos, noLambung, cleanIdx) {
+      const photoContainer = document.getElementById('ac-detail-photo-container');
+      const photoGrid = document.getElementById('ac-detail-photos');
+      const photoCount = document.getElementById('ac-detail-photo-count');
+      const photoEmpty = document.getElementById('ac-detail-photo-empty');
+      if (!photoContainer || !photoGrid) return;
+
+      photoContainer.classList.remove('hidden');
+
+      if (Array.isArray(photos) && photos.length > 0) {
+        if (photoCount) photoCount.textContent = `${photos.length} Foto`;
+        if (photoEmpty) photoEmpty.classList.add('hidden');
+        photoGrid.classList.remove('hidden');
+        photoGrid.innerHTML = photos.map((src, i) => {
+          const label = `Foto ${i + 1}`;
+          const directImgSrc = (typeof formatDriveImageUrl === 'function') ? formatDriveImageUrl(src) : src;
+          return `
+            <div class="group relative rounded-xl overflow-hidden border border-slate-200 bg-slate-900 shadow-2xs hover:shadow-md transition">
+              <div onclick="if(typeof openPhotoPreview==='function'){openPhotoPreview(window.__currentAcDetailPhotos, 'Foto Clean Air Cleaner - ${noLambung}', ${i}, '')}"
+                class="h-24 sm:h-28 w-full overflow-hidden bg-slate-950 flex items-center justify-center cursor-pointer">
+                <img src="${directImgSrc}" alt="${label}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'text-white text-xs p-2 text-center\\'>Gagal memuat foto</div>';">
+              </div>
+              <div onclick="if(typeof openPhotoPreview==='function'){openPhotoPreview(window.__currentAcDetailPhotos, 'Foto Clean Air Cleaner - ${noLambung}', ${i}, '')}"
+                class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition p-1 text-center cursor-pointer">
+                <svg class="w-4 h-4 text-white mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
+                </svg>
+                <span class="text-[8.5px] text-white font-bold leading-tight">Perbesar</span>
+              </div>
+              <button type="button" onclick="event.stopPropagation(); deleteAirCleanerDetailPhoto(${i})"
+                class="absolute top-1.5 right-1.5 p-1 rounded-md bg-black/60 hover:bg-rose-600 text-white/90 hover:text-white transition shadow-sm cursor-pointer z-10"
+                title="Hapus foto ini">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+              <div class="absolute bottom-0 inset-x-0 bg-slate-950/80 backdrop-blur-xs py-0.5 px-2 flex items-center justify-between pointer-events-none">
+                <span class="text-[8.5px] font-bold text-white truncate">${label}</span>
+                <span class="text-[8px] font-semibold text-emerald-400">Lihat Full</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        if (photoCount) photoCount.textContent = '0 Foto';
+        photoGrid.innerHTML = '';
+        photoGrid.classList.add('hidden');
+        if (photoEmpty) photoEmpty.classList.remove('hidden');
+      }
+    }
+    window.renderAirCleanerDetailPhotosUI = renderAirCleanerDetailPhotosUI;
+
+    function triggerAirCleanerPhotoInput() {
+      const inp = document.getElementById('ac-detail-photo-file-input');
+      if (inp) {
+        inp.value = '';
+        inp.click();
+      }
+    }
+    window.triggerAirCleanerPhotoInput = triggerAirCleanerPhotoInput;
+
+    async function handleAirCleanerDetailPhotoUpload(event) {
+      const files = Array.from(event?.target?.files || []);
+      if (files.length === 0) return;
+      if (!window.__currentAcDetailTarget) return;
+
+      const { noLambung, cleanIdx, actionDate } = window.__currentAcDetailTarget;
+      if (typeof showToast === 'function') {
+        showToast(`Memproses ${files.length} foto eviden...`, 'info');
+      }
+
+      try {
+        const compressedList = [];
+        for (const file of files) {
+          const b64 = await compressImageFile(file, 1200, 0.85);
+          if (b64) compressedList.push(b64);
+        }
+
+        if (compressedList.length === 0) return;
+
+        window.__currentAcDetailPhotos = window.__currentAcDetailPhotos || [];
+        window.__currentAcDetailPhotos.push(...compressedList);
+
+        // Simpan ke item airCleanerMonitor
+        const item = (state.airCleanerMonitor || []).find(m => String(m.noLambung || '').trim().toUpperCase() === String(noLambung || '').trim().toUpperCase());
+        if (item && Array.isArray(item.cleans) && cleanIdx >= 0 && cleanIdx < item.cleans.length) {
+          const oldEntry = String(item.cleans[cleanIdx] || '');
+          const dateOnly = oldEntry.split('#PHOTOS#')[0] || actionDate || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : '2026-10-23');
+          item.cleans[cleanIdx] = `${dateOnly}#PHOTOS#${JSON.stringify(window.__currentAcDetailPhotos)}`;
+          safeStorage.setItem('SE_AC_CLEAN_PHOTOS_' + noLambung + '_' + cleanIdx, JSON.stringify(window.__currentAcDetailPhotos));
+          safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(state.airCleanerMonitor));
+
+          if (typeof syncAirCleanerToSupabase === 'function') {
+            syncAirCleanerToSupabase(item);
+          }
+        } else {
+          safeStorage.setItem('SE_AC_CLEAN_PHOTOS_' + noLambung + '_' + cleanIdx, JSON.stringify(window.__currentAcDetailPhotos));
+        }
+
+        renderAirCleanerDetailPhotosUI(window.__currentAcDetailPhotos, noLambung, cleanIdx);
+
+        if (typeof showToast === 'function') {
+          showToast(`Berhasil menambahkan ${compressedList.length} foto eviden Air Cleaner!`, 'success');
+        }
+      } catch (err) {
+        console.error('[handleAirCleanerDetailPhotoUpload Error]', err);
+        if (typeof showToast === 'function') {
+          showToast('Gagal memproses foto: ' + err.message, 'error');
+        }
+      }
+    }
+    window.handleAirCleanerDetailPhotoUpload = handleAirCleanerDetailPhotoUpload;
+
+    function deleteAirCleanerDetailPhoto(photoIndex) {
+      if (!window.__currentAcDetailPhotos || photoIndex < 0 || photoIndex >= window.__currentAcDetailPhotos.length) return;
+      if (!confirm('Hapus foto eviden ini?')) return;
+
+      window.__currentAcDetailPhotos.splice(photoIndex, 1);
+      const { noLambung, cleanIdx, actionDate } = window.__currentAcDetailTarget || {};
+
+      if (noLambung !== undefined && cleanIdx !== undefined) {
+        const item = (state.airCleanerMonitor || []).find(m => String(m.noLambung || '').trim().toUpperCase() === String(noLambung || '').trim().toUpperCase());
+        if (item && Array.isArray(item.cleans) && cleanIdx >= 0 && cleanIdx < item.cleans.length) {
+          const oldEntry = String(item.cleans[cleanIdx] || '');
+          const dateOnly = oldEntry.split('#PHOTOS#')[0] || actionDate || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : '2026-10-23');
+          if (window.__currentAcDetailPhotos.length > 0) {
+            item.cleans[cleanIdx] = `${dateOnly}#PHOTOS#${JSON.stringify(window.__currentAcDetailPhotos)}`;
+          } else {
+            item.cleans[cleanIdx] = dateOnly;
+          }
+          safeStorage.setItem('SE_AC_CLEAN_PHOTOS_' + noLambung + '_' + cleanIdx, JSON.stringify(window.__currentAcDetailPhotos));
+          safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(state.airCleanerMonitor));
+
+          if (typeof syncAirCleanerToSupabase === 'function') {
+            syncAirCleanerToSupabase(item);
+          }
+        }
+        renderAirCleanerDetailPhotosUI(window.__currentAcDetailPhotos, noLambung, cleanIdx);
+        if (typeof showToast === 'function') {
+          showToast('Foto eviden berhasil dihapus.', 'info');
+        }
+      }
+    }
+    window.deleteAirCleanerDetailPhoto = deleteAirCleanerDetailPhoto;
 
     async function deleteAirCleanerActionEntry() {
       // 1. Validasi Otorisasi: Fitur Hapus HANYA untuk role Admin
