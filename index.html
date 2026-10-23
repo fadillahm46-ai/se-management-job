@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -9131,8 +9131,8 @@
     function mapSupabaseJobRowToModel(row) {
       if (!row || !row.id) return null;
       const targetId = String(row.id);
-      const isSchWt = (targetId.startsWith('WT-SCH') || targetId.startsWith('WTJ') || row.job_type === 'sch_wt' || row.job_type === 'water' || ['coal', 'rom', 'non_coal'].includes(row.cat));
-      const isSchLt = (targetId.startsWith('LT-SCH') || targetId.startsWith('LTJ') || row.job_type === 'sch_lt' || row.job_type === 'lube' || ['small', 'digger', 'aircleaner', 'topup'].includes(row.cat));
+      const isSchWt = (targetId.startsWith('WT-') || targetId.startsWith('WTJ') || row.job_type === 'sch_wt' || row.job_type === 'water' || ['coal', 'rom', 'non_coal'].includes(row.cat));
+      const isSchLt = (targetId.startsWith('LT-') || targetId.startsWith('LTJ') || row.job_type === 'sch_lt' || row.job_type === 'lube' || ['small', 'digger', 'aircleaner', 'topup'].includes(row.cat));
       const isUnschWt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-WT') || row.job_type === 'unsch_wt' || ((targetId.startsWith('UNS-') || row.cat === 'unscheduled') && row.service_type === 'watertruck'));
       const isUnschLt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-LT') || row.job_type === 'unsch_lt' || ((targetId.startsWith('UNS-') || row.cat === 'unscheduled') && row.service_type === 'lubetruck'));
       const isWt = isSchWt || isUnschWt;
@@ -9304,8 +9304,8 @@
 
       for (const job of window.globalDataCache.jobs.values()) {
         const targetId = String(job.id || '');
-        const isSchWt = (targetId.startsWith('WT-SCH') || targetId.startsWith('WTJ') || job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat));
-        const isSchLt = (targetId.startsWith('LT-SCH') || targetId.startsWith('LTJ') || job.targetType === 'LT' || ['small', 'digger', 'aircleaner', 'topup'].includes(job.cat));
+        const isSchWt = (targetId.startsWith('WT-') || targetId.startsWith('WTJ') || job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat));
+        const isSchLt = (targetId.startsWith('LT-') || targetId.startsWith('LTJ') || job.targetType === 'LT' || ['small', 'digger', 'aircleaner', 'topup'].includes(job.cat));
         const isUnschWt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-WT') || ((targetId.startsWith('UNS-') || job.cat === 'unscheduled') && job.serviceType === 'watertruck'));
         const isUnschLt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-LT') || ((targetId.startsWith('UNS-') || job.cat === 'unscheduled') && job.serviceType === 'lubetruck'));
 
@@ -9395,7 +9395,7 @@
       for (const [id, job] of Array.from(window.globalDataCache.jobs.entries())) {
         if (!job) continue;
         const idStr = String(job.id || '');
-        const isSch = idStr.startsWith('LT-SCH-') || idStr.startsWith('WT-SCH-');
+        const isSch = idStr.startsWith('LT-') || idStr.startsWith('WT-') || idStr.startsWith('SCH-');
         if (!isSch) continue;
 
         const isWt = idStr.startsWith('WT') || job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat);
@@ -12213,7 +12213,7 @@
       // Saring pekerjaan sesuai role
       let jobs = pool.filter(j => {
         // Pengaman: Jangan pernah tampilkan job scheduled (LT-SCH / WT-SCH) di tabel Job Request
-        if (String(j.id || '').startsWith('LT-SCH') || String(j.id || '').startsWith('WT-SCH')) {
+        if ((String(j.id || '').startsWith('LT-') || String(j.id || '').startsWith('WT-')) && !String(j.id || '').startsWith('LT-REQ') && !String(j.id || '').startsWith('WT-REQ') && j.cat !== 'unscheduled') {
           return false;
         }
         if (isAdmin) {
@@ -13075,7 +13075,8 @@
       if (typeof syncJobToSupabase === 'function') {
         syncJobToSupabase(job, true);
       } else if (state.supabaseClient && job.id) {
-        state.supabaseClient.from('jobs').update({
+        const isWtJob = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(job) : (String(job.id).startsWith('WT') || job.targetType === 'WT');
+        state.supabaseClient.from(isWtJob ? 'jobs_wt' : 'jobs_lt').update({
           armada_unit: upperUnit,
           opt_name: job.opt || '-',
           mp1: job.mp1 || '-',
@@ -13764,7 +13765,7 @@
       }
 
       const snapshotRecord = {
-        id: 'HIST-' + cleanId + '-' + Date.now(),
+        id: cleanId,
         job_id: cleanId,
         no_lambung: job.noLambung || job.no_lambung || 'UNIT',
         type_unit: job.typeUnit || job.type_unit || 'Unit',
@@ -13855,7 +13856,7 @@
       if (state.supabaseClient && window._supabaseHasJobHistory !== false) {
         try {
           const histPayload = {
-            id: snapshotRecord.id || ('HIST-' + cleanId + '-' + Date.now()),
+            id: cleanId,
             job_id: snapshotRecord.job_id,
             no_lambung: snapshotRecord.no_lambung,
             type_unit: snapshotRecord.type_unit,
@@ -14039,6 +14040,67 @@
       return isWt ? 'coal' : 'small';
     }
     window.getScheduleCategoryKey = getScheduleCategoryKey;
+
+    /**
+     * Generator ID Baku Job Terjadwal (LT & WT) Sesuai Permintaan Pengguna:
+     * Format: {prefix}-{typeCode}-{tgl_DDMMYYYY}-{shift}-{no_lambung}{washing_round}
+     * Contoh:
+     * - LT-CAC-24102026-1-D1521 (Clean Air Cleaner)
+     * - LT-GRS-24102026-1-D85146 (Greasing Small)
+     * - LT-GRS-24102026-1-EX2168 (Greasing Big Digger)
+     * - LT-TUO-24102026-1-D8589 (Top Up Oil)
+     * - WT-WSC-24102026-1-DT101 (Washing Coal)
+     * - WT-WNC-24102026-1-DT102 (Washing Non-Coal / ROM)
+     * - WT-WNC-24102026-1-DT102-W2 (Washing Non-Coal Putaran 2)
+     */
+    function generateScheduleJobId(job, targetDate = null, shift = null, washingRound = null) {
+      if (!job) return 'JOB-' + Date.now();
+      const isWt = (job.targetType === 'WT' || ['coal', 'rom', 'non_coal', 'noncoal'].includes(job.cat) || (job.wtUnit && job.wtUnit !== '-'));
+      const prefix = isWt ? 'WT' : 'LT';
+      const typeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(job) : (isWt ? 'WSC' : 'GRS');
+      const tglStr = targetDate || job.tanggalRealisasi || job.tanggal || getEffectiveTodayString();
+      const datePart = (typeof formatDateToDDMMYYYY === 'function') ? formatDateToDDMMYYYY(tglStr) : (String(tglStr).replace(/-/g, ''));
+      const shiftPart = parseInt(shift || job.shift || 1, 10) || 1;
+      const cleanLambung = (job.noLambung || job.no_lambung || 'UNIT').trim().toUpperCase();
+      const round = parseInt(washingRound || job.washingRound || job.washing_round || 1, 10);
+      const roundPart = (isWt && round === 2) ? '-W2' : '';
+      return `${prefix}-${typeCode}-${datePart}-${shiftPart}-${cleanLambung}${roundPart}`;
+    }
+    window.generateScheduleJobId = generateScheduleJobId;
+
+    /**
+     * Batch Upsert Job ke Cloud Supabase langsung ke tabel fisik (jobs_lt & jobs_wt)
+     * Menghilangkan error 'cannot insert into view jobs' sehingga seluruh job greasing,
+     * digger, topup, dan washing 100% tersimpan aman di Supabase dan tidak hilang saat refresh!
+     */
+    async function batchUpsertJobsToSupabase(batchRows) {
+      if (!state.supabaseClient || !Array.isArray(batchRows) || batchRows.length === 0) return { error: null };
+
+      const ltRows = batchRows.filter(r => !String(r.id || '').toUpperCase().startsWith('WT') && r.job_type !== 'sch_wt' && r.job_type !== 'water' && !['coal', 'rom', 'non_coal', 'noncoal'].includes(r.cat));
+      const wtRows = batchRows.filter(r => String(r.id || '').toUpperCase().startsWith('WT') || r.job_type === 'sch_wt' || r.job_type === 'water' || ['coal', 'rom', 'non_coal', 'noncoal'].includes(r.cat));
+
+      let err = null;
+      if (ltRows.length > 0) {
+        const resLt = await state.supabaseClient.from('jobs_lt').upsert(ltRows, { onConflict: 'id' });
+        if (resLt?.error) {
+          console.warn('[batchUpsertJobsToSupabase LT Error]', resLt.error.message);
+          err = resLt.error;
+        }
+      }
+      if (wtRows.length > 0) {
+        const resWt = await state.supabaseClient.from('jobs_wt').upsert(wtRows, { onConflict: 'id' });
+        if (resWt?.error) {
+          console.warn('[batchUpsertJobsToSupabase WT Error]', resWt.error.message);
+          err = err || resWt.error;
+        }
+      }
+
+      if (!err) {
+        console.log(`[batchUpsertJobsToSupabase OK] ${batchRows.length} jobs tersinkronisasi ke cloud (LT: ${ltRows.length}, WT: ${wtRows.length}).`);
+      }
+      return { error: err };
+    }
+    window.batchUpsertJobsToSupabase = batchUpsertJobsToSupabase;
     function generateMonthlySchedule(baseJob, targetMonthStr, masterUnits = []) {
       const todayStr = getEffectiveTodayString();
       const currentMonthKey = todayStr.slice(0, 7);
@@ -14135,7 +14197,7 @@
           const idPrefix = isWt ? 'WT-SCH-' : 'LT-SCH-';
           const roundSuffix = (isWt && parseInt(baseJob.washingRound, 10) === 2) ? '-W2' : '';
           const catKey = (typeof getScheduleCategoryKey === "function") ? getScheduleCategoryKey(baseJob.cat, isWt) : (isWt ? "coal" : "small");
-          const jobId = `${idPrefix}${dateStr.replace(/-/g, '')}-${cleanLambung}-${catKey}-S${shift}${roundSuffix}`;
+          const jobId = (typeof generateScheduleJobId === 'function') ? generateScheduleJobId(baseJob, dateStr, shift, baseJob.washingRound) : `${idPrefix}${dateStr.replace(/-/g, '')}-${cleanLambung}-${catKey}-S${shift}${roundSuffix}`;
 
           // Otomatis tentukan armada & personil roster untuk tanggal dan shift tersebut
           const assignedArmada = baseJob.ltUnit || baseJob.armada || '-';
@@ -15509,7 +15571,7 @@
             const idPrefix = isWt ? 'WT-SCH-' : 'LT-SCH-';
             const catKey = (typeof getScheduleCategoryKey === "function") ? getScheduleCategoryKey(baseJob.cat, isWt) : (isWt ? "coal" : "small");
             const roundSuffix = (isWt && parseInt(baseJob.washingRound, 10) === 2) ? "-W2" : "";
-            baseJob.id = `${idPrefix}${selectedDate.replace(/-/g, '')}-${cleanLambung}-${catKey}-S${effectiveShift}${roundSuffix}`;
+            baseJob.id = (typeof generateScheduleJobId === 'function') ? generateScheduleJobId(baseJob, selectedDate, effectiveShift, baseJob.washingRound) : `${idPrefix}${selectedDate.replace(/-/g, '')}-${cleanLambung}-${catKey}-S${effectiveShift}${roundSuffix}`;
             createdJobs.push(baseJob);
           }
         });
@@ -15571,7 +15633,7 @@
           });
 
           const { error } = batchRows.length > 0
-            ? await state.supabaseClient.from('jobs').upsert(batchRows, { onConflict: 'id' })
+            ? await batchUpsertJobsToSupabase(batchRows)
             : { error: null };
           if (error) {
             console.warn('[Supabase Apply Yesterday Batch Error]', error);
@@ -15665,7 +15727,7 @@
       candidates.forEach(src => {
         const cleanLambung = (src.noLambung || '').trim().toUpperCase();
         const randSuffix = Math.random().toString(36).substr(2, 4);
-        const id = `WT-SCH-${selectedDate.replace(/-/g, '')}-${cleanLambung}-S${shift}-W2-${randSuffix}`;
+        const id = (typeof generateScheduleJobId === 'function') ? generateScheduleJobId({ ...src, targetType: 'WT', cat: activeCat, washingRound: 2 }, selectedDate, shift, 2) : `WT-SCH-${selectedDate.replace(/-/g, '')}-${cleanLambung}-S${shift}-W2-${randSuffix}`;
         const job = {
           id: id,
           cat: activeCat,
@@ -15726,7 +15788,7 @@
           is_pending: false,
           updated_at: new Date().toISOString()
         }));
-        state.supabaseClient.from('jobs').upsert(batchRows, { onConflict: 'id' }).then(({ error }) => {
+        batchUpsertJobsToSupabase(batchRows).then(({ error }) => {
           if (error) console.warn('[Supabase Duplicate W1->W2 Error]', error);
           else console.log(`[Supabase Duplicate W1->W2 OK] ${batchRows.length} jobs synced.`);
         });
@@ -15798,7 +15860,7 @@
         }
 
         const randSuffix = Math.random().toString(36).substr(2, 4);
-        const id = `WT-SCH-${selectedDate.replace(/-/g, '')}-${cleanLambung}-S${tShift}-W${round}-${randSuffix}`;
+        const id = (typeof generateScheduleJobId === 'function') ? generateScheduleJobId({ ...src, targetType: 'WT', cat: activeCat, washingRound: round }, selectedDate, tShift, round) : `WT-SCH-${selectedDate.replace(/-/g, '')}-${cleanLambung}-S${tShift}-W${round}-${randSuffix}`;
         const job = {
           id: id,
           cat: activeCat,
@@ -15858,7 +15920,7 @@
           is_pending: false,
           updated_at: new Date().toISOString()
         }));
-        state.supabaseClient.from('jobs').upsert(batchRows, { onConflict: 'id' }).then(({ error }) => {
+        batchUpsertJobsToSupabase(batchRows).then(({ error }) => {
           if (error) console.warn('[Supabase Duplicate Shift Error]', error);
           else console.log(`[Supabase Duplicate Shift OK] ${batchRows.length} jobs synced.`);
         });
@@ -15972,7 +16034,7 @@
         }
 
         const randSuffix = Math.random().toString(36).substr(2, 4);
-        const id = `WT-SCH-${selectedDate.replace(/-/g, '')}-${cleanLambung}-S${tShift}-W${round}-${randSuffix}`;
+        const id = (typeof generateScheduleJobId === 'function') ? generateScheduleJobId({ ...src, targetType: 'WT', cat: activeCat, washingRound: round }, selectedDate, tShift, round) : `WT-SCH-${selectedDate.replace(/-/g, '')}-${cleanLambung}-S${tShift}-W${round}-${randSuffix}`;
         const job = {
           id: id,
           cat: activeCat,
@@ -16032,7 +16094,7 @@
           is_pending: false,
           updated_at: new Date().toISOString()
         }));
-        state.supabaseClient.from('jobs').upsert(batchRows, { onConflict: 'id' }).then(({ error }) => {
+        batchUpsertJobsToSupabase(batchRows).then(({ error }) => {
           if (error) console.warn('[Supabase Duplicate Yesterday Error]', error);
         });
       }
@@ -16257,7 +16319,7 @@
             if (skipExisting && existingW2.has(cleanLambung)) return;
 
             const randSuffix = Math.random().toString(36).substr(2, 4);
-            const id = `WT-SCH-${selectedDate.replace(/-/g, '')}-${cleanLambung}-S${shift}-W2-${randSuffix}`;
+            const id = (typeof generateScheduleJobId === 'function') ? generateScheduleJobId({ ...src, targetType: 'WT', cat: activeCat, washingRound: 2 }, selectedDate, shift, 2) : `WT-SCH-${selectedDate.replace(/-/g, '')}-${cleanLambung}-S${shift}-W2-${randSuffix}`;
             const job = {
               id: id,
               cat: activeCat,
@@ -16317,7 +16379,7 @@
             }
 
             const randSuffix = Math.random().toString(36).substr(2, 4);
-            const id = `WT-SCH-${selectedDate.replace(/-/g, '')}-${cleanLambung}-S2-W${round}-${randSuffix}`;
+            const id = (typeof generateScheduleJobId === 'function') ? generateScheduleJobId({ ...src, targetType: 'WT', cat: activeCat, washingRound: round }, selectedDate, 2, round) : `WT-SCH-${selectedDate.replace(/-/g, '')}-${cleanLambung}-S2-W${round}-${randSuffix}`;
             const job = {
               id: id,
               cat: activeCat,
@@ -16384,7 +16446,7 @@
             }
 
             const randSuffix = Math.random().toString(36).substr(2, 4);
-            const id = `WT-SCH-${selectedDate.replace(/-/g, '')}-${cleanLambung}-S${targetShift}-W${round}-${randSuffix}`;
+            const id = (typeof generateScheduleJobId === 'function') ? generateScheduleJobId({ ...src, targetType: 'WT', cat: activeCat, washingRound: round }, selectedDate, targetShift, round) : `WT-SCH-${selectedDate.replace(/-/g, '')}-${cleanLambung}-S${targetShift}-W${round}-${randSuffix}`;
             const job = {
               id: id,
               cat: activeCat,
@@ -16451,7 +16513,7 @@
             is_pending: false,
             updated_at: new Date().toISOString()
           }));
-          state.supabaseClient.from('jobs').upsert(batchRows, { onConflict: 'id' }).then(({ error }) => {
+          batchUpsertJobsToSupabase(batchRows).then(({ error }) => {
             if (error) console.warn('[Supabase Modal Duplicate Error]', error);
           });
         }
@@ -17649,7 +17711,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       let jobs = state.unscheduledLtJobs.filter(j => {
         // Pengaman: Jangan pernah tampilkan job scheduled (LT-SCH) di tabel Job Request
-        if (String(j.id || '').startsWith('LT-SCH') || String(j.id || '').startsWith('WT-SCH')) {
+        if ((String(j.id || '').startsWith('LT-') || String(j.id || '').startsWith('WT-')) && !String(j.id || '').startsWith('LT-REQ') && !String(j.id || '').startsWith('WT-REQ') && j.cat !== 'unscheduled') {
           return false;
         }
         if (isAdmin) {
@@ -21787,7 +21849,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       if (!j) return false;
       const idStr = String(j.id || '');
       // Prefix ID yang terdaftar sebagai jadwal schedule rutin (PASTI SCH)
-      if (idStr.startsWith('LT-SCH-') || idStr.startsWith('WT-SCH-') || idStr.startsWith('WTJ-') || idStr.startsWith('SCH-')) {
+      if (idStr.startsWith('LT-') || idStr.startsWith('WT-') || idStr.startsWith('WTJ-') || idStr.startsWith('SCH-')) {
+        if (!idStr.startsWith('LT-REQ') && !idStr.startsWith('WT-REQ') && !idStr.startsWith('UNS')) return false;
         return false;
       }
       // Kategori resmi schedule rutin (PASTI SCH)
@@ -23964,7 +24027,7 @@ Oilman 1 & 2 : ${teamMps}`;
               });
             });
             if (batchRows.length > 0) {
-              state.supabaseClient.from('jobs').upsert(batchRows, { onConflict: 'id' }).then(({ error }) => {
+              batchUpsertJobsToSupabase(batchRows).then(({ error }) => {
                 if (error) console.warn('[Supabase Batch Schedule Error]', error.message);
                 else console.log(`[Supabase Batch Schedule OK] ${batchRows.length} jobs tersinkronisasi.`);
               });
@@ -23979,7 +24042,7 @@ Oilman 1 & 2 : ${teamMps}`;
 
       // 2. Single Day Job (Fallback jika toggle dimatikan)
       const catKey = (typeof getScheduleCategoryKey === 'function') ? getScheduleCategoryKey(baseJob.cat, isWt) : (isWt ? 'coal' : 'small');
-      baseJob.id = isWt ? ('WT-SCH-' + (baseJob.tanggal || '').replace(/-/g, '') + '-' + noLambung + '-' + catKey + '-S' + baseJob.shift + (parseInt(washingRound, 10) === 2 ? '-W2-' : '-W1-') + Math.random().toString(36).substr(2, 4)) : ('LT-SCH-' + (baseJob.tanggal || '').replace(/-/g, '') + '-' + noLambung + '-' + catKey + '-S' + baseJob.shift + '-' + Math.random().toString(36).substr(2, 4));
+      baseJob.id = (typeof generateScheduleJobId === 'function') ? generateScheduleJobId(baseJob, baseJob.tanggal, baseJob.shift, baseJob.washingRound) : (isWt ? ('WT-SCH-' + (baseJob.tanggal || '').replace(/-/g, '') + '-' + noLambung + '-' + catKey + '-S' + baseJob.shift) : ('LT-SCH-' + (baseJob.tanggal || '').replace(/-/g, '') + '-' + noLambung + '-' + catKey + '-S' + baseJob.shift));
       if (isWt) {
         state.watertruckState.jobs.push(baseJob);
       } else {
@@ -31452,8 +31515,8 @@ Oilman 1 & 2 : ${teamMps}`;
       } else {
         const newObj = mapSupabaseJobRowToModel(row);
         if (newObj) {
-          const isSchWt = (targetId.startsWith('WT-SCH') || targetId.startsWith('WTJ') || row.job_type === 'sch_wt' || row.job_type === 'water' || ['coal', 'rom', 'non_coal'].includes(row.cat));
-          const isSchLt = (targetId.startsWith('LT-SCH') || targetId.startsWith('LTJ') || row.job_type === 'sch_lt' || row.job_type === 'lube' || ['small', 'digger', 'aircleaner', 'topup'].includes(row.cat));
+          const isSchWt = (targetId.startsWith('WT-') || targetId.startsWith('WTJ') || row.job_type === 'sch_wt' || row.job_type === 'water' || ['coal', 'rom', 'non_coal'].includes(row.cat));
+          const isSchLt = (targetId.startsWith('LT-') || targetId.startsWith('LTJ') || row.job_type === 'sch_lt' || row.job_type === 'lube' || ['small', 'digger', 'aircleaner', 'topup'].includes(row.cat));
           const isUnschWt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-WT') || row.job_type === 'unsch_wt' || ((targetId.startsWith('UNS-') || row.cat === 'unscheduled') && row.service_type === 'watertruck'));
           const isUnschLt = !isSchWt && !isSchLt && (targetId.startsWith('UNS-LT') || row.job_type === 'unsch_lt' || ((targetId.startsWith('UNS-') || row.cat === 'unscheduled') && row.service_type === 'lubetruck'));
           const isWt = isSchWt || isUnschWt;
