@@ -9008,7 +9008,7 @@
     // Mengeliminasi Egress berlebih dengan HANYA mengambil kolom yang ditampilkan di UI
     // =========================================================================
     const APP_CLIENT_ID = 'cli_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
-    const SUPABASE_JOB_LIST_COLS = 'id,job_type,cat,tanggal,shift,washing_round,cluster,waktu_rencana,type_unit,no_lambung,lokasi,armada_unit,opt_name,mp1,mp2,jam_start,jam_end,durasi,hm_stop,hm_ready,status,is_pending,keterangan,service_notes,bd_notes,non_ach_category,non_ach_reason,ada_operator,unit_condition,service_type,pemesan,kondisi,created_at,updated_at';
+    const SUPABASE_JOB_LIST_COLS = 'id,job_type,cat,tanggal,shift,washing_round,cluster,waktu_rencana,type_unit,no_lambung,lokasi,armada_unit,opt_name,mp1,mp2,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status,is_pending,keterangan,service_notes,bd_notes,non_ach_category,non_ach_reason,ada_operator,unit_turun,unit_swing,kondisi,carry_count,original_date,pemesan,created_by,created_at,updated_at';
     const SUPABASE_ORDER_LIST_COLS = 'id,kode_order,service_type,type_unit,tanggal,shift,jam,nama_pemesan,role_pemesan,nrp_pemesan,no_lambung,cluster,lokasi,keadaan_unit,armada_unit,opt_name,mp1,mp2,hm_start,hm_end,jam_start,jam_end,durasi,tanggal_eksekusi,status,is_locked,handled_by,created_at,updated_at';
     const SUPABASE_ARMADA_COLS = 'id,unit,type_unit,cluster,status,keterangan';
     const SUPABASE_USER_COLS = 'id,nrp,nama,password,role,jabatan,status_aktif';
@@ -10868,7 +10868,9 @@
         return isOpportunityWindow(t);
       });
 
-      const allWashingSch = [...allWt, ...histSch.filter(j => String(j.id || '').startsWith('WT-SCH') || j.cat === 'coal' || j.cat === 'non_coal' || j.cat === 'rom')];
+      const activeWtJobs = state.watertruckState?.jobs || [];
+      const histJobs = Array.isArray(state.jobHistory) ? state.jobHistory : [];
+      const allWashingSch = [...activeWtJobs, ...histJobs.filter(j => String(j.id || '').startsWith('WT-SCH') || j.cat === 'coal' || j.cat === 'non_coal' || j.cat === 'rom')];
       const scheduledOppList = allWashingSch.filter(j => {
         if (j.cat !== 'coal' && j.cat !== 'non_coal' && j.cat !== 'rom') return false;
         const executionStart = j.jamStart || j.start || (j.status === 'ach' ? j.waktu : '');
@@ -11508,7 +11510,7 @@
               .select(SUPABASE_USER_COLS)
               .ilike('nrp', nrp)
               .eq('password', password)
-              .single();
+              .maybeSingle();
 
             const result = await Promise.race([queryPromise, timeoutPromise]);
             if (result && !result.error && result.data) user = result.data;
@@ -23874,10 +23876,8 @@ Oilman 1 & 2 : ${teamMps}`;
                 status: job.status || 'scheduled',
                 keterangan: job.keterangan || '',
                 is_pending: Boolean(job.isPending),
-                unit_condition: job.unitCondition || '',
-                service_type: job.serviceType || '',
                 pemesan: job.namaPemesan || job.pemesan || '',
-                kondisi: job.kondisi || '',
+                kondisi: job.kondisi || job.unitCondition || '',
                 updated_at: new Date().toISOString()
               });
             });
@@ -30736,7 +30736,9 @@ Oilman 1 & 2 : ${teamMps}`;
           status: job.status || 'scheduled',
           keterangan: job.keterangan || '',
           is_pending: Boolean(job.isPending),
-          unit_condition: job.unitCondition || '',
+          ada_operator: job.adaOperator || 'Ya',
+          unit_turun: job.unitTurun || 'Ya',
+          unit_swing: job.unitSwing || 'Tidak',
           service_notes: (function () {
             let sn = job.serviceNotes || (job.status === 'service' ? (job.keterangan || '') : '');
             if (typeof sn === 'string' && (sn.startsWith('PHOTOS:') || sn.startsWith('PHOTOS_ATTACHED') || sn.includes('data:image/'))) {
@@ -30745,9 +30747,8 @@ Oilman 1 & 2 : ${teamMps}`;
             return sn || '';
           })(),
           bd_notes: job.bdNotes || (job.status === 'bd' ? job.keterangan : ''),
-          service_type: job.serviceType || '',
           pemesan: job.namaPemesan || job.pemesan || '',
-          kondisi: job.kondisi || '',
+          kondisi: job.kondisi || job.unitCondition || '',
           updated_at: new Date().toISOString()
         };
 
