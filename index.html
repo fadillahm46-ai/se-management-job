@@ -28056,11 +28056,11 @@ Keterangan : ${keterangan}`;
     let currentReplaceAcPhotoBase64 = '';
 
     function openReplaceAirCleanerModal(noLambung) {
-      // Aturan Pengguna: Fitur replace air cleaner dapat diakses di SEMUA AKSES
-      const canAccess = true;
+      // Fitur Replace Air Cleaner hanya dapat diakses oleh Admin dan Tim Track (bukan oilman atau basecontrol)
+      const canAccess = (state.currentUser?.role === 'admin' || state.currentUser?.role === 'track');
       if (!canAccess) {
         if (typeof showToast === 'function') {
-          showToast('Fitur Replace Air Cleaner dapat diakses oleh semua pengguna operasional.', 'warning');
+          showToast('Fitur Replace Air Cleaner hanya dapat diakses oleh Administrator dan Tim Track.', 'warning');
         }
         return;
       }
@@ -28163,6 +28163,15 @@ Keterangan : ${keterangan}`;
           event.preventDefault();
           event.stopPropagation();
         } catch (e) { }
+      }
+
+      // Validasi hak akses: hanya Admin dan Tim Track
+      const canAccess = (state.currentUser?.role === 'admin' || state.currentUser?.role === 'track');
+      if (!canAccess) {
+        if (typeof showToast === 'function') {
+          showToast('Fitur Replace Air Cleaner hanya dapat diakses oleh Administrator dan Tim Track.', 'warning');
+        }
+        return;
       }
 
       const noLambung = (document.getElementById('replace-ac-unit-val')?.value || '').trim().toUpperCase();
@@ -28999,8 +29008,8 @@ Keterangan : ${keterangan}`;
       const tbody = document.getElementById('aircleaner-monitor-tbody');
       if (!tbody) return;
 
-      // Aturan Pengguna: Fitur replace dan monitoring Air Cleaner terbuka di SEMUA AKSES
-      const canReplace = true;
+      // Kontrol visibilitas tombol & Kolom Aksi Replace: Hanya untuk Admin dan Tim Track (dihilangkan untuk oilman & basecontrol)
+      const canReplace = (state.currentUser?.role === 'admin' || state.currentUser?.role === 'track');
       const isAdmin = (state.currentUser?.role === 'admin');
 
       const btnResetAc = document.getElementById('btn-reset-aircleaner');
@@ -29011,7 +29020,8 @@ Keterangan : ${keterangan}`;
 
       const thAction = document.getElementById('th-aircleaner-action');
       if (thAction) {
-        thAction.classList.remove('hidden');
+        if (canReplace) thAction.classList.remove('hidden');
+        else thAction.classList.add('hidden');
       }
 
       // Update opsi tipe unit
@@ -29129,7 +29139,7 @@ Keterangan : ${keterangan}`;
       });
 
       tbody.innerHTML = '';
-      const totalColSpan = isTabCoal ? 7 : 10;
+      const totalColSpan = isTabCoal ? (canReplace ? 7 : 6) : (canReplace ? 10 : 9);
       if (list.length === 0) {
         const emptyTabLabel = isTabCoal ? 'unit COAL (3x Semprot)' : 'unit NON COAL (6x Semprot)';
         tbody.innerHTML = `<tr><td colspan="${totalColSpan}" class="py-8 text-center text-slate-400 italic text-[11.5px]">Tidak ada data monitoring untuk ${emptyTabLabel}</td></tr>`;
@@ -29209,7 +29219,7 @@ Keterangan : ${keterangan}`;
             </div>
           </td>
           ${cleansCellsHtml}
-          <td class="py-2.5 px-3 text-center border-r border-slate-100">
+          <td class="py-2.5 px-3 text-center ${canReplace ? 'border-r border-slate-100' : ''}">
             <div class="flex flex-col items-center gap-1">
               ${statusBadge}
               ${(item.lastEvidenceUrl || item.evidence_url || item.evidenceUrl) ? `
@@ -29224,6 +29234,7 @@ Keterangan : ${keterangan}`;
               </button>` : ''}
             </div>
           </td>
+          ${canReplace ? `
           <td class="py-2.5 px-1 sm:px-2 text-center">
             <button type="button" onclick="openReplaceAirCleanerModal('${item.noLambung}')"
               class="inline-flex items-center justify-center space-x-1 p-1.5 sm:px-2.5 sm:py-1 rounded-lg sm:rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 hover:text-teal-900 border border-teal-200/90 active:scale-95 shadow-2xs cursor-pointer text-[11px] font-bold transition-all"
@@ -29233,7 +29244,7 @@ Keterangan : ${keterangan}`;
               </svg>
               <span class="hidden md:inline">Replace</span>
             </button>
-          </td>
+          </td>` : ''}
         `;
         tbody.appendChild(tr);
       });
