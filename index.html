@@ -7525,7 +7525,19 @@
           </div>
         </div>
 
-        <!-- Grid 3B: Detail Kondisi Lapangan (Khusus Job Washing: Ada Operator, Unit Turun, Unit Swing, HM Start & End) -->
+        <!-- Grid 3B: Detail HM Unit (Khusus Job Request LT/WT & Job Washing) -->
+        <div id="detail-modal-hm-box"
+          class="hidden px-3 py-1.5 rounded-xl bg-amber-50/70 border border-amber-200/80 space-y-1">
+          <span class="text-[9.5px] font-bold text-amber-900 uppercase tracking-wider block">Hour Meter (HM) Unit</span>
+          <div class="grid grid-cols-2 gap-2 font-mono text-xs items-center">
+            <div><span class="text-slate-500 font-sans text-[9.5px] font-semibold">HM Start:</span> <span
+                class="font-bold text-amber-950" id="detail-modal-hm-start">-</span></div>
+            <div><span class="text-slate-500 font-sans text-[9.5px] font-semibold">HM Finish:</span> <span
+                class="font-bold text-amber-950" id="detail-modal-hm-end">-</span></div>
+          </div>
+        </div>
+
+        <!-- Grid 3C: Detail Kondisi Lapangan (Khusus Job Washing: Ada Operator, Unit Turun, Unit Swing, HM Start & End) -->
         <div id="detail-modal-washing-box"
           class="hidden px-2.5 py-1.5 rounded-xl bg-cyan-50/70 border border-cyan-200/80 space-y-1.5">
           <span class="text-[9.5px] font-black text-cyan-900 uppercase tracking-wider block">Kondisi Lapangan Pencucian
@@ -9330,6 +9342,11 @@
         state.orderRequests = Array.from(window.globalDataCache.orderRequests.values());
         for (const order of window.globalDataCache.orderRequests.values()) {
           const ordId = String(order.id || '');
+          const isZombie = (ordId === 'LT-22102026-REQ-1-E8511' || (order.noLambung === 'E8511' && (order.tanggal === '2026-10-22' || ordId.includes('REQ'))));
+          if (isZombie) {
+            window.globalDataCache.orderRequests.delete(ordId);
+            continue;
+          }
           const isWtOrd = (ordId.startsWith('UNS-WT') || order.serviceType === 'watertruck' || order.service_type === 'watertruck');
           if (isWtOrd) {
             if (!state.unscheduledWtJobs.some(j => String(j.id) === ordId)) {
@@ -9341,6 +9358,15 @@
             }
           }
         }
+      }
+
+      // Pastikan state.unscheduledLtJobs bebas dari data zombie
+      if (Array.isArray(state.unscheduledLtJobs)) {
+        state.unscheduledLtJobs = state.unscheduledLtJobs.filter(j =>
+          String(j.id) !== 'LT-22102026-REQ-1-E8511' &&
+          String(j.noId || j.no_id || '') !== 'LT-22102026-REQ-1-E8511' &&
+          !(j.noLambung === 'E8511' && (j.tanggal === '2026-10-22' || String(j.id).includes('REQ')))
+        );
       }
 
       safeSaveTrimmedJobsToStorage();
@@ -9486,13 +9512,27 @@
                 lastFetchTime: 0,
                 isFetchingArchive: false
               };
+              const cleanedList = [];
               parsed.forEach(j => {
-                if (j && j.id) window.globalDataCache.jobs.set(String(j.id), j);
+                if (j && j.id) {
+                  // AUTO-PURGE: Hapus data zombie yang sudah tidak ada di Supabase
+                  const jId = String(j.id || '');
+                  const jNoId = String(j.noId || j.no_id || '');
+                  const isZombie = (jId === 'LT-22102026-REQ-1-E8511' || jNoId === 'LT-22102026-REQ-1-E8511' || (j.noLambung === 'E8511' && (j.tanggal === '2026-10-22' || jId.includes('REQ'))));
+                  if (!isZombie) {
+                    window.globalDataCache.jobs.set(String(j.id), j);
+                    cleanedList.push(j);
+                  }
+                }
               });
+              // Simpan kembali daftar yang bersih ke storage
+              if (cleanedList.length !== parsed.length) {
+                safeStorage.setItem('SE_TRIMMED_JOBS_CACHE', JSON.stringify(cleanedList));
+              }
               if (typeof syncGlobalCacheToState === 'function') {
                 syncGlobalCacheToState(); if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
               }
-              console.log(`[Storage Render-First] ${parsed.length} transaksi dimuat dari local cache.`);
+              console.log(`[Storage Render-First] ${cleanedList.length} transaksi dimuat dari local cache.`);
             }
           }
         } catch (eTrim) {
@@ -12341,7 +12381,18 @@
             <div class="line-clamp-2">${(job.status === 'done' || job.status === 'ach') ? (job.keterangan || '-') : '-'}</div>
           </td>
           <td class="py-1.5 px-2 md:py-1.5 md:px-2 text-center">
-            ${isAdmin || isBc || isUser || isActioned ? `
+            ${isAdmin ? `
+              <div class="flex items-center justify-center space-x-1.5">
+                ${getJobRequestStatusBadge(job)}
+                <button type="button" onclick="event.stopPropagation(); promptDeleteJob('${job.id}')" 
+                  title="Hapus Job Request Ini (Khusus Admin)" 
+                  class="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
+            ` : (isBc || isUser || isActioned ? `
               <div class="flex items-center justify-center">
                 ${getJobRequestStatusBadge(job)}
               </div>
@@ -12349,7 +12400,7 @@
               <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95">
                 ACTION
               </button>
-            `}
+            `)}
           </td>
         `;
         tbody.appendChild(tr);
@@ -13935,8 +13986,10 @@
             keterangan: snapshotRecord.keterangan,
             non_ach_category: snapshotRecord.non_ach_category,
             non_ach_reason: snapshotRecord.non_ach_reason,
-            fotos: Array.isArray(snapshotRecord.fotos) ? snapshotRecord.fotos : [],
-            snapshot_data: JSON.parse(JSON.stringify(job, (k, v) => (typeof v === 'string' && v.startsWith('data:image/')) ? '[base64-dihapus]' : v)),
+            // ATURAN ULTRA-LOW EGRESS: Jangan pernah mengirim string base64 (data:image/) ke Supabase!
+            // Hanya kirim URL cloud permanen (Google Drive http:// atau https://)
+            fotos: (Array.isArray(snapshotRecord.fotos) ? snapshotRecord.fotos : [])
+              .filter(f => f && typeof f === 'string' && (f.startsWith('http://') || f.startsWith('https://'))),
             created_at: snapshotRecord.created_at
           };
 
@@ -21883,7 +21936,17 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
 
     /**
-     * Salin ringkasan job (Job SCH & Job REQ) ke clipboard sesuai format laporan
+     * Salin ringkasan job (Job SCH & Job REQ) ke clipboard sesuai format laporan:
+     * *PELAPORAN JOB*
+     * Kode Unit :
+     * Deskripsi :
+     * Hm Start & Finish :
+     * Jam Start & Finish :
+     * Status :
+     * Armada :
+     * Operator :
+     * Mp 1 & 2 :
+     * Keterangan :
      */
     function copyJobDetailReport() {
       const jobId = state.currentDetailJobId;
@@ -21901,8 +21964,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         ? isJobAnOrderRequest(job)
         : (String(job.id).startsWith('UNS') || job.job_type === 'unsch_lt' || job.job_type === 'unsch_wt');
 
-      // Format Header Bold sesuai permintaan pengguna (*PELAPORAN UNIT* untuk tebal di WhatsApp & Markdown)
-      const headerText = '*PELAPORAN UNIT*';
+      const isWt = (job.cat === 'coal' || job.cat === 'rom' || job.cat === 'non_coal' || (job.id && String(job.id).includes('WT')) || job.serviceType === 'watertruck' || job.targetType === 'WT');
+
+      // Format Header Bold sesuai permintaan pengguna (*PELAPORAN JOB*)
+      const headerText = '*PELAPORAN JOB*';
 
       const kodeUnit = job.noLambung || '-';
       let deskripsi = '-';
@@ -21921,13 +21986,23 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         deskripsi = catMap[job.cat] || job.cat || (typeof getJobSchLabel === 'function' ? getJobSchLabel(job) : 'Scheduled Service');
       }
 
-      const isWt = (job.cat === 'coal' || job.cat === 'rom' || job.cat === 'non_coal' || (job.id && String(job.id).includes('WT')) || job.serviceType === 'watertruck' || job.targetType === 'WT');
-
+      // Evaluasi HM Start & Finish:
+      // Aturan pengguna:
+      // - Job Request LT: isi HM start & end (sama seperti WT)
+      // - Job Schedule LT: TIDAK ADA mengisi HM start & end -> '-'
+      // - WT (Job Sch & Request): tetap ada HM start & end
       const hmStartVal = (job.hmStart !== null && job.hmStart !== undefined && job.hmStart !== '') ? job.hmStart : ((job.hmStop !== null && job.hmStop !== undefined && job.hmStop !== '') ? job.hmStop : '');
       const hmEndVal = (job.hmEnd !== null && job.hmEnd !== undefined && job.hmEnd !== '') ? job.hmEnd : ((job.hmReady !== null && job.hmReady !== undefined && job.hmReady !== '') ? job.hmReady : '');
-      const hmStartEnd = (hmStartVal && hmEndVal)
-        ? `${hmStartVal} s/d ${hmEndVal}`
-        : (hmStartVal || hmEndVal || job.hmUnit || '-');
+
+      let hmStartFinish = '-';
+      if (!isWt && !isRequest) {
+        // Job Schedule LT: tidak ada mengisi HM start & end
+        hmStartFinish = '-';
+      } else if (hmStartVal && hmEndVal) {
+        hmStartFinish = `${hmStartVal} s/d ${hmEndVal}`;
+      } else if (hmStartVal || hmEndVal) {
+        hmStartFinish = hmStartVal || hmEndVal;
+      }
 
       const startFinish = (job.jamStart || job.jamEnd)
         ? `${job.jamStart || '-'} s/d ${job.jamEnd || '-'}`
@@ -21939,16 +22014,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       else if (job.status === 'pending' || job.isPending) statusStr = 'PENDING';
       else if (job.status === 'scheduled') statusStr = 'SCHEDULED';
       else if (job.status === 'cancel' || job.status === 'cancelled') statusStr = 'CANCEL';
-
-      let rawKet = job.alasanNonAch || job.non_ach_reason || job.keterangan || job.deskripsi || '-';
-      if (rawKet && typeof rawKet === 'string') {
-        if (rawKet.startsWith('PHOTOS_ATTACHED')) {
-          rawKet = '-';
-        } else {
-          rawKet = rawKet.replace(/\bPS\s*1000\b/gi, '').replace(/\[SERVICE\]:\s*/gi, '').replace(/\s*\(?PS\s*\d*\)?/gi, '').trim() || '-';
-        }
-      }
-      const keterangan = rawKet || '-';
+      else if (job.status === 'service') statusStr = 'SERVICE';
+      else if (job.status === 'bd' || job.status === 'breakdown') statusStr = 'BREAKDOWN';
+      else if (job.status === 'done') statusStr = 'DONE';
 
       const armada = (job.armada && job.armada !== '-')
         ? job.armada
@@ -21963,35 +22031,27 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         ? mps.join(' & ')
         : (job.mp && job.mp !== '-' ? job.mp : '-');
 
-      const noIdStr = (typeof getJobNoId === 'function') ? getJobNoId(job) : (job.noId || job.job_id || job.id || '-');
-
-      let textToCopy = '';
-      if (isWt) {
-        // KHUSUS JOB WASHING (WT): Tampilkan HM Start & End dan label Washingman
-        textToCopy = `${headerText}
-No ID : [${noIdStr}]
-Kode Unit : ${kodeUnit}
-Deskripsi : ${deskripsi}
-HM Start & End : ${hmStartEnd}
-Jam Start & Finish : ${startFinish}
-Status : ${statusStr}
-Keterangan : ${keterangan}
-Armada : ${armada}
-Operator : ${operator}
-Washingman 1 & 2 : ${teamMps}`;
-      } else {
-        // KHUSUS JOB LT: Tanpa HM (sesuai instruksi pengguna), label Oilman
-        textToCopy = `${headerText}
-No ID : [${noIdStr}]
-Kode Unit : ${kodeUnit}
-Deskripsi : ${deskripsi}
-Jam Start & Finish : ${startFinish}
-Status : ${statusStr}
-Keterangan : ${keterangan}
-Armada : ${armada}
-Operator : ${operator}
-Oilman 1 & 2 : ${teamMps}`;
+      let rawKet = job.alasanNonAch || job.non_ach_reason || job.keterangan || job.deskripsi || '-';
+      if (rawKet && typeof rawKet === 'string') {
+        if (rawKet.startsWith('PHOTOS_ATTACHED')) {
+          rawKet = '-';
+        } else {
+          rawKet = rawKet.replace(/\bPS\s*1000\b/gi, '').replace(/\[SERVICE\]:\s*/gi, '').replace(/\s*\(?PS\s*\d*\)?/gi, '').trim() || '-';
+        }
       }
+      const keterangan = rawKet || '-';
+
+      // Template baku laporan sesuai instruksi pengguna:
+      const textToCopy = `${headerText}
+Kode Unit : ${kodeUnit}
+Deskripsi : ${deskripsi}
+Hm Start & Finish : ${hmStartFinish}
+Jam Start & Finish : ${startFinish}
+Status : ${statusStr}
+Armada : ${armada}
+Operator : ${operator}
+Mp 1 & 2 : ${teamMps}
+Keterangan : ${keterangan}`;
 
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(textToCopy).then(() => {
@@ -22212,7 +22272,29 @@ Oilman 1 & 2 : ${teamMps}`;
         durasiEl.innerHTML = durasiHtml; // innerHTML agar tag badge ditampilkan sebagai badge, bukan teks mentah
       }
 
-      // 8. Kondisi Lapangan Khusus Washing (WT)
+      // 8. Evaluasi Kotak HM Unit di Modal Detail:
+      // Tampilkan untuk Job Request (LT maupun WT) serta Job Washing (WT)
+      const hmDetailBox = document.getElementById('detail-modal-hm-box');
+      if (hmDetailBox) {
+        if (isJobRequest || isWt) {
+          const startVal = (job.hmStart !== null && job.hmStart !== undefined && job.hmStart !== '') ? job.hmStart : ((job.hmStop !== null && job.hmStop !== undefined && job.hmStop !== '') ? job.hmStop : '-');
+          const endVal = (job.hmEnd !== null && job.hmEnd !== undefined && job.hmEnd !== '') ? job.hmEnd : ((job.hmReady !== null && job.hmReady !== undefined && job.hmReady !== '') ? job.hmReady : '-');
+          if (startVal !== '-' || endVal !== '-') {
+            hmDetailBox.classList.remove('hidden');
+            const hmsEl = document.getElementById('detail-modal-hm-start');
+            const hmeEl = document.getElementById('detail-modal-hm-end');
+            if (hmsEl) hmsEl.textContent = startVal;
+            if (hmeEl) hmeEl.textContent = endVal;
+          } else {
+            hmDetailBox.classList.add('hidden');
+          }
+        } else {
+          // Job Schedule LT: disembunyikan
+          hmDetailBox.classList.add('hidden');
+        }
+      }
+
+      // 8B. Kondisi Lapangan Khusus Washing (WT)
       const washBox = document.getElementById('detail-modal-washing-box');
       if (washBox) {
         if (isWt && !isJobRequest) {
@@ -26900,8 +26982,8 @@ Oilman 1 & 2 : ${teamMps}`;
 
       const startEl = document.getElementById('ach-jam-start');
       const endEl = document.getElementById('ach-jam-end');
-      if (startEl) startEl.value = '';
-      if (endEl) endEl.value = '';
+      if (startEl) startEl.value = job.jamStart || job.jam_start || '';
+      if (endEl) endEl.value = job.jamEnd || job.jam_end || '';
 
       const hmRow = document.getElementById('ach-hm-row');
       const jobKeadaanRow = document.getElementById('ach-job-keadaan-row');
@@ -26911,19 +26993,19 @@ Oilman 1 & 2 : ${teamMps}`;
       const hmStopInput = document.getElementById('ach-hm-stop');
       const hmReadyInput = document.getElementById('ach-hm-ready');
 
-      // Atur label HM secara dinamis sesuai tipe pekerjaan (Washing: HM Start & End; Job Request: HM Stop & Ready)
+      // Atur label HM secara seragam: HM Start & HM End (Sama untuk Job Request LT/WT dan Washing)
       const hmStopLabel = document.getElementById('ach-hm-stop-label');
       const hmReadyLabel = document.getElementById('ach-hm-ready-label');
-      if (hmStopLabel) hmStopLabel.textContent = isWashing ? 'HM Start' : 'HM Stop';
-      if (hmReadyLabel) hmReadyLabel.textContent = isWashing ? 'HM End' : 'HM Ready';
+      if (hmStopLabel) hmStopLabel.textContent = 'HM Start';
+      if (hmReadyLabel) hmReadyLabel.textContent = 'HM End';
 
       if (isJobRequest) {
         if (photoContainer) photoContainer.classList.add('hidden');
         if (hmRow) hmRow.classList.remove('hidden');
         if (jobKeadaanRow) jobKeadaanRow.classList.remove('hidden');
 
-        if (hmStopInput) hmStopInput.value = job.hmStop || job.hmStart || '';
-        if (hmReadyInput) hmReadyInput.value = job.hmReady || job.hmEnd || '';
+        if (hmStopInput) hmStopInput.value = job.hmStart || job.hmStop || '';
+        if (hmReadyInput) hmReadyInput.value = job.hmEnd || job.hmReady || '';
 
         if (keadaanSelect) {
           const initKondisi = String(job.kondisi || '').toUpperCase();
@@ -28173,7 +28255,7 @@ Oilman 1 & 2 : ${teamMps}`;
       if (foundPhotos.length === 0 && state.supabaseClient) {
         state.supabaseClient
           .from('job_history')
-          .select('job_id,no_lambung,snapshot_data,tanggal_eksekusi,keterangan')
+          .select('id,no_id,no_lambung,fotos,tanggal_eksekusi,keterangan')
           .eq('no_lambung', noLambung)
           .order('created_at', { ascending: false })
           .limit(10)
@@ -28181,7 +28263,7 @@ Oilman 1 & 2 : ${teamMps}`;
             if (Array.isArray(data) && data.length > 0) {
               for (const row of data) {
                 const rowDate = normalizeDateToStandard(row.tanggal_eksekusi);
-                const snapPhotos = row.snapshot_data?.fotos;
+                const snapPhotos = Array.isArray(row.fotos) ? row.fotos : [];
                 if (rowDate === stdActionDate && Array.isArray(snapPhotos) && snapPhotos.length > 0) {
                   const valid = snapPhotos.filter(p => p && typeof p === 'string' && p.trim() !== '');
                   if (valid.length > 0) {
@@ -34749,12 +34831,29 @@ Oilman 1 & 2 : ${teamMps}`;
 
       try {
         _lastJobHistoryFetchTs = now;
-        // [Audit Egress] Batasi penarikan awal ke 200 data riwayat terbaru untuk menghemat bandwidth
-        const HISTORY_LIST_COLS = 'id,no_id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,status_final,keterangan,non_ach_category,non_ach_reason,fotos,created_at';
+        // [Audit Ultra-Low Egress] HANYA tarik kolom teks ringkasan untuk tabel riwayat!
+        // DILARANG KERAS menarik kolom 'fotos' dan 'snapshot_data' saat me-load daftar riwayat massal.
+        const HISTORY_LIST_COLS = 'id,no_id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,status_final,keterangan,non_ach_category,non_ach_reason,created_at';
         let { data, error } = await state.supabaseClient.from('job_history').select(HISTORY_LIST_COLS).order('created_at', { ascending: false }).limit(200);
-        if (error && (error.code === '42703' || error.code === 'PGRST204' || /column/i.test(error.message || ''))) {
-          ({ data, error } = await state.supabaseClient.from('job_history').select('*').order('created_at', { ascending: false }).limit(200));
+
+        // Fallback Mandiri: Jika View job_history tidak ada di Supabase, tarik spesifik kolom teks dari tabel fisik job_history_lt & job_history_wt
+        if (error || !Array.isArray(data) || data.length === 0) {
+          try {
+            const [resLt, resWt] = await Promise.all([
+              state.supabaseClient.from('job_history_lt').select(HISTORY_LIST_COLS).order('created_at', { ascending: false }).limit(150),
+              state.supabaseClient.from('job_history_wt').select(HISTORY_LIST_COLS).order('created_at', { ascending: false }).limit(150)
+            ]);
+            const listLt = (!resLt.error && Array.isArray(resLt.data)) ? resLt.data : [];
+            const listWt = (!resWt.error && Array.isArray(resWt.data)) ? resWt.data : [];
+            if (listLt.length > 0 || listWt.length > 0) {
+              data = [...listLt, ...listWt].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 200);
+              error = null;
+            }
+          } catch (splitErr) {
+            console.warn('[Fallback Split History Fetch Error]', splitErr);
+          }
         }
+
         if (!error && Array.isArray(data)) {
           data.forEach(item => {
             if (item && !item.job_id) item.job_id = item.id;
