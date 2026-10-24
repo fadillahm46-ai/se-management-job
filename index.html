@@ -7448,10 +7448,6 @@
             </div>
             <div class="text-right shrink-0 flex flex-col items-end gap-1">
               <div id="detail-modal-status-badge"></div>
-              <span id="detail-modal-pending-badge"
-                class="hidden px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800 animate-pulse">
-                LEMPOK
-              </span>
             </div>
           </div>
         </div>
@@ -9222,10 +9218,10 @@
         adaOperator: row.ada_operator || 'Ya',
         unitTurun: row.unit_turun || 'Ya',
         unitSwing: row.unit_swing || 'Tidak',
-        status: row.status || 'scheduled',
+        status: row.status || (isExplicitUnsch ? 'unscheduled' : 'scheduled'),
         keterangan: row.keterangan || '',
         deskripsi: row.keterangan || '',
-        isPending: Boolean(row.is_pending),
+        isPending: isExplicitUnsch ? false : Boolean(row.is_pending),
         isLocked: ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(String(row.status || '').toLowerCase().trim()) || Boolean(row.is_locked),
         unitCondition: row.unit_condition || '',
         serviceNotes: (row.service_notes && !row.service_notes.startsWith('PHOTOS:') && !row.service_notes.startsWith('PHOTOS_ATTACHED')) ? row.service_notes : '',
@@ -9795,6 +9791,8 @@
       masterUnits: [...DEFAULT_MASTER_UNITS],
       isLtSchedSelectMode: false,
       isWtSchedSelectMode: false,
+      ltSchedSort: null,
+      wtSchedSort: null,
       selectedSchedJobIds: new Set(),
       isCompSelectMode: false,
       selectedCompJobIds: new Set(),
@@ -16748,7 +16746,128 @@
       }
       return 0;
     }
-    window.autoEvaluatePendingJobsThrottled = autoEvaluatePendingJobsThrottled;
+    function renderSchedSortIcon(col, type) {
+      const isWt = (type === 'WT');
+      const sortConfig = isWt ? state.wtSchedSort : state.ltSchedSort;
+      const current = sortConfig?.column;
+      const dir = sortConfig?.direction;
+      const activeColor = isWt ? 'text-cyan-600' : 'text-emerald-600';
+      if (current !== col) {
+        return '<span class="inline-block ml-1 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition select-none">↕</span>';
+      }
+      if (dir === 'asc') {
+        return `<span class="inline-block ml-1 ${activeColor} font-black text-[10px] leading-none select-none">▲</span>`;
+      }
+      return `<span class="inline-block ml-1 ${activeColor} font-black text-[10px] leading-none select-none">▼</span>`;
+    }
+    window.renderSchedSortIcon = renderSchedSortIcon;
+
+    function sortSchedJobsList(jobsList, sortConfig) {
+      if (!jobsList || !jobsList.length) return jobsList;
+
+      if (!sortConfig || !sortConfig.column) {
+        // Default: Pending selalu di posisi atas, disusul waktu rencana
+        jobsList.sort((a, b) => {
+          const aPending = (a.status === 'pending' || a.isPending) ? 1 : 0;
+          const bPending = (b.status === 'pending' || b.isPending) ? 1 : 0;
+          if (bPending !== aPending) return bPending - aPending;
+          return (a.waktu || '').localeCompare(b.waktu || '');
+        });
+        return jobsList;
+      }
+
+      const col = sortConfig.column;
+      const dir = sortConfig.direction === 'desc' ? -1 : 1;
+
+      jobsList.sort((a, b) => {
+        let diff = 0;
+        switch (col) {
+          case 'waktu': {
+            const valA = (a.waktu || '').trim();
+            const valB = (b.waktu || '').trim();
+            diff = valA.localeCompare(valB);
+            break;
+          }
+          case 'unit': {
+            const valA = String(a.noLambung || '').toUpperCase().trim();
+            const valB = String(b.noLambung || '').toUpperCase().trim();
+            diff = valA.localeCompare(valB, undefined, { numeric: true });
+            if (diff === 0) {
+              const typeA = (typeof getUnitTypeFromMaster === 'function') ? getUnitTypeFromMaster(a.noLambung, a.typeUnit || 'Unit') : (a.typeUnit || 'Unit');
+              const typeB = (typeof getUnitTypeFromMaster === 'function') ? getUnitTypeFromMaster(b.noLambung, b.typeUnit || 'Unit') : (b.typeUnit || 'Unit');
+              diff = typeA.localeCompare(typeB);
+            }
+            break;
+          }
+          case 'lokasi': {
+            const locA = `${a.cluster || ''} ${a.lokasi || ''}`.trim().toLowerCase();
+            const locB = `${b.cluster || ''} ${b.lokasi || ''}`.trim().toLowerCase();
+            diff = locA.localeCompare(locB);
+            break;
+          }
+          case 'armada': {
+            const armA = String(a.armada || a.ltUnit || a.wtUnit || a.armada_unit || '').toUpperCase().trim();
+            const armB = String(b.armada || b.ltUnit || b.wtUnit || b.armada_unit || '').toUpperCase().trim();
+            diff = armA.localeCompare(armB, undefined, { numeric: true });
+            break;
+          }
+          case 'personil': {
+            const persA = `${a.opt || ''} ${a.mp1 || ''} ${a.mp2 || ''}`.trim().toLowerCase();
+            const persB = `${b.opt || ''} ${b.mp1 || ''} ${b.mp2 || ''}`.trim().toLowerCase();
+            diff = persA.localeCompare(persB);
+            break;
+          }
+          case 'status': {
+            const stA = String(a.status || (a.isPending ? 'pending' : 'scheduled')).toLowerCase().trim();
+            const stB = String(b.status || (b.isPending ? 'pending' : 'scheduled')).toLowerCase().trim();
+            diff = stA.localeCompare(stB);
+            break;
+          }
+          default:
+            diff = 0;
+        }
+
+        if (diff !== 0) {
+          return dir * diff;
+        }
+
+        // Secondary fallback jika sama: Waktu
+        return (a.waktu || '').localeCompare(b.waktu || '');
+      });
+
+      return jobsList;
+    }
+    window.sortSchedJobsList = sortSchedJobsList;
+
+    function sortLtSchedBy(col) {
+      if (!state.ltSchedSort) {
+        state.ltSchedSort = { column: col, direction: 'asc' };
+      } else if (state.ltSchedSort.column === col) {
+        state.ltSchedSort.direction = (state.ltSchedSort.direction === 'asc' ? 'desc' : 'asc');
+      } else {
+        state.ltSchedSort.column = col;
+        state.ltSchedSort.direction = 'asc';
+      }
+      if (typeof renderLtScheduleTable === 'function') {
+        renderLtScheduleTable();
+      }
+    }
+    window.sortLtSchedBy = sortLtSchedBy;
+
+    function sortWtSchedBy(col) {
+      if (!state.wtSchedSort) {
+        state.wtSchedSort = { column: col, direction: 'asc' };
+      } else if (state.wtSchedSort.column === col) {
+        state.wtSchedSort.direction = (state.wtSchedSort.direction === 'asc' ? 'desc' : 'asc');
+      } else {
+        state.wtSchedSort.column = col;
+        state.wtSchedSort.direction = 'asc';
+      }
+      if (typeof renderWtScheduleTable === 'function') {
+        renderWtScheduleTable();
+      }
+    }
+    window.sortWtSchedBy = sortWtSchedBy;
 
     function renderLtScheduleTable() {
       const container = document.getElementById('lt-schedule-table-container');
@@ -16976,13 +17095,8 @@
         const targetParent = (clusterFilter === 'ALL') ? null : getParentCluster(clusterFilter);
         const clusters = (clusterFilter === 'ALL') ? defaultClusters : [targetParent];
         clusters.forEach(clusterName => {
-          const clusterJobs = jobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
-          clusterJobs.sort((a, b) => {
-            const aPending = (a.status === 'pending' || a.isPending) ? 1 : 0;
-            const bPending = (b.status === 'pending' || b.isPending) ? 1 : 0;
-            if (bPending !== aPending) return bPending - aPending;
-            return (a.waktu || '').localeCompare(b.waktu || '');
-          });
+          let clusterJobs = jobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
+          sortSchedJobsList(clusterJobs, state.ltSchedSort);
           const clusterSection = document.createElement('div');
           clusterSection.className = 'border-b border-slate-100 last:border-b-0';
 
@@ -17006,15 +17120,47 @@
           const table = document.createElement('table');
           table.className = 'w-full table-fixed text-left text-xs';
           table.innerHTML = `
-            <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold">
+            <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold select-none">
               <tr>
                 ${state.isLtSchedSelectMode ? `<th class="py-1.5 px-1.5 w-[5%] md:w-[4%] text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'LT')" title="Pilih Semua di Cluster Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
-                <th class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')}">WAKTU</th>
-                <th class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[22%] md:w-[22%]' : (!isAdmin ? 'w-[22%] md:w-[20%]' : 'w-[24%] md:w-[23%]')}">${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</th>
-                <th class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[24%]' : (!isAdmin ? 'w-[24%] md:w-[23%]' : 'w-[26%] md:w-[25%]')}">CLUSTER & LOKASI</th>
-                <th class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[16%] md:w-[16%]' : (!isAdmin ? 'w-[16%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center">ARMADA</th>
-                <th class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')}">PERSONIL</th>
-                ${!isAdmin ? '<th class="py-1.5 px-2 w-[16%] md:w-[12%] text-center">AKSI / STATUS</th>' : ''}
+                <th onclick="sortLtSchedBy('waktu')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
+                  <div class="flex items-center space-x-0.5">
+                    <span>WAKTU</span>
+                    ${renderSchedSortIcon('waktu', 'LT')}
+                  </div>
+                </th>
+                <th onclick="sortLtSchedBy('unit')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[22%] md:w-[22%]' : (!isAdmin ? 'w-[22%] md:w-[20%]' : 'w-[24%] md:w-[23%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
+                  <div class="flex items-center space-x-0.5">
+                    <span>${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
+                    ${renderSchedSortIcon('unit', 'LT')}
+                  </div>
+                </th>
+                <th onclick="sortLtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[24%]' : (!isAdmin ? 'w-[24%] md:w-[23%]' : 'w-[26%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Cluster & Lokasi Pit">
+                  <div class="flex items-center space-x-0.5">
+                    <span>CLUSTER & LOKASI</span>
+                    ${renderSchedSortIcon('lokasi', 'LT')}
+                  </div>
+                </th>
+                <th onclick="sortLtSchedBy('armada')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[16%] md:w-[16%]' : (!isAdmin ? 'w-[16%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada LT">
+                  <div class="flex items-center justify-center space-x-0.5">
+                    <span>ARMADA</span>
+                    ${renderSchedSortIcon('armada', 'LT')}
+                  </div>
+                </th>
+                <th onclick="sortLtSchedBy('personil')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
+                  <div class="flex items-center space-x-0.5">
+                    <span>PERSONIL</span>
+                    ${renderSchedSortIcon('personil', 'LT')}
+                  </div>
+                </th>
+                ${!isAdmin ? `
+                  <th onclick="sortLtSchedBy('status')" class="py-1.5 px-2 w-[16%] md:w-[12%] text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
+                    <div class="flex items-center justify-center space-x-0.5">
+                      <span>AKSI / STATUS</span>
+                      ${renderSchedSortIcon('status', 'LT')}
+                    </div>
+                  </th>
+                ` : ''}
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -17158,14 +17304,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         const targetParent = (clusterFilter === 'ALL') ? null : getParentCluster(clusterFilter);
         const clusters = (clusterFilter === 'ALL') ? defaultClusters : [targetParent];
         clusters.forEach(clusterName => {
-          const clusterJobs = shiftJobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
-          // Urutkan: Job Pending selalu diletakkan paling atas (top priority), disusul jam rencana
-          clusterJobs.sort((a, b) => {
-            const aPending = (a.status === 'pending' || a.isPending) ? 1 : 0;
-            const bPending = (b.status === 'pending' || b.isPending) ? 1 : 0;
-            if (bPending !== aPending) return bPending - aPending;
-            return (a.waktu || '').localeCompare(b.waktu || '');
-          });
+          let clusterJobs = shiftJobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
+          sortSchedJobsList(clusterJobs, state.ltSchedSort);
           const clusterSection = document.createElement('div');
           clusterSection.className = 'border-b border-slate-100 last:border-b-0';
 
@@ -17189,15 +17329,47 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           const table = document.createElement('table');
           table.className = 'w-full table-fixed text-left text-xs';
           table.innerHTML = `
-            <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold">
+            <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold select-none">
               <tr>
                 ${state.isLtSchedSelectMode ? `<th class="py-1.5 px-2 w-[4%] text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'LT', ${shiftNum})" title="Pilih Semua di Cluster & Shift Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
-                <th class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')}">WAKTU</th>
-                <th class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[22%] md:w-[22%]' : (!isAdmin ? 'w-[22%] md:w-[20%]' : 'w-[24%] md:w-[23%]')}">${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</th>
-                <th class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[24%]' : (!isAdmin ? 'w-[24%] md:w-[23%]' : 'w-[26%] md:w-[25%]')}">CLUSTER & LOKASI</th>
-                <th class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[16%] md:w-[16%]' : (!isAdmin ? 'w-[16%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center">ARMADA</th>
-                <th class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')}">PERSONIL</th>
-                ${!isAdmin ? '<th class="py-1.5 px-2 w-[16%] md:w-[12%] text-center">AKSI / STATUS</th>' : ''}
+                <th onclick="sortLtSchedBy('waktu')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
+                  <div class="flex items-center space-x-0.5">
+                    <span>WAKTU</span>
+                    ${renderSchedSortIcon('waktu', 'LT')}
+                  </div>
+                </th>
+                <th onclick="sortLtSchedBy('unit')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[22%] md:w-[22%]' : (!isAdmin ? 'w-[22%] md:w-[20%]' : 'w-[24%] md:w-[23%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
+                  <div class="flex items-center space-x-0.5">
+                    <span>${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
+                    ${renderSchedSortIcon('unit', 'LT')}
+                  </div>
+                </th>
+                <th onclick="sortLtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[24%]' : (!isAdmin ? 'w-[24%] md:w-[23%]' : 'w-[26%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Cluster & Lokasi Pit">
+                  <div class="flex items-center space-x-0.5">
+                    <span>CLUSTER & LOKASI</span>
+                    ${renderSchedSortIcon('lokasi', 'LT')}
+                  </div>
+                </th>
+                <th onclick="sortLtSchedBy('armada')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[16%] md:w-[16%]' : (!isAdmin ? 'w-[16%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada LT">
+                  <div class="flex items-center justify-center space-x-0.5">
+                    <span>ARMADA</span>
+                    ${renderSchedSortIcon('armada', 'LT')}
+                  </div>
+                </th>
+                <th onclick="sortLtSchedBy('personil')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
+                  <div class="flex items-center space-x-0.5">
+                    <span>PERSONIL</span>
+                    ${renderSchedSortIcon('personil', 'LT')}
+                  </div>
+                </th>
+                ${!isAdmin ? `
+                  <th onclick="sortLtSchedBy('status')" class="py-1.5 px-2 w-[16%] md:w-[12%] text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
+                    <div class="flex items-center justify-center space-x-0.5">
+                      <span>AKSI / STATUS</span>
+                      ${renderSchedSortIcon('status', 'LT')}
+                    </div>
+                  </th>
+                ` : ''}
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -17532,13 +17704,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         const targetParent = (clusterFilter === 'ALL') ? null : getParentCluster(clusterFilter);
         const clusters = (clusterFilter === 'ALL') ? defaultClusters : [targetParent];
         clusters.forEach(clusterName => {
-          const clusterJobs = jobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
-          clusterJobs.sort((a, b) => {
-            const aPending = (a.status === 'pending' || a.isPending) ? 1 : 0;
-            const bPending = (b.status === 'pending' || b.isPending) ? 1 : 0;
-            if (bPending !== aPending) return bPending - aPending;
-            return (a.waktu || '').localeCompare(b.waktu || '');
-          });
+          let clusterJobs = jobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
+          sortSchedJobsList(clusterJobs, state.wtSchedSort);
           const clusterSection = document.createElement('div');
           clusterSection.className = 'border-b border-slate-100 last:border-b-0';
 
@@ -17562,15 +17729,47 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           const table = document.createElement('table');
           table.className = 'w-full table-fixed text-left text-xs';
           table.innerHTML = `
-            <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold">
+            <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold select-none">
               <tr>
                 ${state.isWtSchedSelectMode ? `<th class="py-1.5 px-1.5 w-[5%] md:w-[4%] text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'WT')" title="Pilih Semua di Cluster Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
-                <th class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')}">WAKTU</th>
-                <th class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[22%] md:w-[22%]' : (!isAdmin ? 'w-[22%] md:w-[20%]' : 'w-[24%] md:w-[23%]')}">${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</th>
-                <th class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[24%] md:w-[24%]' : (!isAdmin ? 'w-[24%] md:w-[23%]' : 'w-[26%] md:w-[25%]')}">CLUSTER & LOKASI</th>
-                <th class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[16%] md:w-[16%]' : (!isAdmin ? 'w-[16%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center">ARMADA</th>
-                <th class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')}">PERSONIL</th>
-                ${!isAdmin ? '<th class="py-1.5 px-2 w-[16%] md:w-[12%] text-center">AKSI / STATUS</th>' : ''}
+                <th onclick="sortWtSchedBy('waktu')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
+                  <div class="flex items-center space-x-0.5">
+                    <span>WAKTU</span>
+                    ${renderSchedSortIcon('waktu', 'WT')}
+                  </div>
+                </th>
+                <th onclick="sortWtSchedBy('unit')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[22%] md:w-[22%]' : (!isAdmin ? 'w-[22%] md:w-[20%]' : 'w-[24%] md:w-[23%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
+                  <div class="flex items-center space-x-0.5">
+                    <span>${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
+                    ${renderSchedSortIcon('unit', 'WT')}
+                  </div>
+                </th>
+                <th onclick="sortWtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[24%] md:w-[24%]' : (!isAdmin ? 'w-[24%] md:w-[23%]' : 'w-[26%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Cluster & Lokasi Pit">
+                  <div class="flex items-center space-x-0.5">
+                    <span>CLUSTER & LOKASI</span>
+                    ${renderSchedSortIcon('lokasi', 'WT')}
+                  </div>
+                </th>
+                <th onclick="sortWtSchedBy('armada')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[16%] md:w-[16%]' : (!isAdmin ? 'w-[16%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada WT">
+                  <div class="flex items-center justify-center space-x-0.5">
+                    <span>ARMADA</span>
+                    ${renderSchedSortIcon('armada', 'WT')}
+                  </div>
+                </th>
+                <th onclick="sortWtSchedBy('personil')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
+                  <div class="flex items-center space-x-0.5">
+                    <span>PERSONIL</span>
+                    ${renderSchedSortIcon('personil', 'WT')}
+                  </div>
+                </th>
+                ${!isAdmin ? `
+                  <th onclick="sortWtSchedBy('status')" class="py-1.5 px-2 w-[16%] md:w-[12%] text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
+                    <div class="flex items-center justify-center space-x-0.5">
+                      <span>AKSI / STATUS</span>
+                      ${renderSchedSortIcon('status', 'WT')}
+                    </div>
+                  </th>
+                ` : ''}
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -17732,13 +17931,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           shiftWrapper.appendChild(roundHeader);
 
           clusters.forEach(clusterName => {
-            const clusterJobs = roundJobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
-            clusterJobs.sort((a, b) => {
-              const aPending = (a.status === 'pending' || a.isPending) ? 1 : 0;
-              const bPending = (b.status === 'pending' || b.isPending) ? 1 : 0;
-              if (bPending !== aPending) return bPending - aPending;
-              return (a.waktu || '').localeCompare(b.waktu || '');
-            });
+            let clusterJobs = roundJobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
+            sortSchedJobsList(clusterJobs, state.wtSchedSort);
             const clusterSection = document.createElement('div');
             clusterSection.className = 'border-b border-slate-100 last:border-b-0';
 
@@ -17764,15 +17958,47 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             const table = document.createElement('table');
             table.className = 'w-full table-fixed text-left text-xs';
             table.innerHTML = `
-              <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold">
+              <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold select-none">
                 <tr>
                   ${state.isWtSchedSelectMode ? `<th class="py-1.5 px-2 w-[4%] text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'WT', ${shiftNum})" title="Pilih Semua di Cluster & Shift Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
-                  <th class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')}">WAKTU</th>
-                  <th class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[22%] md:w-[22%]' : (!isAdmin ? 'w-[22%] md:w-[20%]' : 'w-[24%] md:w-[23%]')}">${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</th>
-                  <th class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[24%] md:w-[24%]' : (!isAdmin ? 'w-[24%] md:w-[23%]' : 'w-[26%] md:w-[25%]')}">CLUSTER & LOKASI</th>
-                  <th class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[16%] md:w-[16%]' : (!isAdmin ? 'w-[16%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center">ARMADA</th>
-                  <th class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')}">PERSONIL</th>
-                  ${!isAdmin ? '<th class="py-1.5 px-2 w-[16%] md:w-[12%] text-center">AKSI / STATUS</th>' : ''}
+                  <th onclick="sortWtSchedBy('waktu')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
+                    <div class="flex items-center space-x-0.5">
+                      <span>WAKTU</span>
+                      ${renderSchedSortIcon('waktu', 'WT')}
+                    </div>
+                  </th>
+                  <th onclick="sortWtSchedBy('unit')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[22%] md:w-[22%]' : (!isAdmin ? 'w-[22%] md:w-[20%]' : 'w-[24%] md:w-[23%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
+                    <div class="flex items-center space-x-0.5">
+                      <span>${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
+                      ${renderSchedSortIcon('unit', 'WT')}
+                    </div>
+                  </th>
+                  <th onclick="sortWtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[24%] md:w-[24%]' : (!isAdmin ? 'w-[24%] md:w-[23%]' : 'w-[26%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Cluster & Lokasi Pit">
+                    <div class="flex items-center space-x-0.5">
+                      <span>CLUSTER & LOKASI</span>
+                      ${renderSchedSortIcon('lokasi', 'WT')}
+                    </div>
+                  </th>
+                  <th onclick="sortWtSchedBy('armada')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[16%] md:w-[16%]' : (!isAdmin ? 'w-[16%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada WT">
+                    <div class="flex items-center justify-center space-x-0.5">
+                      <span>ARMADA</span>
+                      ${renderSchedSortIcon('armada', 'WT')}
+                    </div>
+                  </th>
+                  <th onclick="sortWtSchedBy('personil')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
+                    <div class="flex items-center space-x-0.5">
+                      <span>PERSONIL</span>
+                      ${renderSchedSortIcon('personil', 'WT')}
+                    </div>
+                  </th>
+                  ${!isAdmin ? `
+                    <th onclick="sortWtSchedBy('status')" class="py-1.5 px-2 w-[16%] md:w-[12%] text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
+                      <div class="flex items-center justify-center space-x-0.5">
+                        <span>AKSI / STATUS</span>
+                        ${renderSchedSortIcon('status', 'WT')}
+                      </div>
+                    </th>
+                  ` : ''}
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -20746,44 +20972,52 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
     function getJobStatusBadge(job) {
       if (!job) return '<span class="text-slate-400 font-bold text-xs">-</span>';
-      if (job.status === 'ach') {
+      const isReq = (typeof isJobAnOrderRequest === 'function') && isJobAnOrderRequest(job);
+      const st = String(job.status || '').toLowerCase().trim();
+
+      if (st === 'ach') {
         return '<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">ACH</span>';
       }
-      if (job.status === 'done') {
+      if (st === 'done') {
         return '<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">DONE</span>';
       }
-      if (job.status === 'service') {
+      if (st === 'service') {
         const label = job.psType ? `SERVICE (${job.psType})` : 'SERVICE';
         return `<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 border border-blue-300">${label}</span>`;
       }
-      if (job.status === 'bd') {
+      if (st === 'bd' || st === 'breakdown') {
         return '<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">BD</span>';
       }
-      if (job.status === 'non_ach') {
+      if (st === 'non_ach' || st === 'non-ach') {
         return '<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">NON-ACH</span>';
       }
-      if (job.status === 'pending' || job.isPending) {
+      if (st === 'cancel' || st === 'cancelled') {
+        return '<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">CANCEL</span>';
+      }
+      // Khusus Job Request yang aktif (belum selesai):
+      if (isReq || st === 'unscheduled' || st === 'unschedule') {
+        return '<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800 border border-sky-300">UNSCHEDULE</span>';
+      }
+      // Unit terjadwal yang pending dari shift sebelumnya:
+      if (st === 'pending' || job.isPending) {
         return '<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">PENDING</span>';
       }
-      if (job.status === 'scheduled') {
+      if (st === 'scheduled') {
         return '<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-300">SCHEDULED</span>';
-      }
-      if (job.status === 'cancel') {
-        return '<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">CANCEL</span>';
       }
       return `<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-300">${(job.status || 'SCHEDULED').toUpperCase()}</span>`;
     }
 
     function getJobRequestStatusBadge(job) {
       if (!job) return '<span class="text-slate-400 font-bold text-xs">-</span>';
-      const st = (job.status || '').toLowerCase();
+      const st = String(job.status || '').toLowerCase().trim();
       if (st === 'done' || st === 'ach') {
         return '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">DONE</span>';
       }
-      if (st === 'cancel') {
+      if (st === 'cancel' || st === 'cancelled') {
         return '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">CANCEL</span>';
       }
-      return '<span class="text-slate-400 font-bold text-xs">-</span>';
+      return '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-100 text-sky-800 border border-sky-300">UNSCHEDULE</span>';
     }
 
     function getAssignedServiceUnitForUser(user) {
@@ -21646,7 +21880,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         console.log('[Supabase Cache TTL] Master Roster fresh dari cache lokal (TTL 12 Jam):', state.masterRoster.length, 'jadwal');
         return true;
       }
-      if (_rosterLoadPromise && !force) {
+      if (_rosterLoadPromise) {
         return _rosterLoadPromise;
       }
 
@@ -22262,18 +22496,14 @@ Keterangan : ${keterangan}`;
         subLabelEl.textContent = job.typeUnit || job.tipeUnit || 'Unit';
       }
 
-      // 3. Status Badge & Lempok Pending Badge
+      // 3. Status Badge (Jika pending cukup tampil PENDING di status badge, tanpa label lempok)
       const badgeEl = document.getElementById('detail-modal-status-badge');
       if (badgeEl) {
         badgeEl.innerHTML = (typeof getJobStatusBadge === 'function') ? getJobStatusBadge(job) : (job.status || 'SCHEDULED');
       }
       const pendingBadgeEl = document.getElementById('detail-modal-pending-badge');
       if (pendingBadgeEl) {
-        if (job.status === 'pending' || job.isPending) {
-          pendingBadgeEl.classList.remove('hidden');
-        } else {
-          pendingBadgeEl.classList.add('hidden');
-        }
+        pendingBadgeEl.classList.add('hidden');
       }
 
       // Tampilan Baris List: Tanggal Waktu & Lokasi
@@ -31529,9 +31759,9 @@ Keterangan : ${keterangan}`;
           })(),
           hm_stop: job.hmStop || job.hmStart || null,
           hm_ready: job.hmReady || job.hmEnd || null,
-          status: job.status || 'scheduled',
+          status: isReq ? (['done', 'ach', 'cancel', 'cancelled'].includes(String(job.status || '').toLowerCase()) ? job.status : 'unscheduled') : (job.status || 'scheduled'),
           keterangan: job.keterangan || job.deskripsi || '',
-          is_pending: Boolean(job.isPending),
+          is_pending: isReq ? false : Boolean(job.isPending),
           ada_operator: job.adaOperator || 'Ya',
           unit_turun: job.unitTurun || 'Ya',
           unit_swing: job.unitSwing || 'Tidak',
@@ -33554,8 +33784,8 @@ Keterangan : ${keterangan}`;
         jamStart: '',
         jamEnd: '',
         fotos: [],
-        status: '-', // Status antrean awal
-        isPending: true
+        status: 'unscheduled',
+        isPending: false
       };
 
       if (serviceType === 'watertruck') {
@@ -35262,23 +35492,39 @@ Keterangan : ${keterangan}`;
     }
     window.loadPicaFromSupabase = loadPicaFromSupabase;
 
-    // 7. SINKRONISASI MURNI DARI CLOUD SUPABASE (PULL DATA SAJA)
+    // 7. SINKRONISASI MURNI DARI CLOUD SUPABASE (PULL DATA SAJA DENGAN OPTIMASI ROLE-BASED)
+    let _isForceSyncInProgress = false;
     async function forceSyncAllDataFromSupabase() {
       if (!state.supabaseClient) {
         showToast('Koneksi Supabase belum aktif! Periksa koneksi internet Anda.', 'error');
         return;
       }
+      if (_isForceSyncInProgress) {
+        showToast('Sinkronisasi sedang berlangsung, mohon tunggu...', 'info');
+        return;
+      }
+      _isForceSyncInProgress = true;
       showToast('Mengambil data terbaru dari Cloud Supabase...', 'info');
       try {
-        const results = await Promise.allSettled([
-          loadRosterFromSupabase(null, true),
-          (typeof syncSupabaseMasterData === 'function' ? syncSupabaseMasterData(true) : Promise.resolve()),
+        const userRole = state.currentUser?.role || 'user';
+        const isFieldOp = (userRole === 'mp_lt' || userRole === 'mp_wt' || userRole === 'oilman' || userRole === 'washingman' || userRole === 'operator' || userRole === 'user');
+
+        // OPTIMASI KUOTA EGRESS (Hemat 90%):
+        // Operator lapangan HANYA butuh jadwal operasional aktif (jobs) & riwayat hari ini (~15-20 KB).
+        // JANGAN bebani kuota dengan mendownload ribuan baris roster dan kontak ke ponsel operator lapangan!
+        // Sinkronisasi data master lengkap (Roster, Kontak, Users) khusus dijalankan jika role Admin / Base Control.
+        const syncTasks = [
           (typeof loadJobsFromSupabase === 'function' ? loadJobsFromSupabase(true) : Promise.resolve()),
           (typeof loadJobHistoryFromSupabase === 'function' ? loadJobHistoryFromSupabase(true) : Promise.resolve()),
           (typeof loadPicaFromSupabase === 'function' ? loadPicaFromSupabase() : Promise.resolve()),
-          (typeof loadAirCleanerFromSupabase === 'function' ? loadAirCleanerFromSupabase(true) : Promise.resolve()),
-          loadUnitsFromSupabase(true, false)
-        ]);
+          (typeof loadAirCleanerFromSupabase === 'function' ? loadAirCleanerFromSupabase(true) : Promise.resolve())
+        ];
+
+        if (!isFieldOp && typeof syncSupabaseMasterData === 'function') {
+          syncTasks.unshift(syncSupabaseMasterData(true));
+        }
+
+        const results = await Promise.allSettled(syncTasks);
 
         // Catatan Anti-Zombie: JANGAN otomatis push cache lokal saat sinkronisasi tarik cloud.
         // Sinkronisasi tombol ini murni menarik (PULL) kondisi terkini dari database Supabase ke web.
@@ -35301,12 +35547,12 @@ Keterangan : ${keterangan}`;
         else if (state.activeTab === 'lt-unschedule' && typeof renderLtUnscheduleTable === 'function') renderLtUnscheduleTable();
         else if (state.activeTab === 'wt-unschedule' && typeof renderWtUnscheduleTable === 'function') renderWtUnscheduleTable();
         else if (state.activeTab === 'job-requests' && typeof renderAdminJobRequests === 'function') renderAdminJobRequests();
-        if (typeof debouncedRefreshUI === 'function') debouncedRefreshUI();
-
-        showToast('Sinkronisasi penuh berhasil! Cloud Supabase & Web telah sinkron 100%.', 'success');
+        showToast('Sinkronisasi data berhasil! Kondisi Cloud Supabase & Web telah sinkron.', 'success');
       } catch (e) {
         console.error('Error saat force sync dari Supabase:', e);
         showToast('Gagal sinkronisasi data dari Supabase: ' + e.message, 'error');
+      } finally {
+        _isForceSyncInProgress = false;
       }
     } window.forceSyncAllDataFromSupabase = forceSyncAllDataFromSupabase;
     window.loadRosterFromSupabase = loadRosterFromSupabase;
@@ -36084,7 +36330,166 @@ Keterangan : ${keterangan}`;
         return;
       }
 
-      // Format kolom tabel Excel yang dipisah sesuai permintaan pengguna:
+      // ========================================================================
+      // KHUSUS MENU JADWAL / SCH (LT & WT): FORMAT EKSPOR 1 KOLOM SESUAI PERMINTAAN
+      // Contoh Baris: "D1558 FRONT CENDRAWASIH LT2518"
+      // Judul Kolom: "sch air cleaner 25/10/2026" (Tanggal menyesuaikan data filter/asli)
+      // ========================================================================
+      const isScheduleDownload = (sourceType === 'LT' || sourceType === 'WT');
+
+      if (isScheduleDownload) {
+        // Terapkan pengurutan jadwal agar urutan baris sama dengan tampilan tabel aktif di web
+        const sortConfig = (sourceType === 'WT') ? state.wtSchedSort : state.ltSchedSort;
+        if (typeof sortSchedJobsList === 'function') {
+          sortSchedJobsList(jobs, sortConfig);
+        }
+
+        // Ambil tanggal filter yang sedang dipilih atau tanggal job aktif
+        const rawDate = (sourceType === 'WT')
+          ? (document.getElementById('wt-filter-date')?.value || state.watertruckState?.filterDate || jobs[0]?.tanggal || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : ''))
+          : (document.getElementById('lt-filter-date')?.value || state.lubetruckState?.filterDate || jobs[0]?.tanggal || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : ''));
+
+        let formattedDate = '';
+        if (rawDate && rawDate.includes('-')) {
+          const dParts = rawDate.split('-');
+          if (dParts.length === 3) {
+            formattedDate = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
+          }
+        }
+        if (!formattedDate) {
+          const dObj = new Date();
+          const d = String(dObj.getDate()).padStart(2, '0');
+          const m = String(dObj.getMonth() + 1).padStart(2, '0');
+          const y = dObj.getFullYear();
+          formattedDate = `${d}/${m}/${y}`;
+        }
+
+        const activeCat = (sourceType === 'WT')
+          ? (state.watertruckState?.activeCategory || 'coal')
+          : (state.lubetruckState?.activeCategory || 'small');
+
+        let catLabel = 'schedule';
+        if (activeCat === 'aircleaner' || activeCat === 'air_cleaner') catLabel = 'air cleaner';
+        else if (activeCat === 'small') catLabel = 'greasing small track';
+        else if (activeCat === 'digger') catLabel = 'big digger';
+        else if (activeCat === 'topup') catLabel = 'top up oil';
+        else if (activeCat === 'coal') catLabel = 'washing coal';
+        else if (activeCat === 'rom') catLabel = 'washing rom';
+        else if (activeCat === 'non_coal') catLabel = 'washing non-coal';
+
+        // Judul kolom tunggal: "sch air cleaner 25/10/2026"
+        const singleColHeader = `sch ${catLabel} ${formattedDate}`;
+
+        // Cek apakah kategori ini harus dipisah per cluster sesuai instruksi:
+        // Khusus: greasing small, big digger, washing coal dan non coal dipisah per cluster.
+        // Sedangkan air cleaner, rom dan top up oil tetap normal (1 daftar lurus).
+        const isClusterGroupedCategory = ['small', 'digger', 'coal', 'non_coal'].includes(activeCat);
+
+        let rows = [];
+
+        if (isClusterGroupedCategory) {
+          const defaultOrder = ['Selatan', 'Tengah', 'Utara'];
+          const getJobParentCluster = (j) => {
+            if (typeof getParentCluster === 'function') {
+              return getParentCluster(j.cluster) || 'Lainnya';
+            }
+            return j.cluster || 'Lainnya';
+          };
+
+          const uniqueClusters = Array.from(new Set(jobs.map(j => getJobParentCluster(j)).filter(Boolean)));
+          const orderedClusters = [
+            ...defaultOrder.filter(c => uniqueClusters.some(uc => uc.toLowerCase() === c.toLowerCase())),
+            ...uniqueClusters.filter(uc => !defaultOrder.some(c => c.toLowerCase() === uc.toLowerCase()))
+          ];
+
+          let isFirstCluster = true;
+          orderedClusters.forEach(clusterName => {
+            const clusterJobs = jobs.filter(j => getJobParentCluster(j).toLowerCase() === clusterName.toLowerCase());
+            if (clusterJobs.length === 0) return;
+
+            // Baris kosong pemisah antar cluster (kecuali sebelum cluster pertama)
+            if (!isFirstCluster) {
+              rows.push(['']);
+            }
+            isFirstCluster = false;
+
+            // Header Cluster: misal "KGU SELATAN"
+            let clusterHeader = String(clusterName).trim().toUpperCase();
+            if (!clusterHeader.startsWith('KGU')) {
+              clusterHeader = `KGU ${clusterHeader}`;
+            }
+            rows.push([clusterHeader]);
+
+            // Urutkan pekerjaan dalam cluster sesuai sort config yang aktif
+            if (typeof sortSchedJobsList === 'function') {
+              sortSchedJobsList(clusterJobs, sortConfig);
+            }
+
+            // Tambahkan baris pekerjaan unit dalam cluster
+            clusterJobs.forEach(j => {
+              const noUnit = String(j.noLambung || j.unit || '').trim().toUpperCase();
+              const lokasi = String(j.lokasi || '').trim().toUpperCase();
+
+              let rawArmada = (j.armada && j.armada !== '-') ? j.armada : ((j.wtUnit && j.wtUnit !== '-') ? j.wtUnit : ((j.ltUnit && j.ltUnit !== '-') ? j.ltUnit : ((j.armadaUnit && j.armadaUnit !== '-') ? j.armadaUnit : '')));
+              if (!rawArmada || rawArmada === '-' || rawArmada.startsWith('--')) {
+                rawArmada = (typeof resolveJobArmada === 'function') ? resolveJobArmada(j) : '';
+              }
+              const armada = String(rawArmada || '').trim().toUpperCase();
+              const cleanArmada = (armada === '-' || armada.startsWith('--')) ? '' : armada;
+
+              const parts = [];
+              if (noUnit && noUnit !== '-') parts.push(noUnit);
+              if (lokasi && lokasi !== '-') parts.push(lokasi);
+              if (cleanArmada) parts.push(cleanArmada);
+
+              rows.push([parts.join(' ')]);
+            });
+          });
+        } else {
+          // Kategori Normal (Air Cleaner, ROM, Top Up Oil): 1 daftar lurus tanpa sub-header cluster
+          rows = jobs.map(j => {
+            const noUnit = String(j.noLambung || j.unit || '').trim().toUpperCase();
+            const lokasi = String(j.lokasi || '').trim().toUpperCase();
+
+            let rawArmada = (j.armada && j.armada !== '-') ? j.armada : ((j.wtUnit && j.wtUnit !== '-') ? j.wtUnit : ((j.ltUnit && j.ltUnit !== '-') ? j.ltUnit : ((j.armadaUnit && j.armadaUnit !== '-') ? j.armadaUnit : '')));
+            if (!rawArmada || rawArmada === '-' || rawArmada.startsWith('--')) {
+              rawArmada = (typeof resolveJobArmada === 'function') ? resolveJobArmada(j) : '';
+            }
+            const armada = String(rawArmada || '').trim().toUpperCase();
+            const cleanArmada = (armada === '-' || armada.startsWith('--')) ? '' : armada;
+
+            const parts = [];
+            if (noUnit && noUnit !== '-') parts.push(noUnit);
+            if (lokasi && lokasi !== '-') parts.push(lokasi);
+            if (cleanArmada) parts.push(cleanArmada);
+
+            return [parts.join(' ')];
+          });
+        }
+
+        const aoa = [[singleColHeader], ...rows];
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+        // Auto-fit lebar kolom Excel agar teks panjang muat sempurna
+        let maxLen = singleColHeader.length;
+        rows.forEach(r => {
+          const val = String(r[0] || '');
+          if (val.length > maxLen) maxLen = val.length;
+        });
+        ws['!cols'] = [{ wch: Math.min(Math.max(maxLen + 4, 30), 60) }];
+
+        const wb = XLSX.utils.book_new();
+        const sheetName = (`SCH_${catLabel.replace(/\s+/g, '_').toUpperCase()}`).slice(0, 31);
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+        const cleanDateFile = formattedDate.replace(/\//g, '-');
+        const fullFileName = `SCH_${catLabel.replace(/\s+/g, '_')}_${cleanDateFile}.xlsx`;
+        XLSX.writeFile(wb, fullFileName);
+        showToast(`Berhasil mengunduh data ${singleColHeader}!`, 'success');
+        return;
+      }
+
+      // Format kolom tabel Excel yang dipisah sesuai permintaan pengguna (Khusus Riwayat Selesai, Job Request, PICA):
       // No, No ID, Jenis Job, Plan, Waktu, Shift, Type Unit, No Unit, Cluster, Lokasi, Tgl Action, Start, End, Durasi, Status, Temuan/Kendala, Armada, OPT, MP 1, MP 2
       const headers = [
         'No',
