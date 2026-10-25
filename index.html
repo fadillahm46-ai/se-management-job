@@ -398,6 +398,168 @@
     .mob-nav-pop svg {
       animation: mobNavPop 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
+
+    /* ========================================================================== */
+    /* ATURAN SKALA 30% LEBIH KECIL (COMPACT SCH) DI HP & DESKTOP (SEMUA SCH & AKSES) */
+    /* ========================================================================== */
+    #lt-schedule-table-container,
+    #wt-schedule-table-container {
+      font-size: 0.72rem !important;
+    }
+
+    /* Container Card Schedule: border-radius & margin lebih ringkas */
+    #lt-schedule-table-container>div,
+    #wt-schedule-table-container>div {
+      border-radius: 0.85rem !important;
+      margin-bottom: 0.65rem !important;
+    }
+
+    /* Header Banner Schedule (Hijau / Cyan) */
+    #lt-schedule-table-container .bg-emerald-800,
+    #lt-schedule-table-container .bg-emerald-700,
+    #wt-schedule-table-container .bg-cyan-700,
+    #wt-schedule-table-container .bg-cyan-600 {
+      padding: 0.35rem 0.65rem !important;
+    }
+
+    #lt-schedule-table-container .bg-emerald-800 span,
+    #lt-schedule-table-container .bg-emerald-700 span,
+    #wt-schedule-table-container .bg-cyan-700 span,
+    #wt-schedule-table-container .bg-cyan-600 span {
+      font-size: 0.70rem !important;
+    }
+
+    #lt-schedule-table-container .bg-emerald-800 button,
+    #lt-schedule-table-container .bg-emerald-700 button,
+    #wt-schedule-table-container .bg-cyan-700 button,
+    #wt-schedule-table-container .bg-cyan-600 button {
+      padding: 0.15rem 0.45rem !important;
+      font-size: 0.65rem !important;
+      border-radius: 0.4rem !important;
+    }
+
+    /* Cluster Bar Sub-Header */
+    #lt-schedule-table-container .bg-emerald-50\/70,
+    #wt-schedule-table-container .bg-cyan-50\/70,
+    #lt-schedule-table-container [class*="bg-emerald-50"],
+    #wt-schedule-table-container [class*="bg-cyan-50"] {
+      padding: 0.25rem 0.55rem !important;
+    }
+
+    #lt-schedule-table-container .bg-emerald-50\/70 span,
+    #wt-schedule-table-container .bg-cyan-50\/70 span,
+    #lt-schedule-table-container [class*="bg-emerald-50"] span,
+    #wt-schedule-table-container [class*="bg-cyan-50"] span {
+      font-size: 0.68rem !important;
+    }
+
+    #lt-schedule-table-container .bg-emerald-50\/70 button,
+    #wt-schedule-table-container .bg-cyan-50\/70 button,
+    #lt-schedule-table-container [class*="bg-emerald-50"] button,
+    #wt-schedule-table-container [class*="bg-cyan-50"] button {
+      padding: 0.1rem 0.35rem !important;
+      font-size: 0.62rem !important;
+      border-radius: 0.35rem !important;
+    }
+
+    /* Table Schedule Thead */
+    #lt-schedule-table-container thead,
+    #wt-schedule-table-container thead {
+      font-size: 0.65rem !important;
+    }
+
+    #lt-schedule-table-container th,
+    #wt-schedule-table-container th {
+      padding: 0.25rem 0.35rem !important;
+      font-size: 0.65rem !important;
+      letter-spacing: normal !important;
+    }
+
+    /* Table Schedule Tbody */
+    #lt-schedule-table-container tbody,
+    #wt-schedule-table-container tbody {
+      font-size: 0.70rem !important;
+    }
+
+    #lt-schedule-table-container td,
+    #wt-schedule-table-container td {
+      padding: 0.25rem 0.35rem !important;
+      font-size: 0.70rem !important;
+      line-height: 1.25 !important;
+    }
+
+    /* Angka & No Lambung Unit: 30% Lebih Kecil (sebelumnya 15-16px, kini ~11px) */
+    #lt-schedule-table-container button[onclick*="openJobDetailModal"],
+    #wt-schedule-table-container button[onclick*="openJobDetailModal"] {
+      font-size: 11px !important;
+      line-height: 1.2 !important;
+      font-weight: 900 !important;
+      letter-spacing: normal !important;
+    }
+
+    /* Waktu / Jam & Angka Mono */
+    #lt-schedule-table-container .font-mono,
+    #wt-schedule-table-container .font-mono {
+      font-size: 0.68rem !important;
+    }
+
+    /* Type Unit (misal: PPA_PC 2000-8) */
+    #lt-schedule-table-container td span.uppercase,
+    #wt-schedule-table-container td span.uppercase {
+      font-size: 0.58rem !important;
+      line-height: 1.1 !important;
+    }
+
+    /* Cluster & Lokasi */
+    #lt-schedule-table-container td span[class*="text-slate-800"],
+    #wt-schedule-table-container td span[class*="text-slate-800"] {
+      font-size: 0.70rem !important;
+    }
+
+    #lt-schedule-table-container td span[class*="text-slate-500"],
+    #wt-schedule-table-container td span[class*="text-slate-500"] {
+      font-size: 0.65rem !important;
+    }
+
+    /* Badge Armada */
+    #lt-schedule-table-container button[onclick*="openQuickArmadaSelector"],
+    #wt-schedule-table-container button[onclick*="openQuickArmadaSelector"],
+    #lt-schedule-table-container span[class*="font-mono"],
+    #wt-schedule-table-container span[class*="font-mono"] {
+      padding: 0.1rem 0.35rem !important;
+      font-size: 0.65rem !important;
+      border-radius: 0.35rem !important;
+    }
+
+    /* Personil (OPT & MP) */
+    #lt-schedule-table-container td div[class*="text-slate-700"],
+    #wt-schedule-table-container td div[class*="text-slate-700"],
+    #lt-schedule-table-container td div[class*="text-slate-600"],
+    #wt-schedule-table-container td div[class*="text-slate-600"] {
+      font-size: 0.65rem !important;
+      line-height: 1.2 !important;
+    }
+
+    #lt-schedule-table-container td span[class*="text-slate-400"],
+    #wt-schedule-table-container td span[class*="text-slate-400"] {
+      font-size: 0.60rem !important;
+    }
+
+    /* Tombol ACTION */
+    #lt-schedule-table-container button[onclick*="openActionDecision"],
+    #wt-schedule-table-container button[onclick*="openActionDecision"] {
+      padding: 0.15rem 0.45rem !important;
+      font-size: 0.62rem !important;
+      letter-spacing: 0.03em !important;
+      border-radius: 0.35rem !important;
+    }
+
+    /* Badge Tambahan (+ AC, PENDING, dsb) */
+    #lt-schedule-table-container span[class*="border-blue-200"],
+    #wt-schedule-table-container span[class*="border-blue-200"] {
+      padding: 0.05rem 0.25rem !important;
+      font-size: 0.58rem !important;
+    }
   </style>
 
   <style id="sidebar-compact-plain">
@@ -2981,13 +3143,34 @@
         </div>
 
         <!-- ================================================================== -->
-        <!-- TAB 6: ORDER LAPANGAN (Admin Form - PRD Section 4.5)               -->
+        <!-- TAB 6: ORDER LAPANGAN & PENYELESAIAN JOB (BANTU MP)               -->
         <!-- ================================================================== -->
         <div id="tab-orders" class="tab-pane hidden py-3 md:py-6 flex flex-col items-center">
-          <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200/80 shadow-xs w-full max-w-2xl mx-auto">
+
+          <!-- KOTAK PILIHAN / TAB SWITCHER: FORM ORDER vs PENYELESAIAN JOB (BANTU MP) -->
+          <div id="order-tab-switcher-wrapper" class="w-full max-w-2xl mx-auto mb-4 flex items-center justify-center">
+            <div class="inline-flex p-1.5 rounded-2xl bg-slate-200/80 border border-slate-300/80 shadow-xs space-x-1.5">
+              <button type="button" id="btn-order-tab-form" onclick="switchOrderSubtab('form')"
+                class="px-5 py-2.5 rounded-xl text-xs font-black tracking-wide transition-all shadow-xs bg-white text-slate-900 cursor-pointer">
+                Form Order Lapangan
+              </button>
+              <button type="button" id="btn-order-tab-direct" onclick="switchOrderSubtab('direct')"
+                class="px-5 py-2.5 rounded-xl text-xs font-black tracking-wide transition-all text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1.5">
+                <span>Penyelesaian Job</span>
+                <span
+                  class="px-1.5 py-0.2 rounded-md text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">Khusus
+                  Admin</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- SUBPANE 1: FORM ORDER (Alur masuk ke Job Request & di-done-kan tim lapangan) -->
+          <div id="order-subpane-form"
+            class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200/80 shadow-xs w-full max-w-2xl mx-auto">
             <h3 class="text-base font-extrabold text-slate-900 mb-1">Form Permintaan Lapangan (Order)</h3>
             <p class="text-xs text-slate-500 mb-6">Input manual oleh Admin berdasarkan permintaan tim di lapangan via
-              radio / grup</p>
+              radio / grup. Alurnya akan masuk ke antrean Job Request untuk dikerjakan & diselesaikan oleh tim lapangan.
+            </p>
 
             <form onsubmit="handleOrderSubmit(event)" class="space-y-4 text-xs font-semibold">
               <!-- Baris 1: Nama Pemesan & No Lambung Unit -->
@@ -3099,6 +3282,192 @@
                 <button type="submit"
                   class="px-6 py-3 rounded-2xl bg-brand-200 hover:bg-brand-300 text-brand-800 font-extrabold uppercase tracking-wider transition cursor-pointer shadow-xs">
                   Kirim ke Job Request MP
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- SUBPANE 2: PENYELESAIAN JOB (Khusus Admin: Menyimpan pekerjaan langsung ke Riwayat Selesai) -->
+          <div id="order-subpane-direct"
+            class="hidden bg-white p-6 md:p-8 rounded-3xl border border-slate-200/80 shadow-xs w-full max-w-2xl mx-auto">
+            <div class="flex items-center justify-between mb-5">
+              <h3 class="text-base font-extrabold text-slate-900">
+                Penyelesaian Job Lapangan
+              </h3>
+            </div>
+
+            <form onsubmit="handleDirectCompletionSubmit(event)" class="space-y-4 text-xs font-semibold">
+              <!-- Baris 1: Tipe Layanan & Kode Unit -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-slate-700 mb-1.5">Tipe Layanan / Armada</label>
+                  <div class="flex space-x-4 pt-2">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="direct-tipe-service" value="lubetruck" checked
+                        onchange="handleDirectServiceTypeChange(this.value)"
+                        class="text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                      <span>Lubetruck (LT)</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="direct-tipe-service" value="watertruck"
+                        onchange="handleDirectServiceTypeChange(this.value)"
+                        class="text-cyan-600 focus:ring-cyan-500 cursor-pointer">
+                      <span>Water Truck (WT)</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="relative">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-slate-700">Kode Unit (No Lambung)</label>
+                    <span class="text-[10px] text-slate-400 font-normal">Pilih unit atau ketik manual</span>
+                  </div>
+                  <input type="text" id="direct-kode-unit" list="order-units-datalist"
+                    placeholder="Contoh: E2168 / D8589" required oninput="triggerAutoFillForDirectOrder(this.value)"
+                    onchange="triggerAutoFillForDirectOrder(this.value)" onfocus="populateOrderUnitsDatalist()"
+                    autocomplete="off"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 font-mono font-bold uppercase text-slate-900 bg-white">
+                </div>
+              </div>
+
+              <!-- Baris 2: Cluster & Lokasi Pit -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-slate-700 font-medium mb-1.5">Cluster</label>
+                  <input type="text" id="direct-cluster" list="order-clusters-datalist"
+                    placeholder="Contoh: KGU Selatan" required
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 bg-white font-medium text-slate-900">
+                </div>
+                <div>
+                  <label class="block text-slate-700 font-medium mb-1.5">Lokasi Pit</label>
+                  <input type="text" id="direct-lokasi" placeholder="Contoh: BALANAI / PIT UTARA" required
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 uppercase font-medium bg-white text-slate-900">
+                </div>
+              </div>
+
+              <!-- Baris 3: Deskripsi Pekerjaan -->
+              <div>
+                <label class="block text-slate-700 mb-1.5">Deskripsi Pekerjaan</label>
+                <textarea id="direct-deskripsi" rows="2"
+                  placeholder="Deskripsi pekerjaan (contoh: Greasing boom & stick, Top Up Oli SAE 15W40 10L, Cuci Radiator)..."
+                  required
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500"></textarea>
+              </div>
+
+              <!-- Baris 4: HM Start & HM Finish -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-slate-700 mb-1.5">HM Start</label>
+                  <input type="number" step="any" id="direct-hm-start" placeholder="Contoh: 12500"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                </div>
+                <div>
+                  <label class="block text-slate-700 mb-1.5">HM Finish</label>
+                  <input type="number" step="any" id="direct-hm-finish" placeholder="Contoh: 12502"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                </div>
+              </div>
+
+              <!-- Baris 5: Jam Start & Jam Finish -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-slate-700 mb-1.5">Jam Start</label>
+                  <input type="time" id="direct-jam-start" required
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                </div>
+                <div>
+                  <label class="block text-slate-700 mb-1.5">Jam Finish</label>
+                  <input type="time" id="direct-jam-finish" required
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                </div>
+              </div>
+
+              <!-- Baris 6: Status (Hanya Service dan Breakdown) & Armada Searchable Dropdown -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-slate-700 mb-1.5">Status</label>
+                  <select id="direct-status"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-800 focus:outline-none focus:border-emerald-500 bg-white cursor-pointer">
+                    <option value="SERVICE" selected>SERVICE (Maintenance/PCR)</option>
+                    <option value="BREAKDOWN">BREAKDOWN (Kendala Unit)</option>
+                  </select>
+                </div>
+                <div class="relative" id="container-direct-armada">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-slate-700 font-medium">Armada</label>
+                    <span class="text-[10px] text-emerald-600 font-bold">Auto-sync Roster</span>
+                  </div>
+                  <div class="relative">
+                    <input type="text" id="search-direct-armada" placeholder="-- Ketik / Cari Armada (misal: LT2510) --"
+                      autocomplete="off"
+                      class="w-full px-3.5 py-2.5 pr-8 rounded-xl border border-slate-200 bg-white text-slate-900 font-bold text-xs focus:outline-none focus:border-emerald-500 shadow-2xs transition truncate cursor-pointer"
+                      onfocus="openDirectArmadaDropdown()" oninput="filterDirectArmadaDropdown(this.value)"
+                      onclick="openDirectArmadaDropdown()" onkeydown="handleDirectArmadaKeydown(event)">
+                    <button type="button" id="clear-direct-armada" onclick="clearDirectArmadaSelect()"
+                      class="hidden absolute right-7 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                      title="Hapus pilihan">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                      </svg>
+                    </button>
+                    <div class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <!-- Native select hidden untuk integritas data formulir -->
+                  <select id="direct-armada" class="hidden" required>
+                    <option value="">-- Pilih Armada --</option>
+                  </select>
+                  <div id="dropdown-direct-armada"
+                    class="hidden absolute left-0 right-0 z-50 mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 divide-y divide-slate-100 text-xs">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Baris 7: Operator (Opt) & MP 1 / MP 2 (Otomatis dari Roster saat Armada dipilih) -->
+              <div class="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-bold text-slate-700">Personil Lapangan</span>
+                  <span class="text-[10px] text-slate-400 font-medium">Otomatis terisi dari Roster saat Armada dipilih
+                    (dapat disesuaikan)</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label class="block text-slate-700 text-[11px] mb-1 font-bold">Operator (Opt)</label>
+                    <input type="text" id="direct-opt-name" placeholder="Nama Operator" required
+                      class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 bg-white font-medium text-slate-900">
+                  </div>
+                  <div>
+                    <label class="block text-slate-700 text-[11px] mb-1 font-bold">MP 1</label>
+                    <input type="text" id="direct-mp1-name" placeholder="Nama MP 1" required
+                      class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 bg-white font-medium text-slate-900">
+                  </div>
+                  <div>
+                    <label class="block text-slate-700 text-[11px] mb-1 font-bold">MP 2</label>
+                    <input type="text" id="direct-mp2-name" placeholder="Nama MP 2 (Opsional)"
+                      class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 bg-white font-medium text-slate-900">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Baris 8: Keterangan -->
+              <div>
+                <label class="block text-slate-700 mb-1.5">Keterangan</label>
+                <textarea id="direct-keterangan" rows="2"
+                  placeholder="Catatan hasil pekerjaan atau keterangan khusus..."
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500"></textarea>
+              </div>
+
+              <!-- Tombol Submit Penyelesaian Job -->
+              <div class="pt-2 flex items-center justify-end">
+                <button type="submit" id="btn-direct-submit"
+                  class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold uppercase tracking-wider transition cursor-pointer shadow-md active:scale-98 flex items-center justify-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <span>SUBMIT SELESAI (MASUK RIWAYAT)</span>
                 </button>
               </div>
             </form>
@@ -5468,6 +5837,54 @@
     </div>
   </div>
 
+  <!-- MODAL: PERINGATAN PEKERJAAN SUDAH DISELESAIKAN (ANTI-DUPLIKASI & ANTI-OVERWRITE) -->
+  <div id="modal-already-actioned"
+    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
+    <div
+      class="bg-white rounded-3xl max-w-xs sm:max-w-sm w-full p-6 shadow-2xl text-center select-none border border-slate-100 flex flex-col items-center">
+      <div
+        class="w-13 h-13 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl mb-3 shadow-inner">
+        <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+      <h3 class="text-base font-bold text-slate-800 tracking-tight" id="already-actioned-title">Pekerjaan Sudah Selesai
+      </h3>
+      <p class="text-xs text-slate-500 mt-1.5 leading-relaxed" id="already-actioned-msg">
+        Unit ini telah diselesaikan oleh rekan Anda.
+      </p>
+
+      <div class="mt-4 p-3.5 bg-slate-50 rounded-2xl border border-slate-100 w-full text-left space-y-2 text-[11px]">
+        <div class="flex justify-between items-center text-slate-600">
+          <span class="text-slate-400 font-medium">Unit:</span>
+          <span class="font-bold text-slate-800 text-xs" id="already-actioned-unit">-</span>
+        </div>
+        <div class="flex justify-between items-center text-slate-600">
+          <span class="text-slate-400 font-medium">Dikerjakan Oleh:</span>
+          <span class="font-bold text-slate-800" id="already-actioned-pic">-</span>
+        </div>
+        <div class="flex justify-between items-center text-slate-600">
+          <span class="text-slate-400 font-medium">Waktu Selesai:</span>
+          <span class="font-bold text-slate-800" id="already-actioned-time">-</span>
+        </div>
+        <div class="flex justify-between items-center text-slate-600">
+          <span class="text-slate-400 font-medium">Status:</span>
+          <span class="font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px]"
+            id="already-actioned-status">ACHIEVED</span>
+        </div>
+      </div>
+
+      <p class="text-[10px] text-slate-400 mt-3 italic leading-normal">
+        Data Anda tidak perlu diinput ulang untuk mencegah duplikasi data. Unit telah dipindahkan ke menu Riwayat.
+      </p>
+
+      <button type="button" onclick="toggleModal('modal-already-actioned', false)"
+        class="mt-4 w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs shadow-md transition cursor-pointer">
+        Mengerti
+      </button>
+    </div>
+  </div>
+
   <!-- MODAL: KONFIRMASI CANCEL JOB REQUEST -->
   <div id="modal-jobreq-cancel"
     class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
@@ -5530,6 +5947,7 @@
             <option value="normal">Normal (Unit beroperasi tanpa kendala / bukan service)</option>
             <option value="service">Service (Periodic Service / Maintenance)</option>
             <option value="breakdown">Breakdown (Unit rusak mendadak)</option>
+            <option value="parkir">Unit Parkir (Unit parkir / standby)</option>
           </select>
 
           <!-- Kontainer Khusus Service: Keterangan / Catatan Service (Wajib Diisi) -->
@@ -5555,44 +5973,38 @@
             <textarea id="ach-bd-notes" rows="2" placeholder="Tuliskan komponen atau bagian yang mengalami kerusakan..."
               class="w-full px-3 py-2 rounded-xl border border-rose-200 bg-white text-xs focus:outline-none focus:border-rose-400"></textarea>
           </div>
+
+          <!-- Kontainer Khusus Parkir: Keterangan / Alasan Unit Parkir -->
+          <div id="ach-parkir-container" class="hidden pt-2 border-t border-slate-200 space-y-1.5">
+            <label class="block text-[11px] font-bold text-purple-800">Keterangan Unit Parkir Lapangan:</label>
+            <textarea id="ach-parkir-notes" rows="2"
+              placeholder="Tuliskan keterangan unit parkir (misal: Unit parkir di workshop, hujan, tidak ada operator, standby front, dll)..."
+              class="w-full px-3 py-2 rounded-xl border border-purple-200 bg-white text-xs focus:outline-none focus:border-purple-400 font-medium"></textarea>
+          </div>
         </div>
 
         <!-- Kontainer Isian Validasi Normal -->
         <div id="ach-normal-form-fields" class="space-y-3">
-          <!-- Penyesuaian Lokasi & Cluster Pit Aktual Lapangan (Polosan Bersih Background Putih) -->
-          <div class="p-2.5 rounded-2xl bg-white border border-slate-200 space-y-1.5 shadow-2xs">
-            <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold text-slate-800 flex items-center space-x-1.5">
-                <svg class="w-3.5 h-3.5 text-rose-500 flex-shrink-0" fill="none" stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-                <span>Lokasi & Cluster</span>
-              </span>
+          <!-- Baris: Cluster & Lokasi Pit Aktual Lapangan (Simetris dengan Armada & MP) -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-700 mb-1">Cluster <span class="text-rose-500 font-bold">*</span></label>
+              <select id="ach-cluster"
+                class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 font-bold text-xs focus:outline-none focus:border-brand-500 shadow-2xs">
+                <option value="Selatan">KGU SELATAN</option>
+                <option value="Tengah">KGU TENGAH</option>
+                <option value="Utara">KGU UTARA</option>
+                <option value="ROM">ROM AREA</option>
+                <option value="Outpit Selatan">Outpit Selatan</option>
+                <option value="Outpit Tengah">Outpit Tengah</option>
+                <option value="Outpit Utara">Outpit Utara</option>
+                <option value="HRM Selatan">HRM Selatan</option>
+              </select>
             </div>
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-slate-600 text-[10px] mb-0.5 font-semibold">Cluster</label>
-                <select id="ach-cluster"
-                  class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-bold text-xs focus:outline-none focus:border-brand-500 shadow-2xs">
-                  <option value="Selatan">KGU SELATAN</option>
-                  <option value="Tengah">KGU TENGAH</option>
-                  <option value="Utara">KGU UTARA</option>
-                  <option value="ROM">ROM AREA</option>
-                  <option value="Outpit Selatan">Outpit Selatan</option>
-                  <option value="Outpit Tengah">Outpit Tengah</option>
-                  <option value="Outpit Utara">Outpit Utara</option>
-                  <option value="HRM Selatan">HRM Selatan</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-slate-600 text-[10px] mb-0.5 font-semibold">Lokasi</label>
-                <input type="text" id="ach-lokasi" placeholder="Contoh: BALANAI / SIM E"
-                  class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-bold text-xs uppercase focus:outline-none focus:border-brand-500">
-              </div>
+            <div>
+              <label class="block text-slate-700 mb-1">Lokasi <span class="text-rose-500 font-bold">*</span></label>
+              <input type="text" id="ach-lokasi" placeholder="Contoh: BALANAI / SIM E"
+                class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 font-bold text-xs uppercase focus:outline-none focus:border-brand-500 shadow-2xs">
             </div>
           </div>
 
@@ -5728,6 +6140,194 @@
             </div>
           </div>
 
+          <!-- Section Khusus SCH Top Up Oil (4 Komponen: OLI ENGINE, OLI TRANSMISI/SWING, OLI HYDRAULIC, AIR COOLANT) -->
+          <div id="ach-topup-container" class="hidden space-y-2.5 pt-1">
+            <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+              <span class="text-[11px] font-bold text-slate-800 uppercase tracking-wide flex items-center space-x-1.5">
+                <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Pemeriksaan Komponen Top Up Oil <span class="text-rose-500">*</span></span>
+              </span>
+              <button type="button" onclick="setAllTopUpAman()"
+                class="text-[10.5px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-lg transition cursor-pointer flex items-center space-x-1"
+                title="Pilih Aman untuk Semua Komponen">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Semua Aman</span>
+              </button>
+            </div>
+
+            <!-- 1. OLI ENGINE -->
+            <div class="p-2.5 rounded-2xl bg-slate-50/70 border border-slate-200 space-y-2 transition"
+              id="card-topup-engine">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-800 text-xs tracking-tight">OLI ENGINE</span>
+                <div class="flex items-center space-x-1.5 shrink-0">
+                  <button type="button" id="btn-topup-engine-aman" onclick="setTopUpStatus('engine', 'Aman')"
+                    class="px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-slate-300">
+                    <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Aman</span>
+                  </button>
+                  <button type="button" id="btn-topup-engine-tidak" onclick="setTopUpStatus('engine', 'Tidak')"
+                    class="px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-slate-300">
+                    <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>Tidak</span>
+                  </button>
+                </div>
+              </div>
+              <div id="dropdown-topup-engine" class="hidden pt-1.5 border-t border-slate-200/80 space-y-1.5">
+                <label class="block text-[10.5px] font-bold text-rose-700">Keterangan OLI ENGINE:</label>
+                <select id="sel-topup-engine" onchange="handleTopUpSelectReason('engine', this.value)"
+                  class="w-full px-2.5 py-1.5 rounded-xl border border-rose-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:border-rose-400 shadow-2xs">
+                  <option value="">-- Pilih Keterangan / Kendala --</option>
+                  <option value="Level Kurang / Low (Perlu Top Up)">Level Kurang / Low (Perlu Top Up)</option>
+                  <option value="Bocor / Rembes Lapangan">Bocor / Rembes Lapangan</option>
+                  <option value="Oli Tercampur Air / Emulsi">Oli Tercampur Air / Emulsi</option>
+                  <option value="Oli Hitam Pekat / Kotor">Oli Hitam Pekat / Kotor</option>
+                  <option value="Level Berlebih / Over High">Level Berlebih / Over High</option>
+                  <option value="Dipstick / Tutup Pengisi Rusak">Dipstick / Tutup Pengisi Rusak</option>
+                  <option value="Tidak Bisa Dicek (Unit Miring / Posisi)">Tidak Bisa Dicek (Unit Miring / Posisi)
+                  </option>
+                  <option value="Lainnya">Lainnya (Ketik Manual)</option>
+                </select>
+                <input type="text" id="desc-topup-engine" placeholder="Detail keterangan / liter (opsional)..."
+                  class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none focus:border-brand-500 shadow-2xs">
+              </div>
+            </div>
+
+            <!-- 2. OLI TRANSMISI/SWING -->
+            <div class="p-2.5 rounded-2xl bg-slate-50/70 border border-slate-200 space-y-2 transition"
+              id="card-topup-transmisi">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-800 text-xs tracking-tight">OLI TRANSMISI/SWING</span>
+                <div class="flex items-center space-x-1.5 shrink-0">
+                  <button type="button" id="btn-topup-transmisi-aman" onclick="setTopUpStatus('transmisi', 'Aman')"
+                    class="px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-slate-300">
+                    <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Aman</span>
+                  </button>
+                  <button type="button" id="btn-topup-transmisi-tidak" onclick="setTopUpStatus('transmisi', 'Tidak')"
+                    class="px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-slate-300">
+                    <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>Tidak</span>
+                  </button>
+                </div>
+              </div>
+              <div id="dropdown-topup-transmisi" class="hidden pt-1.5 border-t border-slate-200/80 space-y-1.5">
+                <label class="block text-[10.5px] font-bold text-rose-700">Keterangan OLI TRANSMISI/SWING:</label>
+                <select id="sel-topup-transmisi" onchange="handleTopUpSelectReason('transmisi', this.value)"
+                  class="w-full px-2.5 py-1.5 rounded-xl border border-rose-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:border-rose-400 shadow-2xs">
+                  <option value="">-- Pilih Keterangan / Kendala --</option>
+                  <option value="Level Kurang / Low (Perlu Top Up)">Level Kurang / Low (Perlu Top Up)</option>
+                  <option value="Bocor / Rembes Lapangan">Bocor / Rembes Lapangan</option>
+                  <option value="Oli Tercampur Air / Emulsi">Oli Tercampur Air / Emulsi</option>
+                  <option value="Oli Kotor / Berbau Gosong">Oli Kotor / Berbau Gosong</option>
+                  <option value="Level Berlebih / Over High">Level Berlebih / Over High</option>
+                  <option value="Sight Glass / Indikator Rusak">Sight Glass / Indikator Rusak</option>
+                  <option value="Tidak Bisa Dicek (Unit Miring / Posisi)">Tidak Bisa Dicek (Unit Miring / Posisi)
+                  </option>
+                  <option value="Lainnya">Lainnya (Ketik Manual)</option>
+                </select>
+                <input type="text" id="desc-topup-transmisi" placeholder="Detail keterangan / liter (opsional)..."
+                  class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none focus:border-brand-500 shadow-2xs">
+              </div>
+            </div>
+
+            <!-- 3. OLI HYDRAULIC -->
+            <div class="p-2.5 rounded-2xl bg-slate-50/70 border border-slate-200 space-y-2 transition"
+              id="card-topup-hydraulic">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-800 text-xs tracking-tight">OLI HYDRAULIC</span>
+                <div class="flex items-center space-x-1.5 shrink-0">
+                  <button type="button" id="btn-topup-hydraulic-aman" onclick="setTopUpStatus('hydraulic', 'Aman')"
+                    class="px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-slate-300">
+                    <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Aman</span>
+                  </button>
+                  <button type="button" id="btn-topup-hydraulic-tidak" onclick="setTopUpStatus('hydraulic', 'Tidak')"
+                    class="px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-slate-300">
+                    <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>Tidak</span>
+                  </button>
+                </div>
+              </div>
+              <div id="dropdown-topup-hydraulic" class="hidden pt-1.5 border-t border-slate-200/80 space-y-1.5">
+                <label class="block text-[10.5px] font-bold text-rose-700">Keterangan OLI HYDRAULIC:</label>
+                <select id="sel-topup-hydraulic" onchange="handleTopUpSelectReason('hydraulic', this.value)"
+                  class="w-full px-2.5 py-1.5 rounded-xl border border-rose-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:border-rose-400 shadow-2xs">
+                  <option value="">-- Pilih Keterangan / Kendala --</option>
+                  <option value="Level Kurang / Low (Perlu Top Up)">Level Kurang / Low (Perlu Top Up)</option>
+                  <option value="Bocor / Rembes Hose / Fitting">Bocor / Rembes Hose / Fitting</option>
+                  <option value="Oli Berbusa / Tercampur Udara">Oli Berbusa / Tercampur Udara</option>
+                  <option value="Oli Emulsi / Kotor">Oli Emulsi / Kotor</option>
+                  <option value="Level Berlebih / Over High">Level Berlebih / Over High</option>
+                  <option value="Sight Glass Kusam / Rusak">Sight Glass Kusam / Rusak</option>
+                  <option value="Tidak Bisa Dicek (Attachment Terangkat)">Tidak Bisa Dicek (Attachment Terangkat)
+                  </option>
+                  <option value="Lainnya">Lainnya (Ketik Manual)</option>
+                </select>
+                <input type="text" id="desc-topup-hydraulic" placeholder="Detail keterangan / liter (opsional)..."
+                  class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none focus:border-brand-500 shadow-2xs">
+              </div>
+            </div>
+
+            <!-- 4. AIR COOLANT -->
+            <div class="p-2.5 rounded-2xl bg-slate-50/70 border border-slate-200 space-y-2 transition"
+              id="card-topup-coolant">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-800 text-xs tracking-tight">AIR COOLANT</span>
+                <div class="flex items-center space-x-1.5 shrink-0">
+                  <button type="button" id="btn-topup-coolant-aman" onclick="setTopUpStatus('coolant', 'Aman')"
+                    class="px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-slate-300">
+                    <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Aman</span>
+                  </button>
+                  <button type="button" id="btn-topup-coolant-tidak" onclick="setTopUpStatus('coolant', 'Tidak')"
+                    class="px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-slate-300">
+                    <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>Tidak</span>
+                  </button>
+                </div>
+              </div>
+              <div id="dropdown-topup-coolant" class="hidden pt-1.5 border-t border-slate-200/80 space-y-1.5">
+                <label class="block text-[10.5px] font-bold text-rose-700">Keterangan AIR COOLANT:</label>
+                <select id="sel-topup-coolant" onchange="handleTopUpSelectReason('coolant', this.value)"
+                  class="w-full px-2.5 py-1.5 rounded-xl border border-rose-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:border-rose-400 shadow-2xs">
+                  <option value="">-- Pilih Keterangan / Kendala --</option>
+                  <option value="Level Coolant Kurang / Low (Perlu Tambah)">Level Coolant Kurang / Low (Perlu Tambah)
+                  </option>
+                  <option value="Bocor / Rembes Selang / Radiator">Bocor / Rembes Selang / Radiator</option>
+                  <option value="Coolant Keruh / Berkarat">Coolant Keruh / Berkarat</option>
+                  <option value="Level Berlebih / Over High">Level Berlebih / Over High</option>
+                  <option value="Tutup Radiator / Reservoir Rusak">Tutup Radiator / Reservoir Rusak</option>
+                  <option value="Reservoir Tank Retak / Pecah">Reservoir Tank Retak / Pecah</option>
+                  <option value="Lainnya">Lainnya (Ketik Manual)</option>
+                </select>
+                <input type="text" id="desc-topup-coolant" placeholder="Detail keterangan / liter (opsional)..."
+                  class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 focus:outline-none focus:border-brand-500 shadow-2xs">
+              </div>
+            </div>
+          </div>
+
           <!-- Baris Tambahan Khusus Job Request: Keadaan Unit & Pilihan Job -->
           <div id="ach-job-keadaan-row" class="hidden space-y-2.5">
             <div>
@@ -5836,7 +6436,7 @@
             </div>
           </div>
 
-          <div>
+          <div id="ach-keterangan-container">
             <label class="block text-slate-700 mb-1" id="ach-keterangan-label">Temuan / Kendala Penghambat Job</label>
             <input type="text" id="ach-keterangan" placeholder="Contoh: Nihil / Tidak ada kendala"
               class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 text-xs">
@@ -7576,7 +8176,7 @@
         <!-- 5. Keterangan / Kendala -->
         <div class="pt-2 border-t border-slate-100 space-y-1">
           <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Catatan / Kendala</span>
-          <p class="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 text-slate-700 text-xs leading-relaxed font-normal"
+          <p class="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 text-slate-700 text-xs leading-relaxed font-normal whitespace-pre-line"
             id="detail-modal-keterangan">
             Nihil / Tidak ada kendala
           </p>
@@ -9262,10 +9862,11 @@
         keterangan: row.keterangan || '',
         deskripsi: row.keterangan || '',
         isPending: isExplicitUnsch ? false : Boolean(row.is_pending),
-        isLocked: ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(String(row.status || '').toLowerCase().trim()) || Boolean(row.is_locked),
+        isLocked: ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'parkir', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(String(row.status || '').toLowerCase().trim()) || Boolean(row.is_locked),
         unitCondition: row.unit_condition || '',
         serviceNotes: (row.service_notes && !row.service_notes.startsWith('PHOTOS:') && !row.service_notes.startsWith('PHOTOS_ATTACHED')) ? row.service_notes : '',
         bdNotes: row.bd_notes || '',
+        parkirNotes: row.parkir_notes || '',
         serviceType: row.service_type || (isUnschWt ? 'watertruck' : 'lubetruck'),
         namaPemesan: row.pemesan || '',
         pemesan: row.pemesan || '',
@@ -12160,6 +12761,10 @@
         syncAllDateFiltersToToday();
         navigateTab('dashboard');
       }
+
+      if (typeof initOrderSubtabView === 'function') {
+        initOrderSubtabView();
+      }
     }
 
     function getUnitTypeFromMaster(lambung, defaultType = 'Unit') {
@@ -12402,6 +13007,10 @@
         if ((String(j.id || '').startsWith('LT-') || String(j.id || '').startsWith('WT-')) && !String(j.id || '').startsWith('LT-REQ') && !String(j.id || '').startsWith('WT-REQ') && j.cat !== 'unscheduled') {
           return false;
         }
+        // Aturan Pengguna: Jika di-action, job akan masuk ke riwayat (selesai), keluar dari antrean Job Request pending
+        const isDone = (j.status === 'done' || j.status === 'ach' || j.status === 'cancel' || (j.isLocked && j.status !== 'pending'));
+        if (isDone) return false;
+
         if (isAdmin) {
           return true;
         } else if (isBc) {
@@ -12440,20 +13049,17 @@
           <table class="w-full table-fixed text-left text-xs">
             <thead class="bg-slate-50/90 text-slate-500 uppercase text-[9.5px] tracking-wider border-b border-slate-200 font-extrabold select-none">
               <tr>
-                <th class="py-2.5 px-2 w-[24%] md:w-[13%]">NO ID</th>
-                <th class="py-2.5 px-2 w-[18%] md:w-[9%]">TGL & WAKTU</th>
-                <th class="py-2.5 px-2 w-[22%] md:w-[11%]">
+                <th class="py-2.5 px-2 w-[14%]">NO ID</th>
+                <th class="py-2.5 px-2 w-[11%]">TGL & WAKTU</th>
+                <th class="py-2.5 px-2 w-[14%]">
                   <span class="md:hidden">NO UNIT</span>
                   <span class="hidden md:inline">${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
                 </th>
-                <th class="py-2.5 px-2 w-[20%] md:w-[10%]">CLUSTER & LOKASI</th>
-                <th class="hidden md:table-cell py-2.5 px-2 w-[12%]">DESKRIPSI</th>
-                <th class="hidden md:table-cell py-2.5 px-2 w-[8%] text-center">ARMADA</th>
+                <th class="py-2.5 px-2 w-[13%]">CLUSTER & LOKASI</th>
+                <th class="hidden md:table-cell py-2.5 px-2 w-[18%]">DESKRIPSI</th>
+                <th class="hidden md:table-cell py-2.5 px-2 w-[10%] text-center">ARMADA</th>
                 <th class="hidden md:table-cell py-2.5 px-2 w-[11%]">PERSONIL</th>
-                <th class="hidden md:table-cell py-2.5 px-2 w-[7%]">HM UNIT</th>
-                <th class="hidden md:table-cell py-2.5 px-2 w-[8%]">PELAKSANAAN</th>
-                <th class="hidden md:table-cell py-2.5 px-2 w-[9%]">KETERANGAN</th>
-                <th class="py-2.5 px-2 w-[16%] md:w-[6%] text-center">${isAdmin || isBc || isUser ? 'STATUS' : 'AKSI'}</th>
+                <th class="py-2.5 px-2 w-[9%] text-center">AKSI</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -12466,7 +13072,7 @@
         let emptyText = 'Tidak ada job request pending';
         if (filterType === 'LT') emptyText = 'Tidak ada request Lubetruck pending';
         else if (filterType === 'WT') emptyText = 'Tidak ada request Water Truck pending';
-        tbody.innerHTML = `<tr><td colspan="11" class="py-8 text-center text-slate-400 italic font-semibold text-xs">${searchVal ? `Tidak ada job request yang cocok dengan "${searchVal}"` : emptyText}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-400 italic font-semibold text-xs">${searchVal ? `Tidak ada job request yang cocok dengan "${searchVal}"` : emptyText}</td></tr>`;
         return;
       }
 
@@ -12474,9 +13080,6 @@
         const isWt = (job.serviceType === 'watertruck' || Boolean(job.wtUnit) || String(job.id || '').toUpperCase().startsWith('WT'));
         const unitType = getUnitTypeFromMaster(job.noLambung, job.typeUnit || 'Unit');
         const jobNoId = (typeof getJobNoId === 'function') ? getJobNoId(job) : (job.noId || job.job_id || job.id || '-');
-        const pelaksanaanHtml = (job.jamStart && job.jamEnd)
-          ? `<div class="font-mono text-[10px] text-slate-800 font-semibold leading-tight"><div>Start: ${job.jamStart}</div><div>End: ${job.jamEnd}</div></div>`
-          : (job.jamStart ? `<div class="font-mono text-[10px] text-slate-800 font-semibold leading-tight">Start: ${job.jamStart}</div>` : `<span class="text-slate-400 font-bold">-</span>`);
 
         const isActioned = (job.status === 'done' || job.status === 'ach' || job.status === 'cancel');
         const badgeKondisiClass = job.kondisi === 'BREAKDOWN' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-900';
@@ -12516,31 +13119,39 @@
           <td class="hidden md:table-cell py-1.5 px-2 break-words text-[10.5px]">
             ${renderPersonnelCell(job)}
           </td>
-          <td class="hidden md:table-cell py-1.5 px-2 font-mono text-[10px] text-slate-700 break-words">${job.hmUnit || '-'}</td>
-          <td class="hidden md:table-cell py-1.5 px-2 break-words">${pelaksanaanHtml}</td>
-          <td class="hidden md:table-cell py-1.5 px-2 text-[10px] text-slate-600 break-words">
-            <div class="line-clamp-2">${(job.status === 'done' || job.status === 'ach') ? (job.keterangan || '-') : '-'}</div>
-          </td>
-          <td class="py-1.5 px-2 md:py-1.5 md:px-2 text-center">
-            ${isAdmin ? `
-              <div class="flex items-center justify-center space-x-1.5">
-                ${getJobRequestStatusBadge(job)}
-                <button type="button" onclick="event.stopPropagation(); promptDeleteJob('${job.id}')" 
-                  title="Hapus Job Request Ini (Khusus Admin)" 
-                  class="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                  </svg>
-                </button>
-              </div>
-            ` : (isBc || isUser || isActioned ? `
+          <td class="py-1.5 px-2 md:py-2 md:px-2 text-center">
+            ${(isBc || isUser) && !isAdmin ? `
               <div class="flex items-center justify-center">
                 ${getJobRequestStatusBadge(job)}
               </div>
+            ` : (isActioned ? `
+              <div class="flex items-center justify-center space-x-1.5">
+                ${getJobRequestStatusBadge(job)}
+                ${isAdmin ? `
+                  <button type="button" onclick="event.stopPropagation(); promptDeleteJob('${job.id}')" 
+                    title="Hapus Job Request Ini (Khusus Admin)" 
+                    class="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
+                ` : ''}
+              </div>
             ` : `
-              <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95">
-                ACTION
-              </button>
+              <div class="flex items-center justify-center space-x-1.5">
+                <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95" title="Kerjakan / Action Job Request">
+                  ACTION
+                </button>
+                ${isAdmin ? `
+                  <button type="button" onclick="event.stopPropagation(); promptDeleteJob('${job.id}')" 
+                    title="Hapus Job Request Ini (Khusus Admin)" 
+                    class="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
+                ` : ''}
+              </div>
             `)}
           </td>
         `;
@@ -13610,6 +14221,7 @@
         if (orderDateInput && !orderDateInput.value) {
           orderDateInput.value = getEffectiveTodayString();
         }
+        if (typeof initOrderSubtabView === 'function') initOrderSubtabView();
       } else if (tabKey === 'more') {
         renderFullMoreMenu();
       }
@@ -14011,7 +14623,7 @@
       if (existingIdx !== -1) {
         const ex = state.jobHistory[existingIdx];
         const exFinal = String(ex.status_final || '').toUpperCase();
-        if (['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN'].includes(exFinal) && statusFinal === 'NON_ACH') {
+        if (['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR'].includes(exFinal) && statusFinal === 'NON_ACH') {
           console.warn(`[History Protection] Dilarang downgrade job ${cleanId} dari ${exFinal} ke NON_ACH! Snapshot ditolak.`);
           return;
         }
@@ -15181,16 +15793,16 @@
 
       if (isAdmin) {
         return `
-          <button type="button" onclick="openQuickArmadaSelector('${job.id}', '${assigned ? armadaName : ''}', ${isWt})" class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg ${assigned ? (isWt ? 'bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200') : 'bg-slate-100 hover:bg-slate-200 text-slate-400 border border-slate-200'} font-mono font-bold text-[11.5px] transition shadow-2xs" title="${assigned ? 'Klik untuk ganti armada' : 'Klik untuk tentukan armada'}">
+          <button type="button" onclick="openQuickArmadaSelector('${job.id}', '${assigned ? armadaName : ''}', ${isWt})" class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-lg ${assigned ? (isWt ? 'bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200') : 'bg-slate-100 hover:bg-slate-200 text-slate-400 border border-slate-200'} font-mono font-bold text-[9px] md:text-[9.5px] transition shadow-2xs" title="${assigned ? 'Klik untuk ganti armada' : 'Klik untuk tentukan armada'}">
             <span>${armadaName}</span>
-            <svg class="w-2.5 h-2.5 ${assigned ? (isWt ? 'text-cyan-600' : 'text-emerald-600') : 'text-slate-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+            <svg class="w-2 h-2 ${assigned ? (isWt ? 'text-cyan-600' : 'text-emerald-600') : 'text-slate-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
           </button>
         `;
       } else {
         if (assigned) {
-          return `<span class="font-mono font-bold ${isWt ? 'text-cyan-800' : 'text-emerald-800'} text-[11.5px]">${armadaName}</span>`;
+          return `<span class="font-mono font-bold ${isWt ? 'text-cyan-800' : 'text-emerald-800'} text-[9px] md:text-[9.5px]">${armadaName}</span>`;
         }
-        return `<span class="text-slate-300 font-bold text-[11.5px]">-</span>`;
+        return `<span class="text-slate-300 font-bold text-[9px] md:text-[9.5px]">-</span>`;
       }
     }
     window.renderArmadaCell = renderArmadaCell;
@@ -15202,15 +15814,15 @@
 
       if (isAdmin) {
         return `
-          <button type="button" onclick="openQuickArmadaSelector('${job.id}', '${assigned ? armadaName : ''}', ${isWt})" class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-lg ${assigned ? (isWt ? 'bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200') : 'bg-slate-100 hover:bg-slate-200 text-slate-400 border border-slate-200'} font-mono font-bold text-[11.5px] transition shadow-2xs truncate max-w-full" title="${assigned ? 'Klik untuk ganti armada' : 'Klik untuk tentukan armada'}">
+          <button type="button" onclick="openQuickArmadaSelector('${job.id}', '${assigned ? armadaName : ''}', ${isWt})" class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-lg ${assigned ? (isWt ? 'bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200') : 'bg-slate-100 hover:bg-slate-200 text-slate-400 border border-slate-200'} font-mono font-bold text-[9px] md:text-[9.5px] transition shadow-2xs truncate max-w-full" title="${assigned ? 'Klik untuk ganti armada' : 'Klik untuk tentukan armada'}">
             <span>${armadaName}</span>
           </button>
         `;
       } else {
         if (assigned) {
-          return `<span class="inline-block px-1.5 py-0.5 rounded-lg font-mono font-bold ${isWt ? 'text-cyan-800 bg-cyan-50/90 border border-cyan-200' : 'text-emerald-800 bg-emerald-50/90 border border-emerald-200'} text-[11.5px] shadow-2xs">${armadaName}</span>`;
+          return `<span class="inline-block px-1.5 py-0.5 rounded-lg font-mono font-bold ${isWt ? 'text-cyan-800 bg-cyan-50/90 border border-cyan-200' : 'text-emerald-800 bg-emerald-50/90 border border-emerald-200'} text-[9px] md:text-[9.5px] shadow-2xs">${armadaName}</span>`;
         }
-        return `<span class="text-slate-300 font-bold text-[11.5px]">-</span>`;
+        return `<span class="text-slate-300 font-bold text-[9px] md:text-[9.5px]">-</span>`;
       }
     }
     window.renderArmadaOnlyCell = renderArmadaOnlyCell;
@@ -15272,11 +15884,11 @@
       }
 
       return `
-        <div class="text-slate-700 leading-tight text-[11px]">
-          <span class="text-slate-400 font-semibold text-[10.5px]">OPT:</span> <span class="font-bold text-slate-800 text-[11px]">${optName}</span>
+        <div class="text-slate-700 leading-tight text-[8.5px]">
+          <span class="text-slate-400 font-semibold text-[8px]">OPT:</span> <span class="font-bold text-slate-800 text-[8.5px]">${optName}</span>
         </div>
-        <div class="text-slate-600 leading-tight mt-0.5 text-[11px]">
-          <span class="text-slate-400 font-semibold text-[10.5px]">MP:</span> <span class="font-semibold text-slate-700 text-[11px]">${mpText}</span>
+        <div class="text-slate-600 leading-tight mt-0.5 text-[8.5px]">
+          <span class="text-slate-400 font-semibold text-[8px]">MP:</span> <span class="font-semibold text-slate-700 text-[8.5px]">${mpText}</span>
         </div>
       `;
     }
@@ -17064,7 +17676,7 @@
           const hCat = String(h.cat || '').toLowerCase().trim();
           return hUnit && jUnit && hUnit === jUnit && hDate === jDate && hShift === jShift && hCat === jCat;
         });
-        const isActioned = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) || (j.status_final !== undefined && j.status_final !== null && String(j.status_final).trim() !== '') || inHistory;
+        const isActioned = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'parkir', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) || (j.status_final !== undefined && j.status_final !== null && String(j.status_final).trim() !== '') || inHistory;
         const isQueueActive = ((s === 'scheduled') || (s === 'pending') || Boolean(j.isPending)) && !isActioned;
         return matchCat && matchDate && isQueueActive;
       });
@@ -17298,27 +17910,27 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                     <input type="checkbox" ${state.selectedSchedJobIds.has(job.id) ? 'checked' : ''} onchange="toggleSelectSchedJobRow('${job.id}', this.checked, 'LT')" class="rounded border-slate-300 text-brand-600 cursor-pointer">
                   </td>
                 ` : ''}
-                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">${job.waktu || '08:00 s/d 08:30'}</td>
-                <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
+                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1 px-1 md:py-1.5 md:px-1.5 font-mono text-[9px] md:text-[9.5px] font-semibold text-slate-700 break-words">${job.waktu || '08:00 s/d 08:30'}</td>
+                <td class="py-1 px-1 md:py-1.5 md:px-1.5 break-words">
                   <div class="flex items-center flex-wrap gap-1">
-                    <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-950 font-mono hover:text-emerald-700 text-left cursor-pointer text-[15px] sm:text-[16px] leading-snug tracking-normal">
+                    <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-950 font-mono hover:text-emerald-700 text-left cursor-pointer text-[11.5px] sm:text-[12px] leading-snug tracking-normal">
                       ${job.noLambung}
                     </button>
-                    ${hasAcJob ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 text-[10.5px] font-bold font-sans ml-1 tracking-tight shadow-2xs cursor-default" title="Unit ini juga memiliki jadwal Clean Air Cleaner hari ini">+ AC</span>` : ''}
+                    ${hasAcJob ? `<span class="inline-flex items-center px-1 py-0.2 rounded bg-blue-50 text-blue-600 border border-blue-200 text-[8px] font-bold font-sans ml-1 tracking-tight shadow-2xs cursor-default" title="Unit ini juga memiliki jadwal Clean Air Cleaner hari ini">+ AC</span>` : ''}
                   </div>
-                  ${isAdmin ? `<span class="text-[9.5px] sm:text-[10px] font-bold text-slate-400 block uppercase tracking-wider leading-tight mt-0.5">${unitType}</span>` : ''}
+                  ${isAdmin ? `<span class="text-[7.5px] sm:text-[8px] font-bold text-slate-400 block uppercase tracking-wider leading-tight mt-0.5">${unitType}</span>` : ''}
                 </td>
-                <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
-                  <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
-                  <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
+                <td class="py-1 px-1 md:py-1.5 md:px-1.5 break-words">
+                  <span class="font-bold text-slate-800 text-[9px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
+                  <span class="text-[8.5px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
                 </td>
-                <td class="py-1.5 px-1 md:px-2 text-center font-mono font-bold text-emerald-800 text-[11.5px] align-middle">
+                <td class="py-1 px-1 md:px-1.5 text-center font-mono font-bold text-emerald-800 text-[9px] align-middle">
                   ${renderArmadaOnlyCell(job, false)}
                 </td>
-                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 break-words text-[11px]">
+                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1 px-1.5 break-words text-[8.5px]">
                   ${renderPersonnelCell(job)}
                 </td>
-                <td class="py-1.5 px-1 md:px-2 text-center align-middle">
+                <td class="py-1 px-1 md:px-1.5 text-center align-middle">
                   ${renderJobActionCell(job)}
                 </td>
               `;
@@ -17509,31 +18121,31 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                     <input type="checkbox" ${state.selectedSchedJobIds.has(job.id) ? 'checked' : ''} onchange="toggleSelectSchedJobRow('${job.id}', this.checked, 'LT')" class="rounded border-slate-300 text-brand-600 cursor-pointer">
                   </td>
                 ` : ''}
-                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">
+                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1 px-1 md:py-1.5 md:px-1.5 font-mono text-[9px] md:text-[9.5px] font-semibold text-slate-700 break-words">
                   <div>${job.waktu || '07:00 s/d 07:15'}</div>
-                  ${isPendingJob ? `<span class="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9.5px] font-extrabold bg-amber-200/80 text-amber-950 uppercase tracking-tighter">PENDING S1</span>` : ''}
+                  ${isPendingJob ? `<span class="inline-block mt-0.5 px-1 py-0.2 rounded text-[8px] font-extrabold bg-amber-200/80 text-amber-950 uppercase tracking-tighter">PENDING S1</span>` : ''}
                 </td>
-                <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
+                <td class="py-1 px-1 md:py-1.5 md:px-1.5 break-words">
                   <div class="flex items-center flex-wrap gap-1">
-                    <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-950 font-mono hover:text-emerald-700 text-left cursor-pointer text-[15px] sm:text-[16px] leading-snug tracking-normal">
+                    <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-950 font-mono hover:text-emerald-700 text-left cursor-pointer text-[11.5px] sm:text-[12px] leading-snug tracking-normal">
                       ${job.noLambung}
                     </button>
-                    ${hasAcJob ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 text-[10.5px] font-bold font-sans ml-1 tracking-tight shadow-2xs cursor-default" title="Unit ini juga memiliki jadwal Clean Air Cleaner hari ini">+ AC</span>` : ''}
-                    ${isPendingJob ? `<span class="md:hidden inline-flex items-center px-1.5 py-0.5 rounded bg-amber-200/80 text-amber-950 text-[9px] font-extrabold tracking-tight shadow-2xs">PENDING S1</span>` : ''}
+                    ${hasAcJob ? `<span class="inline-flex items-center px-1 py-0.2 rounded bg-blue-50 text-blue-600 border border-blue-200 text-[8px] font-bold font-sans ml-1 tracking-tight shadow-2xs cursor-default" title="Unit ini juga memiliki jadwal Clean Air Cleaner hari ini">+ AC</span>` : ''}
+                    ${isPendingJob ? `<span class="md:hidden inline-flex items-center px-1 py-0.2 rounded bg-amber-200/80 text-amber-950 text-[7.5px] font-extrabold tracking-tight shadow-2xs">PENDING S1</span>` : ''}
                   </div>
-                  ${isAdmin ? `<span class="text-[9.5px] sm:text-[10px] font-bold text-slate-400 block uppercase tracking-wider leading-tight mt-0.5">${unitType}</span>` : ''}
+                  ${isAdmin ? `<span class="text-[7.5px] sm:text-[8px] font-bold text-slate-400 block uppercase tracking-wider leading-tight mt-0.5">${unitType}</span>` : ''}
                 </td>
-                <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
-                  <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
-                  <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
+                <td class="py-1 px-1 md:py-1.5 md:px-1.5 break-words">
+                  <span class="font-bold text-slate-800 text-[9px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
+                  <span class="text-[8.5px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
                 </td>
-                <td class="py-1.5 px-1 md:px-2 text-center align-middle">
+                <td class="py-1 px-1 md:px-1.5 text-center align-middle">
                   ${renderArmadaCell(job, false)}
                 </td>
-                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 break-words text-[11px]">
+                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1 px-1.5 break-words text-[8.5px]">
                   ${renderPersonnelCell(job)}
                 </td>
-                <td class="py-1.5 px-1 md:px-2 text-center align-middle">
+                <td class="py-1 px-1 md:px-1.5 text-center align-middle">
                   ${renderJobActionCell(job)}
                 </td>
               `;
@@ -17900,24 +18512,24 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                     <input type="checkbox" ${state.selectedSchedJobIds.has(job.id) ? 'checked' : ''} onchange="toggleSelectSchedJobRow('${job.id}', this.checked, 'WT')" class="rounded border-slate-300 text-brand-600 cursor-pointer">
                   </td>
                 ` : ''}
-                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">${job.waktu || '08:00 s/d 09:00'}</td>
-                <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
-                  <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-950 font-mono hover:text-cyan-700 text-left cursor-pointer text-[15px] sm:text-[16px] leading-snug tracking-normal">
+                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1 px-1 md:py-1.5 md:px-1.5 font-mono text-[9px] md:text-[9.5px] font-semibold text-slate-700 break-words">${job.waktu || '08:00 s/d 09:00'}</td>
+                <td class="py-1 px-1 md:py-1.5 md:px-1.5 break-words">
+                  <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-950 font-mono hover:text-cyan-700 text-left cursor-pointer text-[11.5px] sm:text-[12px] leading-snug tracking-normal">
                     ${job.noLambung}
                   </button>
-                  ${isAdmin ? `<span class="text-[9.5px] sm:text-[10px] font-bold text-slate-400 block uppercase tracking-wider leading-tight mt-0.5">${unitType}</span>` : ''}
+                  ${isAdmin ? `<span class="text-[7.5px] sm:text-[8px] font-bold text-slate-400 block uppercase tracking-wider leading-tight mt-0.5">${unitType}</span>` : ''}
                 </td>
-                <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
-                  <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
-                  <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
+                <td class="py-1 px-1 md:py-1.5 md:px-1.5 break-words">
+                  <span class="font-bold text-slate-800 text-[9px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
+                  <span class="text-[8.5px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
                 </td>
-                <td class="py-1.5 px-1 md:px-2 text-center font-mono font-bold text-cyan-800 text-[11.5px] align-middle">
+                <td class="py-1 px-1 md:px-1.5 text-center font-mono font-bold text-cyan-800 text-[9px] align-middle">
                   ${renderArmadaOnlyCell(job, true)}
                 </td>
-                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 break-words text-[11px]">
+                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1 px-1.5 break-words text-[8.5px]">
                   ${renderPersonnelCell(job)}
                 </td>
-                <td class="py-1.5 px-1 md:px-2 text-center align-middle">
+                <td class="py-1 px-1 md:px-1.5 text-center align-middle">
                   ${renderJobActionCell(job)}
                 </td>
               `;
@@ -18083,24 +18695,24 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                       <input type="checkbox" ${state.selectedSchedJobIds.has(job.id) ? 'checked' : ''} onchange="toggleSelectSchedJobRow('${job.id}', this.checked, 'WT')" class="rounded border-slate-300 text-brand-600 cursor-pointer">
                     </td>
                   ` : ''}
-                  <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">${job.waktu || round.defaultTime}</td>
-                  <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
-                    <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-950 font-mono hover:text-cyan-700 text-left cursor-pointer text-[15px] sm:text-[16px] leading-snug tracking-normal">
+                  <td class="${isMp ? 'hidden md:table-cell' : ''} py-1 px-1 md:py-1.5 md:px-1.5 font-mono text-[9px] md:text-[9.5px] font-semibold text-slate-700 break-words">${job.waktu || round.defaultTime}</td>
+                  <td class="py-1 px-1 md:py-1.5 md:px-1.5 break-words">
+                    <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-950 font-mono hover:text-cyan-700 text-left cursor-pointer text-[11.5px] sm:text-[12px] leading-snug tracking-normal">
                       ${job.noLambung}
                     </button>
-                    ${isAdmin ? `<span class="text-[9.5px] sm:text-[10px] font-bold text-slate-400 block uppercase tracking-wider leading-tight mt-0.5">${unitType}</span>` : ''}
+                    ${isAdmin ? `<span class="text-[7.5px] sm:text-[8px] font-bold text-slate-400 block uppercase tracking-wider leading-tight mt-0.5">${unitType}</span>` : ''}
                   </td>
-                  <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
-                    <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
-                    <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
+                  <td class="py-1 px-1 md:py-1.5 md:px-1.5 break-words">
+                    <span class="font-bold text-slate-800 text-[9px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
+                    <span class="text-[8.5px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
                   </td>
-                  <td class="py-1.5 px-1 md:px-2 text-center align-middle">
+                  <td class="py-1 px-1 md:px-1.5 text-center align-middle">
                     ${renderArmadaCell(job, true)}
                   </td>
-                  <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 break-words text-[11px]">
+                  <td class="${isMp ? 'hidden md:table-cell' : ''} py-1 px-1.5 break-words text-[8.5px]">
                     ${renderPersonnelCell(job)}
                   </td>
-                  <td class="py-1.5 px-1 md:px-2 text-center align-middle">
+                  <td class="py-1 px-1 md:px-1.5 text-center align-middle">
                     ${renderJobActionCell(job)}
                   </td>
                 `;
@@ -18138,6 +18750,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         if ((String(j.id || '').startsWith('LT-') || String(j.id || '').startsWith('WT-')) && !String(j.id || '').startsWith('LT-REQ') && !String(j.id || '').startsWith('WT-REQ') && j.cat !== 'unscheduled') {
           return false;
         }
+        // Aturan Pengguna: Jika di-action, job akan masuk ke riwayat (selesai), keluar dari antrean Job Request pending
+        const isDone = (j.status === 'done' || j.status === 'ach' || j.status === 'cancel' || (j.isLocked && j.status !== 'pending'));
+        if (isDone) return false;
+
         if (isAdmin) {
           return true;
         } else if (isBc) {
@@ -18175,20 +18791,17 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           <table class="w-full table-fixed text-left text-xs">
             <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-200 font-extrabold">
               <tr>
-                <th class="py-2 px-1.5 w-[24%] md:w-[13%]">NO ID</th>
-                <th class="py-2 px-1.5 w-[18%] md:w-[9%]">TGL & WAKTU</th>
-                <th class="py-2 px-2 w-[22%] md:w-[11%]">
+                <th class="py-2.5 px-2 w-[14%]">NO ID</th>
+                <th class="py-2.5 px-2 w-[11%]">TGL & WAKTU</th>
+                <th class="py-2.5 px-2 w-[14%]">
                   <span class="md:hidden">NO UNIT</span>
                   <span class="hidden md:inline">${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
                 </th>
-                <th class="py-2 px-2 w-[20%] md:w-[10%]">CLUSTER & LOKASI</th>
-                <th class="hidden md:table-cell py-2 px-2 w-[12%]">DESKRIPSI</th>
-                <th class="hidden md:table-cell py-2 px-2 w-[8%] text-center">ARMADA</th>
-                <th class="hidden md:table-cell py-2 px-2 w-[11%]">PERSONIL</th>
-                <th class="hidden md:table-cell py-2 px-2 w-[7%]">HM UNIT</th>
-                <th class="hidden md:table-cell py-2 px-2 w-[8%]">PELAKSANAAN</th>
-                <th class="hidden md:table-cell py-2 px-2 w-[9%]">KETERANGAN</th>
-                <th class="py-2 px-1.5 w-[16%] md:w-[6%] text-center">${isAdmin || isBc || isUser ? 'STATUS' : 'AKSI'}</th>
+                <th class="py-2.5 px-2 w-[13%]">CLUSTER & LOKASI</th>
+                <th class="hidden md:table-cell py-2.5 px-2 w-[18%]">DESKRIPSI</th>
+                <th class="hidden md:table-cell py-2.5 px-2 w-[10%] text-center">ARMADA</th>
+                <th class="hidden md:table-cell py-2.5 px-2 w-[11%]">PERSONIL</th>
+                <th class="py-2.5 px-2 w-[9%] text-center">AKSI</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -18198,18 +18811,15 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       const tbody = container.querySelector('tbody');
       if (jobs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="py-6 text-center text-slate-400 italic text-[11px]">${searchVal ? `Tidak ada job request yang cocok dengan pencarian "${searchVal}"` : 'Tidak ada request Lubetruck pending'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-400 italic text-[11px]">${searchVal ? `Tidak ada job request yang cocok dengan pencarian "${searchVal}"` : 'Tidak ada request Lubetruck pending'}</td></tr>`;
         return;
       }
 
       jobs.forEach(job => {
         const unitType = getUnitTypeFromMaster(job.noLambung, job.typeUnit || 'Unit');
         const jobNoId = (typeof getJobNoId === 'function') ? getJobNoId(job) : (job.noId || job.job_id || job.id || '-');
-        const pelaksanaanHtml = (job.jamStart && job.jamEnd)
-          ? `<div class="font-mono text-[11px] text-slate-800 font-semibold leading-tight"><div>Start: ${job.jamStart}</div><div>End: ${job.jamEnd}</div></div>`
-          : (job.jamStart ? `<div class="font-mono text-[11px] text-slate-800 font-semibold leading-tight">Start: ${job.jamStart}</div>` : `<span class="text-slate-400 font-bold">-</span>`);
 
-        const isActioned = (job.status === 'done' || job.status === 'ach' || job.status === 'cancel');
+        const isActioned = (job.status === 'done' || job.status === 'ach' || job.status === 'cancel' || job.status === 'service' || job.status === 'bd' || job.status === 'breakdown' || job.status === 'parkir');
 
         const tr = document.createElement('tr');
         tr.className = `hover:bg-slate-50/80 transition align-top ${job.status === 'done' || job.status === 'ach' ? 'bg-emerald-50/20' : (job.status === 'cancel' ? 'bg-rose-50/20' : '')}`;
@@ -18246,21 +18856,40 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           <td class="hidden md:table-cell py-1.5 px-2 break-words text-[11px]">
             ${renderPersonnelCell(job)}
           </td>
-          <td class="hidden md:table-cell py-1.5 px-2 font-mono text-[11.5px] font-bold text-slate-800 break-words">${job.hmUnit || '-'}</td>
-          <td class="hidden md:table-cell py-1.5 px-2 break-words">${pelaksanaanHtml}</td>
-          <td class="hidden md:table-cell py-1.5 px-2 text-[11px] text-slate-600 break-words">
-            <div class="line-clamp-2">${(job.status === 'done' || job.status === 'ach') ? (job.keterangan || '-') : '-'}</div>
-          </td>
           <td class="py-1.5 px-2 md:py-2 md:px-2 text-center align-middle">
-            ${isAdmin || isBc || isUser || isActioned ? `
+            ${(isBc || isUser) && !isAdmin ? `
               <div class="flex items-center justify-center">
                 ${getJobRequestStatusBadge(job)}
               </div>
+            ` : (isActioned ? `
+              <div class="flex items-center justify-center space-x-1.5">
+                ${getJobRequestStatusBadge(job)}
+                ${isAdmin ? `
+                  <button type="button" onclick="event.stopPropagation(); promptDeleteJob('${job.id}')" 
+                    title="Hapus Job Request (Khusus Admin)" 
+                    class="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
+                ` : ''}
+              </div>
             ` : `
-              <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-bold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95">
-                ACTION
-              </button>
-            `}
+              <div class="flex items-center justify-center space-x-1.5">
+                <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-bold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95" title="Kerjakan / Action Job Request">
+                  ACTION
+                </button>
+                ${isAdmin ? `
+                  <button type="button" onclick="event.stopPropagation(); promptDeleteJob('${job.id}')" 
+                    title="Hapus Job Request (Khusus Admin)" 
+                    class="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
+                ` : ''}
+              </div>
+            `)}
           </td>
         `;
         tbody.appendChild(tr);
@@ -18284,6 +18913,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       const isUser = (userRole === 'user');
 
       let jobs = state.unscheduledWtJobs.filter(j => {
+        // Aturan Pengguna: Jika di-action, job akan masuk ke riwayat (selesai), keluar dari antrean Job Request pending
+        const isDone = (j.status === 'done' || j.status === 'ach' || j.status === 'cancel' || (j.isLocked && j.status !== 'pending'));
+        if (isDone) return false;
+
         if (isAdmin) {
           return true;
         } else if (isBc) {
@@ -18321,20 +18954,17 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           <table class="w-full table-fixed text-left text-xs">
             <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-200 font-extrabold">
               <tr>
-                <th class="py-2 px-1.5 w-[24%] md:w-[13%]">NO ID</th>
-                <th class="py-2 px-1.5 w-[18%] md:w-[9%]">TGL & WAKTU</th>
-                <th class="py-2 px-2 w-[22%] md:w-[11%]">
+                <th class="py-2.5 px-2 w-[14%]">NO ID</th>
+                <th class="py-2.5 px-2 w-[11%]">TGL & WAKTU</th>
+                <th class="py-2.5 px-2 w-[14%]">
                   <span class="md:hidden">NO UNIT</span>
                   <span class="hidden md:inline">${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
                 </th>
-                <th class="py-2 px-2 w-[20%] md:w-[10%]">CLUSTER & LOKASI</th>
-                <th class="hidden md:table-cell py-2 px-2 w-[12%]">DESKRIPSI</th>
-                <th class="hidden md:table-cell py-2 px-2 w-[8%] text-center">ARMADA</th>
-                <th class="hidden md:table-cell py-2 px-2 w-[11%]">PERSONIL</th>
-                <th class="hidden md:table-cell py-2 px-2 w-[7%]">HM UNIT</th>
-                <th class="hidden md:table-cell py-2 px-2 w-[8%]">PELAKSANAAN</th>
-                <th class="hidden md:table-cell py-2 px-2 w-[9%]">KETERANGAN</th>
-                <th class="py-2 px-1.5 w-[16%] md:w-[6%] text-center">${isAdmin || isBc || isUser ? 'STATUS' : 'AKSI'}</th>
+                <th class="py-2.5 px-2 w-[13%]">CLUSTER & LOKASI</th>
+                <th class="hidden md:table-cell py-2.5 px-2 w-[18%]">DESKRIPSI</th>
+                <th class="hidden md:table-cell py-2.5 px-2 w-[10%] text-center">ARMADA</th>
+                <th class="hidden md:table-cell py-2.5 px-2 w-[11%]">PERSONIL</th>
+                <th class="py-2.5 px-2 w-[9%] text-center">AKSI</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -18344,16 +18974,13 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       const tbody = container.querySelector('tbody');
       if (jobs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="py-6 text-center text-slate-400 italic text-[11px]">${searchVal ? `Tidak ada job request yang cocok dengan pencarian "${searchVal}"` : 'Tidak ada request Water Truck pending'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-400 italic text-[11px]">${searchVal ? `Tidak ada job request yang cocok dengan pencarian "${searchVal}"` : 'Tidak ada request Water Truck pending'}</td></tr>`;
         return;
       }
 
       jobs.forEach(job => {
         const unitType = getUnitTypeFromMaster(job.noLambung, job.typeUnit || 'Unit');
         const jobNoId = (typeof getJobNoId === 'function') ? getJobNoId(job) : (job.noId || job.job_id || job.id || '-');
-        const pelaksanaanHtml = (job.jamStart && job.jamEnd)
-          ? `<div class="font-mono text-[11px] text-slate-800 font-semibold leading-tight"><div>Start: ${job.jamStart}</div><div>End: ${job.jamEnd}</div></div>`
-          : (job.jamStart ? `<div class="font-mono text-[11px] text-slate-800 font-semibold leading-tight">Start: ${job.jamStart}</div>` : `<span class="text-slate-400 font-bold">-</span>`);
 
         const isActioned = (job.status === 'done' || job.status === 'ach' || job.status === 'cancel');
 
@@ -18398,21 +19025,40 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           <td class="hidden md:table-cell py-1.5 px-2 break-words text-[11px]">
             ${renderPersonnelCell(job)}
           </td>
-          <td class="hidden md:table-cell py-1.5 px-2 font-mono text-[11.5px] font-bold text-slate-800 break-words">${job.hmUnit || '-'}</td>
-          <td class="hidden md:table-cell py-1.5 px-2 break-words">${pelaksanaanHtml}</td>
-          <td class="hidden md:table-cell py-1.5 px-2 text-[11px] text-slate-600 break-words">
-            <div class="line-clamp-2">${(job.status === 'done' || job.status === 'ach') ? (job.keterangan || '-') : '-'}</div>
-          </td>
           <td class="py-1.5 px-2 md:py-2 md:px-2 text-center align-middle">
-            ${isAdmin || isActioned ? `
+            ${(isBc || isUser) && !isAdmin ? `
               <div class="flex items-center justify-center">
                 ${getJobRequestStatusBadge(job)}
               </div>
+            ` : (isActioned ? `
+              <div class="flex items-center justify-center space-x-1.5">
+                ${getJobRequestStatusBadge(job)}
+                ${isAdmin ? `
+                  <button type="button" onclick="event.stopPropagation(); promptDeleteJob('${job.id}')" 
+                    title="Hapus Job Request (Khusus Admin)" 
+                    class="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
+                ` : ''}
+              </div>
             ` : `
-              <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-bold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95">
-                ACTION
-              </button>
-            `}
+              <div class="flex items-center justify-center space-x-1.5">
+                <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-bold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95" title="Kerjakan / Action Job Request">
+                  ACTION
+                </button>
+                ${isAdmin ? `
+                  <button type="button" onclick="event.stopPropagation(); promptDeleteJob('${job.id}')" 
+                    title="Hapus Job Request (Khusus Admin)" 
+                    class="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
+                ` : ''}
+              </div>
+            `)}
           </td>
         `;
         tbody.appendChild(tr);
@@ -21048,6 +21694,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       if (st === 'bd' || st === 'breakdown') {
         return '<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">BD</span>';
       }
+      if (st === 'parkir') {
+        return '<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800 border border-purple-300">PARKIR</span>';
+      }
       if (st === 'non_ach' || st === 'non-ach') {
         return '<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">NON-ACH</span>';
       }
@@ -21371,7 +22020,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
     function renderJobActionCell(job) {
       if (!job) return '<span class="text-slate-400 font-bold text-xs">-</span>';
       const s = (job.status || '').toLowerCase();
-      if (s === 'ach' || s === 'achieved' || s === 'done' || s === 'non_ach' || s === 'non-ach' || s === 'cancel' || s === 'cancelled' || s === 'service' || s === 'bd') {
+      if (s === 'ach' || s === 'achieved' || s === 'done' || s === 'non_ach' || s === 'non-ach' || s === 'cancel' || s === 'cancelled' || s === 'service' || s === 'bd' || s === 'breakdown' || s === 'parkir') {
         return `<div class="flex items-center justify-center">${getJobStatusBadge(job)}</div>`;
       }
 
@@ -21389,13 +22038,21 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
     }
     window.renderJobActionCell = renderJobActionCell;
 
-    function submitNonAchAction(e) {
+    async function submitNonAchAction(e) {
       if (e && e.preventDefault) e.preventDefault();
       const job = findJobById(state.currentActionJobId);
       if (!job) {
         showToast('Data job tidak ditemukan', 'error');
         return;
       }
+
+      // LAYER 2 GUARD: Cek apakah unit sudah di-action rekan lain
+      const isAlreadyDone = await checkJobAlreadyActionedGuard(job, true);
+      if (isAlreadyDone) {
+        toggleModal('modal-non-ach-form', false);
+        return;
+      }
+
       const kategori = document.getElementById('nonach-kategori')?.value || 'Lain-lain';
       const alasan = document.getElementById('nonach-alasan')?.value || '-';
 
@@ -22274,8 +22931,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       if (!j) return false;
       const s = String(j.status || '').toLowerCase().trim();
       const sf = String(j.status_final || '').toUpperCase().trim();
-      return ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown'].includes(s) ||
-        ['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN'].includes(sf);
+      return ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'parkir'].includes(s) ||
+        ['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR'].includes(sf);
     }
     window.isAchLikeStatus = isAchLikeStatus;
 
@@ -22382,6 +23039,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       else if (job.status === 'cancel' || job.status === 'cancelled') statusStr = 'CANCEL';
       else if (job.status === 'service') statusStr = 'SERVICE';
       else if (job.status === 'bd' || job.status === 'breakdown') statusStr = 'BREAKDOWN';
+      else if (job.status === 'parkir') statusStr = 'PARKIR';
       else if (job.status === 'done') statusStr = 'DONE';
 
       const armada = (job.armada && job.armada !== '-')
@@ -25194,7 +25852,7 @@ Keterangan : ${keterangan}`;
         }
       }
 
-      const isActioned = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(String(j.status || j.status_final || '').toLowerCase().trim());
+      const isActioned = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'parkir', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(String(j.status || j.status_final || '').toLowerCase().trim());
       const hasRealizationTime = Boolean(j.status_final || (j.jamStart && j.jamEnd) || (isActioned && (j.jamStart || j.jamEnd)));
 
       // ----------------------------------------------------------------------
@@ -25519,7 +26177,7 @@ Keterangan : ${keterangan}`;
       const isCompletedFilter = j => {
         const s = String(j.status || '').toLowerCase().trim();
         // Tampilkan SEMUA unit yang sudah di-action (ACH, SERVICE, BD, NON-ACH, CANCEL) di semua akses
-        return ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) ||
+        return ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'parkir', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) ||
           (j.status_final !== undefined && j.status_final !== null && String(j.status_final).trim() !== '');
       };
 
@@ -26457,11 +27115,242 @@ Keterangan : ${keterangan}`;
     }
     window.switchMasterSubtab = switchMasterSubtab;
 
-    function openActionDecision(jobId) {
+    /**
+     * =========================================================================
+     * FITUR PENGAMAN ANTI-DUPLIKASI & ANTI-OVERWRITE JOB (3-LAYER DEFENSE)
+     * Mencegah pengguna meng-action ulang unit yang sudah diselesaikan rekan lain
+     * =========================================================================
+     */
+
+    // 1. Pencarian di Riwayat Lokal (Kecepatan 0ms)
+    function findActionedRecordLocally(job) {
+      if (!job || !Array.isArray(state.jobHistory)) return null;
+      const lambung = String(job.noLambung || job.no_lambung || job.kodeUnit || job.unit || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (!lambung) return null;
+
+      const tglRencana = String(job.tanggal || job.tanggal_rencana || job.tanggalRealisasi || '').trim().split('T')[0];
+      const shift = parseInt(job.shift || job.shift_rencana || 1, 10);
+      const isWt = isJobWaterTruck(job);
+      const round = parseInt(job.washingRound || job.washing_round || 1, 10);
+      const isReq = isJobAnOrderRequest(job);
+      const jobId = String(job.id || job.job_id || '').trim();
+
+      // Cek kecocokan ID langsung
+      let found = state.jobHistory.find(h => {
+        const hId = String(h.id || h.job_id || '');
+        if (jobId && (hId === jobId || hId.startsWith(jobId + '-'))) {
+          const st = String(h.status_final || h.status || '').toUpperCase();
+          return ['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR', 'ACH'].includes(st);
+        }
+        return false;
+      });
+      if (found) return found;
+
+      // Cek kecocokan nomor lambung, tanggal dan shift
+      found = state.jobHistory.find(h => {
+        const hLambung = String(h.no_lambung || h.noLambung || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (!hLambung || hLambung !== lambung) return false;
+
+        if (isReq) {
+          const hId = String(h.id || h.job_id || '');
+          return jobId && hId.includes(jobId);
+        }
+
+        const hTgl = String(h.tanggal_rencana || h.tanggal_eksekusi || h.tanggal || '').trim().split('T')[0];
+        if (tglRencana && hTgl) {
+          const norm1 = tglRencana.includes('/') ? tglRencana.split('/').reverse().join('-') : tglRencana;
+          const norm2 = hTgl.includes('/') ? hTgl.split('/').reverse().join('-') : hTgl;
+          if (norm1 !== norm2) return false;
+        }
+
+        const hShift = parseInt(h.shift_rencana || h.shift || 1, 10);
+        if (shift && hShift && shift !== hShift) return false;
+
+        if (isWt) {
+          const hRound = parseInt(h.washingRound || h.washing_round || 1, 10);
+          if (round && hRound && round !== hRound) return false;
+        }
+
+        const st = String(h.status_final || h.status || '').toUpperCase();
+        return ['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR', 'ACH'].includes(st);
+      });
+
+      return found || null;
+    }
+    window.findActionedRecordLocally = findActionedRecordLocally;
+
+    // 2. Pemeriksaan Langsung ke Cloud Supabase (~100ms) jika lokal belum tersinkron
+    async function checkActionedRecordOnServer(job) {
+      if (!state.supabaseClient || !job) return null;
+      const lambung = String(job.noLambung || job.no_lambung || job.kodeUnit || job.unit || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (!lambung) return null;
+
+      const isWt = isJobWaterTruck(job);
+      const targetTable = isWt ? 'job_history_wt' : 'job_history_lt';
+      const shift = parseInt(job.shift || job.shift_rencana || 1, 10);
+      const rawDate = String(job.tanggal || job.tanggal_rencana || job.tanggalRealisasi || '').trim().split('T')[0];
+
+      try {
+        let query = state.supabaseClient
+          .from(targetTable)
+          .select('id, no_lambung, armada_unit, opt_name, mp1, mp2, jam_start, jam_end, status_final, keterangan, created_at, tanggal_rencana, tanggal_eksekusi, shift_rencana')
+          .eq('no_lambung', lambung)
+          .limit(5);
+
+        if (rawDate) {
+          const dateIso = rawDate.includes('/') ? rawDate.split('/').reverse().join('-') : rawDate;
+          query = query.or(`tanggal_rencana.eq.${dateIso},tanggal_eksekusi.eq.${dateIso}`);
+        }
+
+        let { data, error } = await query;
+        if (error && (error.code === 'PGRST205' || error.code === '42P01')) {
+          const fb = await state.supabaseClient
+            .from('job_history')
+            .select('id, no_lambung, armada_unit, opt_name, mp1, mp2, jam_start, jam_end, status_final, keterangan, created_at, tanggal_rencana, tanggal_eksekusi, shift_rencana')
+            .eq('no_lambung', lambung)
+            .limit(5);
+          data = fb.data;
+          error = fb.error;
+        }
+
+        if (!error && Array.isArray(data) && data.length > 0) {
+          const matched = data.find(r => {
+            const s = String(r.status_final || '').toUpperCase();
+            const isCompleted = ['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR', 'ACH'].includes(s);
+            if (!isCompleted) return false;
+            if (shift && r.shift_rencana && parseInt(r.shift_rencana, 10) !== shift) return false;
+            return true;
+          });
+
+          if (matched) {
+            if (!Array.isArray(state.jobHistory)) state.jobHistory = [];
+            const exIdx = state.jobHistory.findIndex(h => String(h.id || h.job_id) === String(matched.id));
+            if (exIdx !== -1) {
+              state.jobHistory[exIdx] = matched;
+            } else {
+              state.jobHistory.unshift(matched);
+            }
+            safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
+            return matched;
+          }
+        }
+      } catch (err) {
+        console.warn('[checkActionedRecordOnServer Exception]', err);
+      }
+      return null;
+    }
+    window.checkActionedRecordOnServer = checkActionedRecordOnServer;
+
+    // 3. Tampilkan Modal Dialog Peringatan Sudah Dikerjakan
+    function showAlreadyActionedModal(info) {
+      const elTitle = document.getElementById('already-actioned-title');
+      const elMsg = document.getElementById('already-actioned-msg');
+      const elUnit = document.getElementById('already-actioned-unit');
+      const elPic = document.getElementById('already-actioned-pic');
+      const elTime = document.getElementById('already-actioned-time');
+      const elStatus = document.getElementById('already-actioned-status');
+
+      if (elTitle) elTitle.textContent = info.isSubmitting ? 'Simpan Dibatalkan (Sudah Selesai)' : 'Pekerjaan Sudah Selesai';
+      if (elMsg) {
+        elMsg.textContent = info.isSubmitting
+          ? `Pekerjaan untuk unit ini baru saja disubmit oleh rekan Anda. Untuk mencegah data tertimpa atau duplikasi, formulir ini dibatalkan.`
+          : `Unit ini sudah diselesaikan oleh rekan Anda dan tercatat di sistem. Anda tidak perlu menginput ulang.`;
+      }
+      if (elUnit) elUnit.textContent = info.unitNo || '-';
+      if (elPic) elPic.textContent = `${info.pelaku}${info.armadaStr ? ' (' + info.armadaStr + ')' : ''}`;
+      if (elTime) elTime.textContent = info.jamStr || 'Tercatat Selesai';
+      if (elStatus) elStatus.textContent = (info.statusStr || 'ACHIEVED').toUpperCase();
+
+      toggleModal('modal-already-actioned', true);
+    }
+    window.showAlreadyActionedModal = showAlreadyActionedModal;
+
+    // 4. Controller Guard Sentral Anti-Duplikasi & Anti-Overwrite
+    async function checkJobAlreadyActionedGuard(job, isSubmitting = false) {
+      if (!job) return false;
+
+      // Cek di riwayat lokal
+      let record = findActionedRecordLocally(job);
+
+      // Jika belum ada di lokal, cek server database
+      if (!record && state.supabaseClient) {
+        record = await checkActionedRecordOnServer(job);
+      }
+
+      if (record) {
+        const unitNo = job.noLambung || record.no_lambung || 'Unit';
+        const pelaku = (record.opt_name && record.opt_name !== '-') ? record.opt_name : 'Rekan Anda';
+        const armadaStr = (record.armada_unit && record.armada_unit !== '-') ? record.armada_unit : '';
+        const jam = record.jam_end || record.jam_start || '';
+        const jamStr = jam ? `Pukul ${jam}` : (record.created_at ? new Date(record.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-');
+        const statusStr = record.status_final || 'ACHIEVED';
+
+        // Bersihkan unit dari antrean jadwal aktif di HP pengguna agar tidak muncul lagi
+        const targetId = String(job.id || '');
+        const cleanUnit = String(unitNo).toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const cleanDate = String(job.tanggal || job.tanggal_rencana || record.tanggal_rencana || '').split('T')[0];
+        const shift = parseInt(job.shift || job.shift_rencana || record.shift_rencana || 1, 10);
+
+        if (state.lubetruckState?.jobs) {
+          state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => {
+            if (String(j.id) === targetId) return false;
+            const jU = String(j.noLambung || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            const jD = String(j.tanggal || '').split('T')[0];
+            const jS = parseInt(j.shift || 1, 10);
+            return !(jU === cleanUnit && jD === cleanDate && jS === shift);
+          });
+        }
+        if (state.watertruckState?.jobs) {
+          state.watertruckState.jobs = state.watertruckState.jobs.filter(j => {
+            if (String(j.id) === targetId) return false;
+            const jU = String(j.noLambung || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            const jD = String(j.tanggal || '').split('T')[0];
+            const jS = parseInt(j.shift || 1, 10);
+            return !(jU === cleanUnit && jD === cleanDate && jS === shift);
+          });
+        }
+        if (state.unscheduledLtJobs) {
+          state.unscheduledLtJobs = state.unscheduledLtJobs.filter(j => String(j.id) !== targetId);
+        }
+        if (state.unscheduledWtJobs) {
+          state.unscheduledWtJobs = state.unscheduledWtJobs.filter(j => String(j.id) !== targetId);
+        }
+        if (window.globalDataCache) {
+          window.globalDataCache.jobs?.delete(targetId);
+          window.globalDataCache.orderRequests?.delete(targetId);
+        }
+
+        if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
+        if (typeof refreshActiveTable === 'function') refreshActiveTable();
+        if (typeof debouncedRefreshUI === 'function') debouncedRefreshUI();
+
+        showAlreadyActionedModal({
+          isSubmitting,
+          unitNo,
+          pelaku,
+          armadaStr,
+          jamStr,
+          statusStr
+        });
+
+        return true;
+      }
+
+      return false;
+    }
+    window.checkJobAlreadyActionedGuard = checkJobAlreadyActionedGuard;
+
+    async function openActionDecision(jobId) {
       state.currentActionJobId = jobId;
       const job = (typeof findJobById === 'function') ? findJobById(jobId) : null;
       if (!job) {
         showToast('Data unit tidak ditemukan!', 'error');
+        return;
+      }
+
+      // LAYER 1 GUARD: Pre-check apakah unit sudah diselesaikan rekan lain
+      const isAlreadyDone = await checkJobAlreadyActionedGuard(job, false);
+      if (isAlreadyDone) {
         return;
       }
 
@@ -26472,8 +27361,6 @@ Keterangan : ${keterangan}`;
         openAchForm();
         return;
       }
-
-
 
       const titleEl = document.getElementById('decision-modal-title');
       const subEl = document.getElementById('decision-modal-subtitle');
@@ -26547,8 +27434,8 @@ Keterangan : ${keterangan}`;
     }
     window.formatDriveImageUrl = formatDriveImageUrl;
 
-    // Helper kompresi gambar via canvas HTML5
-    function compressImageFile(file, maxDim = 1200, quality = 0.85) {
+    // Helper kompresi gambar via canvas HTML5 (Dioptimasi 1024px @ 70% agar ukuran ~90-130KB dan upload super cepat)
+    function compressImageFile(file, maxDim = 1024, quality = 0.70) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onerror = reject;
@@ -26582,7 +27469,7 @@ Keterangan : ${keterangan}`;
       });
     }
 
-    // Render Preview Foto (1 Tombol Utama + Thumbnail Cards dengan Tombol Hapus)
+    // Render Preview Foto (1 Tombol Utama + Thumbnail Cards yang BISA DIKLIK & DI-ZOOM + Tombol Hapus)
     function renderAchPhotoSlots() {
       const container = document.getElementById('ach-photo-slots');
       const countBadge = document.getElementById('ach-photo-count-badge');
@@ -26610,7 +27497,7 @@ Keterangan : ${keterangan}`;
           hint.textContent = 'Maksimal 5 foto (kelebihan)';
         } else {
           hint.className = 'text-emerald-600 font-bold';
-          hint.textContent = `✓ ${validPhotos.length} foto siap dilampirkan`;
+          hint.textContent = `✓ ${validPhotos.length} foto siap dilampirkan (klik foto untuk zoom)`;
         }
       }
 
@@ -26618,20 +27505,28 @@ Keterangan : ${keterangan}`;
         const slot = document.createElement('div');
         const isDrive = photo && typeof photo === 'string' && photo.startsWith('http');
         const directSrc = formatDriveImageUrl(photo);
-        slot.className = 'relative border border-slate-200 bg-slate-50 rounded-xl overflow-hidden shadow-2xs group';
+        slot.className = 'relative border border-slate-200 bg-slate-50 rounded-xl overflow-hidden shadow-2xs group cursor-pointer hover:border-brand-500 hover:shadow-md transition';
         slot.innerHTML = `
-          <div class="aspect-4/3 w-full bg-slate-900 overflow-hidden flex items-center justify-center">
+          <div class="aspect-4/3 w-full bg-slate-900 overflow-hidden flex items-center justify-center relative cursor-pointer" onclick="openPhotoPreview(state.currentAchPhotos, ${idx}, 'Pratinjau Foto ${idx + 1}')">
             <img src="${directSrc}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200" alt="Foto ${idx + 1}">
+            <!-- Overlay Info Klik Zoom -->
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity duration-150 p-2 text-center pointer-events-none">
+              <span class="text-base mb-0.5">🔍</span>
+              <span class="text-[10px] font-bold bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-xs">Klik untuk Zoom</span>
+            </div>
           </div>
-          <div class="p-1.5 bg-white flex items-center justify-between border-t border-slate-100">
-            <span class="text-[9.5px] font-bold text-slate-700">Foto ${idx + 1}</span>
+          <div class="p-1.5 bg-white flex items-center justify-between border-t border-slate-100 cursor-pointer" onclick="openPhotoPreview(state.currentAchPhotos, ${idx}, 'Pratinjau Foto ${idx + 1}')">
+            <span class="text-[9.5px] font-bold text-slate-700 flex items-center space-x-1">
+              <span>Foto ${idx + 1}</span>
+              <span class="text-slate-400 text-[9px]">🔍</span>
+            </span>
             <span class="text-[8px] font-extrabold px-1.5 py-0.2 rounded ${isDrive ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
               ${isDrive ? 'Drive' : 'Lokal'}
             </span>
           </div>
-          <button type="button" onclick="removeAchPhoto(${idx})"
+          <button type="button" onclick="event.stopPropagation(); removeAchPhoto(${idx});"
             title="Hapus foto ini"
-            class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center text-xs font-bold shadow-md cursor-pointer transition">
+            class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center text-xs font-bold shadow-md cursor-pointer transition z-10">
             ×
           </button>
         `;
@@ -26689,7 +27584,7 @@ Keterangan : ${keterangan}`;
       for (let i = 0; i < filesToProcess.length; i++) {
         const file = filesToProcess[i];
         try {
-          const photoDataUrl = await compressImageFile(file, 1200, 0.85);
+          const photoDataUrl = await compressImageFile(file, 1024, 0.70);
           state.currentAchPhotos.push(photoDataUrl);
           renderAchPhotoSlots();
 
@@ -26964,17 +27859,16 @@ Keterangan : ${keterangan}`;
 
       let uploadSuccessCount = 0;
       try {
-        for (let i = 0; i < fotosArray.length; i++) {
-          const src = fotosArray[i];
+        const syncPromises = fotosArray.map(async (src, i) => {
           if (src && typeof src === 'string' && src.startsWith('data:image/')) {
-            // Silent: showToast(`Mengunggah Foto ${i + 1} (${job.noLambung || ''}) ke Google Drive...`, 'info');
             const driveUrl = await uploadBase64PhotoToDrive(src, job.noLambung, job.cat, i, job.id);
             if (driveUrl) {
               fotosArray[i] = driveUrl;
               uploadSuccessCount++;
             }
           }
-        }
+        });
+        await Promise.all(syncPromises);
 
         job.fotos = fotosArray;
         safeStorage.setItem(savedKey, JSON.stringify(fotosArray));
@@ -27487,6 +28381,7 @@ Keterangan : ${keterangan}`;
       const normalFields = document.getElementById('ach-normal-form-fields');
       const servicePsBox = document.getElementById('ach-service-ps-container');
       const bdBox = document.getElementById('ach-bd-container');
+      const parkirBox = document.getElementById('ach-parkir-container');
       const submitBtn = document.getElementById('ach-form-submit-btn');
 
       const jamStart = document.getElementById('ach-jam-start');
@@ -27499,6 +28394,7 @@ Keterangan : ${keterangan}`;
         if (normalFields) normalFields.classList.add('hidden');
         if (servicePsBox) servicePsBox.classList.remove('hidden');
         if (bdBox) bdBox.classList.add('hidden');
+        if (parkirBox) parkirBox.classList.add('hidden');
         if (submitBtn) {
           submitBtn.textContent = 'SIMPAN SERVICE';
           submitBtn.className = 'flex-1 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold uppercase tracking-wider transition shadow-sm cursor-pointer';
@@ -27507,14 +28403,28 @@ Keterangan : ${keterangan}`;
         if (normalFields) normalFields.classList.add('hidden');
         if (servicePsBox) servicePsBox.classList.add('hidden');
         if (bdBox) bdBox.classList.remove('hidden');
+        if (parkirBox) parkirBox.classList.add('hidden');
         if (submitBtn) {
           submitBtn.textContent = 'SIMPAN BD';
           submitBtn.className = 'flex-1 py-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold uppercase tracking-wider transition shadow-sm cursor-pointer';
         }
+      } else if (val === 'parkir') {
+        // Sesuai permintaan pengguna: Unit parkir tidak perlu dimintai foto, hanya dimintai keterangan seperti unit breakdown!
+        if (normalFields) normalFields.classList.add('hidden');
+        if (servicePsBox) servicePsBox.classList.add('hidden');
+        if (bdBox) bdBox.classList.add('hidden');
+        if (parkirBox) parkirBox.classList.remove('hidden');
+        if (submitBtn) {
+          submitBtn.textContent = 'SIMPAN PARKIR';
+          submitBtn.className = 'flex-1 py-3 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold uppercase tracking-wider transition shadow-sm cursor-pointer';
+        }
+        const parkirNoteEl = document.getElementById('ach-parkir-notes');
+        if (parkirNoteEl) setTimeout(() => parkirNoteEl.focus(), 80);
       } else if (val === 'normal') {
         if (normalFields) normalFields.classList.remove('hidden');
         if (servicePsBox) servicePsBox.classList.add('hidden');
         if (bdBox) bdBox.classList.add('hidden');
+        if (parkirBox) parkirBox.classList.add('hidden');
         if (submitBtn) {
           submitBtn.textContent = 'SIMPAN ACH';
           submitBtn.className = 'flex-1 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold uppercase tracking-wider transition shadow-sm cursor-pointer';
@@ -27524,6 +28434,7 @@ Keterangan : ${keterangan}`;
         if (normalFields) normalFields.classList.add('hidden');
         if (servicePsBox) servicePsBox.classList.add('hidden');
         if (bdBox) bdBox.classList.add('hidden');
+        if (parkirBox) parkirBox.classList.add('hidden');
         if (submitBtn) {
           submitBtn.textContent = 'PILIH KONDISI UNIT';
           submitBtn.className = 'flex-1 py-3 rounded-2xl bg-slate-300 text-slate-500 font-extrabold uppercase tracking-wider transition shadow-sm cursor-not-allowed';
@@ -27560,6 +28471,176 @@ Keterangan : ${keterangan}`;
       }
     }
     window.handleAchKeadaanChange = handleAchKeadaanChange;
+
+    /**
+     * Konfigurasi & State Manajemen Pemeriksaan Komponen Khusus SCH Top Up Oil
+     */
+    const topUpComponentKeys = [
+      { key: 'engine', label: 'OLI ENGINE' },
+      { key: 'transmisi', label: 'OLI TRANSMISI/SWING' },
+      { key: 'hydraulic', label: 'OLI HYDRAULIC' },
+      { key: 'coolant', label: 'AIR COOLANT' }
+    ];
+
+    window._topUpState = {
+      engine: { status: '', reason: '' },
+      transmisi: { status: '', reason: '' },
+      hydraulic: { status: '', reason: '' },
+      coolant: { status: '', reason: '' }
+    };
+
+    function setTopUpStatus(compKey, status) {
+      if (!window._topUpState) window._topUpState = {};
+      if (!window._topUpState[compKey]) window._topUpState[compKey] = { status: '', reason: '' };
+      window._topUpState[compKey].status = status;
+
+      const btnAman = document.getElementById(`btn-topup-${compKey}-aman`);
+      const btnTidak = document.getElementById(`btn-topup-${compKey}-tidak`);
+      const dropdownBox = document.getElementById(`dropdown-topup-${compKey}`);
+      const cardBox = document.getElementById(`card-topup-${compKey}`);
+
+      if (status === 'Aman') {
+        if (btnAman) {
+          btnAman.className = 'px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer border-emerald-500 bg-emerald-500 text-white shadow-2xs';
+        }
+        if (btnTidak) {
+          btnTidak.className = 'px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-slate-300';
+        }
+        if (dropdownBox) dropdownBox.classList.add('hidden');
+        if (cardBox) {
+          cardBox.className = 'p-2.5 rounded-2xl bg-emerald-50/30 border border-emerald-200 space-y-2 transition';
+        }
+      } else if (status === 'Tidak') {
+        if (btnTidak) {
+          btnTidak.className = 'px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer border-rose-500 bg-rose-500 text-white shadow-2xs';
+        }
+        if (btnAman) {
+          btnAman.className = 'px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-slate-300';
+        }
+        if (dropdownBox) dropdownBox.classList.remove('hidden');
+        if (cardBox) {
+          cardBox.className = 'p-2.5 rounded-2xl bg-rose-50/30 border border-rose-200 space-y-2 transition';
+        }
+        const selEl = document.getElementById(`sel-topup-${compKey}`);
+        if (selEl && !selEl.value) {
+          try { selEl.focus(); } catch (e) { }
+        }
+      } else {
+        if (btnAman) {
+          btnAman.className = 'px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-slate-300';
+        }
+        if (btnTidak) {
+          btnTidak.className = 'px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-slate-300';
+        }
+        if (dropdownBox) dropdownBox.classList.add('hidden');
+        if (cardBox) {
+          cardBox.className = 'p-2.5 rounded-2xl bg-slate-50/70 border border-slate-200 space-y-2 transition';
+        }
+      }
+    }
+
+    function setAllTopUpAman() {
+      topUpComponentKeys.forEach(comp => {
+        setTopUpStatus(comp.key, 'Aman');
+      });
+      showToast('Semua komponen Top Up diset Aman', 'success');
+    }
+
+    function handleTopUpSelectReason(compKey, val) {
+      const descEl = document.getElementById(`desc-topup-${compKey}`);
+      if (val === 'Lainnya') {
+        if (descEl) {
+          descEl.focus();
+          descEl.placeholder = 'Ketik keterangan kendala secara manual...';
+        }
+      } else if (val) {
+        if (descEl && !descEl.value) {
+          descEl.placeholder = 'Detail / liter penambahan (opsional)...';
+        }
+      }
+    }
+
+    function getTopUpComponentReason(compKey) {
+      const selEl = document.getElementById(`sel-topup-${compKey}`);
+      const descEl = document.getElementById(`desc-topup-${compKey}`);
+      const selVal = (selEl?.value || '').trim();
+      const descVal = (descEl?.value || '').trim();
+
+      if (selVal === 'Lainnya') {
+        return descVal;
+      }
+      if (selVal && descVal) {
+        return `${selVal} - ${descVal}`;
+      }
+      return selVal || descVal || '';
+    }
+
+    function buildTopUpKeteranganText() {
+      const lines = topUpComponentKeys.map(comp => {
+        const status = window._topUpState?.[comp.key]?.status || 'Aman';
+        if (status === 'Tidak') {
+          const reason = getTopUpComponentReason(comp.key);
+          return reason ? `${comp.label} : Tidak (${reason})` : `${comp.label} : Tidak`;
+        }
+        return `${comp.label} : Aman`;
+      });
+      return lines.join('\n');
+    }
+
+    function resetTopUpComponent(compKey) {
+      if (window._topUpState && window._topUpState[compKey]) {
+        window._topUpState[compKey] = { status: '', reason: '' };
+      }
+      setTopUpStatus(compKey, '');
+      const selEl = document.getElementById(`sel-topup-${compKey}`);
+      const descEl = document.getElementById(`desc-topup-${compKey}`);
+      if (selEl) selEl.value = '';
+      if (descEl) descEl.value = '';
+    }
+
+    function initTopUpFormValues(job) {
+      const existingKet = String(job.keterangan || '');
+      const hasTopUpFormat = topUpComponentKeys.some(c => existingKet.toUpperCase().includes(c.label));
+
+      topUpComponentKeys.forEach(comp => {
+        resetTopUpComponent(comp.key);
+        if (hasTopUpFormat) {
+          const regex = new RegExp(comp.label.replace(/[\/\(\)]/g, '\\$&') + '\\s*:\\s*([^\\n\\r]+)', 'i');
+          const match = existingKet.match(regex);
+          if (match) {
+            const rawVal = match[1].trim();
+            if (rawVal.toLowerCase().startsWith('tidak')) {
+              setTopUpStatus(comp.key, 'Tidak');
+              const reasonMatch = rawVal.match(/tidak\s*[\(\-:]\s*(.+)\)?/i);
+              let reason = reasonMatch ? reasonMatch[1].replace(/\)$/, '').trim() : '';
+              const selEl = document.getElementById(`sel-topup-${comp.key}`);
+              const descEl = document.getElementById(`desc-topup-${comp.key}`);
+              if (selEl && reason) {
+                const optFound = Array.from(selEl.options).some(o => o.value === reason);
+                if (optFound) {
+                  selEl.value = reason;
+                } else {
+                  selEl.value = 'Lainnya';
+                  if (descEl) descEl.value = reason;
+                }
+              }
+            } else if (rawVal.toLowerCase().startsWith('aman')) {
+              setTopUpStatus(comp.key, 'Aman');
+            }
+          }
+        }
+      });
+    }
+
+    window.topUpComponentKeys = topUpComponentKeys;
+    window.setTopUpStatus = setTopUpStatus;
+    window.setAllTopUpAman = setAllTopUpAman;
+    window.handleTopUpSelectReason = handleTopUpSelectReason;
+    window.getTopUpComponentReason = getTopUpComponentReason;
+    window.buildTopUpKeteranganText = buildTopUpKeteranganText;
+    window.resetTopUpComponent = resetTopUpComponent;
+    window.initTopUpFormValues = initTopUpFormValues;
+
     function openAchForm() {
       toggleModal('modal-action-decision', false);
       const job = findJobById(state.currentActionJobId);
@@ -27774,6 +28855,27 @@ Keterangan : ${keterangan}`;
         }
       }
 
+      const isSchTopUp = !isJobRequest && (job.cat === 'topup' || job.cat === 'top up oil' || job.cat === 'topup_oil');
+      const topupContainer = document.getElementById('ach-topup-container');
+      const ketContainer = document.getElementById('ach-keterangan-container');
+
+      if (topupContainer) {
+        if (isSchTopUp) {
+          topupContainer.classList.remove('hidden');
+          initTopUpFormValues(job);
+        } else {
+          topupContainer.classList.add('hidden');
+        }
+      }
+
+      if (ketContainer) {
+        if (isSchTopUp) {
+          ketContainer.classList.add('hidden');
+        } else {
+          ketContainer.classList.remove('hidden');
+        }
+      }
+
       const ketInput = document.getElementById('ach-keterangan');
       const ketLabel = document.getElementById('ach-keterangan-label');
 
@@ -27811,6 +28913,8 @@ Keterangan : ${keterangan}`;
       if (sNotesEl) sNotesEl.value = job.serviceNotes || '';
       const bdNotesEl = document.getElementById('ach-bd-notes');
       if (bdNotesEl) bdNotesEl.value = job.bdNotes || '';
+      const parkirNotesEl = document.getElementById('ach-parkir-notes');
+      if (parkirNotesEl) parkirNotesEl.value = job.parkirNotes || '';
 
       toggleModal('modal-ach-form', true);
     }
@@ -27908,6 +29012,25 @@ Keterangan : ${keterangan}`;
         return;
       }
 
+      if (unitCondition === 'parkir') {
+        // Sesuai permintaan pengguna: Unit parkir hanya dimintai keterangan (seperti breakdown), tanpa meminta foto!
+        const parkirNotes = (document.getElementById('ach-parkir-notes')?.value || '').trim() || 'Unit parkir / standby lapangan';
+        job.status = 'parkir';
+        job.unitCondition = 'parkir';
+        job.isPending = false;
+        job.isLocked = true;
+        job.keterangan = `[PARKIR]: ${parkirNotes}`;
+        job.parkirNotes = parkirNotes;
+        if (!job.tanggalRealisasi) job.tanggalRealisasi = getEffectiveTodayString();
+        if (typeof lockJobHistorySnapshot === 'function') {
+          lockJobHistorySnapshot(job, 'PARKIR', job.keterangan);
+        }
+        toggleModal('modal-ach-form', false);
+        showToast(`Unit ${job.noLambung} dicatat status PARKIR (${parkirNotes})!`, 'info');
+        notifyDataChanged({ source: 'parkir_status', jobId: job.id, orderId: isJobRequest ? job.id : null });
+        return;
+      }
+
       const jamStart = document.getElementById('ach-jam-start')?.value || '';
       const jamEnd = document.getElementById('ach-jam-end')?.value || '';
 
@@ -27961,6 +29084,44 @@ Keterangan : ${keterangan}`;
         }
       }
 
+      const isSchTopUp = !isJobRequest && (job.cat === 'topup' || job.cat === 'top up oil' || job.cat === 'topup_oil');
+
+      // Validasi Khusus SCH Top Up Oil: Pastikan 4 komponen (Oli Engine, Transmisi/Swing, Hydraulic, Coolant) terisi
+      if (isSchTopUp && unitCondition === 'normal') {
+        for (const comp of topUpComponentKeys) {
+          const compStatus = window._topUpState?.[comp.key]?.status;
+          if (!compStatus) {
+            showToast(`Silakan pilih status (Aman / Tidak) untuk ${comp.label}!`, 'warning');
+            const cardEl = document.getElementById(`card-topup-${comp.key}`);
+            if (cardEl) {
+              cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              cardEl.classList.add('ring-2', 'ring-rose-400');
+              setTimeout(() => cardEl.classList.remove('ring-2', 'ring-rose-400'), 2500);
+            }
+            return;
+          }
+          if (compStatus === 'Tidak') {
+            const reason = getTopUpComponentReason(comp.key);
+            if (!reason) {
+              showToast(`Silakan pilih atau isi keterangan kendala untuk ${comp.label}!`, 'warning');
+              const selEl = document.getElementById(`sel-topup-${comp.key}`);
+              if (selEl) {
+                selEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                selEl.focus();
+              }
+              return;
+            }
+          }
+        }
+      }
+
+      // LAYER 2 GUARD: CEK DOUBLE-ACTION / OVERWRITE SEBELUM PROSES SIMPAN KE CLOUD
+      const isAlreadyDone = await checkJobAlreadyActionedGuard(job, true);
+      if (isAlreadyDone) {
+        toggleModal('modal-ach-form', false);
+        return;
+      }
+
       const submitBtn = document.getElementById('ach-form-submit-btn');
       const origBtnHtml = submitBtn ? submitBtn.innerHTML : 'Simpan ACH';
 
@@ -27984,7 +29145,12 @@ Keterangan : ${keterangan}`;
         if (!ltValue || ltValue === '-' || ltValue.startsWith('--')) {
           ltValue = (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '') || job.armada || job.ltUnit || job.wtUnit || '-';
         }
-        const ket = document.getElementById('ach-keterangan')?.value.trim() || (isJobRequest ? 'Selesai sesuai SOP' : 'Nihil / Lancar sesuai SOP');
+        let ket = '';
+        if (isSchTopUp) {
+          ket = buildTopUpKeteranganText();
+        } else {
+          ket = document.getElementById('ach-keterangan')?.value.trim() || (isJobRequest ? 'Selesai sesuai SOP' : 'Nihil / Lancar sesuai SOP');
+        }
 
         const optVal = document.getElementById('ach-opt-name')?.value || job.opt || '-';
         const mp1Val = document.getElementById('ach-mp1-name')?.value || job.mp1 || '-';
@@ -28047,12 +29213,15 @@ Keterangan : ${keterangan}`;
           job.armada = ltValue;
           job.opt = optVal;
 
-          for (let i = 0; i < totalPhotos; i++) {
-            const photoSrc = uploadedPhotos[i];
+          if (loadingMsg) {
+            loadingMsg.textContent = `Mengunggah ${totalPhotos} foto serentak ke Drive...`;
+          }
+
+          // OPTIMASI CEPAT: Unggah seluruh foto secara serentak (Parallel Promise.all)
+          // Memangkas waktu tunggu dari ~15-20 detik menjadi hanya ~1.5 - 2 detik!
+          let completedCount = 0;
+          const uploadPromises = uploadedPhotos.map(async (photoSrc, i) => {
             if (photoSrc && typeof photoSrc === 'string' && photoSrc.startsWith('data:image/')) {
-              if (loadingMsg) {
-                loadingMsg.textContent = `Unggah Foto ${i + 1}/${totalPhotos} ke Drive...`;
-              }
               try {
                 const driveUrl = await uploadBase64PhotoToDrive(photoSrc, job.noLambung, job.cat, i, job.id);
                 if (driveUrl) {
@@ -28060,9 +29229,16 @@ Keterangan : ${keterangan}`;
                 }
               } catch (uErr) {
                 console.warn(`[Submit Ach Photo ${i + 1} Upload Warning]`, uErr);
+              } finally {
+                completedCount++;
+                if (loadingMsg) {
+                  loadingMsg.textContent = `Mengunggah foto (${completedCount}/${totalPhotos})...`;
+                }
               }
             }
-          }
+          });
+
+          await Promise.all(uploadPromises);
         }
 
         // Sinkronisasi otomatis ke Monitoring Air Cleaner (KHUSUS LT):
@@ -28508,7 +29684,7 @@ Keterangan : ${keterangan}`;
 
       try {
         if (typeof showToast === 'function') showToast('Memproses dan mengompres foto evidence...', 'info');
-        const base64 = await compressImageFile(file, 1280, 0.85);
+        const base64 = await compressImageFile(file, 1024, 0.70);
         currentReplaceAcPhotoBase64 = base64;
 
         const previewImg = document.getElementById('replace-ac-preview-img');
@@ -29133,7 +30309,7 @@ Keterangan : ${keterangan}`;
       try {
         const compressedList = [];
         for (const file of files) {
-          const b64 = await compressImageFile(file, 1200, 0.85);
+          const b64 = await compressImageFile(file, 1024, 0.70);
           if (b64) compressedList.push(b64);
         }
 
@@ -32098,7 +33274,7 @@ Keterangan : ${keterangan}`;
       try {
         const targetId = String(job.id);
         const s = String(job.status || '').toLowerCase().trim();
-        const isActioned = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) || (job.status_final !== undefined && job.status_final !== null && String(job.status_final).trim() !== '') || Boolean(job.isLocked);
+        const isActioned = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'parkir', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) || (job.status_final !== undefined && job.status_final !== null && String(job.status_final).trim() !== '') || Boolean(job.isLocked);
 
         // ATURAN PENGGUNA: Jika job sudah di-action (ACH, SERVICE, BD, NON-ACH),
         // job HARUS berada di job_history dan DILARANG disimpan/di-upsert ke tabel jobs agar tabel jobs tidak menumpuk!
@@ -33620,40 +34796,9 @@ Keterangan : ${keterangan}`;
             debouncedRefreshUI();
           }
         })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'job_history' }, (payload) => {
-          if (!payload) return;
-          console.log('[Realtime Postgres job_history]', payload.eventType);
-          if (payload.eventType === 'DELETE') {
-            const delHistId = String(payload.old?.job_id || payload.old?.id || '');
-            if (delHistId && Array.isArray(state.jobHistory)) {
-              state.jobHistory = state.jobHistory.filter(h => String(h.job_id || h.id) !== delHistId);
-              safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
-              if (state.activeTab === 'completed' && typeof renderCompletedTable === 'function') {
-                renderCompletedTable();
-              }
-              if (typeof loadAirCleanerFromSupabase === 'function') {
-                loadAirCleanerFromSupabase(true);
-              }
-            }
-          } else if (payload.new) {
-            const newHist = payload.new;
-            if (!Array.isArray(state.jobHistory)) state.jobHistory = [];
-            const exIdx = state.jobHistory.findIndex(h => String(h.job_id || h.id) === String(newHist.job_id || newHist.id));
-            if (exIdx !== -1) {
-              state.jobHistory[exIdx] = newHist;
-            } else {
-              state.jobHistory.unshift(newHist);
-            }
-            safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
-            if (state.activeTab === 'completed' && typeof renderCompletedTable === 'function') {
-              renderCompletedTable();
-            }
-            const isAc = (newHist.cat === 'aircleaner' || newHist.cat === 'air_cleaner');
-            if (isAc && typeof loadAirCleanerFromSupabase === 'function') {
-              loadAirCleanerFromSupabase(true);
-            }
-          }
-        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'job_history_lt' }, (payload) => handleRealtimeHistoryMutated(payload))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'job_history_wt' }, (payload) => handleRealtimeHistoryMutated(payload))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'job_history' }, (payload) => handleRealtimeHistoryMutated(payload))
         .subscribe((status) => {
           const statusEl = document.getElementById('header-db-status');
           if (status === 'SUBSCRIBED') {
@@ -33683,6 +34828,67 @@ Keterangan : ${keterangan}`;
             }
           }
         });
+
+      // Handler Realtime Sinkronisasi Riwayat Baru / Selesai dari Rekan Kerja
+      function handleRealtimeHistoryMutated(payload) {
+        if (!payload) return;
+        console.log('[Realtime Postgres History]', payload.table, payload.eventType);
+        if (payload.eventType === 'DELETE') {
+          const delHistId = String(payload.old?.job_id || payload.old?.id || '');
+          if (delHistId && Array.isArray(state.jobHistory)) {
+            state.jobHistory = state.jobHistory.filter(h => String(h.job_id || h.id) !== delHistId);
+            safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
+            if (state.activeTab === 'completed' && typeof renderCompletedTable === 'function') {
+              renderCompletedTable();
+            }
+            if (typeof loadAirCleanerFromSupabase === 'function') {
+              loadAirCleanerFromSupabase(true);
+            }
+          }
+        } else if (payload.new) {
+          const newHist = payload.new;
+          if (!Array.isArray(state.jobHistory)) state.jobHistory = [];
+          const exIdx = state.jobHistory.findIndex(h => String(h.job_id || h.id) === String(newHist.job_id || newHist.id));
+          if (exIdx !== -1) {
+            state.jobHistory[exIdx] = newHist;
+          } else {
+            state.jobHistory.unshift(newHist);
+          }
+          safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
+
+          // SINKRONISASI INSTAN: Hapus unit yang baru saja diselesaikan dari tampilan jadwal aktif di HP rekan lain!
+          const unitNo = String(newHist.no_lambung || '').toUpperCase().trim();
+          const rawDate = String(newHist.tanggal_rencana || newHist.tanggal_eksekusi || '').split('T')[0];
+          const shift = parseInt(newHist.shift_rencana || 1, 10);
+
+          if (unitNo && state.lubetruckState?.jobs) {
+            state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => {
+              const jU = String(j.noLambung || '').toUpperCase().trim();
+              const jD = String(j.tanggal || '').split('T')[0];
+              const jS = parseInt(j.shift || 1, 10);
+              return !(jU === unitNo && jD === rawDate && jS === shift);
+            });
+          }
+          if (unitNo && state.watertruckState?.jobs) {
+            state.watertruckState.jobs = state.watertruckState.jobs.filter(j => {
+              const jU = String(j.noLambung || '').toUpperCase().trim();
+              const jD = String(j.tanggal || '').split('T')[0];
+              const jS = parseInt(j.shift || 1, 10);
+              return !(jU === unitNo && jD === rawDate && jS === shift);
+            });
+          }
+
+          if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
+          if (typeof refreshActiveTable === 'function') refreshActiveTable();
+          if (state.activeTab === 'completed' && typeof renderCompletedTable === 'function') {
+            renderCompletedTable();
+          }
+          const isAc = (newHist.cat === 'aircleaner' || newHist.cat === 'air_cleaner');
+          if (isAc && typeof loadAirCleanerFromSupabase === 'function') {
+            loadAirCleanerFromSupabase(true);
+          }
+        }
+      }
     }
 
     // RELAXED BACKGROUND POLLING (600 DETIK) & ZERO POLLING SAAT REALTIME AKTIF
@@ -33711,39 +34917,43 @@ Keterangan : ${keterangan}`;
           console.warn('[Relaxed Polling Error]', e);
         }
       }, 600000); // 10 menit
-
     }
     window.startRelaxedBackgroundPolling = startRelaxedBackgroundPolling;
 
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden && state.supabaseClient) {
-          // Jika WebSocket tersambung, data sudah realtime instan, tidak perlu fetch
-          if (isRealtimeSubscribed && realtimeChannel && realtimeChannel.state === 'joined') {
+          const isWsHealthy = isRealtimeSubscribed && realtimeChannel && realtimeChannel.state === 'joined';
+          // 1. Jika WebSocket dalam keadaan sehat & tersambung, data sudah 100% realtime (0 KB Egress!)
+          if (isWsHealthy) {
             return;
           }
-          console.log('[Realtime DB] Tab aktif kembali & WebSocket terputus, menyambungkan ulang...');
+
+          // 2. Jika WebSocket terputus saat layar HP mati / sleep, sambungkan ulang WebSocket
+          console.log('[Realtime DB] Tab aktif kembali & WebSocket offline, menyambungkan ulang...');
           setupSupabaseRealtimeListener();
+
+          // 3. Hanya lakukan fetch Hot-Window jika koneksi sempat terputus dan cooldown 60 detik terpenuhi
           const now = Date.now();
           const lastFetch = window.globalDataCache?.lastFetchTime || 0;
-          if (now - lastFetch >= 300000) { // Cooldown 5 menit
-            console.log('[Visibility Throttle] Sinkronisasi Hot-Window setelah reconnect...');
-            loadJobsFromSupabase();
+          if (now - lastFetch >= 60000) {
+            if (typeof loadJobsFromSupabase === 'function') {
+              loadJobsFromSupabase();
+            }
           }
         }
       });
       window.addEventListener('focus', () => {
         if (state.supabaseClient) {
-          // Hanya fetch jika koneksi WebSocket terputus untuk menghemat 100% kuota log saat fokus
-          if (isRealtimeSubscribed && realtimeChannel && realtimeChannel.state === 'joined') {
-            return;
+          const isWsHealthy = isRealtimeSubscribed && realtimeChannel && realtimeChannel.state === 'joined';
+          if (isWsHealthy) {
+            return; // 0 KB Egress saat WebSocket normal
           }
-          if (!realtimeChannel || realtimeChannel.state !== 'joined') {
-            const now = Date.now();
-            const lastFetch = window.globalDataCache?.lastFetchTime || 0;
-            if (now - lastFetch >= 300000) { // Cooldown 5 menit
-              console.log('[Focus Throttle] Window focus & WebSocket offline, sinkronisasi Hot-Window...');
-              setupSupabaseRealtimeListener();
+          const now = Date.now();
+          const lastFetch = window.globalDataCache?.lastFetchTime || 0;
+          if (now - lastFetch >= 60000) {
+            setupSupabaseRealtimeListener();
+            if (typeof loadJobsFromSupabase === 'function') {
               loadJobsFromSupabase();
             }
           }
@@ -34233,6 +35443,585 @@ Keterangan : ${keterangan}`;
         renderAdminJobRequests();
       }
     }
+
+    // ========================================================================
+    // CONTROLLER ORDER LAPANGAN & FORM PENYELESAIAN JOB (BANTU MP KHUSUS ADMIN)
+    // ========================================================================
+
+    let currentOrderSubtab = 'form';
+
+    function initOrderSubtabView() {
+      const isAdmin = (state.currentUser?.role === 'admin');
+      const switcherWrapper = document.getElementById('order-tab-switcher-wrapper');
+      const directTabBtn = document.getElementById('btn-order-tab-direct');
+
+      if (!isAdmin) {
+        // Jika bukan admin, sembunyikan pilihan penyelesaian job dan switcher
+        if (switcherWrapper) switcherWrapper.classList.add('hidden');
+        switchOrderSubtab('form');
+        return;
+      }
+
+      if (switcherWrapper) switcherWrapper.classList.remove('hidden');
+      if (directTabBtn) directTabBtn.classList.remove('hidden');
+
+      // Set tanggal default untuk jam start / finish jika kosong
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const jamNow = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      const jamStartEl = document.getElementById('direct-jam-start');
+      const jamFinishEl = document.getElementById('direct-jam-finish');
+      if (jamStartEl && !jamStartEl.value) jamStartEl.value = jamNow;
+      if (jamFinishEl && !jamFinishEl.value) jamFinishEl.value = jamNow;
+
+      if (currentOrderSubtab === 'direct') {
+        populateDirectArmadaOptions();
+      }
+    }
+    window.initOrderSubtabView = initOrderSubtabView;
+
+    function switchOrderSubtab(subtab) {
+      const isAdmin = (state.currentUser?.role === 'admin');
+      if (subtab === 'direct' && !isAdmin) {
+        showToast('Penyelesaian job langsung hanya dapat diakses oleh Admin!', 'warning');
+        subtab = 'form';
+      }
+
+      currentOrderSubtab = subtab;
+      const formPane = document.getElementById('order-subpane-form');
+      const directPane = document.getElementById('order-subpane-direct');
+      const btnForm = document.getElementById('btn-order-tab-form');
+      const btnDirect = document.getElementById('btn-order-tab-direct');
+
+      if (subtab === 'direct') {
+        if (formPane) formPane.classList.add('hidden');
+        if (directPane) directPane.classList.remove('hidden');
+
+        if (btnDirect) {
+          btnDirect.className = 'px-5 py-2.5 rounded-xl text-xs font-black tracking-wide transition-all shadow-xs bg-white text-slate-900 cursor-pointer flex items-center gap-1.5';
+        }
+        if (btnForm) {
+          btnForm.className = 'px-5 py-2.5 rounded-xl text-xs font-black tracking-wide transition-all text-slate-600 hover:text-slate-900 cursor-pointer';
+        }
+
+        populateDirectArmadaOptions();
+      } else {
+        if (formPane) formPane.classList.remove('hidden');
+        if (directPane) directPane.classList.add('hidden');
+
+        if (btnForm) {
+          btnForm.className = 'px-5 py-2.5 rounded-xl text-xs font-black tracking-wide transition-all shadow-xs bg-white text-slate-900 cursor-pointer';
+        }
+        if (btnDirect) {
+          btnDirect.className = 'px-5 py-2.5 rounded-xl text-xs font-black tracking-wide transition-all text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1.5';
+        }
+      }
+    }
+    window.switchOrderSubtab = switchOrderSubtab;
+
+    function handleDirectServiceTypeChange(svcType) {
+      populateDirectArmadaOptions();
+    }
+    window.handleDirectServiceTypeChange = handleDirectServiceTypeChange;
+
+    window._directArmadaData = [];
+
+    function populateDirectArmadaOptions() {
+      const armadaSelect = document.getElementById('direct-armada');
+      const searchInput = document.getElementById('search-direct-armada');
+      const clearBtn = document.getElementById('clear-direct-armada');
+      if (!armadaSelect) return;
+
+      const svcType = document.querySelector('input[name="direct-tipe-service"]:checked')?.value || 'lubetruck';
+      const isWt = (svcType === 'watertruck');
+
+      armadaSelect.innerHTML = '<option value="">-- Pilih Armada --</option>';
+
+      const armadaList = (state.masterArmada && state.masterArmada.length > 0)
+        ? state.masterArmada.filter(a => {
+          const jenis = (a.jenis || a.tipe || '').toUpperCase();
+          const nomor = (a.nomor || a.unit || '').toUpperCase();
+          const isActive = (a.status === 'Aktif' || !a.status || a.status === 'Operasional') && (a.statusAktif !== false);
+          if (!isActive) return false;
+          return isWt
+            ? (jenis.includes('WT') || jenis.includes('WATER') || nomor.startsWith('WT'))
+            : (jenis.includes('LT') || jenis.includes('LUBE') || nomor.startsWith('LT'));
+        })
+        : [];
+
+      // Kelompokkan armada per cluster
+      const clusterGroups = {};
+      armadaList.forEach(arm => {
+        let cName = (arm.cluster || 'SELATAN').toUpperCase();
+        if (cName.startsWith('KGU ')) cName = cName.replace('KGU ', '');
+        if (!clusterGroups[cName]) clusterGroups[cName] = [];
+        const noArmada = arm.nomor || arm.unit;
+        if (noArmada && !clusterGroups[cName].includes(noArmada)) {
+          clusterGroups[cName].push(noArmada);
+        }
+      });
+
+      window._directArmadaData = [];
+
+      Object.keys(clusterGroups).forEach(cName => {
+        const grp = document.createElement('optgroup');
+        grp.label = cName;
+        clusterGroups[cName].forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u;
+          opt.textContent = `${u} (${cName})`;
+          grp.appendChild(opt);
+
+          window._directArmadaData.push({
+            value: u,
+            label: `${u} (${cName})`,
+            cluster: cName
+          });
+        });
+        armadaSelect.appendChild(grp);
+      });
+
+      // Pilih armada pertama jika ada data
+      if (window._directArmadaData.length > 0) {
+        const first = window._directArmadaData[0];
+        selectDirectArmadaOption(first.value, first.label);
+      } else {
+        armadaSelect.value = '';
+        if (searchInput) searchInput.value = '';
+        if (clearBtn) clearBtn.classList.add('hidden');
+      }
+    }
+    window.populateDirectArmadaOptions = populateDirectArmadaOptions;
+
+    function openDirectArmadaDropdown() {
+      const dropdownEl = document.getElementById('dropdown-direct-armada');
+      if (!dropdownEl) return;
+      dropdownEl.classList.remove('hidden');
+      const curQuery = document.getElementById('search-direct-armada')?.value || '';
+      const curArmada = document.getElementById('direct-armada')?.value || '';
+      const isExactLabel = (window._directArmadaData || []).some(item => item.value === curArmada && item.label === curQuery);
+      filterDirectArmadaDropdown(isExactLabel ? '' : curQuery);
+    }
+    window.openDirectArmadaDropdown = openDirectArmadaDropdown;
+
+    function closeDirectArmadaDropdown() {
+      const dropdownEl = document.getElementById('dropdown-direct-armada');
+      if (dropdownEl) dropdownEl.classList.add('hidden');
+    }
+    window.closeDirectArmadaDropdown = closeDirectArmadaDropdown;
+
+    function filterDirectArmadaDropdown(query) {
+      const dropdownEl = document.getElementById('dropdown-direct-armada');
+      const clearBtn = document.getElementById('clear-direct-armada');
+      if (!dropdownEl) return;
+
+      const cleanQ = String(query || '').trim().toLowerCase();
+      if (clearBtn) {
+        if (cleanQ !== '') clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+      }
+
+      const list = window._directArmadaData || [];
+      const filtered = (cleanQ === '')
+        ? list
+        : list.filter(item => item.value.toLowerCase().includes(cleanQ) || item.label.toLowerCase().includes(cleanQ) || item.cluster.toLowerCase().includes(cleanQ));
+
+      dropdownEl.innerHTML = '';
+      if (filtered.length === 0) {
+        dropdownEl.innerHTML = `
+          <div class="px-3 py-3 text-center text-slate-400 italic">
+            <span>Armada tidak ditemukan</span>
+          </div>
+        `;
+        return;
+      }
+
+      const grouped = {};
+      filtered.forEach(item => {
+        if (!grouped[item.cluster]) grouped[item.cluster] = [];
+        grouped[item.cluster].push(item);
+      });
+
+      const currentVal = document.getElementById('direct-armada')?.value || '';
+
+      Object.keys(grouped).forEach(cName => {
+        const header = document.createElement('div');
+        header.className = 'px-3 py-1.5 bg-slate-100 font-black text-slate-900 text-[10px] uppercase tracking-wider sticky top-0';
+        header.textContent = cName;
+        dropdownEl.appendChild(header);
+
+        grouped[cName].forEach(item => {
+          const isSelected = (item.value === currentVal);
+          const row = document.createElement('div');
+          row.className = `px-3.5 py-2 text-left cursor-pointer transition flex items-center justify-between ${isSelected ? 'bg-emerald-50 text-emerald-800 font-black' : 'hover:bg-slate-50 text-slate-800 font-bold'}`;
+
+          let labelHtml = item.label;
+          if (cleanQ !== '') {
+            const idx = item.label.toLowerCase().indexOf(cleanQ);
+            if (idx !== -1) {
+              const before = item.label.slice(0, idx);
+              const match = item.label.slice(idx, idx + cleanQ.length);
+              const after = item.label.slice(idx + cleanQ.length);
+              labelHtml = `${before}<span class="text-emerald-700 bg-emerald-100 underline">${match}</span>${after}`;
+            }
+          }
+
+          row.innerHTML = `
+            <span class="truncate">${labelHtml}</span>
+            ${isSelected ? '<svg class="w-4 h-4 text-emerald-600 flex-shrink-0 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>' : ''}
+          `;
+          row.onmousedown = (e) => {
+            e.preventDefault();
+            selectDirectArmadaOption(item.value, item.label);
+          };
+          dropdownEl.appendChild(row);
+        });
+      });
+    }
+    window.filterDirectArmadaDropdown = filterDirectArmadaDropdown;
+
+    function selectDirectArmadaOption(val, label) {
+      const armadaSelect = document.getElementById('direct-armada');
+      const searchInput = document.getElementById('search-direct-armada');
+      const clearBtn = document.getElementById('clear-direct-armada');
+
+      if (armadaSelect) {
+        armadaSelect.value = val || '';
+      }
+      if (searchInput) {
+        searchInput.value = label || val || '';
+      }
+      if (clearBtn) {
+        if (val) clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+      }
+
+      closeDirectArmadaDropdown();
+      handleDirectArmadaChange(val);
+    }
+    window.selectDirectArmadaOption = selectDirectArmadaOption;
+
+    function clearDirectArmadaSelect() {
+      const armadaSelect = document.getElementById('direct-armada');
+      const searchInput = document.getElementById('search-direct-armada');
+      const clearBtn = document.getElementById('clear-direct-armada');
+
+      if (armadaSelect) armadaSelect.value = '';
+      if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+      }
+      if (clearBtn) clearBtn.classList.add('hidden');
+
+      openDirectArmadaDropdown();
+    }
+    window.clearDirectArmadaSelect = clearDirectArmadaSelect;
+
+    function handleDirectArmadaKeydown(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const dropdownEl = document.getElementById('dropdown-direct-armada');
+        const firstRow = dropdownEl?.querySelector('div[class*="cursor-pointer"]');
+        if (firstRow) {
+          firstRow.dispatchEvent(new MouseEvent('mousedown'));
+        }
+      } else if (e.key === 'Escape') {
+        closeDirectArmadaDropdown();
+      }
+    }
+    window.handleDirectArmadaKeydown = handleDirectArmadaKeydown;
+
+    // Listener click outside untuk menutup popup pencarian armada
+    if (!window._directArmadaListenerAttached) {
+      document.addEventListener('click', (e) => {
+        const container = document.getElementById('container-direct-armada');
+        if (container && !container.contains(e.target)) {
+          closeDirectArmadaDropdown();
+          const armadaSelect = document.getElementById('direct-armada');
+          const searchInput = document.getElementById('search-direct-armada');
+          if (armadaSelect && searchInput) {
+            const curVal = armadaSelect.value;
+            const match = (window._directArmadaData || []).find(item => item.value === curVal);
+            if (match) searchInput.value = match.label;
+            else if (curVal) searchInput.value = curVal;
+            else searchInput.value = '';
+          }
+        }
+      });
+      window._directArmadaListenerAttached = true;
+    }
+
+    function handleDirectArmadaChange(armadaUnit) {
+      if (!armadaUnit) return;
+      const cleanArmada = String(armadaUnit).trim().toUpperCase();
+      const cluster = document.getElementById('direct-cluster')?.value || 'Selatan';
+      const shift = state.currentShift || (typeof getEffectiveShift === 'function' ? getEffectiveShift() : 1);
+      const tanggal = typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : '';
+
+      // Panggil fungsi getPersonnelForArmada yang sinkron dengan master roster
+      if (typeof getPersonnelForArmada === 'function') {
+        const pers = getPersonnelForArmada(cleanArmada, cluster, shift, tanggal);
+        const optInp = document.getElementById('direct-opt-name');
+        const mp1Inp = document.getElementById('direct-mp1-name');
+        const mp2Inp = document.getElementById('direct-mp2-name');
+
+        if (optInp) optInp.value = (pers.opt && pers.opt !== '-') ? pers.opt : '';
+        if (mp1Inp) mp1Inp.value = (pers.mp1 && pers.mp1 !== '-') ? pers.mp1 : '';
+        if (mp2Inp) mp2Inp.value = (pers.mp2 && pers.mp2 !== '-') ? pers.mp2 : '';
+      }
+    }
+    window.handleDirectArmadaChange = handleDirectArmadaChange;
+
+    function triggerAutoFillForDirectOrder(val) {
+      if (!val) return;
+      const rawVal = String(val).trim();
+      if (!rawVal) return;
+
+      const units = getAllMasterUnitsComprehensive();
+      let matchedUnit = null;
+
+      const upper = rawVal.toUpperCase();
+      matchedUnit = units.find(u => (u.lambung || '').toUpperCase() === upper);
+
+      if (!matchedUnit) {
+        const token = upper.split(/[\s(•\-]/)[0].trim();
+        if (token) {
+          matchedUnit = units.find(u => (u.lambung || '').toUpperCase() === token);
+        }
+      }
+
+      if (!matchedUnit) {
+        matchedUnit = units.find(u => {
+          const lb = (u.lambung || '').toUpperCase();
+          return lb && upper.startsWith(lb);
+        });
+      }
+
+      if (!matchedUnit) return;
+
+      const lambungInp = document.getElementById('direct-kode-unit');
+      if (lambungInp && lambungInp.value !== matchedUnit.lambung) {
+        lambungInp.value = matchedUnit.lambung;
+      }
+
+      const lokasiInp = document.getElementById('direct-lokasi');
+      if (lokasiInp && matchedUnit.lokasi && matchedUnit.lokasi !== '-') {
+        lokasiInp.value = matchedUnit.lokasi;
+      }
+
+      const clusterInp = document.getElementById('direct-cluster');
+      if (clusterInp && matchedUnit.cluster) {
+        clusterInp.value = typeof formatClusterLabel === 'function' ? formatClusterLabel(matchedUnit.cluster) : matchedUnit.cluster;
+      }
+
+      // Re-trigger personil armada jika armada sudah terpilih
+      const selectedArmada = document.getElementById('direct-armada')?.value;
+      if (selectedArmada) {
+        handleDirectArmadaChange(selectedArmada);
+      }
+    }
+    window.triggerAutoFillForDirectOrder = triggerAutoFillForDirectOrder;
+
+    async function handleDirectCompletionSubmit(event) {
+      if (event) event.preventDefault();
+
+      const svcType = document.querySelector('input[name="direct-tipe-service"]:checked')?.value || 'lubetruck';
+      const lambung = document.getElementById('direct-kode-unit')?.value?.trim().toUpperCase();
+      const cluster = document.getElementById('direct-cluster')?.value?.trim() || 'Selatan';
+      const lokasi = document.getElementById('direct-lokasi')?.value?.trim().toUpperCase();
+      const deskripsi = document.getElementById('direct-deskripsi')?.value?.trim() || '';
+      const hmStart = (document.getElementById('direct-hm-start')?.value || '').trim();
+      const hmFinish = (document.getElementById('direct-hm-finish')?.value || '').trim();
+      const jamStart = document.getElementById('direct-jam-start')?.value || '';
+      const jamFinish = document.getElementById('direct-jam-finish')?.value || '';
+      const statusChoice = document.getElementById('direct-status')?.value || 'SERVICE';
+      const armada = document.getElementById('direct-armada')?.value?.trim().toUpperCase();
+      const opt = document.getElementById('direct-opt-name')?.value?.trim() || '-';
+      const mp1 = document.getElementById('direct-mp1-name')?.value?.trim() || '-';
+      const mp2 = document.getElementById('direct-mp2-name')?.value?.trim() || '-';
+      const keterangan = document.getElementById('direct-keterangan')?.value?.trim() || deskripsi || 'Selesai sesuai SOP';
+
+      if (!lambung || !lokasi) {
+        showToast('Nomor lambung dan lokasi pit wajib diisi!', 'warning');
+        return;
+      }
+      if (!armada) {
+        showToast('Armada wajib dipilih!', 'warning');
+        return;
+      }
+      if (!jamStart || !jamFinish) {
+        showToast('Jam start dan jam selesai wajib diisi!', 'warning');
+        return;
+      }
+
+      const submitBtn = document.getElementById('btn-direct-submit');
+      const origBtnHtml = submitBtn ? submitBtn.innerHTML : 'SUBMIT SELESAI';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+          <span class="inline-flex items-center justify-center space-x-2">
+            <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Menyimpan ke Riwayat...</span>
+          </span>
+        `;
+      }
+
+      try {
+        const isWt = (svcType === 'watertruck');
+        const prefix = isWt ? 'WT' : 'LT';
+        const tanggalStr = getEffectiveTodayString();
+        const datePart = (typeof formatDateToDDMMYYYY === 'function') ? formatDateToDDMMYYYY(tanggalStr) : '24102026';
+        const shiftPart = parseInt(state.currentShift || 1, 10) || 1;
+        const cleanLambung = String(lambung).trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || 'UNIT';
+        const randId = Math.random().toString(36).substring(2, 6).toUpperCase();
+        const finalJobId = `${prefix}-${datePart}-DIR-${shiftPart}-${cleanLambung}-${randId}`;
+
+        const durasi = (typeof calculateDurationRaw === 'function') ? calculateDurationRaw(jamStart, jamFinish) : null;
+        let hmUnit = '-';
+        if (hmStart && hmFinish) hmUnit = `${hmStart} s/d ${hmFinish}`;
+        else if (hmStart || hmFinish) hmUnit = hmStart || hmFinish;
+
+        // Map status (Khusus SERVICE & BREAKDOWN)
+        let finalStatus = 'service';
+        let unitCond = 'service';
+        let histStatus = 'SERVICE';
+
+        if (statusChoice === 'BREAKDOWN') {
+          finalStatus = 'bd';
+          unitCond = 'breakdown';
+          histStatus = 'BREAKDOWN';
+        } else {
+          finalStatus = 'service';
+          unitCond = 'service';
+          histStatus = 'SERVICE';
+        }
+
+        const directJob = {
+          id: finalJobId,
+          job_id: finalJobId,
+          noId: finalJobId,
+          no_id: finalJobId,
+          kodeOrder: finalJobId,
+          kode_order: finalJobId,
+          serviceType: svcType,
+          targetType: isWt ? 'WT' : 'LT',
+          job_type: isWt ? 'direct_wt' : 'direct_lt',
+          cat: 'unscheduled',
+          shift: shiftPart,
+          tanggal: tanggalStr,
+          tanggalRealisasi: tanggalStr,
+          waktu: jamStart,
+          jamStart: jamStart,
+          jamEnd: jamFinish,
+          durasi: durasi,
+          durasiMins: durasi,
+          cluster: cluster,
+          lokasi: lokasi,
+          noLambung: lambung,
+          typeUnit: getUnitTypeFromMaster(lambung, 'HAUL TRUCK'),
+          deskripsi: deskripsi,
+          keterangan: keterangan,
+          hmStart: hmStart || '',
+          hmEnd: hmFinish || '',
+          hmStop: hmStart || '',
+          hmReady: hmFinish || '',
+          hmUnit: hmUnit,
+          status: finalStatus,
+          unitCondition: unitCond,
+          kondisi: (statusChoice === 'BREAKDOWN' || statusChoice === 'SERVICE') ? statusChoice : 'NORMAL',
+          armada: armada,
+          armadaUnit: armada,
+          armada_unit: armada,
+          ltUnit: isWt ? '-' : armada,
+          wtUnit: isWt ? armada : '-',
+          opt: opt,
+          mp1: mp1,
+          mp2: mp2,
+          namaPemesan: state.currentUser?.nama || 'Admin Operasional',
+          pemesan: state.currentUser?.nama || 'Admin Operasional',
+          createdBy: 'admin',
+          createdByRole: 'admin',
+          createdByNrp: state.currentUser?.nrp || '',
+          isPending: false,
+          isLocked: true,
+          is_locked: true,
+          actionTimestamp: Date.now(),
+          created_at: new Date().toISOString()
+        };
+
+        // Kunci snapshot ke riwayat selesai (job_history)
+        if (typeof lockJobHistorySnapshot === 'function') {
+          await lockJobHistorySnapshot(directJob, histStatus, keterangan);
+        }
+
+        // Catat ke state lokal completed & jobHistory
+        if (!state.jobHistory) state.jobHistory = [];
+        state.jobHistory.unshift(directJob);
+
+        if (window.globalDataCache && window.globalDataCache.jobs) {
+          window.globalDataCache.jobs.set(finalJobId, directJob);
+        }
+
+        // Jika status SERVICE atau pekerjaan mengandung air cleaner, perbarui rekapan Air Cleaner
+        const acText = `${deskripsi} ${keterangan}`.toLowerCase();
+        if (!isWt && (statusChoice === 'SERVICE' || acText.includes('air cleaner')) && typeof updateAirCleanerRecord === 'function') {
+          updateAirCleanerRecord(lambung, getUnitTypeFromMaster(lambung, 'HAUL TRUCK'), 'service', keterangan);
+        }
+
+        // Update master unit lokasi & populasi
+        if (typeof registerOrUpdateMasterUnit === 'function' && lambung) {
+          registerOrUpdateMasterUnit({
+            lambung: lambung,
+            type: getUnitTypeFromMaster(lambung, 'HAUL TRUCK'),
+            cluster: cluster,
+            lokasi: lokasi
+          });
+        }
+
+        // Sinkronkan ke Supabase jika client aktif
+        if (state.supabaseClient && typeof syncJobToSupabase === 'function') {
+          try {
+            await syncJobToSupabase(directJob, true);
+          } catch (errSync) {
+            console.warn('[handleDirectCompletionSubmit Supabase Error]', errSync);
+          }
+        }
+
+        saveDatabaseSync();
+
+        showToast(`Pekerjaan unit ${lambung} berhasil diselesaikan & langsung masuk ke Riwayat Selesai!`, 'success');
+
+        // Reset form
+        if (document.getElementById('direct-kode-unit')) document.getElementById('direct-kode-unit').value = '';
+        if (document.getElementById('direct-cluster')) document.getElementById('direct-cluster').value = '';
+        if (document.getElementById('direct-lokasi')) document.getElementById('direct-lokasi').value = '';
+        if (document.getElementById('direct-deskripsi')) document.getElementById('direct-deskripsi').value = '';
+        if (document.getElementById('direct-hm-start')) document.getElementById('direct-hm-start').value = '';
+        if (document.getElementById('direct-hm-finish')) document.getElementById('direct-hm-finish').value = '';
+        if (document.getElementById('direct-keterangan')) document.getElementById('direct-keterangan').value = '';
+
+        // Otomatis refresh render riwayat selesai & notifikasi data changed
+        if (typeof renderCompletedTable === 'function') {
+          renderCompletedTable();
+        }
+        if (typeof notifyDataChanged === 'function') {
+          notifyDataChanged({ source: 'direct_admin_completion', jobId: finalJobId });
+        }
+
+      } catch (err) {
+        console.error('[handleDirectCompletionSubmit Error]', err);
+        showToast('Gagal memproses penyelesaian job: ' + (err.message || 'Error'), 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnHtml;
+        }
+      }
+    }
+    window.handleDirectCompletionSubmit = handleDirectCompletionSubmit;
 
 
     async function fetchEntireSupabaseTable(tableName, selectCols = '*', orderCol = null, ascending = true) {
@@ -36766,143 +38555,424 @@ Keterangan : ${keterangan}`;
           ? (document.getElementById('wt-filter-date')?.value || state.watertruckState?.filterDate || jobs[0]?.tanggal || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : ''))
           : (document.getElementById('lt-filter-date')?.value || state.lubetruckState?.filterDate || jobs[0]?.tanggal || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : ''));
 
+        let dayName = 'SENIN';
         let formattedDate = '';
+        const dayNames = ['MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'];
+
         if (rawDate && rawDate.includes('-')) {
           const dParts = rawDate.split('-');
           if (dParts.length === 3) {
-            formattedDate = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
+            const y = parseInt(dParts[0], 10);
+            const m = parseInt(dParts[1], 10);
+            const d = parseInt(dParts[2], 10);
+            const dateObj = new Date(y, m - 1, d);
+            dayName = dayNames[dateObj.getDay()] || 'SENIN';
+            formattedDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
           }
         }
         if (!formattedDate) {
           const dObj = new Date();
+          dayName = dayNames[dObj.getDay()] || 'SENIN';
           const d = String(dObj.getDate()).padStart(2, '0');
           const m = String(dObj.getMonth() + 1).padStart(2, '0');
           const y = dObj.getFullYear();
           formattedDate = `${d}/${m}/${y}`;
         }
 
+        const formattedHeaderDate = `${dayName} ${formattedDate}`;
+
         const activeCat = (sourceType === 'WT')
           ? (state.watertruckState?.activeCategory || 'coal')
           : (state.lubetruckState?.activeCategory || 'small');
 
-        let catLabel = 'schedule';
-        if (activeCat === 'aircleaner' || activeCat === 'air_cleaner') catLabel = 'air cleaner';
-        else if (activeCat === 'small') catLabel = 'greasing small track';
-        else if (activeCat === 'digger') catLabel = 'big digger';
-        else if (activeCat === 'topup') catLabel = 'top up oil';
-        else if (activeCat === 'coal') catLabel = 'washing coal';
-        else if (activeCat === 'rom') catLabel = 'washing rom';
-        else if (activeCat === 'non_coal') catLabel = 'washing non-coal';
+        // Helper deteksi apakah unit memiliki jadwal Air Cleaner pada tanggal target
+        const hasAirCleanerSchedule = (unitNo, targetDate) => {
+          if (!unitNo) return false;
+          const targetLambung = String(unitNo).trim().toUpperCase();
+          const targetD = targetDate || rawDate;
 
-        // Judul kolom tunggal: "sch air cleaner 25/10/2026"
-        const singleColHeader = `sch ${catLabel} ${formattedDate}`;
+          // 1. Cek di schedule Lubetruck kategori aircleaner
+          const inLt = (state.lubetruckState?.jobs || []).some(j => {
+            if (!j) return false;
+            const isAc = (j.cat === 'aircleaner' || j.cat === 'air_cleaner');
+            const jDate = j.tanggal;
+            const jLambung = String(j.noLambung || j.unit || '').trim().toUpperCase();
+            return isAc && (!targetD || jDate === targetD) && jLambung === targetLambung;
+          });
+          if (inLt) return true;
 
-        // Cek apakah kategori ini harus dipisah per cluster sesuai instruksi:
-        // Khusus: greasing small, big digger, washing coal dan non coal dipisah per cluster.
-        // Sedangkan air cleaner, rom dan top up oil tetap normal (1 daftar lurus).
-        const isClusterGroupedCategory = ['small', 'digger', 'coal', 'non_coal'].includes(activeCat);
+          // 2. Cek di antrean Unscheduled / Order Request Air Cleaner
+          const inUnsch = (state.unscheduledLtJobs || []).some(j => {
+            if (!j) return false;
+            const jLambung = String(j.noLambung || j.unit || '').trim().toUpperCase();
+            const jDate = j.tanggal;
+            const reqStr = String(j.requestedJob || '').toLowerCase();
+            const descStr = String(j.deskripsi || j.keterangan || '').toLowerCase();
+            const isAc = (j.cat === 'aircleaner' || reqStr.includes('air cleaner') || descStr.includes('air cleaner'));
+            return isAc && (!targetD || jDate === targetD) && jLambung === targetLambung;
+          });
+          if (inUnsch) return true;
 
-        let rows = [];
-
-        if (isClusterGroupedCategory) {
-          const defaultOrder = ['Selatan', 'Tengah', 'Utara'];
-          const getJobParentCluster = (j) => {
-            if (typeof getParentCluster === 'function') {
-              return getParentCluster(j.cluster) || 'Lainnya';
-            }
-            return j.cluster || 'Lainnya';
-          };
-
-          const uniqueClusters = Array.from(new Set(jobs.map(j => getJobParentCluster(j)).filter(Boolean)));
-          const orderedClusters = [
-            ...defaultOrder.filter(c => uniqueClusters.some(uc => uc.toLowerCase() === c.toLowerCase())),
-            ...uniqueClusters.filter(uc => !defaultOrder.some(c => c.toLowerCase() === uc.toLowerCase()))
-          ];
-
-          let isFirstCluster = true;
-          orderedClusters.forEach(clusterName => {
-            const clusterJobs = jobs.filter(j => getJobParentCluster(j).toLowerCase() === clusterName.toLowerCase());
-            if (clusterJobs.length === 0) return;
-
-            // Baris kosong pemisah antar cluster (kecuali sebelum cluster pertama)
-            if (!isFirstCluster) {
-              rows.push(['']);
-            }
-            isFirstCluster = false;
-
-            // Header Cluster: misal "KGU SELATAN"
-            let clusterHeader = String(clusterName).trim().toUpperCase();
-            if (!clusterHeader.startsWith('KGU')) {
-              clusterHeader = `KGU ${clusterHeader}`;
-            }
-            rows.push([clusterHeader]);
-
-            // Urutkan pekerjaan dalam cluster sesuai sort config yang aktif
-            if (typeof sortSchedJobsList === 'function') {
-              sortSchedJobsList(clusterJobs, sortConfig);
-            }
-
-            // Tambahkan baris pekerjaan unit dalam cluster
-            clusterJobs.forEach(j => {
-              const noUnit = String(j.noLambung || j.unit || '').trim().toUpperCase();
-              const lokasi = String(j.lokasi || '').trim().toUpperCase();
-
-              let rawArmada = (j.armada && j.armada !== '-') ? j.armada : ((j.wtUnit && j.wtUnit !== '-') ? j.wtUnit : ((j.ltUnit && j.ltUnit !== '-') ? j.ltUnit : ((j.armadaUnit && j.armadaUnit !== '-') ? j.armadaUnit : '')));
-              if (!rawArmada || rawArmada === '-' || rawArmada.startsWith('--')) {
-                rawArmada = (typeof resolveJobArmada === 'function') ? resolveJobArmada(j) : '';
+          // 3. Cek di monitoring Air Cleaner jika tercatat untuk tanggal ini
+          if (Array.isArray(state.airCleanerMonitor)) {
+            const acItem = state.airCleanerMonitor.find(m => String(m.noLambung || '').trim().toUpperCase() === targetLambung);
+            if (acItem) {
+              const formattedDateSlash = (typeof formatDateToCustomSlash === 'function') ? formatDateToCustomSlash(targetD) : '';
+              if (Array.isArray(acItem.cleans) && formattedDateSlash && acItem.cleans.includes(formattedDateSlash)) {
+                return true;
               }
-              const armada = String(rawArmada || '').trim().toUpperCase();
-              const cleanArmada = (armada === '-' || armada.startsWith('--')) ? '' : armada;
+            }
+          }
+          return false;
+        };
 
-              const parts = [];
-              if (noUnit && noUnit !== '-') parts.push(noUnit);
-              if (lokasi && lokasi !== '-') parts.push(lokasi);
-              if (cleanArmada) parts.push(cleanArmada);
+        // Helper deteksi apakah unit memiliki jadwal Greasing (small atau digger) pada tanggal target
+        const hasGreasingSchedule = (unitNo, targetDate) => {
+          if (!unitNo) return false;
+          const targetLambung = String(unitNo).trim().toUpperCase();
+          const targetD = targetDate || rawDate;
 
-              rows.push([parts.join(' ')]);
+          // 1. Cek di schedule Lubetruck kategori small atau digger
+          const inLt = (state.lubetruckState?.jobs || []).some(j => {
+            if (!j) return false;
+            const isGrs = (j.cat === 'small' || j.cat === 'digger');
+            const jDate = j.tanggal;
+            const jLambung = String(j.noLambung || j.unit || '').trim().toUpperCase();
+            return isGrs && (!targetD || jDate === targetD) && jLambung === targetLambung;
+          });
+          if (inLt) return true;
+
+          // 2. Cek di antrean Unscheduled / Order Request Greasing
+          const inUnsch = (state.unscheduledLtJobs || []).some(j => {
+            if (!j) return false;
+            const jLambung = String(j.noLambung || j.unit || '').trim().toUpperCase();
+            const jDate = j.tanggal;
+            const reqStr = String(j.requestedJob || '').toLowerCase();
+            const descStr = String(j.deskripsi || j.keterangan || '').toLowerCase();
+            const isGrs = (j.cat === 'small' || j.cat === 'digger' || reqStr.includes('greasing') || descStr.includes('greasing'));
+            return isGrs && (!targetD || jDate === targetD) && jLambung === targetLambung;
+          });
+          if (inUnsch) return true;
+
+          return false;
+        };
+
+        // Helper format string per baris unit
+        const buildUnitLine = (j, cat) => {
+          const noUnit = String(j.noLambung || j.unit || '').trim().toUpperCase();
+          const lokasi = String(j.lokasi || '').trim().toUpperCase();
+
+          let rawArmada = (j.armada && j.armada !== '-') ? j.armada : ((j.wtUnit && j.wtUnit !== '-') ? j.wtUnit : ((j.ltUnit && j.ltUnit !== '-') ? j.ltUnit : ((j.armadaUnit && j.armadaUnit !== '-') ? j.armadaUnit : '')));
+          if (!rawArmada || rawArmada === '-' || rawArmada.startsWith('--')) {
+            rawArmada = (typeof resolveJobArmada === 'function') ? resolveJobArmada(j) : '';
+          }
+          const armada = String(rawArmada || '').trim().toUpperCase();
+          const cleanArmada = (armada === '-' || armada.startsWith('--')) ? '' : armada;
+
+          const parts = [];
+          if (noUnit && noUnit !== '-') parts.push(noUnit);
+          if (lokasi && lokasi !== '-') parts.push(lokasi);
+          if (cleanArmada) parts.push(cleanArmada);
+
+          // Suffix lintas jadwal:
+          const targetD = j.tanggal || rawDate;
+          if (cat === 'digger' || cat === 'small') {
+            if (hasAirCleanerSchedule(noUnit, targetD)) {
+              parts.push('+ AC');
+            }
+          } else if (cat === 'aircleaner' || cat === 'air_cleaner') {
+            if (hasGreasingSchedule(noUnit, targetD)) {
+              parts.push('+ GRS');
+            }
+          }
+
+          return parts.join(' ');
+        };
+
+        // Helper deteksi Big Digger vs Small Track
+        const isBigDiggerUnit = (j) => {
+          if (!j) return false;
+          // Kategori eksplisit di jadwal
+          if (j.cat === 'digger') return true;
+          if (j.cat === 'small') return false;
+
+          const noUnit = String(j.noLambung || j.unit || '').trim().toUpperCase();
+          const mUnit = (state.masterUnits || []).find(u => {
+            const l = String(u.lambung || u.no_lambung || u.unit || '').trim().toUpperCase();
+            return l === noUnit;
+          });
+
+          // Tipe / Model dari Master Unit atau Job
+          const typeUnit = String(j.typeUnit || j.type || '').trim().toUpperCase();
+          const masterType = String(mUnit?.type || mUnit?.type_model || '').trim().toUpperCase();
+          const fullType = `${typeUnit} ${masterType}`.toUpperCase();
+
+          // 1. Prioritas utama: Tipe eksplisit Small Track / Support / Dozer / Grader
+          // PC300 (E345, E342, dll), PC200, PC210, PC500, SY215, SY600, D155, D85, GD adalah Small Track / Support
+          if (/(PC\s*300|PC\s*200|PC\s*210|PC\s*500|SY\s*215|SY\s*600|D155|D85|GD|DOZER|GRADER|CRANE|SUPPORT)/i.test(fullType)) {
+            return false;
+          }
+
+          // 2. Tipe eksplisit Big Digger / Loading Fleet (PC2000, PC1250, PC3400, PC850, CAT395, EX1200, EX2000, EX2600, EX3600)
+          if (/(PC\s*2000|PC\s*1250|PC\s*3400|PC\s*850|CAT\s*395|CAT395|EX\s*1200|EX\s*2000|EX\s*2600|EX\s*3600|DIGGER|LOADING)/i.test(fullType)) {
+            return true;
+          }
+
+          // 3. Fallback pola nomor lambung armada tambang:
+          // PC3400: E3401 s/d E3404 (harus E340x, BUKAN E345/E342/E346/E347 yang merupakan PC300)
+          if (/^E340\d+/i.test(noUnit)) return true;
+          // PC2000: E2001 - E2099 (4 digit) atau E520xxAMM
+          if (/^E20\d{2}/i.test(noUnit) || /^E520\d+/i.test(noUnit)) return true;
+          // PC1250: E1221 - E1299 (4 digit) atau E512xxAMM
+          if (/^E12\d{2}/i.test(noUnit) || /^E512\d+/i.test(noUnit)) return true;
+          // PC850: E8501 - E8599 (4 digit)
+          if (/^E85\d{2}/i.test(noUnit)) return true;
+          // CAT395: E3901 - E3999 (4 digit)
+          if (/^E39\d{2}/i.test(noUnit)) return true;
+          // Drill DM
+          if (/^DM\d+/i.test(noUnit)) return true;
+
+          return false;
+        };
+
+        // Helper deteksi Unit Coal vs Non-Coal
+        const isCoalUnit = (j) => {
+          if (!j) return false;
+          const noUnit = String(j.noLambung || j.unit || '').trim().toUpperCase();
+          const mUnit = (state.masterUnits || []).find(u => {
+            const l = String(u.lambung || u.no_lambung || u.unit || '').trim().toUpperCase();
+            return l === noUnit;
+          });
+
+          // 1. Cek dari field kategori master unit atau job
+          if (mUnit && String(mUnit.kategori || '').toLowerCase().trim() === 'coal') return true;
+          if (String(j.kategori || '').toLowerCase().trim() === 'coal') return true;
+          if (String(j.cat || '').toLowerCase().trim() === 'coal') return true;
+
+          // 2. Cek dari lokasi pit operasional (job lokasi maupun master lokasi)
+          const jobLokasi = String(j.lokasi || '').toUpperCase();
+          const masterLokasi = String(mUnit?.lokasi || '').toUpperCase();
+          if (/(COAL|BATUBARA|ROM|P1|PIT\s*1)/i.test(jobLokasi)) return true;
+          if (/(COAL|BATUBARA|ROM|P1|PIT\s*1)/i.test(masterLokasi)) return true;
+
+          // 3. Cek catatan / keterangan / deskripsi
+          const ket = `${j.keterangan || ''} ${j.deskripsi || ''}`.toUpperCase();
+          if (/(COAL|BATUBARA)/i.test(ket)) return true;
+
+          // 4. Cek antrean Water Truck Coal jika ada
+          const inWtCoal = (state.watertruckState?.jobs || []).some(wj => {
+            if (!wj || wj.cat !== 'coal') return false;
+            return String(wj.noLambung || wj.unit || '').trim().toUpperCase() === noUnit;
+          });
+          if (inWtCoal) return true;
+
+          return false;
+        };
+
+        // Helper mapping nama cluster ke SELATAN / TENGAH / UTARA
+        const getJobParentCluster = (j) => {
+          let c = '';
+          if (typeof getParentCluster === 'function') {
+            c = getParentCluster(j.cluster) || '';
+          } else {
+            c = j.cluster || '';
+          }
+          const cu = String(c).toUpperCase();
+          if (cu.includes('SELATAN')) return 'SELATAN';
+          if (cu.includes('TENGAH')) return 'TENGAH';
+          if (cu.includes('UTARA')) return 'UTARA';
+          return 'SELATAN';
+        };
+
+        let aoa = [];
+        let categorySheetName = 'SCHEDULE';
+
+        // ========================================================================
+        // BUILDER FORMAT EXCEL BERDASARKAN 7 KATEGORI
+        // ========================================================================
+
+        if (activeCat === 'digger') {
+          // 1. BIG DIGGER
+          categorySheetName = 'SCH_BIG_DIGGER';
+          aoa.push(['SCHEDULLE DAILY GREASING UNIT BIG DIGGER']);
+          aoa.push([formattedHeaderDate]);
+
+          const clusters = ['SELATAN', 'TENGAH', 'UTARA'];
+          clusters.forEach((clName, idx) => {
+            if (idx > 0) aoa.push(['']);
+            aoa.push([`KGU ${clName}`]);
+            const cJobs = jobs.filter(j => getJobParentCluster(j) === clName);
+            if (typeof sortSchedJobsList === 'function') sortSchedJobsList(cJobs, sortConfig);
+            cJobs.forEach(j => {
+              aoa.push([buildUnitLine(j, activeCat)]);
             });
           });
-        } else {
-          // Kategori Normal (Air Cleaner, ROM, Top Up Oil): 1 daftar lurus tanpa sub-header cluster
-          rows = jobs.map(j => {
-            const noUnit = String(j.noLambung || j.unit || '').trim().toUpperCase();
-            const lokasi = String(j.lokasi || '').trim().toUpperCase();
 
-            let rawArmada = (j.armada && j.armada !== '-') ? j.armada : ((j.wtUnit && j.wtUnit !== '-') ? j.wtUnit : ((j.ltUnit && j.ltUnit !== '-') ? j.ltUnit : ((j.armadaUnit && j.armadaUnit !== '-') ? j.armadaUnit : '')));
-            if (!rawArmada || rawArmada === '-' || rawArmada.startsWith('--')) {
-              rawArmada = (typeof resolveJobArmada === 'function') ? resolveJobArmada(j) : '';
+          aoa.push(['']);
+          aoa.push(['NOTE']);
+          aoa.push(['PRIORITASKAN GREASING BIG DIGGER ANTARA 12.00 - 13:00 & 16:00 - 16:12']);
+
+        } else if (activeCat === 'small') {
+          // 2. GREASING SMALL TRACK
+          categorySheetName = 'SCH_SMALL_TRACK';
+          aoa.push(['SCHEDULLE DAILY GREASING UNIT SMALL TRACK']);
+          aoa.push([formattedHeaderDate]);
+
+          const clusters = ['SELATAN', 'TENGAH', 'UTARA'];
+          clusters.forEach((clName, idx) => {
+            if (idx > 0) aoa.push(['']);
+            aoa.push([`KGU ${clName}`]);
+            const cJobs = jobs.filter(j => getJobParentCluster(j) === clName);
+            if (typeof sortSchedJobsList === 'function') sortSchedJobsList(cJobs, sortConfig);
+            cJobs.forEach(j => {
+              aoa.push([buildUnitLine(j, activeCat)]);
+            });
+          });
+
+        } else if (activeCat === 'aircleaner' || activeCat === 'air_cleaner') {
+          // 3. AIR CLEANER
+          categorySheetName = 'SCH_AIR_CLEANER';
+          aoa.push(['SCHEDULE PENYEMPROTAN AIR CLEANER UNIT TRACK & GD (P1 COAL)']);
+          aoa.push([formattedHeaderDate]);
+
+          const groups = [
+            {
+              title: 'BIG DIGGER NON COAL',
+              filter: j => isBigDiggerUnit(j) && !isCoalUnit(j)
+            },
+            {
+              title: 'BIG DIGGER COAL P1',
+              filter: j => isBigDiggerUnit(j) && isCoalUnit(j)
+            },
+            {
+              title: 'SMALL TRACK COAL',
+              filter: j => !isBigDiggerUnit(j) && isCoalUnit(j)
+            },
+            {
+              title: 'SMALL TRACK NON COAL',
+              filter: j => !isBigDiggerUnit(j) && !isCoalUnit(j)
             }
-            const armada = String(rawArmada || '').trim().toUpperCase();
-            const cleanArmada = (armada === '-' || armada.startsWith('--')) ? '' : armada;
+          ];
 
-            const parts = [];
-            if (noUnit && noUnit !== '-') parts.push(noUnit);
-            if (lokasi && lokasi !== '-') parts.push(lokasi);
-            if (cleanArmada) parts.push(cleanArmada);
+          groups.forEach((grp, idx) => {
+            if (idx > 0) aoa.push(['']);
+            aoa.push([grp.title]);
+            const grpJobs = jobs.filter(grp.filter);
+            if (typeof sortSchedJobsList === 'function') sortSchedJobsList(grpJobs, sortConfig);
+            grpJobs.forEach(j => {
+              aoa.push([buildUnitLine(j, activeCat)]);
+            });
+          });
 
-            return [parts.join(' ')];
+        } else if (activeCat === 'topup') {
+          // 4. TOP UP OIL
+          categorySheetName = 'SCH_TOP_UP_OIL';
+          aoa.push(['SCHEDULLE DAILY TOP UP OIL']);
+          aoa.push([formattedHeaderDate]);
+
+          const clusters = ['SELATAN', 'TENGAH', 'UTARA'];
+          clusters.forEach((clName, idx) => {
+            if (idx > 0) aoa.push(['']);
+            aoa.push([`KGU ${clName}`]);
+            const cJobs = jobs.filter(j => getJobParentCluster(j) === clName);
+            if (typeof sortSchedJobsList === 'function') sortSchedJobsList(cJobs, sortConfig);
+            cJobs.forEach(j => {
+              aoa.push([buildUnitLine(j, activeCat)]);
+              aoa.push(['OLI ENGINE :']);
+              aoa.push(['OLI TRANSMISI/SWING :']);
+              aoa.push(['OLI HYDRAULIC :']);
+              aoa.push(['AIR COOLANT :']);
+            });
+          });
+
+        } else if (activeCat === 'coal') {
+          // 5. WASHING COAL
+          categorySheetName = 'SCH_WASHING_COAL';
+          aoa.push(['SCHEDULLE DAILY WASHING COAL']);
+          aoa.push([formattedHeaderDate]);
+
+          const clusters = ['SELATAN', 'TENGAH', 'UTARA'];
+          clusters.forEach((clName, idx) => {
+            if (idx > 0) aoa.push(['']);
+            aoa.push([`KGU ${clName}`]);
+            const cJobs = jobs.filter(j => getJobParentCluster(j) === clName);
+            if (typeof sortSchedJobsList === 'function') sortSchedJobsList(cJobs, sortConfig);
+            cJobs.forEach(j => {
+              aoa.push([buildUnitLine(j, activeCat)]);
+            });
+          });
+
+          // Footer NOTE Mekanisme Pencucian Unit
+          aoa.push(['']);
+          aoa.push(['NOTE ']);
+          aoa.push(['MEKANISME PENCUCIAN UNIT']);
+          aoa.push(['06.25 - 06.44 (Utamakan 2000, 1250, 800)']);
+          aoa.push(['08.00 - 09.00 (Sisa unit coal yg belum di cuci saat HSCS)']);
+          aoa.push(['11.55 - 12.10 (pencucian opportunity)']);
+          aoa.push(['12.55 - 14.00 (pencucian kedua)jb']);
+          aoa.push(['16.00 - 16.12 (Spare waktu jika ada yg belum dicuci pada pencucian kedua) ']);
+          aoa.push(['18.25 - 18.44 (Utamakan 2000, 1250, 800) ']);
+          aoa.push(['20.00 - 21.00 (Sisa unit coal yg belum di cuci saat HSCS) ']);
+          aoa.push(['01.00 - 02.00 (pencucian kedua)']);
+          aoa.push(['pencucian schedule unit non coal bisa di action kapan pun']);
+
+        } else if (activeCat === 'rom') {
+          // 6. WASHING ROM
+          categorySheetName = 'SCH_WASHING_ROM';
+          aoa.push(['SCHEDULLE DAILY WASHING ROM']);
+          aoa.push([formattedHeaderDate]);
+          aoa.push(['ROM ']);
+
+          if (typeof sortSchedJobsList === 'function') sortSchedJobsList(jobs, sortConfig);
+          jobs.forEach(j => {
+            aoa.push([buildUnitLine(j, activeCat)]);
+          });
+
+        } else if (activeCat === 'non_coal' || activeCat === 'noncoal') {
+          // 7. WASHING NON COAL
+          categorySheetName = 'SCH_WASHING_NON_COAL';
+          aoa.push(['SCHEDULLE DAILY WASHING NON COAL']);
+          aoa.push([formattedHeaderDate]);
+
+          const clusters = ['SELATAN', 'TENGAH', 'UTARA'];
+          clusters.forEach((clName, idx) => {
+            if (idx > 0) aoa.push(['']);
+            aoa.push([`KGU ${clName}`]);
+            const cJobs = jobs.filter(j => getJobParentCluster(j) === clName);
+            if (typeof sortSchedJobsList === 'function') sortSchedJobsList(cJobs, sortConfig);
+            cJobs.forEach(j => {
+              aoa.push([buildUnitLine(j, activeCat)]);
+            });
+          });
+
+        } else {
+          // Fallback umum
+          categorySheetName = 'SCHEDULE';
+          aoa.push([`SCHEDULLE DAILY ${String(activeCat).toUpperCase()}`]);
+          aoa.push([formattedHeaderDate]);
+          jobs.forEach(j => {
+            aoa.push([buildUnitLine(j, activeCat)]);
           });
         }
 
-        const aoa = [[singleColHeader], ...rows];
         const ws = XLSX.utils.aoa_to_sheet(aoa);
 
-        // Auto-fit lebar kolom Excel agar teks panjang muat sempurna
-        let maxLen = singleColHeader.length;
-        rows.forEach(r => {
+        // Auto-fit lebar kolom Excel agar teks muat rapi dan lega
+        let maxLen = 30;
+        aoa.forEach(r => {
           const val = String(r[0] || '');
           if (val.length > maxLen) maxLen = val.length;
         });
-        ws['!cols'] = [{ wch: Math.min(Math.max(maxLen + 4, 30), 60) }];
+        ws['!cols'] = [{ wch: Math.min(Math.max(maxLen + 4, 32), 80) }];
 
         const wb = XLSX.utils.book_new();
-        const sheetName = (`SCH_${catLabel.replace(/\s+/g, '_').toUpperCase()}`).slice(0, 31);
+        const sheetName = categorySheetName.slice(0, 31);
         XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
         const cleanDateFile = formattedDate.replace(/\//g, '-');
-        const fullFileName = `SCH_${catLabel.replace(/\s+/g, '_')}_${cleanDateFile}.xlsx`;
+        const fullFileName = `${categorySheetName}_${cleanDateFile}.xlsx`;
         XLSX.writeFile(wb, fullFileName);
-        showToast(`Berhasil mengunduh data ${singleColHeader}!`, 'success');
+        showToast(`Berhasil mengunduh ${aoa[0][0]} (${formattedDate})!`, 'success');
         return;
       }
 
