@@ -5623,7 +5623,7 @@
             </div>
           </div>
 
-          <!-- Baris 1: Armada & Nama OPT (Dropdown List dari Roster) -->
+          <!-- Baris 1: Armada & Nama OPT (Dropdown List dari Roster dengan Fitur Pencarian) -->
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-slate-700 mb-1">Armada <span class="text-rose-500 font-bold">*</span></label>
@@ -5632,30 +5632,97 @@
                 <option value="">-- Pilih Armada --</option>
               </select>
             </div>
-            <div>
+            <div class="relative" id="container-ach-opt-name">
               <label class="block text-slate-700 mb-1">Nama OPT <span class="text-rose-500 font-bold">*</span></label>
-              <select id="ach-opt-name"
-                class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-brand-500 shadow-2xs transition">
+              <div class="relative">
+                <input type="text" id="search-ach-opt-name" placeholder="-- Ketik / Cari Nama OPT --" autocomplete="off"
+                  class="w-full px-3 py-2 pr-7 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-brand-500 shadow-2xs transition truncate"
+                  onfocus="openSearchableDropdown('ach-opt-name')"
+                  oninput="filterSearchableDropdown('ach-opt-name', this.value)"
+                  onclick="openSearchableDropdown('ach-opt-name')">
+                <button type="button" id="clear-ach-opt-name" onclick="clearSearchableSelect('ach-opt-name')"
+                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                  title="Hapus pilihan">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                  </svg>
+                </button>
+                <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+              <select id="ach-opt-name" class="hidden">
                 <option value="">-- Pilih Operator --</option>
               </select>
+              <div id="dropdown-ach-opt-name"
+                class="hidden absolute left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 divide-y divide-slate-100 text-xs">
+              </div>
             </div>
           </div>
 
-          <!-- Baris 2: Nama MP 1 dan Nama MP 2 (Dropdown List dari Roster) -->
+          <!-- Baris 2: Nama MP 1 dan Nama MP 2 (Dropdown List dari Roster dengan Fitur Pencarian) -->
           <div class="grid grid-cols-2 gap-3">
-            <div>
+            <div class="relative" id="container-ach-mp1-name">
               <label class="block text-slate-700 mb-1">Nama MP 1 <span class="text-rose-500 font-bold">*</span></label>
-              <select id="ach-mp1-name"
-                class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-brand-500 shadow-2xs transition">
+              <div class="relative">
+                <input type="text" id="search-ach-mp1-name" placeholder="-- Ketik / Cari MP 1 --" autocomplete="off"
+                  class="w-full px-3 py-2 pr-7 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-brand-500 shadow-2xs transition truncate"
+                  onfocus="openSearchableDropdown('ach-mp1-name')"
+                  oninput="filterSearchableDropdown('ach-mp1-name', this.value)"
+                  onclick="openSearchableDropdown('ach-mp1-name')">
+                <button type="button" id="clear-ach-mp1-name" onclick="clearSearchableSelect('ach-mp1-name')"
+                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                  title="Hapus pilihan">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                  </svg>
+                </button>
+                <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+              <select id="ach-mp1-name" class="hidden">
                 <option value="">-- Pilih MP 1 --</option>
               </select>
+              <div id="dropdown-ach-mp1-name"
+                class="hidden absolute left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 divide-y divide-slate-100 text-xs">
+              </div>
             </div>
-            <div>
+            <div class="relative" id="container-ach-mp2-name">
               <label class="block text-slate-700 mb-1">Nama MP 2 <span class="text-rose-500 font-bold">*</span></label>
-              <select id="ach-mp2-name"
-                class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-brand-500 shadow-2xs transition">
+              <div class="relative">
+                <input type="text" id="search-ach-mp2-name" placeholder="-- Ketik / Cari MP 2 --" autocomplete="off"
+                  class="w-full px-3 py-2 pr-7 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-brand-500 shadow-2xs transition truncate"
+                  onfocus="openSearchableDropdown('ach-mp2-name')"
+                  oninput="filterSearchableDropdown('ach-mp2-name', this.value)"
+                  onclick="openSearchableDropdown('ach-mp2-name')">
+                <button type="button" id="clear-ach-mp2-name" onclick="clearSearchableSelect('ach-mp2-name')"
+                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                  title="Hapus pilihan">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                  </svg>
+                </button>
+                <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+              <select id="ach-mp2-name" class="hidden">
                 <option value="">-- Pilih MP 2 --</option>
+                <option value="-">- (Tidak Ada)</option>
               </select>
+              <div id="dropdown-ach-mp2-name"
+                class="hidden absolute left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 divide-y divide-slate-100 text-xs">
+              </div>
             </div>
           </div>
 
@@ -12294,6 +12361,15 @@
         if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
         if (state.activeTab === 'lt-schedule') renderLtScheduleTable();
         else if (state.activeTab === 'wt-schedule') renderWtScheduleTable();
+
+        // Pastikan Master Roster untuk tanggal aktif ini juga tersedia di memori HP
+        if (typeof ensureRosterForDate === 'function') {
+          ensureRosterForDate(dateStr).then(hasNewRoster => {
+            if (hasNewRoster) {
+              if (typeof refreshActiveTable === 'function') refreshActiveTable();
+            }
+          });
+        }
       } catch (e) {
         console.warn('[Supabase On-Demand Error]', e);
       }
@@ -15012,11 +15088,22 @@
           return nR === normTargetDate || rDate === targetDate;
         };
 
+        const shiftMatch = (rShift, rKodeShift) => {
+          let sNum = Number(rShift);
+          if (!sNum && rKodeShift) {
+            const code = String(rKodeShift).trim().toUpperCase();
+            if (code.startsWith('N') || code === 'NS' || code === 'NIGHT') sNum = 2;
+            else if (code.startsWith('D') || code === 'DS' || code === 'DAY') sNum = 1;
+          }
+          if (!sNum) return true; // jika data roster tidak mendefinisikan shift, lolos
+          return sNum === Number(shift);
+        };
+
         // 1. Cari MP1 & MP2 aktif dari Roster yang bertugas pada armada/unit ini
         let matchedMp = roster.filter(r =>
           (r.jenis === targetJenis || (!isWt && r.jenis === 'OM') || (isWt && r.jenis === 'WM')) &&
           dateMatch(r.tanggal) &&
-          (Number(r.shift) === Number(shift) || !r.shift) &&
+          shiftMatch(r.shift, r.kodeShift) &&
           (normMatch(r.unit) || normMatch(r.unitEfektif)) &&
           r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI'
         );
@@ -15025,15 +15112,17 @@
           matchedMp = roster.filter(r =>
             (r.jenis === targetJenis || (!isWt && r.jenis === 'OM') || (isWt && r.jenis === 'WM')) &&
             (!r.tanggal || r.tanggal === targetDate) &&
-            (Number(r.shift) === Number(shift) || !r.shift) &&
+            shiftMatch(r.shift, r.kodeShift) &&
             (normMatch(r.unit) || normMatch(r.unitEfektif)) &&
             r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI'
           );
         }
 
+        // Fallback tahap 3: jika data tanggal belum terisi / cache tanggal lain, WAJIB tetap cocokkan shift!
         if (matchedMp.length === 0) {
           matchedMp = roster.filter(r =>
             (r.jenis === targetJenis || (!isWt && r.jenis === 'OM') || (isWt && r.jenis === 'WM')) &&
+            shiftMatch(r.shift, r.kodeShift) &&
             (normMatch(r.unit) || normMatch(r.unitEfektif)) &&
             r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI'
           );
@@ -15050,7 +15139,7 @@
         let optCandidates = roster.filter(r =>
           r.jenis === 'OPT' &&
           dateMatch(r.tanggal) &&
-          (Number(r.shift) === Number(shift) || !r.shift) &&
+          shiftMatch(r.shift, r.kodeShift) &&
           r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI' &&
           (normMatch(r.unitEfektif) || normMatch(r.unit))
         );
@@ -15059,15 +15148,17 @@
           optCandidates = roster.filter(r =>
             r.jenis === 'OPT' &&
             (!r.tanggal || r.tanggal === targetDate) &&
-            (Number(r.shift) === Number(shift) || !r.shift) &&
+            shiftMatch(r.shift, r.kodeShift) &&
             r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI' &&
             (normMatch(r.unitEfektif) || normMatch(r.unit))
           );
         }
 
+        // Fallback tahap 3 OPT: WAJIB tetap filter shift & hanya OPT dari Roster!
         if (optCandidates.length === 0) {
           optCandidates = roster.filter(r =>
             r.jenis === 'OPT' &&
+            shiftMatch(r.shift, r.kodeShift) &&
             (normMatch(r.unitEfektif) || normMatch(r.unit)) &&
             r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI'
           );
@@ -15080,14 +15171,8 @@
 
         if (matchedOpt && matchedOpt.nama) {
           defaultOpt = matchedOpt.nama;
-        } else {
-          // Fallback ke masterOperators HANYA jika ada operator dengan unit/armada yang cocok persis
-          const ops = state.masterOperators || [];
-          const opMatch = ops.find(o => normMatch(o.armada_unit || o.armada || o.unit) && (o.jabatan?.toLowerCase().includes('opt') || o.jabatan?.toLowerCase().includes('operator') || !o.jabatan));
-          if (opMatch && opMatch.nama) {
-            defaultOpt = opMatch.nama;
-          }
         }
+        // Bebas kontak produksi: Sesuai instruksi pengguna, dilarang fallback ke masterOperators!
       } catch (err) {
         console.warn('[Roster Lookup Error]', err);
       }
@@ -17122,39 +17207,39 @@
           table.innerHTML = `
             <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold select-none">
               <tr>
-                ${state.isLtSchedSelectMode ? `<th class="py-1.5 px-1.5 w-[5%] md:w-[4%] text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'LT')" title="Pilih Semua di Cluster Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
-                <th onclick="sortLtSchedBy('waktu')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
+                ${state.isLtSchedSelectMode ? `<th class="py-1.5 px-1.5 ${isMp ? 'w-[8%] md:w-[4%]' : 'w-[5%] md:w-[4%]'} text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'LT')" title="Pilih Semua di Cluster Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
+                <th onclick="sortLtSchedBy('waktu')" class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
                   <div class="flex items-center space-x-0.5">
                     <span>WAKTU</span>
                     ${renderSchedSortIcon('waktu', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('unit')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[22%] md:w-[22%]' : (!isAdmin ? 'w-[22%] md:w-[20%]' : 'w-[24%] md:w-[23%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
+                <th onclick="sortLtSchedBy('unit')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[22%] md:w-[22%]' : 'w-[22%] md:w-[22%]') : (!isAdmin ? 'w-[24%] md:w-[20%]' : 'w-[24%] md:w-[23%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
                   <div class="flex items-center space-x-0.5">
                     <span>${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
                     ${renderSchedSortIcon('unit', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[24%]' : (!isAdmin ? 'w-[24%] md:w-[23%]' : 'w-[26%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Cluster & Lokasi Pit">
+                <th onclick="sortLtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[28%] md:w-[24%]' : 'w-[24%] md:w-[24%]') : (!isAdmin ? 'w-[32%] md:w-[23%]' : 'w-[26%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Cluster & Lokasi Pit">
                   <div class="flex items-center space-x-0.5">
                     <span>CLUSTER & LOKASI</span>
                     ${renderSchedSortIcon('lokasi', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('armada')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[16%] md:w-[16%]' : (!isAdmin ? 'w-[16%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada LT">
+                <th onclick="sortLtSchedBy('armada')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[18%] md:w-[16%]' : 'w-[16%] md:w-[16%]') : (!isAdmin ? 'w-[18%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada LT">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>ARMADA</span>
                     ${renderSchedSortIcon('armada', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('personil')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
+                <th onclick="sortLtSchedBy('personil')" class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
                   <div class="flex items-center space-x-0.5">
                     <span>PERSONIL</span>
                     ${renderSchedSortIcon('personil', 'LT')}
                   </div>
                 </th>
                 ${!isAdmin ? `
-                  <th onclick="sortLtSchedBy('status')" class="py-1.5 px-2 w-[16%] md:w-[12%] text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
+                  <th onclick="sortLtSchedBy('status')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[10%]' : 'w-[26%] md:w-[12%]'} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
                     <div class="flex items-center justify-center space-x-0.5">
                       <span>AKSI / STATUS</span>
                       ${renderSchedSortIcon('status', 'LT')}
@@ -17225,7 +17310,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                     <input type="checkbox" ${state.selectedSchedJobIds.has(job.id) ? 'checked' : ''} onchange="toggleSelectSchedJobRow('${job.id}', this.checked, 'LT')" class="rounded border-slate-300 text-brand-600 cursor-pointer">
                   </td>
                 ` : ''}
-                <td class="py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">${job.waktu || '08:00 s/d 08:30'}</td>
+                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">${job.waktu || '08:00 s/d 08:30'}</td>
                 <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
                   <div class="flex items-center flex-wrap gap-1">
                     <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-950 font-mono hover:text-emerald-700 text-left cursor-pointer text-[15px] sm:text-[16px] leading-snug tracking-normal">
@@ -17239,14 +17324,14 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                   <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
                   <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
                 </td>
-                <td class="py-1.5 px-2 text-center font-mono font-bold text-emerald-800 text-[11.5px] align-middle">
+                <td class="py-1.5 px-1 md:px-2 text-center font-mono font-bold text-emerald-800 text-[11.5px] align-middle">
                   ${renderArmadaOnlyCell(job, false)}
                 </td>
-                <td class="py-1.5 px-2 break-words text-[11px]">
+                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 break-words text-[11px]">
                   ${renderPersonnelCell(job)}
                 </td>
                 ${!isAdmin ? `
-                <td class="py-1.5 px-2 text-center align-middle">
+                <td class="py-1.5 px-1 md:px-2 text-center align-middle">
                   ${renderJobActionCell(job)}
                 </td>
                 ` : ''}
@@ -17331,39 +17416,39 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           table.innerHTML = `
             <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold select-none">
               <tr>
-                ${state.isLtSchedSelectMode ? `<th class="py-1.5 px-2 w-[4%] text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'LT', ${shiftNum})" title="Pilih Semua di Cluster & Shift Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
-                <th onclick="sortLtSchedBy('waktu')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
+                ${state.isLtSchedSelectMode ? `<th class="py-1.5 px-2 ${isMp ? 'w-[8%] md:w-[4%]' : 'w-[4%] md:w-[4%]'} text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'LT', ${shiftNum})" title="Pilih Semua di Cluster & Shift Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
+                <th onclick="sortLtSchedBy('waktu')" class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
                   <div class="flex items-center space-x-0.5">
                     <span>WAKTU</span>
                     ${renderSchedSortIcon('waktu', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('unit')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[22%] md:w-[22%]' : (!isAdmin ? 'w-[22%] md:w-[20%]' : 'w-[24%] md:w-[23%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
+                <th onclick="sortLtSchedBy('unit')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[22%] md:w-[22%]' : 'w-[22%] md:w-[22%]') : (!isAdmin ? 'w-[24%] md:w-[20%]' : 'w-[24%] md:w-[23%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
                   <div class="flex items-center space-x-0.5">
                     <span>${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
                     ${renderSchedSortIcon('unit', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[24%]' : (!isAdmin ? 'w-[24%] md:w-[23%]' : 'w-[26%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Cluster & Lokasi Pit">
+                <th onclick="sortLtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[28%] md:w-[24%]' : 'w-[24%] md:w-[24%]') : (!isAdmin ? 'w-[32%] md:w-[23%]' : 'w-[26%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Cluster & Lokasi Pit">
                   <div class="flex items-center space-x-0.5">
                     <span>CLUSTER & LOKASI</span>
                     ${renderSchedSortIcon('lokasi', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('armada')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[16%] md:w-[16%]' : (!isAdmin ? 'w-[16%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada LT">
+                <th onclick="sortLtSchedBy('armada')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[18%] md:w-[16%]' : 'w-[16%] md:w-[16%]') : (!isAdmin ? 'w-[18%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada LT">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>ARMADA</span>
                     ${renderSchedSortIcon('armada', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('personil')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
+                <th onclick="sortLtSchedBy('personil')" class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
                   <div class="flex items-center space-x-0.5">
                     <span>PERSONIL</span>
                     ${renderSchedSortIcon('personil', 'LT')}
                   </div>
                 </th>
                 ${!isAdmin ? `
-                  <th onclick="sortLtSchedBy('status')" class="py-1.5 px-2 w-[16%] md:w-[12%] text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
+                  <th onclick="sortLtSchedBy('status')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[10%]' : 'w-[26%] md:w-[12%]'} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
                     <div class="flex items-center justify-center space-x-0.5">
                       <span>AKSI / STATUS</span>
                       ${renderSchedSortIcon('status', 'LT')}
@@ -17440,7 +17525,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                     <input type="checkbox" ${state.selectedSchedJobIds.has(job.id) ? 'checked' : ''} onchange="toggleSelectSchedJobRow('${job.id}', this.checked, 'LT')" class="rounded border-slate-300 text-brand-600 cursor-pointer">
                   </td>
                 ` : ''}
-                <td class="py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">
+                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">
                   <div>${job.waktu || '07:00 s/d 07:15'}</div>
                   ${isPendingJob ? `<span class="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9.5px] font-extrabold bg-amber-200/80 text-amber-950 uppercase tracking-tighter">PENDING S1</span>` : ''}
                 </td>
@@ -17450,6 +17535,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                       ${job.noLambung}
                     </button>
                     ${hasAcJob ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 text-[10.5px] font-bold font-sans ml-1 tracking-tight shadow-2xs cursor-default" title="Unit ini juga memiliki jadwal Clean Air Cleaner hari ini">+ AC</span>` : ''}
+                    ${isPendingJob ? `<span class="md:hidden inline-flex items-center px-1.5 py-0.5 rounded bg-amber-200/80 text-amber-950 text-[9px] font-extrabold tracking-tight shadow-2xs">PENDING S1</span>` : ''}
                   </div>
                   ${isAdmin ? `<span class="text-[9.5px] sm:text-[10px] font-bold text-slate-400 block uppercase tracking-wider leading-tight mt-0.5">${unitType}</span>` : ''}
                 </td>
@@ -17457,14 +17543,14 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                   <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
                   <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
                 </td>
-                <td class="py-1.5 px-2 text-center align-middle">
+                <td class="py-1.5 px-1 md:px-2 text-center align-middle">
                   ${renderArmadaCell(job, false)}
                 </td>
-                <td class="py-1.5 px-2 break-words text-[11px]">
+                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 break-words text-[11px]">
                   ${renderPersonnelCell(job)}
                 </td>
                 ${!isAdmin ? `
-                <td class="py-1.5 px-2 text-center align-middle">
+                <td class="py-1.5 px-1 md:px-2 text-center align-middle">
                   ${renderJobActionCell(job)}
                 </td>
                 ` : ''}
@@ -17731,39 +17817,39 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           table.innerHTML = `
             <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold select-none">
               <tr>
-                ${state.isWtSchedSelectMode ? `<th class="py-1.5 px-1.5 w-[5%] md:w-[4%] text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'WT')" title="Pilih Semua di Cluster Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
-                <th onclick="sortWtSchedBy('waktu')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
+                ${state.isWtSchedSelectMode ? `<th class="py-1.5 px-1.5 ${isMp ? 'w-[8%] md:w-[4%]' : 'w-[5%] md:w-[4%]'} text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'WT')" title="Pilih Semua di Cluster Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
+                <th onclick="sortWtSchedBy('waktu')" class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
                   <div class="flex items-center space-x-0.5">
                     <span>WAKTU</span>
                     ${renderSchedSortIcon('waktu', 'WT')}
                   </div>
                 </th>
-                <th onclick="sortWtSchedBy('unit')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[22%] md:w-[22%]' : (!isAdmin ? 'w-[22%] md:w-[20%]' : 'w-[24%] md:w-[23%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
+                <th onclick="sortWtSchedBy('unit')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? (isMp ? 'w-[22%] md:w-[22%]' : 'w-[22%] md:w-[22%]') : (!isAdmin ? 'w-[24%] md:w-[20%]' : 'w-[24%] md:w-[23%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
                   <div class="flex items-center space-x-0.5">
                     <span>${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
                     ${renderSchedSortIcon('unit', 'WT')}
                   </div>
                 </th>
-                <th onclick="sortWtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[24%] md:w-[24%]' : (!isAdmin ? 'w-[24%] md:w-[23%]' : 'w-[26%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Cluster & Lokasi Pit">
+                <th onclick="sortWtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? (isMp ? 'w-[28%] md:w-[24%]' : 'w-[24%] md:w-[24%]') : (!isAdmin ? 'w-[32%] md:w-[23%]' : 'w-[26%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Cluster & Lokasi Pit">
                   <div class="flex items-center space-x-0.5">
                     <span>CLUSTER & LOKASI</span>
                     ${renderSchedSortIcon('lokasi', 'WT')}
                   </div>
                 </th>
-                <th onclick="sortWtSchedBy('armada')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[16%] md:w-[16%]' : (!isAdmin ? 'w-[16%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada WT">
+                <th onclick="sortWtSchedBy('armada')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? (isMp ? 'w-[18%] md:w-[16%]' : 'w-[16%] md:w-[16%]') : (!isAdmin ? 'w-[18%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada WT">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>ARMADA</span>
                     ${renderSchedSortIcon('armada', 'WT')}
                   </div>
                 </th>
-                <th onclick="sortWtSchedBy('personil')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
+                <th onclick="sortWtSchedBy('personil')" class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
                   <div class="flex items-center space-x-0.5">
                     <span>PERSONIL</span>
                     ${renderSchedSortIcon('personil', 'WT')}
                   </div>
                 </th>
                 ${!isAdmin ? `
-                  <th onclick="sortWtSchedBy('status')" class="py-1.5 px-2 w-[16%] md:w-[12%] text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
+                  <th onclick="sortWtSchedBy('status')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[24%] md:w-[10%]' : 'w-[26%] md:w-[12%]'} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
                     <div class="flex items-center justify-center space-x-0.5">
                       <span>AKSI / STATUS</span>
                       ${renderSchedSortIcon('status', 'WT')}
@@ -17834,7 +17920,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                     <input type="checkbox" ${state.selectedSchedJobIds.has(job.id) ? 'checked' : ''} onchange="toggleSelectSchedJobRow('${job.id}', this.checked, 'WT')" class="rounded border-slate-300 text-brand-600 cursor-pointer">
                   </td>
                 ` : ''}
-                <td class="py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">${job.waktu || '08:00 s/d 09:00'}</td>
+                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">${job.waktu || '08:00 s/d 09:00'}</td>
                 <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
                   <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-950 font-mono hover:text-cyan-700 text-left cursor-pointer text-[15px] sm:text-[16px] leading-snug tracking-normal">
                     ${job.noLambung}
@@ -17845,14 +17931,14 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                   <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
                   <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
                 </td>
-                <td class="py-1.5 px-2 text-center font-mono font-bold text-cyan-800 text-[11.5px] align-middle">
+                <td class="py-1.5 px-1 md:px-2 text-center font-mono font-bold text-cyan-800 text-[11.5px] align-middle">
                   ${renderArmadaOnlyCell(job, true)}
                 </td>
-                <td class="py-1.5 px-2 break-words text-[11px]">
+                <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 break-words text-[11px]">
                   ${renderPersonnelCell(job)}
                 </td>
                 ${!isAdmin ? `
-                <td class="py-1.5 px-2 text-center align-middle">
+                <td class="py-1.5 px-1 md:px-2 text-center align-middle">
                   ${renderJobActionCell(job)}
                 </td>
                 ` : ''}
@@ -17960,39 +18046,39 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             table.innerHTML = `
               <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold select-none">
                 <tr>
-                  ${state.isWtSchedSelectMode ? `<th class="py-1.5 px-2 w-[4%] text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'WT', ${shiftNum})" title="Pilih Semua di Cluster & Shift Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
-                  <th onclick="sortWtSchedBy('waktu')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
+                  ${state.isWtSchedSelectMode ? `<th class="py-1.5 px-2 ${isMp ? 'w-[8%] md:w-[4%]' : 'w-[4%] md:w-[4%]'} text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'WT', ${shiftNum})" title="Pilih Semua di Cluster & Shift Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
+                  <th onclick="sortWtSchedBy('waktu')" class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[16%] md:w-[15%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
                     <div class="flex items-center space-x-0.5">
                       <span>WAKTU</span>
                       ${renderSchedSortIcon('waktu', 'WT')}
                     </div>
                   </th>
-                  <th onclick="sortWtSchedBy('unit')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[22%] md:w-[22%]' : (!isAdmin ? 'w-[22%] md:w-[20%]' : 'w-[24%] md:w-[23%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
+                  <th onclick="sortWtSchedBy('unit')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? (isMp ? 'w-[22%] md:w-[22%]' : 'w-[22%] md:w-[22%]') : (!isAdmin ? 'w-[24%] md:w-[20%]' : 'w-[24%] md:w-[23%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
                     <div class="flex items-center space-x-0.5">
                       <span>${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
                       ${renderSchedSortIcon('unit', 'WT')}
                     </div>
                   </th>
-                  <th onclick="sortWtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[24%] md:w-[24%]' : (!isAdmin ? 'w-[24%] md:w-[23%]' : 'w-[26%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Cluster & Lokasi Pit">
+                  <th onclick="sortWtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? (isMp ? 'w-[28%] md:w-[24%]' : 'w-[24%] md:w-[24%]') : (!isAdmin ? 'w-[32%] md:w-[23%]' : 'w-[26%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Cluster & Lokasi Pit">
                     <div class="flex items-center space-x-0.5">
                       <span>CLUSTER & LOKASI</span>
                       ${renderSchedSortIcon('lokasi', 'WT')}
                     </div>
                   </th>
-                  <th onclick="sortWtSchedBy('armada')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[16%] md:w-[16%]' : (!isAdmin ? 'w-[16%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada WT">
+                  <th onclick="sortWtSchedBy('armada')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? (isMp ? 'w-[18%] md:w-[16%]' : 'w-[16%] md:w-[16%]') : (!isAdmin ? 'w-[18%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada WT">
                     <div class="flex items-center justify-center space-x-0.5">
                       <span>ARMADA</span>
                       ${renderSchedSortIcon('armada', 'WT')}
                     </div>
                   </th>
-                  <th onclick="sortWtSchedBy('personil')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
+                  <th onclick="sortWtSchedBy('personil')" class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[19%] md:w-[20%]' : (!isAdmin ? 'w-[18%] md:w-[18%]' : 'w-[20%] md:w-[20%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
                     <div class="flex items-center space-x-0.5">
                       <span>PERSONIL</span>
                       ${renderSchedSortIcon('personil', 'WT')}
                     </div>
                   </th>
                   ${!isAdmin ? `
-                    <th onclick="sortWtSchedBy('status')" class="py-1.5 px-2 w-[16%] md:w-[12%] text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
+                    <th onclick="sortWtSchedBy('status')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[24%] md:w-[10%]' : 'w-[26%] md:w-[12%]'} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
                       <div class="flex items-center justify-center space-x-0.5">
                         <span>AKSI / STATUS</span>
                         ${renderSchedSortIcon('status', 'WT')}
@@ -18021,7 +18107,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                       <input type="checkbox" ${state.selectedSchedJobIds.has(job.id) ? 'checked' : ''} onchange="toggleSelectSchedJobRow('${job.id}', this.checked, 'WT')" class="rounded border-slate-300 text-brand-600 cursor-pointer">
                     </td>
                   ` : ''}
-                  <td class="py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">${job.waktu || round.defaultTime}</td>
+                  <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] font-semibold text-slate-700 break-words">${job.waktu || round.defaultTime}</td>
                   <td class="py-1.5 px-1.5 md:py-2 md:px-2 break-words">
                     <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-black text-slate-950 font-mono hover:text-cyan-700 text-left cursor-pointer text-[15px] sm:text-[16px] leading-snug tracking-normal">
                       ${job.noLambung}
@@ -18032,14 +18118,14 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                     <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
                     <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
                   </td>
-                  <td class="py-1.5 px-2 text-center align-middle">
+                  <td class="py-1.5 px-1 md:px-2 text-center align-middle">
                     ${renderArmadaCell(job, true)}
                   </td>
-                  <td class="py-1.5 px-2 break-words text-[11px]">
+                  <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 break-words text-[11px]">
                     ${renderPersonnelCell(job)}
                   </td>
                   ${!isAdmin ? `
-                  <td class="py-1.5 px-2 text-center align-middle">
+                  <td class="py-1.5 px-1 md:px-2 text-center align-middle">
                     ${renderJobActionCell(job)}
                   </td>
                   ` : ''}
@@ -24861,6 +24947,8 @@ Keterangan : ${keterangan}`;
     function normalizeDateStr(d) {
       if (!d) return '';
       d = String(d).trim();
+      if (d.includes('T')) d = d.split('T')[0].trim();
+      if (d.includes(' ')) d = d.split(' ')[0].trim();
       if (d.includes('/')) {
         const p = d.split('/');
         if (p.length === 3) {
@@ -24870,6 +24958,7 @@ Keterangan : ${keterangan}`;
       }
       return d;
     }
+    window.normalizeDateStr = normalizeDateStr;
 
 
     /**
@@ -26985,20 +27074,265 @@ Keterangan : ${keterangan}`;
       }
     }
 
+    // =========================================================================
+    // SEARCHABLE DROPDOWN COMPONENT UNTUK FORM ACH (NAMA OPT, MP 1, MP 2)
+    // =========================================================================
+    window._searchablePersonnelData = {
+      'ach-opt-name': [],
+      'ach-mp1-name': [],
+      'ach-mp2-name': []
+    };
+
+    function openSearchableDropdown(fieldId) {
+      ['ach-opt-name', 'ach-mp1-name', 'ach-mp2-name'].forEach(id => {
+        if (id !== fieldId) closeSearchableDropdown(id);
+      });
+      const dropdownEl = document.getElementById(`dropdown-${fieldId}`);
+      const inputEl = document.getElementById(`search-${fieldId}`);
+      if (!dropdownEl) return;
+      dropdownEl.classList.remove('hidden');
+      filterSearchableDropdown(fieldId, inputEl ? inputEl.value : '');
+    }
+    window.openSearchableDropdown = openSearchableDropdown;
+
+    function closeSearchableDropdown(fieldId) {
+      const dropdownEl = document.getElementById(`dropdown-${fieldId}`);
+      if (dropdownEl) dropdownEl.classList.add('hidden');
+    }
+    window.closeSearchableDropdown = closeSearchableDropdown;
+
+    function filterSearchableDropdown(fieldId, query = '') {
+      const dropdownEl = document.getElementById(`dropdown-${fieldId}`);
+      const clearBtn = document.getElementById(`clear-${fieldId}`);
+      if (!dropdownEl) return;
+
+      const rawList = window._searchablePersonnelData[fieldId] || [];
+      const cleanQ = String(query || '').trim().toLowerCase();
+
+      if (clearBtn) {
+        if (cleanQ !== '') clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+      }
+
+      const filtered = cleanQ === ''
+        ? rawList
+        : rawList.filter(item => String(item.value || '').toLowerCase().includes(cleanQ) || String(item.label || '').toLowerCase().includes(cleanQ));
+
+      const nativeSelect = document.getElementById(fieldId);
+      const currentSelectedVal = nativeSelect ? nativeSelect.value : '';
+
+      dropdownEl.innerHTML = '';
+      if (filtered.length === 0) {
+        dropdownEl.innerHTML = `
+          <div class="px-3 py-2.5 text-center text-slate-400 italic">
+            <span>Nama tidak ditemukan</span>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(item => {
+        const isSelected = (item.value === currentSelectedVal);
+        const row = document.createElement('div');
+        row.className = `px-3 py-2 text-left cursor-pointer transition flex items-center justify-between ${isSelected ? 'bg-emerald-50 text-emerald-800 font-bold' : 'hover:bg-slate-50 text-slate-800 font-semibold'}`;
+
+        let labelHtml = item.label;
+        if (cleanQ !== '' && item.value !== '' && item.value !== '-') {
+          const idx = item.label.toLowerCase().indexOf(cleanQ);
+          if (idx !== -1) {
+            const before = item.label.slice(0, idx);
+            const match = item.label.slice(idx, idx + cleanQ.length);
+            const after = item.label.slice(idx + cleanQ.length);
+            labelHtml = `${before}<span class="text-brand-600 bg-brand-50 font-bold underline">${match}</span>${after}`;
+          }
+        }
+
+        row.innerHTML = `
+          <span class="truncate">${labelHtml}</span>
+          ${isSelected ? '<svg class="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>' : ''}
+        `;
+        row.onmousedown = (e) => {
+          e.preventDefault();
+          selectSearchableOption(fieldId, item.value);
+        };
+        dropdownEl.appendChild(row);
+      });
+    }
+    window.filterSearchableDropdown = filterSearchableDropdown;
+
+    function selectSearchableOption(fieldId, value) {
+      const nativeSelect = document.getElementById(fieldId);
+      const inputEl = document.getElementById(`search-${fieldId}`);
+      const clearBtn = document.getElementById(`clear-${fieldId}`);
+
+      if (nativeSelect) {
+        if (value && value !== '-' && ![...nativeSelect.options].some(o => o.value === value)) {
+          const opt = document.createElement('option');
+          opt.value = value;
+          opt.textContent = value;
+          nativeSelect.appendChild(opt);
+        }
+        nativeSelect.value = value || '';
+        try {
+          const ev = new Event('change', { bubbles: true });
+          nativeSelect.dispatchEvent(ev);
+        } catch (e) { }
+      }
+
+      if (inputEl) {
+        if (value === '-') inputEl.value = '- (Tidak Ada)';
+        else inputEl.value = value || '';
+      }
+
+      if (clearBtn) {
+        if (value && value !== '') clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+      }
+
+      closeSearchableDropdown(fieldId);
+    }
+    window.selectSearchableOption = selectSearchableOption;
+
+    function clearSearchableSelect(fieldId) {
+      const nativeSelect = document.getElementById(fieldId);
+      const inputEl = document.getElementById(`search-${fieldId}`);
+      const clearBtn = document.getElementById(`clear-${fieldId}`);
+
+      if (nativeSelect) {
+        nativeSelect.value = (fieldId === 'ach-mp2-name' ? '-' : '');
+        try {
+          const ev = new Event('change', { bubbles: true });
+          nativeSelect.dispatchEvent(ev);
+        } catch (e) { }
+      }
+
+      if (inputEl) {
+        inputEl.value = '';
+        inputEl.focus();
+      }
+
+      if (clearBtn) clearBtn.classList.add('hidden');
+      openSearchableDropdown(fieldId);
+    }
+    window.clearSearchableSelect = clearSearchableSelect;
+
+    // Menutup popup dropdown jika user mengklik area lain
+    if (!window._searchableDropdownListenerAttached) {
+      document.addEventListener('click', (e) => {
+        ['ach-opt-name', 'ach-mp1-name', 'ach-mp2-name'].forEach(fieldId => {
+          const container = document.getElementById(`container-${fieldId}`);
+          if (container && !container.contains(e.target)) {
+            closeSearchableDropdown(fieldId);
+            const nativeSelect = document.getElementById(fieldId);
+            const inputEl = document.getElementById(`search-${fieldId}`);
+            if (inputEl && nativeSelect) {
+              if (nativeSelect.value === '-') inputEl.value = '- (Tidak Ada)';
+              else if (nativeSelect.value) inputEl.value = nativeSelect.value;
+              else inputEl.value = '';
+            }
+          }
+        });
+      });
+      window._searchableDropdownListenerAttached = true;
+    }
+
+    async function ensureRosterForDate(targetDate) {
+      if (!targetDate || !state.supabaseClient) return false;
+      const normDate = (typeof normalizeDateStr === 'function') ? normalizeDateStr(targetDate) : String(targetDate).trim();
+      if (!normDate) return false;
+
+      const alreadyHasDate = (state.masterRoster || []).some(r => {
+        const rNorm = (typeof normalizeDateStr === 'function') ? normalizeDateStr(r.tanggal) : r.tanggal;
+        return rNorm === normDate;
+      });
+
+      if (alreadyHasDate) return false;
+
+      try {
+        console.log(`[Supabase Hot-Window Roster] Mengambil roster aktif untuk tanggal ${normDate}...`);
+        const { data, error } = await state.supabaseClient
+          .from('master_roster')
+          .select(SUPABASE_ROSTER_COLS)
+          .eq('tanggal', normDate);
+
+        if (error || !Array.isArray(data) || data.length === 0) return false;
+
+        const opMap = {};
+        if (Array.isArray(state.masterOperators)) {
+          state.masterOperators.forEach(o => { if (o.nrp) opMap[String(o.nrp).trim()] = o; });
+        }
+
+        const mappedRows = data.map((r, idx) => {
+          const opInfo = opMap[String(r.nrp).trim()] || {};
+          const baseUnit = r.unit || opInfo.unit || '-';
+          let unitEfektif = r.unit_efektif || baseUnit;
+          const shiftCode = String(r.kode_shift || r.shift_code || 'DWS').trim();
+          const matchSpare = shiftCode.match(/^[DN](\d{2,5})$/i);
+          if (matchSpare && typeof resolveArmadaFromShiftCode === 'function') {
+            const resolvedUnit = resolveArmadaFromShiftCode(shiftCode, baseUnit, r.jenis || r.tipe_karyawan);
+            if (resolvedUnit && resolvedUnit !== '-') unitEfektif = resolvedUnit;
+          }
+          const shiftNum = r.shift || ((shiftCode.toUpperCase().startsWith('N')) ? 2 : 1);
+          const armMatch = (state.masterArmada || []).find(a => (a.unit || '').toUpperCase() === (unitEfektif || baseUnit).toUpperCase());
+          const resolvedCluster = armMatch?.cluster || opInfo.cluster || 'Selatan';
+          return {
+            id: r.id || ('ROSTER-HOT-' + normDate + '-' + idx),
+            jenis: r.jenis || r.tipe_karyawan || 'OPT',
+            nrp: r.nrp,
+            nik: r.nrp,
+            nama: r.nama || opInfo.nama || '-',
+            unit: baseUnit,
+            unitEfektif: unitEfektif,
+            cluster: resolvedCluster,
+            periode: r.periode,
+            tanggal: r.tanggal,
+            shift: shiftNum,
+            kodeShift: shiftCode,
+            isSpare: r.is_spare !== undefined ? Boolean(r.is_spare) : !!matchSpare
+          };
+        });
+
+        const existingRoster = state.masterRoster || [];
+        const existingKeys = new Set(existingRoster.map(r => r.id || `${r.nrp}_${r.tanggal}_${r.shift}`));
+        mappedRows.forEach(row => {
+          const k = row.id || `${row.nrp}_${row.tanggal}_${row.shift}`;
+          if (!existingKeys.has(k)) {
+            existingRoster.push(row);
+            existingKeys.add(k);
+          }
+        });
+        state.masterRoster = existingRoster;
+
+        console.log(`[Supabase Hot-Window Roster] Sukses memuat ${mappedRows.length} personil roster untuk tanggal ${normDate}.`);
+        return true;
+      } catch (err) {
+        console.warn('[ensureRosterForDate Warning]', err);
+        return false;
+      }
+    }
+    window.ensureRosterForDate = ensureRosterForDate;
+
     function populateAchPersonnelSelects(selectedOpt, selectedMp1, selectedMp2, isWashing) {
       const optSelect = document.getElementById('ach-opt-name');
       const mp1Select = document.getElementById('ach-mp1-name');
       const mp2Select = document.getElementById('ach-mp2-name');
 
-      // 1. Kumpulkan seluruh data nama Operator OPT dari Roster Operator Plant & Master Kontak Produksi
+      // 1. Kumpulkan seluruh data nama Operator OPT dari Roster Operator Plant (MURNI PLANT ROSTER, BUKAN KONTAK PRODUKSI!)
       const optNames = new Set();
-      (state.masterRoster || []).filter(r => r.jenis === 'OPT').forEach(r => { if (r.nama) optNames.add(r.nama); });
-      (state.masterOperators || []).forEach(o => { if (o.nama) optNames.add(o.nama); });
-      if (selectedOpt && selectedOpt !== '-') optNames.add(selectedOpt);
+      (state.masterRoster || []).filter(r => r.jenis === 'OPT').forEach(r => {
+        if (r.nama && r.nama !== '-' && r.nama.trim() !== '') {
+          optNames.add(r.nama.trim().toUpperCase());
+        }
+      });
+      if (selectedOpt && selectedOpt !== '-' && selectedOpt.trim() !== '') {
+        optNames.add(selectedOpt.trim().toUpperCase());
+      }
+
+      const sortedOpt = Array.from(optNames).sort();
 
       if (optSelect) {
         optSelect.innerHTML = '<option value="">-- Pilih Operator (OPT) --</option>';
-        Array.from(optNames).sort().forEach(name => {
+        sortedOpt.forEach(name => {
           const opt = document.createElement('option');
           opt.value = name;
           opt.textContent = name;
@@ -27007,24 +27341,23 @@ Keterangan : ${keterangan}`;
         optSelect.value = selectedOpt || '';
       }
 
-      // 2. Kumpulkan seluruh data personil MP (Oilman / Washingman) dari Roster, Akun & Master Kontak Produksi
+      window._searchablePersonnelData['ach-opt-name'] = [
+        { value: '', label: '-- Pilih Operator (OPT) --' },
+        ...sortedOpt.map(name => ({ value: name, label: name }))
+      ];
+      selectSearchableOption('ach-opt-name', selectedOpt || '');
+
+      // 2. Kumpulkan seluruh data personil MP (Oilman / Washingman) dari Roster & Akun
       const mpNames = new Set();
       const filterJenis = isWashing ? 'WM' : 'OM';
       (state.masterRoster || []).filter(r => r.jenis === filterJenis || r.jenis === 'OM' || r.jenis === 'WM').forEach(r => {
-        if (r.nama) mpNames.add(r.nama);
+        if (r.nama && r.nama !== '-' && r.nama.trim() !== '') mpNames.add(r.nama.trim().toUpperCase());
       });
       (state.masterUsers || []).filter(u => u.role === 'mp_lt' || u.role === 'mp_wt').forEach(u => {
-        if (u.nama) mpNames.add(u.nama);
+        if (u.nama && u.nama !== '-' && u.nama.trim() !== '') mpNames.add(u.nama.trim().toUpperCase());
       });
-      (state.masterOperators || []).filter(o => {
-        const j = String(o.jabatan || '').toLowerCase();
-        return j.includes('oilman') || j.includes('washing') || j.includes('mp') || j.includes('helper');
-      }).forEach(o => {
-        if (o.nama) mpNames.add(o.nama);
-      });
-
-      if (selectedMp1 && selectedMp1 !== '-') mpNames.add(selectedMp1);
-      if (selectedMp2 && selectedMp2 !== '-') mpNames.add(selectedMp2);
+      if (selectedMp1 && selectedMp1 !== '-' && selectedMp1.trim() !== '') mpNames.add(selectedMp1.trim().toUpperCase());
+      if (selectedMp2 && selectedMp2 !== '-' && selectedMp2.trim() !== '') mpNames.add(selectedMp2.trim().toUpperCase());
 
       const sortedMp = Array.from(mpNames).sort();
 
@@ -27039,6 +27372,12 @@ Keterangan : ${keterangan}`;
         mp1Select.value = selectedMp1 || '';
       }
 
+      window._searchablePersonnelData['ach-mp1-name'] = [
+        { value: '', label: '-- Pilih MP 1 --' },
+        ...sortedMp.map(name => ({ value: name, label: name }))
+      ];
+      selectSearchableOption('ach-mp1-name', selectedMp1 || '');
+
       if (mp2Select) {
         mp2Select.innerHTML = '<option value="">-- Pilih MP 2 --</option><option value="-">- (Tidak Ada)</option>';
         sortedMp.forEach(name => {
@@ -27049,6 +27388,13 @@ Keterangan : ${keterangan}`;
         });
         mp2Select.value = selectedMp2 || '';
       }
+
+      window._searchablePersonnelData['ach-mp2-name'] = [
+        { value: '', label: '-- Pilih MP 2 --' },
+        { value: '-', label: '- (Tidak Ada)' },
+        ...sortedMp.map(name => ({ value: name, label: name }))
+      ];
+      selectSearchableOption('ach-mp2-name', selectedMp2 || '');
     }
 
     function handleAchArmadaInput(armadaUnit) {
@@ -27058,9 +27404,9 @@ Keterangan : ${keterangan}`;
 
       // Jika user memilih opsi kosong ("-- Pilih Armada --"), kosongkan seluruh field crew
       if (!armadaUnit) {
-        if (optSelect) optSelect.value = '';
-        if (mp1Select) mp1Select.value = '';
-        if (mp2Select) mp2Select.value = '';
+        clearSearchableSelect('ach-opt-name');
+        clearSearchableSelect('ach-mp1-name');
+        clearSearchableSelect('ach-mp2-name');
         return;
       }
 
@@ -27070,47 +27416,23 @@ Keterangan : ${keterangan}`;
       const tanggal = job ? job.tanggal : getEffectiveTodayString();
       const crew = getPersonnelForArmada(armadaUnit, cluster, effectiveShift, tanggal);
 
-      // Sesuai instruksi: Munculkan otomatis nama-nama crew (OPT, MP1, MP2) sesuai roster dari armada yang dipilih
-      if (optSelect) {
-        if (crew.opt && crew.opt !== '-') {
-          if (![...optSelect.options].some(o => o.value === crew.opt)) {
-            const opt = document.createElement('option');
-            opt.value = crew.opt;
-            opt.textContent = crew.opt;
-            optSelect.appendChild(opt);
-          }
-          optSelect.value = crew.opt;
-        } else {
-          optSelect.value = '';
-        }
+      // Munculkan otomatis nama-nama crew (OPT, MP1, MP2) sesuai roster dari armada yang dipilih
+      if (crew.opt && crew.opt !== '-') {
+        selectSearchableOption('ach-opt-name', crew.opt);
+      } else {
+        clearSearchableSelect('ach-opt-name');
       }
 
-      if (mp1Select) {
-        if (crew.mp1 && crew.mp1 !== '-') {
-          if (![...mp1Select.options].some(o => o.value === crew.mp1)) {
-            const opt = document.createElement('option');
-            opt.value = crew.mp1;
-            opt.textContent = crew.mp1;
-            mp1Select.appendChild(opt);
-          }
-          mp1Select.value = crew.mp1;
-        } else {
-          mp1Select.value = '';
-        }
+      if (crew.mp1 && crew.mp1 !== '-') {
+        selectSearchableOption('ach-mp1-name', crew.mp1);
+      } else {
+        clearSearchableSelect('ach-mp1-name');
       }
 
-      if (mp2Select) {
-        if (crew.mp2 && crew.mp2 !== '-') {
-          if (![...mp2Select.options].some(o => o.value === crew.mp2)) {
-            const opt = document.createElement('option');
-            opt.value = crew.mp2;
-            opt.textContent = crew.mp2;
-            mp2Select.appendChild(opt);
-          }
-          mp2Select.value = crew.mp2;
-        } else {
-          mp2Select.value = '';
-        }
+      if (crew.mp2 && crew.mp2 !== '-') {
+        selectSearchableOption('ach-mp2-name', crew.mp2);
+      } else {
+        selectSearchableOption('ach-mp2-name', '-');
       }
     }
 
@@ -27360,17 +27682,28 @@ Keterangan : ${keterangan}`;
           ltCustom.value = existingArmada;
           const effectiveShift = (typeof getEffectiveShiftForJob === 'function') ? getEffectiveShiftForJob(job) : (job.shift || 1);
           const crew = getPersonnelForArmada(existingArmada, job.cluster, effectiveShift, job.tanggal);
-          const isDaily = (typeof isDailyRollingCategory === 'function') && isDailyRollingCategory(job.cat, job);
-
           let currentOpt = (crew.opt && crew.opt !== '-') ? crew.opt : '';
           let currentMp1 = (crew.mp1 && crew.mp1 !== '-') ? crew.mp1 : '';
           let currentMp2 = (crew.mp2 && crew.mp2 !== '-') ? crew.mp2 : '';
-          if (!isDaily) {
-            if (job.opt && job.opt !== '-' && job.opt !== '') currentOpt = job.opt;
-            if (job.mp1 && job.mp1 !== '-' && job.mp1 !== '') currentMp1 = job.mp1;
-            if (job.mp2 && job.mp2 !== '-' && job.mp2 !== '') currentMp2 = job.mp2;
-          }
+
+          // Utamakan personil yang sudah terdaftar pada job jika valid
+          if (job.opt && job.opt !== '-' && job.opt !== '') currentOpt = job.opt;
+          if (job.mp1 && job.mp1 !== '-' && job.mp1 !== '') currentMp1 = job.mp1;
+          if (job.mp2 && job.mp2 !== '-' && job.mp2 !== '') currentMp2 = job.mp2;
+
           populateAchPersonnelSelects(currentOpt, currentMp1, currentMp2, isWashing);
+
+          // Hot-window sync: Pastikan roster tanggal hari ini terisi jika di HP belum ada
+          if (job.tanggal && typeof ensureRosterForDate === 'function') {
+            ensureRosterForDate(job.tanggal).then(hasNewRoster => {
+              if (hasNewRoster && state.currentActionJobId === job.id) {
+                const updatedCrew = getPersonnelForArmada(existingArmada, job.cluster, effectiveShift, job.tanggal);
+                if (!currentOpt && updatedCrew.opt && updatedCrew.opt !== '-') selectSearchableOption('ach-opt-name', updatedCrew.opt);
+                if (!currentMp1 && updatedCrew.mp1 && updatedCrew.mp1 !== '-') selectSearchableOption('ach-mp1-name', updatedCrew.mp1);
+                if (!currentMp2 && updatedCrew.mp2 && updatedCrew.mp2 !== '-') selectSearchableOption('ach-mp2-name', updatedCrew.mp2);
+              }
+            });
+          }
         } else {
           // Sesuai permintaan pengguna: Jika armada belum dipilih, kosongkan dulu OPT, MP1, dan MP2!
           // Baru ketika memilih armada di dropdown, nama-nama crew akan muncul otomatis sesuai roster
