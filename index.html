@@ -3700,28 +3700,6 @@
                 <select id="filter-unit-type" onchange="renderMasterUnitsTable()"
                   class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700">
                   <option value="ALL">All Tipe Unit</option>
-                  <optgroup label="Excavator Standar">
-                    <option value="PC200-8M0">PC200-8M0</option>
-                    <option value="PC210-10M0">PC210-10M0</option>
-                    <option value="PC300SE-8M0">PC300SE-8M0</option>
-                    <option value="PC500LC-10R">PC500LC-10R</option>
-                    <option value="SY215E">SY215E</option>
-                    <option value="SY600E">SY600E</option>
-                  </optgroup>
-                  <optgroup label="Big Digger / Shovel">
-                    <option value="PC850-8R1">PC850-8R1</option>
-                    <option value="CAT395">CAT395</option>
-                    <option value="PC1250-8R">PC1250-8R</option>
-                    <option value="PC2000-8">PC2000-8</option>
-                    <option value="PC3400-11M0">PC3400-11M0</option>
-                  </optgroup>
-                  <optgroup label="Bulldozer Fleet">
-                    <option value="D85ESS-2">D85ESS-2</option>
-                    <option value="D155A-6">D155A-6</option>
-                  </optgroup>
-                  <optgroup label="Drilling Fleet">
-                    <option value="D245X (unit driling)">D245X (unit driling)</option>
-                  </optgroup>
                 </select>
                 <select id="filter-unit-cluster" onchange="renderMasterUnitsTable()"
                   class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700">
@@ -3987,12 +3965,12 @@
                 <select id="filter-account-role" onchange="renderMasterAccountsTable()"
                   class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-700">
                   <option value="ALL">All Role</option>
-                  <option value="admin">Administrator / Planner</option>
-                  <option value="basecontrol">Operator Base Control</option>
-                  <option value="track">Tim Track</option>
-                  <option value="mp_lt">Oilman (MP LT)</option>
-                  <option value="mp_wt">Washingman (MP WT)</option>
-                  <option value="user">User Pemohon / Driver</option>
+                  <option value="admin">Administrasi</option>
+                  <option value="basecontrol">Base Control</option>
+                  <option value="track">Track</option>
+                  <option value="user">User</option>
+                  <option value="oilman">Oilman</option>
+                  <option value="washingman">Washingman</option>
                 </select>
               </div>
               <div class="w-full sm:w-64">
@@ -5592,17 +5570,12 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
-                <span>Lokasi & Cluster Pit Aktual (MP Lapangan)</span>
-              </span>
-              <span
-                class="text-[9px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded tracking-tight flex items-center space-x-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block"></span>
-                <span>SINKRON DATA MASTER</span>
+                <span>Lokasi & Cluster</span>
               </span>
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
-                <label class="block text-slate-600 text-[10px] mb-0.5 font-semibold">Cluster Pit Aktual</label>
+                <label class="block text-slate-600 text-[10px] mb-0.5 font-semibold">Cluster</label>
                 <select id="ach-cluster"
                   class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-bold text-xs focus:outline-none focus:border-brand-500 shadow-2xs">
                   <option value="Selatan">KGU SELATAN</option>
@@ -5616,7 +5589,7 @@
                 </select>
               </div>
               <div>
-                <label class="block text-slate-600 text-[10px] mb-0.5 font-semibold">Lokasi Pit Aktual</label>
+                <label class="block text-slate-600 text-[10px] mb-0.5 font-semibold">Lokasi</label>
                 <input type="text" id="ach-lokasi" placeholder="Contoh: BALANAI / SIM E"
                   class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-bold text-xs uppercase focus:outline-none focus:border-brand-500">
               </div>
@@ -5743,13 +5716,12 @@
           <!-- Baris 3: Jam Start & Jam Selesai -->
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-slate-700 mb-1">Jam Start Pengerjaan <span
-                  class="text-rose-500 font-bold">*</span></label>
+              <label class="block text-slate-700 mb-1">Jam Mulai <span class="text-rose-500 font-bold">*</span></label>
               <input type="time" id="ach-jam-start"
                 class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-800">
             </div>
             <div>
-              <label class="block text-slate-700 mb-1">Jam Selesai (End) <span
+              <label class="block text-slate-700 mb-1">Jam Selesai <span
                   class="text-rose-500 font-bold">*</span></label>
               <input type="time" id="ach-jam-end"
                 class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-800">
@@ -5828,7 +5800,7 @@
           <!-- Lampiran Foto: Polosan Bersih Background Putih Sesuai Permintaan -->
           <div id="ach-photo-container" class="space-y-2">
             <div>
-              <label class="block text-slate-700 font-bold text-xs">Lampiran Foto Eviden <span
+              <label class="block text-slate-700 font-bold text-xs">Lampiran Foto <span
                   class="text-rose-500">*</span></label>
             </div>
 
@@ -5853,8 +5825,7 @@
             </div>
             <!-- Info Status Jumlah Foto & Notifikasi Validasi -->
             <div id="ach-photo-status-msg"
-              class="text-[10.5px] font-semibold text-slate-600 flex items-center justify-between px-1">
-              <span>Terpilih: <strong id="ach-photo-count-badge" class="text-slate-800">0 foto</strong></span>
+              class="text-[10.5px] font-semibold text-slate-600 flex items-center justify-end px-1">
               <span id="ach-photo-validation-hint" class="text-rose-600 font-bold">Wajib minimal 2 foto</span>
             </div>
 
@@ -6498,11 +6469,12 @@
             <label class="block text-slate-700 mb-1">Hak Akses (Role)</label>
             <select id="account-form-role" required
               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 bg-white">
-              <option value="admin">Administrator / Planner</option>
-              <option value="basecontrol">Operator Base Control</option>
-              <option value="mp_lt">Oilman (MP LT)</option>
-              <option value="mp_wt">Washingman (MP WT)</option>
-              <option value="user">User Pemohon / Driver</option>
+              <option value="admin">Administrasi</option>
+              <option value="basecontrol">Base Control</option>
+              <option value="track">Track</option>
+              <option value="user">User</option>
+              <option value="oilman">Oilman</option>
+              <option value="washingman">Washingman</option>
             </select>
           </div>
           <div>
@@ -6593,11 +6565,12 @@
           <select id="bulk-edit-account-role"
             class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white font-bold text-slate-800">
             <option value="NO_CHANGE">-- Jangan Ubah Role --</option>
-            <option value="admin">Administrator / Planner</option>
-            <option value="mp_lt">Oilman (MP LT)</option>
-            <option value="mp_wt">Washingman (MP WT)</option>
-            <option value="basecontrol">Operator Base Control</option>
-            <option value="user">User Pemohon / Driver</option>
+            <option value="admin">Administrasi</option>
+            <option value="basecontrol">Base Control</option>
+            <option value="track">Track</option>
+            <option value="user">User</option>
+            <option value="oilman">Oilman</option>
+            <option value="washingman">Washingman</option>
           </select>
         </div>
         <div>
@@ -9860,6 +9833,7 @@
       isWtSchedSelectMode: false,
       ltSchedSort: null,
       wtSchedSort: null,
+      completedSort: { column: 'realisasi', direction: 'desc' },
       selectedSchedJobIds: new Set(),
       isCompSelectMode: false,
       selectedCompJobIds: new Set(),
@@ -11710,9 +11684,15 @@
         }
 
         if (user) {
-          // Normalisasi role antara DB (oilman/washingman) dan Frontend (mp_lt/mp_wt)
-          if (user.role === 'oilman') user.role = 'mp_lt';
-          if (user.role === 'washingman') user.role = 'mp_wt';
+          // Normalisasi role pengguna sistem
+          if (user.role === 'mp_lt') user.role = 'oilman';
+          if (user.role === 'mp_wt') user.role = 'washingman';
+          if ((!user.role || user.role === 'user') && user.jabatan) {
+            const jLower = user.jabatan.toLowerCase();
+            if (jLower.includes('oil') || jLower.includes('lube')) user.role = 'oilman';
+            else if (jLower.includes('wash') || jLower.includes('cuci')) user.role = 'washingman';
+            else if (jLower.includes('track')) user.role = 'track';
+          }
           if (typeof state !== 'undefined') state.currentUser = user;
           if (typeof safeStorage !== 'undefined') {
             safeStorage.setItem('SE_SESSION_USER', JSON.stringify(user));
@@ -11846,12 +11826,14 @@
       const userAvatar = document.getElementById('user-avatar');
 
       const roleLabels = {
-        admin: 'Admin Operasional',
-        track: 'Tim Track',
-        mp_lt: 'Oilman (MP Lubetruck)',
-        mp_wt: 'Washingman',
-        user: 'User Lapangan',
-        basecontrol: 'Base Control'
+        admin: 'Administrasi',
+        basecontrol: 'Base Control',
+        track: 'Track',
+        user: 'User',
+        oilman: 'Oilman',
+        washingman: 'Washingman',
+        mp_lt: 'Oilman',
+        mp_wt: 'Washingman'
       };
 
       if (displayNameEl) displayNameEl.textContent = user.nama;
@@ -12138,7 +12120,7 @@
 
         const mpFlowMeterSidebar = document.getElementById('nav-btn-mp-flowmeter');
         const mpWashChecklistSidebar = document.getElementById('nav-btn-mp-wash-checklist');
-        if (user.role === 'mp_lt') {
+        if (user.role === 'mp_lt' || user.role === 'oilman') {
           if (mpFlowMeterSidebar) mpFlowMeterSidebar.classList.remove('hidden');
           if (mpWashChecklistSidebar) mpWashChecklistSidebar.classList.add('hidden');
           if (navMpAir) navMpAir.classList.remove('hidden');
@@ -12679,8 +12661,13 @@
       const roleEl = document.getElementById('identitas-val-role');
 
       const roleLabels = {
-        admin: 'Administrator / Planner',
-        mp_lt: 'Oilman (Lubetruck)',
+        admin: 'Administrasi',
+        basecontrol: 'Base Control',
+        track: 'Track',
+        user: 'User',
+        oilman: 'Oilman',
+        washingman: 'Washingman',
+        mp_lt: 'Oilman',
         mp_wt: 'Washingman'
       };
 
@@ -13391,7 +13378,7 @@
 
     // Fungsi untuk memperbarui highlight latar belakang menu sidebar yang sedang aktif
     function updateSidebarActiveMenu(tabKey) {
-      const isMp = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'mp_wt');
+      const isMp = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'mp_wt' || state.currentUser?.role === 'oilman' || state.currentUser?.role === 'washingman');
 
       // Reset seluruh tombol navigasi sidebar desktop (kecuali tombol logout)
       document.querySelectorAll('aside nav button, aside nav a').forEach(btn => {
@@ -13527,11 +13514,14 @@
       const roleBadgeText = document.getElementById('role-badge-text');
       if (roleBadgeText && state.currentUser) {
         const roleLabels = {
-          admin: 'Admin / Planner',
-          mp_lt: 'Oilman (MP Lubetruck)',
-          mp_wt: 'Washingman',
-          user: 'User Lapangan',
-          basecontrol: 'Base Control'
+          admin: 'Administrasi',
+          basecontrol: 'Base Control',
+          track: 'Track',
+          user: 'User',
+          oilman: 'Oilman',
+          washingman: 'Washingman',
+          mp_lt: 'Oilman',
+          mp_wt: 'Washingman'
         };
         roleBadgeText.textContent = state.currentUser.jabatan || roleLabels[state.currentUser.role] || state.currentUser.role;
       }
@@ -13558,7 +13548,7 @@
         }
       } else if (tabKey === 'lt-schedule') {
         const today = getEffectiveTodayString();
-        const isOilman = (state.currentUser?.role === 'mp_lt');
+        const isOilman = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'oilman');
         const isTopUp = (state.lubetruckState?.activeCategory === 'topup');
         const tomorrow = (typeof getTomorrowDateStr === 'function') ? getTomorrowDateStr(today) : today;
         const targetDefaultDate = (isOilman && isTopUp) ? tomorrow : today;
@@ -13731,8 +13721,8 @@
       const modal = document.getElementById('modal-mobile-more');
       if (!modal) return;
       if (show) {
-        const isMp = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'mp_wt');
-        const isOilman = (state.currentUser?.role === 'mp_lt');
+        const isMp = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'mp_wt' || state.currentUser?.role === 'oilman' || state.currentUser?.role === 'washingman');
+        const isOilman = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'oilman');
 
         const adminContainer = document.getElementById('more-modal-admin');
         const mpContainer = document.getElementById('more-modal-mp');
@@ -15544,7 +15534,7 @@
       state.lubetruckState.activeCategory = cat;
       state.lubetruckState.hasManualDateFilter = false;
 
-      const isOilman = (state.currentUser?.role === 'mp_lt');
+      const isOilman = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'oilman');
       const today = getEffectiveTodayString();
       const tomorrow = (typeof getTomorrowDateStr === 'function') ? getTomorrowDateStr(today) : today;
       const ltDate = document.getElementById('lt-filter-date');
@@ -16965,7 +16955,7 @@
 
       const isAdmin = (state.currentUser?.role === 'admin');
       const isMp = !isAdmin;
-      const isOilman = (state.currentUser?.role === 'mp_lt');
+      const isOilman = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'oilman');
       const today = getEffectiveTodayString();
       const activeCat = state.lubetruckState.activeCategory;
       const isTopUp = (activeCat === 'topup');
@@ -17238,14 +17228,12 @@
                     ${renderSchedSortIcon('personil', 'LT')}
                   </div>
                 </th>
-                ${!isAdmin ? `
-                  <th onclick="sortLtSchedBy('status')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[10%]' : 'w-[26%] md:w-[12%]'} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
-                    <div class="flex items-center justify-center space-x-0.5">
-                      <span>AKSI / STATUS</span>
-                      ${renderSchedSortIcon('status', 'LT')}
-                    </div>
-                  </th>
-                ` : ''}
+                <th onclick="sortLtSchedBy('status')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[10%]' : 'w-[26%] md:w-[12%]'} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi">
+                  <div class="flex items-center justify-center space-x-0.5">
+                    <span>AKSI</span>
+                    ${renderSchedSortIcon('status', 'LT')}
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -17253,7 +17241,7 @@
 
           const tbody = table.querySelector('tbody');
           if (clusterJobs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${state.isLtSchedSelectMode ? (isAdmin ? 6 : 7) : (isAdmin ? 5 : 6)}" class="py-5 text-center text-slate-400 italic text-[11px]">
+            tbody.innerHTML = `<tr><td colspan="${state.isLtSchedSelectMode ? 7 : 6}" class="py-5 text-center text-slate-400 italic text-[11px]">
               <div>${(activeCat === "digger" && (typeof parseDateString === "function" ? parseDateString(selectedDate).getDay() : new Date(selectedDate).getDay()) === 5) ? "🌴 Hari Jumat adalah Hari Libur Operasi Big Digger. Seluruh unit Big Digger libur operasional hari ini." : (isAdmin ? `Belum ada unit yang dijadwalkan untuk tanggal ${selectedDate}.` : `Tidak ada jadwal unit untuk tanggal ${selectedDate}`)}</div>
 ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahkan jadwal.</span>` : ''}
             </td></tr>`;
@@ -17330,11 +17318,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                 <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 break-words text-[11px]">
                   ${renderPersonnelCell(job)}
                 </td>
-                ${!isAdmin ? `
                 <td class="py-1.5 px-1 md:px-2 text-center align-middle">
                   ${renderJobActionCell(job)}
                 </td>
-                ` : ''}
               `;
               tbody.appendChild(tr);
             });
@@ -17447,14 +17433,12 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                     ${renderSchedSortIcon('personil', 'LT')}
                   </div>
                 </th>
-                ${!isAdmin ? `
-                  <th onclick="sortLtSchedBy('status')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[10%]' : 'w-[26%] md:w-[12%]'} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
-                    <div class="flex items-center justify-center space-x-0.5">
-                      <span>AKSI / STATUS</span>
-                      ${renderSchedSortIcon('status', 'LT')}
-                    </div>
-                  </th>
-                ` : ''}
+                <th onclick="sortLtSchedBy('status')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[10%]' : 'w-[26%] md:w-[12%]'} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi">
+                  <div class="flex items-center justify-center space-x-0.5">
+                    <span>AKSI</span>
+                    ${renderSchedSortIcon('status', 'LT')}
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -17462,7 +17446,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
           const tbody = table.querySelector('tbody');
           if (clusterJobs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${state.isLtSchedSelectMode ? (isAdmin ? 6 : 7) : (isAdmin ? 5 : 6)}" class="py-5 text-center text-slate-400 italic text-[11px]">
+            tbody.innerHTML = `<tr><td colspan="${state.isLtSchedSelectMode ? 7 : 6}" class="py-5 text-center text-slate-400 italic text-[11px]">
               <div>${isAdmin ? `Belum ada unit yang dijadwalkan untuk tanggal ${selectedDate}.` : `Tidak ada jadwal unit untuk tanggal ${selectedDate}`}</div>
 ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahkan jadwal.</span>` : ''}
             </td></tr>`;
@@ -17549,11 +17533,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                 <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 break-words text-[11px]">
                   ${renderPersonnelCell(job)}
                 </td>
-                ${!isAdmin ? `
                 <td class="py-1.5 px-1 md:px-2 text-center align-middle">
                   ${renderJobActionCell(job)}
                 </td>
-                ` : ''}
               `;
               tbody.appendChild(tr);
             });
@@ -17848,14 +17830,12 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                     ${renderSchedSortIcon('personil', 'WT')}
                   </div>
                 </th>
-                ${!isAdmin ? `
-                  <th onclick="sortWtSchedBy('status')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[24%] md:w-[10%]' : 'w-[26%] md:w-[12%]'} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
-                    <div class="flex items-center justify-center space-x-0.5">
-                      <span>AKSI / STATUS</span>
-                      ${renderSchedSortIcon('status', 'WT')}
-                    </div>
-                  </th>
-                ` : ''}
+                <th onclick="sortWtSchedBy('status')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[24%] md:w-[10%]' : 'w-[26%] md:w-[12%]'} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi">
+                  <div class="flex items-center justify-center space-x-0.5">
+                    <span>AKSI</span>
+                    ${renderSchedSortIcon('status', 'WT')}
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -17863,7 +17843,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
           const tbody = table.querySelector('tbody');
           if (clusterJobs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${state.isWtSchedSelectMode ? (isAdmin ? 6 : 7) : (isAdmin ? 5 : 6)}" class="py-5 text-center text-slate-400 italic text-[11px]">
+            tbody.innerHTML = `<tr><td colspan="${state.isWtSchedSelectMode ? 7 : 6}" class="py-5 text-center text-slate-400 italic text-[11px]">
               <div>${isAdmin ? `Belum ada unit washing yang dijadwalkan untuk tanggal ${selectedDate}.` : `Tidak ada jadwal unit untuk tanggal ${selectedDate}`}</div>
 ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahkan.</span>` : ''}
             </td></tr>`;
@@ -17937,11 +17917,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                 <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 break-words text-[11px]">
                   ${renderPersonnelCell(job)}
                 </td>
-                ${!isAdmin ? `
                 <td class="py-1.5 px-1 md:px-2 text-center align-middle">
                   ${renderJobActionCell(job)}
                 </td>
-                ` : ''}
               `;
               tbody.appendChild(tr);
             });
@@ -18077,14 +18055,12 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                       ${renderSchedSortIcon('personil', 'WT')}
                     </div>
                   </th>
-                  ${!isAdmin ? `
-                    <th onclick="sortWtSchedBy('status')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[24%] md:w-[10%]' : 'w-[26%] md:w-[12%]'} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi / Status">
+                    <th onclick="sortWtSchedBy('status')" class="py-1.5 px-2 ${state.isWtSchedSelectMode ? 'w-[24%] md:w-[10%]' : 'w-[26%] md:w-[12%]'} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi">
                       <div class="flex items-center justify-center space-x-0.5">
-                        <span>AKSI / STATUS</span>
+                        <span>AKSI</span>
                         ${renderSchedSortIcon('status', 'WT')}
                       </div>
                     </th>
-                  ` : ''}
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
@@ -18092,7 +18068,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
             const tbody = table.querySelector('tbody');
             if (clusterJobs.length === 0) {
-              tbody.innerHTML = `<tr><td colspan="${state.isWtSchedSelectMode ? (isAdmin ? 6 : 7) : (isAdmin ? 5 : 6)}" class="py-4 text-center text-slate-400 italic text-[11px]">
+              tbody.innerHTML = `<tr><td colspan="${state.isWtSchedSelectMode ? 7 : 6}" class="py-4 text-center text-slate-400 italic text-[11px]">
                 <div>${isAdmin ? `Belum ada jadwal ${round.title.toLowerCase()} untuk tanggal ${selectedDate}.` : `Tidak ada jadwal unit untuk tanggal ${selectedDate}`}</div>
 ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahkan.</span>` : ''}
               </td></tr>`;
@@ -18124,11 +18100,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                   <td class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 break-words text-[11px]">
                     ${renderPersonnelCell(job)}
                   </td>
-                  ${!isAdmin ? `
                   <td class="py-1.5 px-1 md:px-2 text-center align-middle">
                     ${renderJobActionCell(job)}
                   </td>
-                  ` : ''}
                 `;
                 tbody.appendChild(tr);
               });
@@ -19101,9 +19075,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
     }
 
     function enforceDateRestrictions() {
-      const isMp = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'mp_wt');
+      const isMp = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'mp_wt' || state.currentUser?.role === 'oilman' || state.currentUser?.role === 'washingman');
       const today = getEffectiveTodayString();
-      const isOilman = (state.currentUser?.role === 'mp_lt');
+      const isOilman = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'oilman');
       const isTopUp = (state.lubetruckState?.activeCategory === 'topup');
       const tomorrow = (typeof getTomorrowDateStr === 'function') ? getTomorrowDateStr(today) : today;
 
@@ -21217,6 +21191,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       const actionDate = getEffectiveTodayString();
       job.tanggalRealisasi = actionDate;
       job.jamEnd = new Date().toTimeString().slice(0, 5);
+      job.actionTimestamp = Date.now();
+      job.created_at = job.created_at || new Date().toISOString();
       job.pica = true;
       job.alasanNonAch = alasan;
       job.nonAchCategory = kategori;
@@ -21400,25 +21376,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       }
 
       const isPending = (s === 'pending' || job.isPending);
-      const isAdmin = (state.currentUser?.role === 'admin');
 
-      // Khusus Akses Admin: Sediakan tombol Hapus Cepat langsung di tabel + indikator status
-      if (isAdmin) {
-        return `
-          <div class="flex items-center justify-center gap-1.5">
-            <button type="button" onclick="event.stopPropagation(); promptDeleteJob('${job.id}')" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 hover:border-rose-600 text-[10px] font-extrabold transition shadow-2xs cursor-pointer flex items-center space-x-1 active:scale-95" title="Hapus Penugasan Unit Ini">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-              <span>Hapus</span>
-            </button>
-            ${isPending ? '<span class="inline-block px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">PENDING</span>' : ''}
-          </div>
-        `;
-      }
-
-      // Akses MP: Tombol aksi interaktif untuk pelaksanaan eksekusi tugas
+      // Akses Admin & MP: Sediakan tombol ACTION
       return `
-        <div class="flex flex-col items-center justify-center gap-0.5">
-          <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95">
+        <div class="flex items-center justify-center gap-1">
+          <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95" title="Eksekusi Aksi Job (Admin / MP)">
             ACTION
           </button>
           ${isPending ? '<span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">PENDING</span>' : ''}
@@ -22625,7 +22587,7 @@ Keterangan : ${keterangan}`;
 
       // Kontrol Hak Edit Lokasi Pit & Aksi (Aturan keras di menu riwayat: dilarang merubah/mengedit data, hanya fitur hapus untuk admin)
       const isHistoryJob = (state.activeTab === 'completed') || (typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(job));
-      const canEditLoc = !isHistoryJob && (state.currentUser?.role === 'admin' || state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'mp_wt');
+      const canEditLoc = !isHistoryJob && (state.currentUser?.role === 'admin' || state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'mp_wt' || state.currentUser?.role === 'oilman' || state.currentUser?.role === 'washingman');
       const btnSaveLoc = document.getElementById('detail-modal-btn-save-loc');
       if (btnSaveLoc) {
         if (canEditLoc) btnSaveLoc.classList.remove('hidden');
@@ -25446,20 +25408,78 @@ Keterangan : ${keterangan}`;
     window.renderCompletedSortIcon = renderCompletedSortIcon;
 
     /**
+     * Helper waktu presisi untuk pengurutan riwayat pekerjaan selesai.
+     * Mengembalikan timestamp integer milidetik (terbesar = data masuk/selesai paling baru).
+     */
+    function getCompletedJobSortTime(j) {
+      if (!j) return 0;
+      // 1. Ekstraksi tanggal YYYY-MM-DD
+      const rawDate = j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || j.tanggal_rencana || '';
+      const normDate = (typeof normalizeDateStr === 'function') ? normalizeDateStr(rawDate) : String(rawDate || '').trim();
+
+      // 2. Ekstraksi jam selesai (utamakan jamEnd, lalu jamStart, atau dari suffix noId HHMM)
+      let timeStr = String(j.jamEnd || j.jam_end || '').trim();
+      if (!timeStr || timeStr === '-') {
+        timeStr = String(j.jamStart || j.jam_start || '').trim();
+      }
+      if (!timeStr || timeStr === '-') {
+        const noId = String(j.noId || j.no_id || j.id || '');
+        const m = noId.match(/-(\d{4})$/);
+        if (m) {
+          timeStr = `${m[1].slice(0, 2)}:${m[1].slice(2, 4)}`;
+        }
+      }
+
+      // Normalisasi timeStr ke HH:MM
+      let normTime = '00:00';
+      if (timeStr && timeStr !== '-') {
+        const tm = timeStr.match(/(\d{1,2})[:.](\d{2})/);
+        if (tm) {
+          normTime = `${String(parseInt(tm[1], 10)).padStart(2, '0')}:${String(parseInt(tm[2], 10)).padStart(2, '0')}`;
+        }
+      }
+
+      // 3. Fallback created_at timestamp jika ada
+      let createdMs = 0;
+      if (j.created_at || j.createdAt) {
+        const t = new Date(j.created_at || j.createdAt).getTime();
+        if (!isNaN(t) && t > 0) createdMs = t;
+      }
+
+      // Gabungkan tanggal normDate dengan normTime menjadi timestamp milidetik
+      if (normDate) {
+        const dt = new Date(`${normDate}T${normTime}:00`).getTime();
+        if (!isNaN(dt) && dt > 0) {
+          // Tambahkan pecahan detik dari createdMs agar jika menitnya sama, yang disubmit belakangan tetap berada di atas
+          const subMs = createdMs > 0 ? (createdMs % 60000) : 0;
+          return dt + subMs;
+        }
+      }
+      return createdMs || 0;
+    }
+    window.getCompletedJobSortTime = getCompletedJobSortTime;
+
+    /**
      * Toggle pengurutan kolom pada tabel riwayat
+     * Kolom realisasi, waktu, dan durasi secara default berarah descending (terbaru/terbesar di atas)
      */
     function sortCompletedBy(col) {
+      const defaultDescCols = ['realisasi', 'waktu', 'durasi'];
+      const initialDirection = defaultDescCols.includes(col) ? 'desc' : 'asc';
+
       if (!state.completedSort) {
-        state.completedSort = { column: col, direction: 'asc' };
+        state.completedSort = { column: col, direction: initialDirection };
       } else if (state.completedSort.column === col) {
         state.completedSort.direction = (state.completedSort.direction === 'asc' ? 'desc' : 'asc');
       } else {
         state.completedSort.column = col;
-        state.completedSort.direction = 'asc';
+        state.completedSort.direction = initialDirection;
       }
       renderCompletedTable();
     }
     window.sortCompletedBy = sortCompletedBy;
+    window.renderCompletedTable = renderCompletedTable;
+    window.renderHistoryTable = renderCompletedTable;
 
     function renderCompletedTable() {
       const container = document.getElementById('completed-table-container');
@@ -25717,66 +25737,96 @@ Keterangan : ${keterangan}`;
         );
       }
 
-      // Logika sorting di semua kolom (kecuali foto)
+      // Logika sorting di semua kolom (Default: data masuk terbaru di paling atas)
+      if (!state.completedSort || !state.completedSort.column) {
+        state.completedSort = { column: 'realisasi', direction: 'desc' };
+      }
+
       if (state.completedSort && state.completedSort.column) {
         const sortCol = state.completedSort.column;
         const sortDir = state.completedSort.direction === 'desc' ? -1 : 1;
 
         filtered.sort((a, b) => {
+          let cmp = 0;
           switch (sortCol) {
             case 'sch': {
               const codeA = (typeof getJobTypeCode === 'function') ? getJobTypeCode(a) : ((typeof getJobSchLabel === 'function') ? getJobSchLabel(a) : (a.cat || ''));
               const codeB = (typeof getJobTypeCode === 'function') ? getJobTypeCode(b) : ((typeof getJobSchLabel === 'function') ? getJobSchLabel(b) : (b.cat || ''));
-              return sortDir * codeA.localeCompare(codeB);
+              cmp = sortDir * codeA.localeCompare(codeB);
+              break;
             }
             case 'noId': {
               const valA = (typeof getJobNoId === 'function') ? getJobNoId(a) : String(a.id || '');
               const valB = (typeof getJobNoId === 'function') ? getJobNoId(b) : String(b.id || '');
-              return sortDir * valA.localeCompare(valB);
+              cmp = sortDir * valA.localeCompare(valB);
+              break;
             }
             case 'waktu': {
-              const valA = (a.tanggal || '') + ' ' + (a.waktu || '');
-              const valB = (b.tanggal || '') + ' ' + (b.waktu || '');
-              return sortDir * valA.localeCompare(valB);
+              const dateA = (typeof normalizeDateStr === 'function') ? normalizeDateStr(a.tanggal || a.tanggalRealisasi) : (a.tanggal || '');
+              const dateB = (typeof normalizeDateStr === 'function') ? normalizeDateStr(b.tanggal || b.tanggalRealisasi) : (b.tanggal || '');
+              const valA = dateA + ' ' + (a.waktu || '');
+              const valB = dateB + ' ' + (b.waktu || '');
+              cmp = sortDir * valA.localeCompare(valB);
+              break;
             }
             case 'unit': {
               const valA = (a.noLambung || '').toUpperCase();
               const valB = (b.noLambung || '').toUpperCase();
-              return sortDir * valA.localeCompare(valB, undefined, { numeric: true });
+              cmp = sortDir * valA.localeCompare(valB, undefined, { numeric: true });
+              break;
             }
             case 'cluster': {
               const valA = (a.cluster || '') + ' ' + (a.lokasi || '');
               const valB = (b.cluster || '') + ' ' + (b.lokasi || '');
-              return sortDir * valA.localeCompare(valB);
+              cmp = sortDir * valA.localeCompare(valB);
+              break;
             }
             case 'armada': {
               const valA = (a.armada || a.ltUnit || a.wtUnit || '').toUpperCase();
               const valB = (b.armada || b.ltUnit || b.wtUnit || '').toUpperCase();
-              return sortDir * valA.localeCompare(valB, undefined, { numeric: true });
+              cmp = sortDir * valA.localeCompare(valB, undefined, { numeric: true });
+              break;
             }
             case 'personil': {
               const valA = (a.opt || a.mp1 || a.mp2 || '').toLowerCase();
               const valB = (b.opt || b.mp1 || b.mp2 || '').toLowerCase();
-              return sortDir * valA.localeCompare(valB);
+              cmp = sortDir * valA.localeCompare(valB);
+              break;
             }
             case 'realisasi': {
-              const valA = (a.tanggalRealisasi || a.tanggal || '') + ' ' + (a.jamStart || a.jamEnd || '');
-              const valB = (b.tanggalRealisasi || b.tanggal || '') + ' ' + (b.jamStart || b.jamEnd || '');
-              return sortDir * valA.localeCompare(valB);
+              const timeA = (typeof getCompletedJobSortTime === 'function') ? getCompletedJobSortTime(a) : 0;
+              const timeB = (typeof getCompletedJobSortTime === 'function') ? getCompletedJobSortTime(b) : 0;
+              if (timeA !== timeB) {
+                cmp = sortDir * (timeA - timeB);
+              } else {
+                const valA = String(a.noId || a.id || '');
+                const valB = String(b.noId || b.id || '');
+                cmp = sortDir * valA.localeCompare(valB);
+              }
+              break;
             }
             case 'durasi': {
               const durA = (a.durasi !== null && a.durasi !== undefined) ? parseFloat(a.durasi) : -1;
               const durB = (b.durasi !== null && b.durasi !== undefined) ? parseFloat(b.durasi) : -1;
-              return sortDir * (durA - durB);
+              cmp = sortDir * (durA - durB);
+              break;
             }
             case 'status': {
               const valA = (a.status || '').toLowerCase();
               const valB = (b.status || '').toLowerCase();
-              return sortDir * valA.localeCompare(valB);
+              cmp = sortDir * valA.localeCompare(valB);
+              break;
             }
             default:
-              return 0;
+              cmp = 0;
+              break;
           }
+
+          if (cmp !== 0) return cmp;
+          // Tie-breaker: Jika nilai kolom sama, tempatkan data masuk terbaru di paling atas
+          const tA = (typeof getCompletedJobSortTime === 'function') ? getCompletedJobSortTime(a) : 0;
+          const tB = (typeof getCompletedJobSortTime === 'function') ? getCompletedJobSortTime(b) : 0;
+          return tB - tA;
         });
       }
 
@@ -26423,10 +26473,7 @@ Keterangan : ${keterangan}`;
         return;
       }
 
-      // Tombol aksi khusus untuk MP. Akses Admin hanya berbentuk teks tanpa aksi / pop-up pada SCH
-      if (state.currentUser?.role === 'admin') {
-        return;
-      }
+
 
       const titleEl = document.getElementById('decision-modal-title');
       const subEl = document.getElementById('decision-modal-subtitle');
@@ -27353,7 +27400,7 @@ Keterangan : ${keterangan}`;
       (state.masterRoster || []).filter(r => r.jenis === filterJenis || r.jenis === 'OM' || r.jenis === 'WM').forEach(r => {
         if (r.nama && r.nama !== '-' && r.nama.trim() !== '') mpNames.add(r.nama.trim().toUpperCase());
       });
-      (state.masterUsers || []).filter(u => u.role === 'mp_lt' || u.role === 'mp_wt').forEach(u => {
+      (state.masterUsers || []).filter(u => u.role === 'mp_lt' || u.role === 'mp_wt' || u.role === 'oilman' || u.role === 'washingman').forEach(u => {
         if (u.nama && u.nama !== '-' && u.nama.trim() !== '') mpNames.add(u.nama.trim().toUpperCase());
       });
       if (selectedMp1 && selectedMp1 !== '-' && selectedMp1.trim() !== '') mpNames.add(selectedMp1.trim().toUpperCase());
@@ -27526,7 +27573,7 @@ Keterangan : ${keterangan}`;
       const oilmanBox = document.getElementById('ach-oilman-condition-box');
       const condSelect = document.getElementById('ach-unit-condition');
       const role = state.currentUser?.role;
-      const canChooseCondition = (role === 'mp_lt' || role === 'mp_wt' || role === 'admin' || role === 'basecontrol');
+      const canChooseCondition = (role === 'mp_lt' || role === 'mp_wt' || role === 'oilman' || role === 'washingman' || role === 'admin' || role === 'basecontrol');
       if (oilmanBox) {
         if (canChooseCondition && !isJobRequest) {
           oilmanBox.classList.remove('hidden');
@@ -27778,7 +27825,7 @@ Keterangan : ${keterangan}`;
 
       const isJobRequest = isJobAnOrderRequest(job);
       const isWashing = (job.cat === 'coal' || job.cat === 'rom' || job.cat === 'non_coal' || (job.id && job.id.startsWith('WTJ')) || job.serviceType === 'watertruck');
-      const canChooseCondition = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'mp_wt' || state.currentUser?.role === 'admin' || state.currentUser?.role === 'basecontrol');
+      const canChooseCondition = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'mp_wt' || state.currentUser?.role === 'oilman' || state.currentUser?.role === 'washingman' || state.currentUser?.role === 'admin' || state.currentUser?.role === 'basecontrol');
       const hasConditionBox = canChooseCondition && !isJobRequest;
       const unitCondition = hasConditionBox ? (document.getElementById('ach-unit-condition')?.value || '') : 'normal';
 
@@ -28095,6 +28142,8 @@ Keterangan : ${keterangan}`;
         const actionDate = getEffectiveTodayString();
         job.tanggalRealisasi = actionDate;
         if (!job.tanggal) job.tanggal = actionDate;
+        job.actionTimestamp = Date.now();
+        job.created_at = job.created_at || new Date().toISOString();
         job.keterangan = ket;
         job.fotos = [...uploadedPhotos];
         if (job.id && uploadedPhotos.length > 0) {
@@ -30994,28 +31043,31 @@ Keterangan : ${keterangan}`;
       let list = Array.isArray(state.masterUnits) ? state.masterUnits : [];
       const totalAll = list.length;
 
-      // Sinkronkan opsi Tipe Unit dari Cloud ke dropdown filter jika ada tipe baru
+      // Sinkronkan opsi Tipe Unit secara dinamis dari isi data table unit
       const typeSelect = document.getElementById('filter-unit-type');
-      if (typeSelect && totalAll > 0) {
-        let dynamicGroup = document.getElementById('filter-unit-type-dynamic-group');
-        if (!dynamicGroup) {
-          dynamicGroup = document.createElement('optgroup');
-          dynamicGroup.id = 'filter-unit-type-dynamic-group';
-          dynamicGroup.label = 'Tipe Unit Cloud Lainnya';
-          typeSelect.appendChild(dynamicGroup);
-        }
-        const existingValues = new Set(Array.from(typeSelect.querySelectorAll('option')).map(o => (o.value || '').toUpperCase()));
-        const uniqueTypes = [...new Set(list.map(u => (u.type || '').trim()).filter(Boolean))].sort();
-        uniqueTypes.forEach(t => {
-          if (!existingValues.has(t.toUpperCase())) {
+      if (typeSelect) {
+        const curVal = typeSelect.value || 'ALL';
+        const rawList = Array.isArray(state.masterUnits) ? state.masterUnits : [];
+        const uniqueTypes = [...new Set(rawList.map(u => (u.type || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+        const currentOptions = Array.from(typeSelect.options).map(o => o.value);
+        const expectedOptions = ['ALL', ...uniqueTypes];
+        const isMatch = currentOptions.length === expectedOptions.length && currentOptions.every((val, idx) => val.toUpperCase() === expectedOptions[idx].toUpperCase());
+
+        if (!isMatch) {
+          typeSelect.innerHTML = '<option value="ALL">All Tipe Unit</option>';
+          uniqueTypes.forEach(t => {
             const opt = document.createElement('option');
             opt.value = t;
             opt.textContent = t;
-            dynamicGroup.appendChild(opt);
-            existingValues.add(t.toUpperCase());
+            typeSelect.appendChild(opt);
+          });
+          if (uniqueTypes.some(t => t.toUpperCase() === curVal.toUpperCase())) {
+            typeSelect.value = curVal;
+          } else {
+            typeSelect.value = 'ALL';
           }
-        });
-        dynamicGroup.style.display = dynamicGroup.children.length === 0 ? 'none' : '';
+        }
       }
 
       // Filter Data
@@ -35082,6 +35134,7 @@ Keterangan : ${keterangan}`;
             let role = 'user';
             if (rawRole.includes('admin') || rawRole.includes('planner')) role = 'admin';
             else if (rawRole.includes('base') || rawRole.includes('bc') || rawRole.includes('dispatcher')) role = 'basecontrol';
+            else if (rawRole.includes('track')) role = 'track';
             else if (rawRole.includes('oil') || rawRole.includes('lube') || rawRole.includes('lt')) role = 'oilman';
             else if (rawRole.includes('wash') || rawRole.includes('cuci') || rawRole.includes('wt')) role = 'washingman';
             else role = 'user';
@@ -35306,7 +35359,16 @@ Keterangan : ${keterangan}`;
 
       let list = Array.isArray(state.masterUsers) ? [...state.masterUsers] : [];
       if (roleFilter !== 'ALL') {
-        list = list.filter(u => u.role === roleFilter);
+        list = list.filter(u => {
+          const r = String(u.role || '').toLowerCase();
+          if (roleFilter === 'oilman' || roleFilter === 'mp_lt') return r === 'oilman' || r === 'mp_lt';
+          if (roleFilter === 'washingman' || roleFilter === 'mp_wt') return r === 'washingman' || r === 'mp_wt';
+          if (roleFilter === 'track') return r === 'track' || r === 'tim_track';
+          if (roleFilter === 'basecontrol') return r === 'basecontrol' || r === 'base_control';
+          if (roleFilter === 'admin') return r === 'admin';
+          if (roleFilter === 'user') return r === 'user';
+          return r === roleFilter.toLowerCase();
+        });
       }
       if (search) {
         list = list.filter(u =>
@@ -35323,19 +35385,25 @@ Keterangan : ${keterangan}`;
       }
 
       const roleLabels = {
-        admin: 'Administrator',
+        admin: 'Administrasi',
         basecontrol: 'Base Control',
-        mp_lt: 'Oilman (MP LT)',
-        mp_wt: 'Washingman',
-        user: 'User Lapangan'
+        track: 'Track',
+        user: 'User',
+        oilman: 'Oilman',
+        washingman: 'Washingman',
+        mp_lt: 'Oilman',
+        mp_wt: 'Washingman'
       };
 
       const roleColors = {
         admin: 'bg-purple-100 text-purple-800 border-purple-200/80',
         basecontrol: 'bg-indigo-100 text-indigo-800 border-indigo-200/80',
+        track: 'bg-amber-100 text-amber-800 border-amber-200/80',
+        user: 'bg-sky-100 text-sky-800 border-sky-200/80',
+        oilman: 'bg-emerald-100 text-emerald-800 border-emerald-200/80',
+        washingman: 'bg-cyan-100 text-cyan-800 border-cyan-200/80',
         mp_lt: 'bg-emerald-100 text-emerald-800 border-emerald-200/80',
-        mp_wt: 'bg-cyan-100 text-cyan-800 border-cyan-200/80',
-        user: 'bg-sky-100 text-sky-800 border-sky-200/80'
+        mp_wt: 'bg-cyan-100 text-cyan-800 border-cyan-200/80'
       };
 
       let allVisibleChecked = list.length > 0;
@@ -35410,7 +35478,12 @@ Keterangan : ${keterangan}`;
       document.getElementById('account-modal-title').textContent = 'Edit Akun Pegawai';
       document.getElementById('account-form-nrp').value = u.nrp || '';
       document.getElementById('account-form-nama').value = u.nama || '';
-      document.getElementById('account-form-role').value = u.role || 'user';
+      let r = (u.role || 'user').toLowerCase();
+      if (r === 'mp_lt') r = 'oilman';
+      if (r === 'mp_wt') r = 'washingman';
+      if (r === 'tim_track') r = 'track';
+      if (r === 'base_control') r = 'basecontrol';
+      document.getElementById('account-form-role').value = r;
       document.getElementById('account-form-jabatan').value = u.jabatan || '';
       document.getElementById('account-form-password').value = u.password || '';
       document.getElementById('account-form-status').value = String(u.statusAktif !== false);
@@ -37237,9 +37310,15 @@ Keterangan : ${keterangan}`;
         const stored = safeStorage.getItem('SE_SESSION_USER');
         if (stored) {
           const user = JSON.parse(stored);
-          if (user && user.role) {
-            if (user.role === 'oilman') user.role = 'mp_lt';
-            if (user.role === 'washingman') user.role = 'mp_wt';
+          if (user && (user.role || user.jabatan)) {
+            if (user.role === 'mp_lt') user.role = 'oilman';
+            if (user.role === 'mp_wt') user.role = 'washingman';
+            if ((!user.role || user.role === 'user') && user.jabatan) {
+              const jLower = user.jabatan.toLowerCase();
+              if (jLower.includes('oil') || jLower.includes('lube')) user.role = 'oilman';
+              else if (jLower.includes('wash') || jLower.includes('cuci')) user.role = 'washingman';
+              else if (jLower.includes('track')) user.role = 'track';
+            }
             state.currentUser = user;
             renderAppForUser(user);
           } else {
