@@ -15382,10 +15382,17 @@
             ? state.jobHistory.find(h => {
               const hId = String(h.id || h.job_id || '');
               const hJobId = String(h.job_id || h.id || '');
+              const jType = (typeof getJobTypeCode === 'function') ? getJobTypeCode(j) : '';
+              const hType = (typeof getJobTypeCode === 'function') ? getJobTypeCode(h) : '';
+              if (jType && hType && jType !== hType) return false;
+
               if (hId === cleanJobId || hJobId === cleanJobId || hId.startsWith(cleanJobId + '-') || cleanJobId.startsWith(hId + '-')) {
                 const jCat = String(j.cat || '').toLowerCase().trim();
                 const hCat = String(h.cat || '').toLowerCase().trim();
-                if (jCat && hCat && jCat !== hCat) return false;
+                if (jCat && hCat && jCat !== hCat) {
+                  const isBothGrs = (jCat === 'small' || jCat === 'digger') && (hCat === 'small' || hCat === 'digger');
+                  if (!isBothGrs) return false;
+                }
                 return true;
               }
               // Fallback deteksi cerdas: Nomor Lambung + Tanggal + Kategori
@@ -15398,7 +15405,7 @@
                 const dateMatch = (hTgl && (hTgl === jTgl || hTgl === jOrig));
                 const jCat = String(j.cat || '').toLowerCase().trim();
                 const hCat = String(h.cat || '').toLowerCase().trim();
-                const catMatch = (!jCat || !hCat || jCat === hCat);
+                const catMatch = (jType && hType) ? (jType === hType) : ((jCat && hCat) ? (jCat === hCat || ((jCat === 'small' || jCat === 'digger') && (hCat === 'small' || hCat === 'digger'))) : false);
                 if (dateMatch && catMatch) return true;
               }
               return false;
@@ -27374,7 +27381,7 @@ Keterangan : ${keterangan}`;
      * =========================================================================
      */
 
-    // 1. Pencarian di Riwayat Lokal (Kecepatan 0ms)
+    // 1. Pencarian di Riwayat Lokal (Kecepatan 0ms) dengan Pengecekan Kategori / Type Code Ketat
     function findActionedRecordLocally(job) {
       if (!job || !Array.isArray(state.jobHistory)) return null;
       const lambung = String(job.noLambung || job.no_lambung || job.kodeUnit || job.unit || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -27386,8 +27393,10 @@ Keterangan : ${keterangan}`;
       const round = parseInt(job.washingRound || job.washing_round || 1, 10);
       const isReq = isJobAnOrderRequest(job);
       const jobId = String(job.id || job.job_id || '').trim();
+      const jobTypeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(job) : '';
+      const jobCat = String(job.cat || '').toLowerCase().trim();
 
-      // Cek kecocokan ID langsung
+      // Cek kecocokan ID langsung (paling akurat)
       let found = state.jobHistory.find(h => {
         const hId = String(h.id || h.job_id || '');
         if (jobId && (hId === jobId || hId.startsWith(jobId + '-'))) {
@@ -27398,14 +27407,28 @@ Keterangan : ${keterangan}`;
       });
       if (found) return found;
 
-      // Cek kecocokan nomor lambung, tanggal dan shift
+      // Cek kecocokan nomor lambung, tanggal, shift, dan KATEGORI PEKERJAAN
       found = state.jobHistory.find(h => {
         const hLambung = String(h.no_lambung || h.noLambung || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
         if (!hLambung || hLambung !== lambung) return false;
 
+        // PROTEKSI KATEGORI: Air Cleaner (CAC), Greasing (GRS), Top Up (TUO), Washing (WSC/WNC), dan Order (REQ)
+        // tidak boleh saling menimpa atau terbaca sebagai pekerjaan yang sama!
+        const hTypeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(h) : '';
+        if (jobTypeCode && hTypeCode && jobTypeCode !== hTypeCode) {
+          return false;
+        }
+
+        const hCat = String(h.cat || '').toLowerCase().trim();
+        if (jobCat && hCat && jobCat !== hCat) {
+          // Pengecualian khusus: small track dan big digger sama-sama berkode GRS (greasing)
+          const isBothGrs = (jobCat === 'small' || jobCat === 'digger') && (hCat === 'small' || hCat === 'digger');
+          if (!isBothGrs) return false;
+        }
+
         if (isReq) {
           const hId = String(h.id || h.job_id || '');
-          return jobId && hId.includes(jobId);
+          return jobId && (hId === jobId || hId.includes(jobId));
         }
 
         const hTgl = String(h.tanggal_rencana || h.tanggal_eksekusi || h.tanggal || '').trim().split('T')[0];
@@ -27431,7 +27454,7 @@ Keterangan : ${keterangan}`;
     }
     window.findActionedRecordLocally = findActionedRecordLocally;
 
-    // 2. Pemeriksaan Langsung ke Cloud Supabase (~100ms) jika lokal belum tersinkron
+    // 2. Pemeriksaan Langsung ke Cloud Supabase (~100ms) dengan Pengecekan Kategori / Type Code
     async function checkActionedRecordOnServer(job) {
       if (!state.supabaseClient || !job) return null;
       const lambung = String(job.noLambung || job.no_lambung || job.kodeUnit || job.unit || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -27441,13 +27464,17 @@ Keterangan : ${keterangan}`;
       const targetTable = isWt ? 'job_history_wt' : 'job_history_lt';
       const shift = parseInt(job.shift || job.shift_rencana || 1, 10);
       const rawDate = String(job.tanggal || job.tanggal_rencana || job.tanggalRealisasi || '').trim().split('T')[0];
+      const jobId = String(job.id || job.job_id || '').trim();
+      const jobTypeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(job) : '';
+      const jobCat = String(job.cat || '').toLowerCase().trim();
+      const isReq = isJobAnOrderRequest(job);
 
       try {
         let query = state.supabaseClient
           .from(targetTable)
-          .select('id, no_lambung, armada_unit, opt_name, mp1, mp2, jam_start, jam_end, status_final, keterangan, created_at, tanggal_rencana, tanggal_eksekusi, shift_rencana')
+          .select('id, job_id, no_id, no_lambung, armada_unit, opt_name, mp1, mp2, jam_start, jam_end, status_final, keterangan, created_at, tanggal_rencana, tanggal_eksekusi, shift_rencana, cat, job_type')
           .eq('no_lambung', lambung)
-          .limit(5);
+          .limit(10);
 
         if (rawDate) {
           const dateIso = rawDate.includes('/') ? rawDate.split('/').reverse().join('-') : rawDate;
@@ -27458,9 +27485,9 @@ Keterangan : ${keterangan}`;
         if (error && (error.code === 'PGRST205' || error.code === '42P01')) {
           const fb = await state.supabaseClient
             .from('job_history')
-            .select('id, no_lambung, armada_unit, opt_name, mp1, mp2, jam_start, jam_end, status_final, keterangan, created_at, tanggal_rencana, tanggal_eksekusi, shift_rencana')
+            .select('id, job_id, no_id, no_lambung, armada_unit, opt_name, mp1, mp2, jam_start, jam_end, status_final, keterangan, created_at, tanggal_rencana, tanggal_eksekusi, shift_rencana, cat, job_type')
             .eq('no_lambung', lambung)
-            .limit(5);
+            .limit(10);
           data = fb.data;
           error = fb.error;
         }
@@ -27471,6 +27498,27 @@ Keterangan : ${keterangan}`;
             const isCompleted = ['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR', 'ACH'].includes(s);
             if (!isCompleted) return false;
             if (shift && r.shift_rencana && parseInt(r.shift_rencana, 10) !== shift) return false;
+
+            // Cek jika ID langsung cocok
+            const rId = String(r.id || r.job_id || r.no_id || '');
+            if (jobId && (rId === jobId || rId.startsWith(jobId + '-'))) {
+              return true;
+            }
+
+            // Validasi KATEGORI/TYPE CODE
+            const rTypeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(r) : '';
+            if (jobTypeCode && rTypeCode && jobTypeCode !== rTypeCode) return false;
+
+            const rCat = String(r.cat || '').toLowerCase().trim();
+            if (jobCat && rCat && jobCat !== rCat) {
+              const isBothGrs = (jobCat === 'small' || jobCat === 'digger') && (rCat === 'small' || rCat === 'digger');
+              if (!isBothGrs) return false;
+            }
+
+            if (isReq) {
+              return jobId && (rId === jobId || rId.includes(jobId));
+            }
+
             return true;
           });
 
@@ -27537,11 +27585,13 @@ Keterangan : ${keterangan}`;
         const jamStr = jam ? `Pukul ${jam}` : (record.created_at ? new Date(record.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-');
         const statusStr = record.status_final || 'ACHIEVED';
 
-        // Bersihkan unit dari antrean jadwal aktif di HP pengguna agar tidak muncul lagi
+        // Bersihkan HANYA pekerjaan yang bersesuaian dari antrean jadwal aktif di HP pengguna agar tidak muncul lagi
         const targetId = String(job.id || '');
         const cleanUnit = String(unitNo).toUpperCase().replace(/[^A-Z0-9]/g, '');
         const cleanDate = String(job.tanggal || job.tanggal_rencana || record.tanggal_rencana || '').split('T')[0];
         const shift = parseInt(job.shift || job.shift_rencana || record.shift_rencana || 1, 10);
+        const jobTypeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(job) : '';
+        const jobCat = String(job.cat || record.cat || '').toLowerCase().trim();
 
         if (state.lubetruckState?.jobs) {
           state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => {
@@ -27549,7 +27599,14 @@ Keterangan : ${keterangan}`;
             const jU = String(j.noLambung || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
             const jD = String(j.tanggal || '').split('T')[0];
             const jS = parseInt(j.shift || 1, 10);
-            return !(jU === cleanUnit && jD === cleanDate && jS === shift);
+            const jTypeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(j) : '';
+            const jCat = String(j.cat || '').toLowerCase().trim();
+
+            const isSameUnitDateShift = (jU === cleanUnit && jD === cleanDate && jS === shift);
+            const isSameCategory = (jobTypeCode && jTypeCode && jobTypeCode === jTypeCode) || (jobCat && jCat && (jobCat === jCat || ((jobCat === 'small' || jobCat === 'digger') && (jCat === 'small' || jCat === 'digger'))));
+
+            // HANYA hapus baris jika unit, tanggal, shift, DAN KATEGORI pekerjaannya sama persis!
+            return !(isSameUnitDateShift && isSameCategory);
           });
         }
         if (state.watertruckState?.jobs) {
@@ -27558,7 +27615,13 @@ Keterangan : ${keterangan}`;
             const jU = String(j.noLambung || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
             const jD = String(j.tanggal || '').split('T')[0];
             const jS = parseInt(j.shift || 1, 10);
-            return !(jU === cleanUnit && jD === cleanDate && jS === shift);
+            const jTypeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(j) : '';
+            const jCat = String(j.cat || '').toLowerCase().trim();
+
+            const isSameUnitDateShift = (jU === cleanUnit && jD === cleanDate && jS === shift);
+            const isSameCategory = (jobTypeCode && jTypeCode && jobTypeCode === jTypeCode) || (jobCat && jCat && jobCat === jCat);
+
+            return !(isSameUnitDateShift && isSameCategory);
           });
         }
         if (state.unscheduledLtJobs) {
