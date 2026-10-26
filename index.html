@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -14641,18 +14641,18 @@
         const isOilman = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'oilman');
         const isTopUp = (state.lubetruckState?.activeCategory === 'topup');
         const tomorrow = (typeof getTomorrowDateStr === 'function') ? getTomorrowDateStr(today) : today;
-        const targetDefaultDate = (isOilman && isTopUp) ? tomorrow : today;
+        const targetDefaultDate = (isOilman && isTopUp) ? ((typeof getTopUpOilOilmanTargetDate === 'function') ? getTopUpOilOilmanTargetDate(today) : today) : today;
 
         const ltDate = document.getElementById('lt-filter-date');
         if (ltDate) {
-          if (!ltDate.value || (isOilman && isTopUp && ltDate.value === today)) {
+          if (!ltDate.value || (isOilman && isTopUp && !state.lubetruckState?.hasManualDateFilter)) {
             ltDate.value = targetDefaultDate;
           }
-          if (isOilman && isTopUp) ltDate.max = targetDefaultDate;
+          if (isOilman && isTopUp) ltDate.max = tomorrow;
           else if (isOilman) ltDate.max = today;
         }
         if (state.lubetruckState) {
-          if (!state.lubetruckState.filterDate || (isOilman && isTopUp && state.lubetruckState.filterDate === today)) {
+          if (!state.lubetruckState.filterDate || (isOilman && isTopUp && !state.lubetruckState.hasManualDateFilter)) {
             state.lubetruckState.filterDate = targetDefaultDate;
           }
         }
@@ -15318,33 +15318,46 @@
             console.log('[Snapshot History Locked OK]', histId, '->', targetHistTable);
 
             // ATURAN PENGGUNA: Setelah tercatat di job_history, HAPUS dari tabel jobs aktif (jobs_lt, jobs_wt) di Supabase & di RAM lokal
-            const targetDeleteId = cleanBaseId || originalJobId;
-            if (targetDeleteId) {
+            const candidateDeleteIds = Array.from(new Set([
+              cleanBaseId,
+              originalJobId,
+              cleanId,
+              histId,
+              job && job.id,
+              job && job.noId,
+              job && job.no_id
+            ].filter(Boolean).map(String)));
+
+            if (candidateDeleteIds.length > 0) {
               try {
                 await Promise.allSettled([
-                  state.supabaseClient.from('jobs_lt').delete().eq('id', targetDeleteId),
-                  state.supabaseClient.from('jobs_wt').delete().eq('id', targetDeleteId),
-                  state.supabaseClient.from('jobs_lt').delete().eq('id', originalJobId),
-                  state.supabaseClient.from('jobs_wt').delete().eq('id', originalJobId)
+                  state.supabaseClient.from('jobs_lt').delete().in('id', candidateDeleteIds),
+                  state.supabaseClient.from('jobs_wt').delete().in('id', candidateDeleteIds)
                 ]);
-                console.log('[Supabase Move Job OK] Berhasil memindahkan ' + targetDeleteId + ' ke ' + targetHistTable + ' dan menghapus dari tabel jobs aktif.');
+                console.log('[Supabase Move Job OK] Berhasil memindahkan ke ' + targetHistTable + ' dan menghapus ID aktif:', candidateDeleteIds);
               } catch (delEx) { }
               if (typeof _jobSyncQueue !== 'undefined') {
-                _jobSyncQueue.delete(targetDeleteId);
-                _jobSyncQueue.delete(originalJobId);
+                candidateDeleteIds.forEach(id => _jobSyncQueue.delete(id));
               }
             }
 
             // Hapus juga job selesai dari antrean jadwal aktif di memori frontend (jobs_lt / jobs_wt)
             if (state.lubetruckState && Array.isArray(state.lubetruckState.jobs)) {
-              state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => String(j.id) !== targetDeleteId && String(j.id) !== originalJobId);
+              state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => 
+                !candidateDeleteIds.includes(String(j.id)) && 
+                !candidateDeleteIds.includes(String(j.noId)) && 
+                !candidateDeleteIds.includes(String(j.no_id))
+              );
             }
             if (state.watertruckState && Array.isArray(state.watertruckState.jobs)) {
-              state.watertruckState.jobs = state.watertruckState.jobs.filter(j => String(j.id) !== targetDeleteId && String(j.id) !== originalJobId);
+              state.watertruckState.jobs = state.watertruckState.jobs.filter(j => 
+                !candidateDeleteIds.includes(String(j.id)) && 
+                !candidateDeleteIds.includes(String(j.noId)) && 
+                !candidateDeleteIds.includes(String(j.no_id))
+              );
             }
             if (window.globalDataCache && window.globalDataCache.jobs) {
-              window.globalDataCache.jobs.delete(targetDeleteId);
-              window.globalDataCache.jobs.delete(originalJobId);
+              candidateDeleteIds.forEach(id => window.globalDataCache.jobs.delete(id));
             }
             if (typeof safeStorage !== 'undefined') {
               try {
@@ -15782,14 +15795,18 @@
         state.jobHistory.forEach(h => {
           const st = String(h.status_final || '').toUpperCase();
           if (['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN'].includes(st)) {
-            const d = String(h.tanggal_eksekusi || h.tanggal_rencana || '').trim().split('T')[0];
+            const dates = [h.tanggal_eksekusi, h.tanggal_rencana, h.tanggal, h.created_at]
+              .filter(Boolean)
+              .map(x => String(x).trim().split('T')[0]);
             const u = String(h.no_lambung || '').trim().toUpperCase();
             const c = String(h.cat || '').toLowerCase().trim();
             const s = String(h.shift_rencana || h.shift || 1);
-            if (d && u) {
-              achievedUnitDateMap.add(`${d}_${u}_${c}`);
-              achievedUnitDateMap.add(`${d}_${u}_${c}_${s}`);
-              achievedUnitDateMap.add(`${d}_${u}`); // Universal Key Unit + Tanggal
+            if (u && dates.length > 0) {
+              dates.forEach(d => {
+                achievedUnitDateMap.add(`${d}_${u}_${c}`);
+                achievedUnitDateMap.add(`${d}_${u}_${c}_${s}`);
+                achievedUnitDateMap.add(`${d}_${u}`); // Universal Key Unit + Tanggal
+              });
             }
           }
         });
@@ -15844,17 +15861,34 @@
                 }
                 return true;
               }
-              // Fallback deteksi cerdas: Nomor Lambung + Tanggal + Kategori
+              // Fallback deteksi cerdas: Nomor Lambung + Tanggal (Toleransi Eksekusi) + Kategori
               const hUnit = String(h.no_lambung || h.noLambung || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
               const jUnit = String(j.noLambung || j.no_lambung || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
               if (hUnit && jUnit && hUnit === jUnit) {
-                const hTgl = String(h.tanggal_eksekusi || h.tanggal_rencana || h.tanggal || '').trim().split('T')[0].replace(/[^0-9]/g, '');
-                const jTgl = String(j.tanggal || '').trim().split('T')[0].replace(/[^0-9]/g, '');
-                const jOrig = String(j.originalDate || '').trim().split('T')[0].replace(/[^0-9]/g, '');
-                const dateMatch = (hTgl && (hTgl === jTgl || hTgl === jOrig));
+                const hDates = [h.tanggal_eksekusi, h.tanggal_rencana, h.tanggal, h.created_at]
+                  .filter(Boolean)
+                  .map(x => String(x).split('T')[0]);
+                const jDates = [j.tanggal, j.originalDate, j.targetDate]
+                  .filter(Boolean)
+                  .map(x => String(x).split('T')[0]);
+
+                let dateMatch = hDates.some(hd => jDates.includes(hd));
+                if (!dateMatch && hDates.length > 0 && jDates.length > 0) {
+                  for (const hd of hDates) {
+                    for (const jd of jDates) {
+                      const tHd = new Date(hd).getTime();
+                      const tJd = new Date(jd).getTime();
+                      if (!isNaN(tHd) && !isNaN(tJd) && Math.abs(tHd - tJd) <= 86400000 * 2) {
+                        dateMatch = true;
+                        break;
+                      }
+                    }
+                    if (dateMatch) break;
+                  }
+                }
                 const jCat = String(j.cat || '').toLowerCase().trim();
                 const hCat = String(h.cat || '').toLowerCase().trim();
-                const catMatch = (jType && hType) ? (jType === hType) : ((jCat && hCat) ? (jCat === hCat || ((jCat === 'small' || jCat === 'digger') && (hCat === 'small' || hCat === 'digger'))) : false);
+                const catMatch = (jType && hType) ? (jType === hType) : ((jCat && hCat) ? (jCat === hCat || ((jCat === 'small' || jCat === 'digger') && (hCat === 'small' || hCat === 'digger'))) : true);
                 if (dateMatch && catMatch) return true;
               }
               return false;
@@ -16955,13 +16989,16 @@
 
       if (isOilman) {
         if (cat === 'topup') {
-          // Khusus SCH Top Up Oil di akses Oilman: filter tgl maju 1 hari (H+1)
+          // Khusus SCH Top Up Oil di akses Oilman:
+          // - Shift 1 (05:00 - 16:59): tetap tanggal hari ini (today) agar jadwal hari ini tidak tersembunyi
+          // - Shift 2 (17:00 - 04:59): maju 1 hari (H+1 / tomorrow) setelah pergantian Shift 1 ke 2
+          const topUpTargetDate = (typeof getTopUpOilOilmanTargetDate === 'function') ? getTopUpOilOilmanTargetDate(today) : today;
           if (ltDate) {
-            ltDate.value = tomorrow;
+            ltDate.value = topUpTargetDate;
             ltDate.max = tomorrow;
           }
-          state.lubetruckState.filterDate = tomorrow;
-          if (typeof ensureJobsForDate === 'function') ensureJobsForDate(tomorrow);
+          state.lubetruckState.filterDate = topUpTargetDate;
+          if (typeof ensureJobsForDate === 'function') ensureJobsForDate(topUpTargetDate);
         } else {
           // Kategori lain (small, digger, aircleaner): kembali ke hari ini
           if (ltDate) {
@@ -17005,6 +17042,23 @@
       return `${resY}-${resM}-${resD}`;
     }
     window.getTomorrowDateStr = getTomorrowDateStr;
+
+    /**
+     * Menentukan tanggal filter target untuk SCH Top Up Oil pada akses Oilman:
+     * - Shift 1 (05:00 - 16:59): Tetap tanggal hari ini (today) agar jadwal hari ini tidak tersembunyi
+     * - Shift 2 (17:00 - 04:59): Maju ke tanggal esok hari (tomorrow / H+1) setelah berganti dari Shift 1 ke 2
+     */
+    function getTopUpOilOilmanTargetDate(todayStr = null) {
+      const today = todayStr || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : new Date().toISOString().slice(0, 10));
+      const hour = new Date().getHours();
+      // Shift 1: 05:00 - 16:59, Shift 2: 17:00 - 04:59
+      const isShift2 = (hour < 5 || hour >= 17);
+      if (isShift2) {
+        return (typeof getTomorrowDateStr === 'function') ? getTomorrowDateStr(today) : today;
+      }
+      return today;
+    }
+    window.getTopUpOilOilmanTargetDate = getTopUpOilOilmanTargetDate;
 
     /**
      * Hitung string tanggal kemarin (YYYY-MM-DD)
@@ -18442,15 +18496,17 @@
       const isTopUp = (activeCat === 'topup');
       const tomorrow = (typeof getTomorrowDateStr === 'function') ? getTomorrowDateStr(today) : today;
 
-      // Khusus SCH Top Up Oil di akses Oilman: filter tgl maju 1 hari (H+1)
-      const targetDefaultDate = (isOilman && isTopUp) ? tomorrow : today;
+      // Khusus SCH Top Up Oil di akses Oilman:
+      // - Shift 1 (05:00 - 16:59): tetap tanggal hari ini (today) agar jadwal hari ini tidak tersembunyi
+      // - Shift 2 (17:00 - 04:59): maju 1 hari (H+1 / tomorrow) setelah berganti dari shift 1 ke 2
+      const targetDefaultDate = (isOilman && isTopUp) ? ((typeof getTopUpOilOilmanTargetDate === 'function') ? getTopUpOilOilmanTargetDate(today) : today) : today;
       const maxDate = (isOilman && isTopUp) ? tomorrow : today;
 
       const dateInput = document.getElementById('lt-filter-date');
       if (dateInput) {
         if (!dateInput.value) {
           dateInput.value = targetDefaultDate;
-        } else if (isOilman && isTopUp && dateInput.value < targetDefaultDate && !state.lubetruckState.hasManualDateFilter) {
+        } else if (isOilman && isTopUp && !state.lubetruckState.hasManualDateFilter && dateInput.value !== targetDefaultDate) {
           dateInput.value = targetDefaultDate;
         } else if (isMp && dateInput.value > maxDate) {
           dateInput.value = maxDate;
@@ -22918,6 +22974,61 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         return `<div class="flex items-center justify-center">${getJobStatusBadge(job)}</div>`;
       }
 
+      // CEK STATUS BACKGROUND PROCESSING QUEUE (PENGIRIMAN FOTO & SINKRONISASI DI LATAR BELAKANG)
+      const bg = (window._bgJobQueue && (window._bgJobQueue[job.id] || (job.noId && window._bgJobQueue[job.noId]) || (job.no_id && window._bgJobQueue[job.no_id])));
+      if (bg) {
+        if (bg.status === 'uploading') {
+          return `
+            <div class="flex items-center justify-center">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-300 text-blue-700 text-[9.5px] font-bold shadow-2xs whitespace-nowrap animate-pulse" title="Sedang mengunggah foto ke Google Drive & Spreadsheet...">
+                <svg class="animate-spin h-3.5 w-3.5 text-blue-600 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <span>Mengunggah Foto...</span>
+              </span>
+            </div>
+          `;
+        }
+        if (bg.status === 'saving') {
+          return `
+            <div class="flex items-center justify-center">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-700 text-[9.5px] font-bold shadow-2xs whitespace-nowrap animate-pulse" title="Foto berhasil! Menyimpan riwayat ke Supabase...">
+                <svg class="animate-spin h-3.5 w-3.5 text-emerald-600 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <span>Menyimpan Server...</span>
+              </span>
+            </div>
+          `;
+        }
+        if (bg.status === 'success') {
+          return `
+            <div class="flex items-center justify-center">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 text-white text-[9.5px] font-black shadow-xs whitespace-nowrap tracking-wide animate-bounce" title="Sukses tersimpan!">
+                <svg class="h-3.5 w-3.5 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>SELESAI ✓</span>
+              </span>
+            </div>
+          `;
+        }
+        if (bg.status === 'error') {
+          return `
+            <div class="flex items-center justify-center gap-1">
+              <button type="button" onclick="retryBackgroundJob('${job.id}')" class="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[9px] font-extrabold uppercase transition shadow-2xs cursor-pointer active:scale-95 whitespace-nowrap" title="Foto gagal terkirim: ${bg.error || 'Kendala jaringan'}. Klik untuk mencoba kembali!">
+                ⚠️ COBA LAGI
+              </button>
+              <button type="button" onclick="openActionDecision('${job.id}')" class="px-1.5 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-[9px] font-bold cursor-pointer" title="Edit Form / Foto">
+                EDIT
+              </button>
+            </div>
+          `;
+        }
+      }
+
       const isPending = (s === 'pending' || job.isPending);
 
       let pendingBadgeHtml = '';
@@ -22943,6 +23054,15 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       `;
     }
     window.renderJobActionCell = renderJobActionCell;
+
+    function triggerScheduleTableRefresh() {
+      try {
+        if (typeof renderLtScheduleTable === 'function') renderLtScheduleTable();
+        if (typeof renderWtScheduleTable === 'function') renderWtScheduleTable();
+        if (typeof renderUnscheduledJobsTable === 'function') renderUnscheduledJobsTable();
+      } catch (e) { }
+    }
+    window.triggerScheduleTableRefresh = triggerScheduleTableRefresh;
 
     async function submitNonAchAction(e) {
       if (e && e.preventDefault) e.preventDefault();
@@ -28430,6 +28550,19 @@ Keterangan : ${keterangan}`;
     window.checkJobAlreadyActionedGuard = checkJobAlreadyActionedGuard;
 
     async function openActionDecision(jobId) {
+      if (window._bgJobQueue && window._bgJobQueue[jobId]) {
+        const bg = window._bgJobQueue[jobId];
+        if (bg.status === 'uploading' || bg.status === 'saving') {
+          showToast('Unit ini sedang dalam proses pengiriman foto di latar belakang...', 'info');
+          return;
+        }
+        if (bg.status === 'error') {
+          // User menekan EDIT: Bersihkan status error dari antrean dan izinkan buka modal
+          delete window._bgJobQueue[jobId];
+          if (typeof triggerScheduleTableRefresh === 'function') triggerScheduleTableRefresh();
+        }
+      }
+
       state.currentActionJobId = jobId;
       const job = (typeof findJobById === 'function') ? findJobById(jobId) : null;
       if (!job) {
@@ -30372,54 +30505,6 @@ Keterangan : ${keterangan}`;
           }
         }
 
-        // PERMINTAAN PENGGUNA: Foto baru dikirim ke Google Drive & Spreadsheet HANYA saat tombol Submit / Selesai ditekan!
-        // Pada titik ini seluruh data input (jam, personil, armada) sudah lengkap dan tervalidasi.
-        const endpointUrl = APPS_SCRIPT_CONFIG.uploadEndpointUrl || safeStorage.getItem('SE_APPS_SCRIPT_URL') || '';
-        const canUploadDrive = endpointUrl && endpointUrl.trim().startsWith('http');
-
-        if (!isJobRequest && uploadedPhotos.length > 0 && canUploadDrive) {
-          const loadingMsg = document.getElementById('ach-submit-loading-msg');
-          const totalPhotos = uploadedPhotos.length;
-
-          // Pasangkan sementara data eksekusi ke job agar Job ID yang dibentuk sinkron
-          job.jamStart = jamStart;
-          job.jamEnd = jamEnd;
-          job.armada = ltValue;
-          job.opt = optVal;
-
-          if (loadingMsg) {
-            loadingMsg.textContent = `Mengunggah ${totalPhotos} foto serentak ke Drive...`;
-          }
-
-          // OPTIMASI CEPAT: Unggah seluruh foto secara serentak (Parallel Promise.all)
-          // Memangkas waktu tunggu dari ~15-20 detik menjadi hanya ~1.5 - 2 detik!
-          let completedCount = 0;
-          const uploadPromises = uploadedPhotos.map(async (photoSrc, i) => {
-            if (photoSrc && typeof photoSrc === 'string' && photoSrc.startsWith('data:image/')) {
-              try {
-                const driveUrl = await uploadBase64PhotoToDrive(photoSrc, job.noLambung, job.cat, i, job.id);
-                if (driveUrl) {
-                  uploadedPhotos[i] = driveUrl;
-                  if (state.currentAchPhotos && state.currentAchPhotos[i]) {
-                    state.currentAchPhotos[i] = driveUrl;
-                  }
-                }
-              } catch (uErr) {
-                console.warn(`[Submit Ach Photo ${i + 1} Upload Warning]`, uErr);
-              } finally {
-                completedCount++;
-                if (loadingMsg) {
-                  loadingMsg.textContent = `Mengunggah foto (${completedCount}/${totalPhotos})...`;
-                }
-              }
-            }
-          });
-
-          await Promise.all(uploadPromises);
-          // Update state foto modal agar tidak ada foto base64 yang diunggah ulang
-          state.currentAchPhotos = [...uploadedPhotos];
-        }
-
         // Sinkronisasi otomatis ke Monitoring Air Cleaner (KHUSUS LT):
         // 1. Dari schedule air cleaner (job.cat === 'aircleaner')
         // 2. Dari job request yang permintaannya air cleaner / deskripsi mengandung air cleaner
@@ -30475,11 +30560,7 @@ Keterangan : ${keterangan}`;
           }
         }
 
-        job.status = isJobRequest ? 'done' : 'ach';
-        job.isPending = false;
-        job.isLocked = true;
-        job.is_locked = true;
-        if (job.pendingFromShift) { job.pendingFromShift = null; }
+        // Simpan seluruh data input eksekusi ke objek job
         job.ltUnit = isWashing ? '-' : ltValue;
         job.wtUnit = isWashing ? ltValue : '-';
         job.armada = ltValue;
@@ -30500,20 +30581,69 @@ Keterangan : ${keterangan}`;
         job.actionTimestamp = Date.now();
         job.created_at = job.created_at || new Date().toISOString();
         job.keterangan = ket;
+
+        // Evaluasi Foto Base64 & Background Processing
+        const endpointUrl = APPS_SCRIPT_CONFIG.uploadEndpointUrl || safeStorage.getItem('SE_APPS_SCRIPT_URL') || '';
+        const canUploadDrive = endpointUrl && endpointUrl.trim().startsWith('http');
+        const hasBase64Photos = !isJobRequest && uploadedPhotos.some(p => p && typeof p === 'string' && p.startsWith('data:image/'));
+
+        // ATURAN PENGGUNA: SISTEM PENGIRIMAN FOTO BERJALAN DI BELAKANG LAYAR (BACKGROUND QUEUE)
+        // 1. Modal langsung tertutup seketika (< 1 detik) agar MP tidak tertahan 5-10 detik.
+        // 2. Tombol ACTION pada baris unit bersangkutan berganti menjadi badge [ ⏳ Mengunggah Foto... ].
+        // 3. Foto dikirim ke Google Apps Script (Drive & Sheets).
+        // 4. JIKA FOTO GAGAL: JANGAN SIMPAN ID APAPUN KE SUPABASE & JANGAN HAPUS DARI JADWAL AKTIF.
+        //    Tombol di baris tabel berubah menjadi [ ⚠️ COBA LAGI ] dan [ EDIT ].
+        // 5. JIKA FOTO SUKSES: Ubah badge menjadi [ ⏳ Menyimpan Server... ], simpan ke Supabase job_history
+        //    dan hapus dari tabel aktif, lalu tampilkan centang hijau [ ✓ Selesai ], dan baris berpindah ke riwayat.
+        if (hasBase64Photos && canUploadDrive) {
+          // Amankan foto lokal di safeStorage agar tidak hilang jika terjadi kendala jaringan
+          if (job.id && uploadedPhotos.length > 0) {
+            try { safeStorage.setItem('SE_JOB_FOTOS_' + job.id, JSON.stringify(uploadedPhotos)); } catch (e) { }
+            if (!state.jobPhotosMap) state.jobPhotosMap = {};
+            state.jobPhotosMap[job.id] = [...uploadedPhotos];
+          }
+
+          // Daftarkan ke Antrean Background Processing
+          window._bgJobQueue = window._bgJobQueue || {};
+          window._bgJobQueue[job.id] = {
+            jobId: job.id,
+            job: job,
+            isJobRequest: isJobRequest,
+            uploadedPhotos: [...uploadedPhotos],
+            ket: ket,
+            status: 'uploading',
+            error: null,
+            startedAt: Date.now()
+          };
+
+          // Tutup Modal Form ACH Seketika
+          toggleModal('modal-ach-form', false);
+          showToast(`Pekerjaan ${job.noLambung || ''} tersimpan! Foto sedang dikirim di latar belakang...`, 'info', 3500);
+
+          // Segera perbarui tampilan tabel agar tombol ACTION langsung berganti jadi badge [ ⏳ Mengunggah Foto... ]
+          if (typeof triggerScheduleTableRefresh === 'function') triggerScheduleTableRefresh();
+
+          // Jalankan proses latar belakang
+          processBackgroundAchJob(job.id);
+          return;
+        }
+
+        // JIKA TIDAK ADA FOTO BASE64 (Atau semua foto sudah berupa link URL Drive):
+        job.status = isJobRequest ? 'done' : 'ach';
+        job.isPending = false;
+        job.isLocked = true;
+        job.is_locked = true;
+        if (job.pendingFromShift) { job.pendingFromShift = null; }
         job.fotos = [...uploadedPhotos];
         if (job.id && uploadedPhotos.length > 0) {
-          safeStorage.setItem('SE_JOB_FOTOS_' + job.id, JSON.stringify(uploadedPhotos));
+          try { safeStorage.setItem('SE_JOB_FOTOS_' + job.id, JSON.stringify(uploadedPhotos)); } catch (e) { }
           if (!state.jobPhotosMap) state.jobPhotosMap = {};
           state.jobPhotosMap[job.id] = [...uploadedPhotos];
-          // serviceNotes HANYA diperuntukkan bagi catatan teks servis aktual, BUKAN foto/JSON!
-          if (job.serviceNotes && (job.serviceNotes.startsWith('PHOTOS:') || job.serviceNotes.startsWith('PHOTOS_ATTACHED'))) {
-            job.serviceNotes = '';
-          }
         }
 
         // Kunci snapshot data historis ke tabel job_history di Supabase
         if (typeof lockJobHistorySnapshot === 'function') {
-          await lockJobHistorySnapshot(job, 'ACHIEVED', ket);
+          await lockJobHistorySnapshot(job, isJobRequest ? 'DONE' : 'ACHIEVED', ket);
         }
 
         toggleModal('modal-ach-form', false);
@@ -30530,6 +30660,97 @@ Keterangan : ${keterangan}`;
         }
       }
     }
+
+    // ========================================================================
+    // ATOMIC BACKGROUND ACH JOB PROCESSOR (PENGIRIMAN FOTO & SINKRONISASI SUPABASE)
+    // ========================================================================
+    async function processBackgroundAchJob(jobId) {
+      const qItem = window._bgJobQueue?.[jobId];
+      if (!qItem) return;
+      const { job, isJobRequest, uploadedPhotos, ket } = qItem;
+
+      qItem.status = 'uploading';
+      qItem.error = null;
+      if (typeof triggerScheduleTableRefresh === 'function') triggerScheduleTableRefresh();
+
+      try {
+        // TAHAP 1: Unggah Seluruh Foto Base64 ke Google Drive & Spreadsheet via Apps Script
+        const photosToUpload = [...uploadedPhotos];
+        const uploadPromises = photosToUpload.map(async (photoSrc, i) => {
+          if (photoSrc && typeof photoSrc === 'string' && photoSrc.startsWith('data:image/')) {
+            const driveUrl = await uploadBase64PhotoToDrive(photoSrc, job.noLambung, job.cat, i, job.id);
+            if (driveUrl && typeof driveUrl === 'string' && driveUrl.startsWith('http')) {
+              photosToUpload[i] = driveUrl;
+            } else {
+              throw new Error('Gagal mendapatkan tautan Drive untuk foto ' + (i + 1));
+            }
+          }
+        });
+
+        await Promise.all(uploadPromises);
+
+        // Validasi ketat: Jangan lanjutkan jika masih ada foto Base64 (berarti ada foto yang gagal upload)
+        const hasFailedPhotos = photosToUpload.some(p => p && typeof p === 'string' && p.startsWith('data:image/'));
+        if (hasFailedPhotos) {
+          throw new Error('Sebagian foto belum berhasil masuk ke Google Drive.');
+        }
+
+        // TAHAP 2: FOTO 100% SUKSES! Siapkan objek job dan simpan ke Supabase
+        qItem.status = 'saving';
+        if (typeof triggerScheduleTableRefresh === 'function') triggerScheduleTableRefresh();
+
+        job.status = isJobRequest ? 'done' : 'ach';
+        job.isPending = false;
+        job.isLocked = true;
+        job.is_locked = true;
+        if (job.pendingFromShift) { job.pendingFromShift = null; }
+        job.fotos = [...photosToUpload];
+
+        if (job.id && photosToUpload.length > 0) {
+          try { safeStorage.setItem('SE_JOB_FOTOS_' + job.id, JSON.stringify(photosToUpload)); } catch (e) { }
+          if (!state.jobPhotosMap) state.jobPhotosMap = {};
+          state.jobPhotosMap[job.id] = [...photosToUpload];
+          if (job.serviceNotes && (job.serviceNotes.startsWith('PHOTOS:') || job.serviceNotes.startsWith('PHOTOS_ATTACHED'))) {
+            job.serviceNotes = '';
+          }
+        }
+
+        // Kunci snapshot data historis ke tabel job_history_lt / job_history_wt di Supabase & hapus dari tabel aktif
+        if (typeof lockJobHistorySnapshot === 'function') {
+          await lockJobHistorySnapshot(job, isJobRequest ? 'DONE' : 'ACHIEVED', ket);
+        }
+
+        // TAHAP 3: Berhasil Penuh! Tampilkan tanda centang hijau
+        qItem.status = 'success';
+        if (typeof triggerScheduleTableRefresh === 'function') triggerScheduleTableRefresh();
+        showToast(`✓ Foto & data unit ${job.noLambung || ''} sukses tersimpan!`, 'success');
+
+        // Beri jeda 1.8 detik agar MP melihat tanda centang hijau sebelum baris hilang masuk ke Riwayat
+        setTimeout(() => {
+          delete window._bgJobQueue[jobId];
+          notifyDataChanged({ source: 'ach_action', jobId: job.id, orderId: isJobRequest ? job.id : null });
+        }, 1800);
+
+      } catch (err) {
+        console.error('[Background ACH Job Error]', err);
+        qItem.status = 'error';
+        qItem.error = err.message || 'Gagal mengirim foto';
+        if (typeof triggerScheduleTableRefresh === 'function') triggerScheduleTableRefresh();
+        showToast(`⚠️ Unit ${job.noLambung || ''}: Foto gagal dikirim ke Drive (${err.message || 'Kendala jaringan'}). Data belum disimpan ke Supabase demi menjaga konsistensi. Silakan klik 'COBA LAGI' pada baris unit!`, 'error', 7000);
+      }
+    }
+    window.processBackgroundAchJob = processBackgroundAchJob;
+
+    function retryBackgroundJob(jobId) {
+      const qItem = window._bgJobQueue?.[jobId];
+      if (!qItem) {
+        openActionDecision(jobId);
+        return;
+      }
+      showToast('Mencoba mengunggah ulang foto unit...', 'info');
+      processBackgroundAchJob(jobId);
+    }
+    window.retryBackgroundJob = retryBackgroundJob;
 
     // ========================================================================
     // MONITORING CLEAN AIR CLEANER CONTROLLER & LOGIKA OTOMATIS
