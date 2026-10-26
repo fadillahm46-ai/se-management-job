@@ -5877,9 +5877,9 @@
           <span class="text-slate-400 font-medium">Unit:</span>
           <span class="font-bold text-slate-800 text-xs" id="already-actioned-unit">-</span>
         </div>
-        <div class="flex justify-between items-center text-slate-600">
-          <span class="text-slate-400 font-medium">Dikerjakan Oleh:</span>
-          <span class="font-bold text-slate-800" id="already-actioned-pic">-</span>
+        <div class="flex justify-between items-start gap-2 text-slate-600">
+          <span class="text-slate-400 font-medium shrink-0">Dikerjakan Oleh:</span>
+          <span class="font-bold text-slate-800 text-right leading-tight" id="already-actioned-pic">-</span>
         </div>
         <div class="flex justify-between items-center text-slate-600">
           <span class="text-slate-400 font-medium">Waktu Selesai:</span>
@@ -27579,8 +27579,32 @@ Keterangan : ${keterangan}`;
 
       if (record) {
         const unitNo = job.noLambung || record.no_lambung || 'Unit';
-        const pelaku = (record.opt_name && record.opt_name !== '-') ? record.opt_name : 'Rekan Anda';
-        const armadaStr = (record.armada_unit && record.armada_unit !== '-') ? record.armada_unit : '';
+        const armadaStr = (record.armada_unit && record.armada_unit !== '-') ? record.armada_unit : ((job.armada || job.ltUnit || job.wtUnit || '').trim());
+
+        // Ambil nama kedua Manpower (Oilman untuk Lubetruck / Washingman untuk Watertruck)
+        let mp1 = (record.mp1 && record.mp1 !== '-' && record.mp1 !== '') ? record.mp1 : (job.mp1 && job.mp1 !== '-' ? job.mp1 : '');
+        let mp2 = (record.mp2 && record.mp2 !== '-' && record.mp2 !== '') ? record.mp2 : (job.mp2 && job.mp2 !== '-' ? job.mp2 : '');
+
+        // Fallback jika record riwayat belum terisi mp1/mp2, cari dari penugasan roster armada
+        if ((!mp1 || !mp2) && typeof getPersonnelForArmada === 'function' && armadaStr) {
+          const shift = parseInt(job.shift || job.shift_rencana || record.shift_rencana || 1, 10);
+          const tgl = job.tanggal || job.tanggal_rencana || record.tanggal_rencana || record.tanggal_eksekusi;
+          const crew = getPersonnelForArmada(armadaStr, job.cluster || record.cluster, shift, tgl);
+          if (!mp1 && crew.mp1 && crew.mp1 !== '-') mp1 = crew.mp1;
+          if (!mp2 && crew.mp2 && crew.mp2 !== '-') mp2 = crew.mp2;
+        }
+
+        let pelaku = '';
+        if (mp1 && mp2 && mp1 !== '-' && mp2 !== '-') {
+          pelaku = `${mp1} & ${mp2}`;
+        } else if (mp1 && mp1 !== '-') {
+          pelaku = mp1;
+        } else if (mp2 && mp2 !== '-') {
+          pelaku = mp2;
+        } else {
+          // Fallback jika memang tidak ada data MP, tampilkan nama operator atau default
+          pelaku = (record.opt_name && record.opt_name !== '-') ? record.opt_name : 'Rekan Anda';
+        }
         const jam = record.jam_end || record.jam_start || '';
         const jamStr = jam ? `Pukul ${jam}` : (record.created_at ? new Date(record.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-');
         const statusStr = record.status_final || 'ACHIEVED';
