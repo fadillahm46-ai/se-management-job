@@ -10452,7 +10452,7 @@
       isWtSchedSelectMode: false,
       ltSchedSort: null,
       wtSchedSort: null,
-      completedSort: { column: 'realisasi', direction: 'desc' },
+      completedSort: null,
       selectedSchedJobIds: new Set(),
       isCompSelectMode: false,
       selectedCompJobIds: new Set(),
@@ -17664,13 +17664,20 @@
     window.sortSchedJobsList = sortSchedJobsList;
 
     function sortLtSchedBy(col) {
-      if (!state.ltSchedSort) {
-        state.ltSchedSort = { column: col, direction: 'asc' };
-      } else if (state.ltSchedSort.column === col) {
-        state.ltSchedSort.direction = (state.ltSchedSort.direction === 'asc' ? 'desc' : 'asc');
+      const defaultDescCols = ['status'];
+      const initialDirection = defaultDescCols.includes(col) ? 'desc' : 'asc';
+      const oppositeDirection = (initialDirection === 'asc' ? 'desc' : 'asc');
+
+      if (!state.ltSchedSort || state.ltSchedSort.column !== col) {
+        // Klik 1: Urutkan arah pertama
+        state.ltSchedSort = { column: col, direction: initialDirection, step: 1 };
+      } else if (state.ltSchedSort.step === 1) {
+        // Klik 2: Urutkan arah sebaliknya
+        state.ltSchedSort.direction = oppositeDirection;
+        state.ltSchedSort.step = 2;
       } else {
-        state.ltSchedSort.column = col;
-        state.ltSchedSort.direction = 'asc';
+        // Klik 3: Reset sortir kembali ke awal (urutan default)
+        state.ltSchedSort = null;
       }
       if (typeof renderLtScheduleTable === 'function') {
         renderLtScheduleTable();
@@ -17679,13 +17686,20 @@
     window.sortLtSchedBy = sortLtSchedBy;
 
     function sortWtSchedBy(col) {
-      if (!state.wtSchedSort) {
-        state.wtSchedSort = { column: col, direction: 'asc' };
-      } else if (state.wtSchedSort.column === col) {
-        state.wtSchedSort.direction = (state.wtSchedSort.direction === 'asc' ? 'desc' : 'asc');
+      const defaultDescCols = ['status'];
+      const initialDirection = defaultDescCols.includes(col) ? 'desc' : 'asc';
+      const oppositeDirection = (initialDirection === 'asc' ? 'desc' : 'asc');
+
+      if (!state.wtSchedSort || state.wtSchedSort.column !== col) {
+        // Klik 1: Urutkan arah pertama
+        state.wtSchedSort = { column: col, direction: initialDirection, step: 1 };
+      } else if (state.wtSchedSort.step === 1) {
+        // Klik 2: Urutkan arah sebaliknya
+        state.wtSchedSort.direction = oppositeDirection;
+        state.wtSchedSort.step = 2;
       } else {
-        state.wtSchedSort.column = col;
-        state.wtSchedSort.direction = 'asc';
+        // Klik 3: Reset sortir kembali ke awal (urutan default)
+        state.wtSchedSort = null;
       }
       if (typeof renderWtScheduleTable === 'function') {
         renderWtScheduleTable();
@@ -17899,7 +17913,7 @@
           (j.mp1 && j.mp1.toLowerCase().includes(searchVal)) ||
           (j.mp2 && j.mp2.toLowerCase().includes(searchVal)) ||
           (j.keterangan && j.keterangan.toLowerCase().includes(searchVal)) ||
-          (searchVal === 'grs' && (activeCat === 'aircleaner' || activeCat === 'air_cleaner') && isUnitConcurrentWithGreasing(j.noLambung, j.tanggal || selectedDate))
+          ((searchVal === 'grs' || searchVal === '+ grs' || searchVal === '+grs') && (activeCat === 'aircleaner' || activeCat === 'air_cleaner') && isUnitConcurrentWithGreasing(j.noLambung, j.tanggal || selectedDate))
         );
       }
 
@@ -18118,7 +18132,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                       ${job.noLambung}
                     </button>
                     ${hasAcJob ? `<span class="inline-flex items-center px-1 py-0.2 rounded bg-blue-50 text-blue-600 border border-blue-200 text-[8px] font-bold font-sans ml-1 tracking-tight shadow-2xs cursor-default" title="Unit ini juga memiliki jadwal Clean Air Cleaner hari ini">+ AC</span>` : ''}
-                    ${hasGrsJob ? `<span class="inline-flex items-center px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-300 text-[8px] font-black font-sans ml-0.5 tracking-tight shadow-2xs cursor-default" title="Unit ini berbarengan dengan jadwal Greasing (Big Digger / Small Track) hari ini">GRS</span>` : ''}
+                    ${hasGrsJob ? `<span class="inline-flex items-center px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-300 text-[8px] font-black font-sans ml-0.5 tracking-tight shadow-2xs cursor-default" title="Unit ini berbarengan dengan jadwal Greasing (Big Digger / Small Track) hari ini">+ GRS</span>` : ''}
                   </div>
                   ${isAdmin ? `<span class="text-[7.5px] sm:text-[8px] font-bold text-slate-400 block uppercase tracking-wider leading-tight mt-0.5">${unitType}</span>` : ''}
                 </td>
@@ -23396,7 +23410,7 @@ Keterangan : ${keterangan}`;
       if (titleEl) {
         const isAc = (job.cat === 'aircleaner' || job.cat === 'air_cleaner');
         const hasGrs = isAc && (typeof isUnitConcurrentWithGreasing === 'function') && isUnitConcurrentWithGreasing(job.noLambung, job.tanggal);
-        titleEl.textContent = (job.noLambung || 'UNIT') + (hasGrs ? ' - GRS' : '');
+        titleEl.textContent = (job.noLambung || 'UNIT') + (hasGrs ? ' + GRS' : '');
       }
 
       // Deteksi apakah Job Request (Form Order) atau Job Terjadwal (SCH)
@@ -26344,20 +26358,26 @@ Keterangan : ${keterangan}`;
     window.getCompletedJobSortTime = getCompletedJobSortTime;
 
     /**
-     * Toggle pengurutan kolom pada tabel riwayat
-     * Kolom realisasi, waktu, dan durasi secara default berarah descending (terbaru/terbesar di atas)
+     * Tri-State Sort Kolom Tabel Riwayat Pekerjaan:
+     * - Klik 1: Arah pertama (ASC, atau DESC untuk kolom waktu/realisasi/durasi)
+     * - Klik 2: Arah sebaliknya
+     * - Klik 3: Reset sortir kembali ke awal (urutan default riwayat tanpa sort kolom)
      */
     function sortCompletedBy(col) {
       const defaultDescCols = ['realisasi', 'waktu', 'durasi'];
       const initialDirection = defaultDescCols.includes(col) ? 'desc' : 'asc';
+      const oppositeDirection = (initialDirection === 'asc' ? 'desc' : 'asc');
 
-      if (!state.completedSort) {
-        state.completedSort = { column: col, direction: initialDirection };
-      } else if (state.completedSort.column === col) {
-        state.completedSort.direction = (state.completedSort.direction === 'asc' ? 'desc' : 'asc');
+      if (!state.completedSort || state.completedSort.column !== col) {
+        // Klik 1: Arah pertama
+        state.completedSort = { column: col, direction: initialDirection, step: 1 };
+      } else if (state.completedSort.step === 1) {
+        // Klik 2: Arah sebaliknya
+        state.completedSort.direction = oppositeDirection;
+        state.completedSort.step = 2;
       } else {
-        state.completedSort.column = col;
-        state.completedSort.direction = initialDirection;
+        // Klik 3: Reset sortir kembali ke awal
+        state.completedSort = null;
       }
       renderCompletedTable();
     }
@@ -26624,11 +26644,7 @@ Keterangan : ${keterangan}`;
         );
       }
 
-      // Logika sorting di semua kolom (Default: data masuk terbaru di paling atas)
-      if (!state.completedSort || !state.completedSort.column) {
-        state.completedSort = { column: 'realisasi', direction: 'desc' };
-      }
-
+      // Logika sorting di semua kolom (Tri-state: Klik 1 = Arah A, Klik 2 = Arah B, Klik 3 = Reset ke default)
       if (state.completedSort && state.completedSort.column) {
         const sortCol = state.completedSort.column;
         const sortDir = state.completedSort.direction === 'desc' ? -1 : 1;
@@ -26711,6 +26727,13 @@ Keterangan : ${keterangan}`;
 
           if (cmp !== 0) return cmp;
           // Tie-breaker: Jika nilai kolom sama, tempatkan data masuk terbaru di paling atas
+          const tA = (typeof getCompletedJobSortTime === 'function') ? getCompletedJobSortTime(a) : 0;
+          const tB = (typeof getCompletedJobSortTime === 'function') ? getCompletedJobSortTime(b) : 0;
+          return tB - tA;
+        });
+      } else {
+        // Default Urutan Awal (Reset Sortir): Waktu data masuk/selesai paling baru di atas
+        filtered.sort((a, b) => {
           const tA = (typeof getCompletedJobSortTime === 'function') ? getCompletedJobSortTime(a) : 0;
           const tB = (typeof getCompletedJobSortTime === 'function') ? getCompletedJobSortTime(b) : 0;
           return tB - tA;
@@ -38914,7 +38937,7 @@ Keterangan : ${keterangan}`;
           }
         } else if (cat === 'aircleaner' || cat === 'air_cleaner') {
           if (hasGreasingSchedule(noUnit, targetD)) {
-            parts.push('GRS');
+            parts.push('+ GRS');
           }
         }
 
