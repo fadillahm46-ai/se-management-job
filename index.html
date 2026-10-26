@@ -13170,9 +13170,9 @@
         const tr = document.createElement('tr');
         tr.className = `hover:bg-slate-50/80 transition align-top ${job.status === 'done' || job.status === 'ach' ? (isWt ? 'bg-cyan-50/20' : 'bg-emerald-50/20') : (job.status === 'cancel' ? 'bg-rose-50/20' : '')}`;
         tr.innerHTML = `
-          <td class="py-1 px-1.5 md:py-1.5 md:px-2 font-mono text-[10px] md:text-[10.5px] font-extrabold text-slate-800 break-all select-all">
-            <button type="button" onclick="openJobDetailModal('${job.id}')" class="text-left font-mono font-extrabold text-slate-900 ${isWt ? 'hover:text-cyan-700' : 'hover:text-emerald-700'} cursor-pointer break-all" title="Klik untuk lihat detail ${jobNoId}">
-              ${jobNoId}
+          <td class="py-1 px-1.5 md:py-1.5 md:px-2 font-mono text-[10px] md:text-[10.5px] font-extrabold text-slate-800 select-all leading-tight">
+            <button type="button" onclick="openJobDetailModal('${job.id}')" class="text-left font-mono font-extrabold text-slate-900 ${isWt ? 'hover:text-cyan-700' : 'hover:text-emerald-700'} cursor-pointer" title="Klik untuk lihat detail ${jobNoId}">
+              ${formatJobNoIdDesktopHtml(jobNoId)}
             </button>
           </td>
           <td class="py-1 px-1.5 md:py-1.5 md:px-2 font-mono text-[10px] text-slate-700 break-words">
@@ -19047,9 +19047,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         const tr = document.createElement('tr');
         tr.className = `hover:bg-slate-50/80 transition align-top ${job.status === 'done' || job.status === 'ach' ? 'bg-emerald-50/20' : (job.status === 'cancel' ? 'bg-rose-50/20' : '')}`;
         tr.innerHTML = `
-          <td class="py-1 px-1.5 md:py-1.5 md:px-2 font-mono text-[10px] md:text-[10.5px] font-extrabold text-slate-800 break-all select-all">
-            <button type="button" onclick="openJobDetailModal('${job.id}')" class="text-left font-mono font-extrabold text-slate-900 hover:text-emerald-700 cursor-pointer break-all" title="Klik untuk lihat detail ${jobNoId}">
-              ${jobNoId}
+          <td class="py-1 px-1.5 md:py-1.5 md:px-2 font-mono text-[10px] md:text-[10.5px] font-extrabold text-slate-800 select-all leading-tight">
+            <button type="button" onclick="openJobDetailModal('${job.id}')" class="text-left font-mono font-extrabold text-slate-900 hover:text-emerald-700 cursor-pointer" title="Klik untuk lihat detail ${jobNoId}">
+              ${formatJobNoIdDesktopHtml(jobNoId)}
             </button>
           </td>
           <td class="py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] text-slate-700 break-words">
@@ -19216,9 +19216,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         const tr = document.createElement('tr');
         tr.className = `hover:bg-slate-50/80 transition align-top ${job.status === 'done' || job.status === 'ach' ? 'bg-cyan-50/20' : (job.status === 'cancel' ? 'bg-rose-50/20' : '')}`;
         tr.innerHTML = `
-          <td class="py-1 px-1.5 md:py-1.5 md:px-2 font-mono text-[10px] md:text-[10.5px] font-extrabold text-slate-800 break-all select-all">
-            <button type="button" onclick="openJobDetailModal('${job.id}')" class="text-left font-mono font-extrabold text-slate-900 hover:text-cyan-700 cursor-pointer break-all" title="Klik untuk lihat detail ${jobNoId}">
-              ${jobNoId}
+          <td class="py-1 px-1.5 md:py-1.5 md:px-2 font-mono text-[10px] md:text-[10.5px] font-extrabold text-slate-800 select-all leading-tight">
+            <button type="button" onclick="openJobDetailModal('${job.id}')" class="text-left font-mono font-extrabold text-slate-900 hover:text-cyan-700 cursor-pointer" title="Klik untuk lihat detail ${jobNoId}">
+              ${formatJobNoIdDesktopHtml(jobNoId)}
             </button>
           </td>
           <td class="py-1.5 px-1.5 md:py-2 md:px-2 font-mono text-[11.5px] text-slate-700 break-words">
@@ -26189,6 +26189,49 @@ Keterangan : ${keterangan}`;
     window.generateJobNoId = generateJobNoId;
 
     /**
+     * Memformat string NO ID pada tabel Desktop agar terbagi 2 baris rapi:
+     * Baris 1: PREFIX-TYPE-DDMMYYYY-SHIFT (contoh: LT-GRS-26102026-1)
+     * Baris 2: -NO_LAMBUNG-HHMM (contoh: -E52002AMM-1215)
+     * Berlaku untuk semua role/akses di mode desktop.
+     */
+    function formatJobNoIdDesktopHtml(rawId) {
+      if (!rawId || rawId === '-') return '-';
+      const str = String(rawId).trim();
+
+      // Pola 1: Format Reguler LT/WT: ((?:LT|WT)-[A-Z0-9]+-\d{8}-\d)(-[A-Za-z0-9_.-]+)
+      const mReg = str.match(/^((?:LT|WT)-[A-Z0-9]+-\d{8}-\d)(-[A-Za-z0-9_.-]+)$/i);
+      if (mReg) {
+        return `<span class="block whitespace-nowrap leading-tight">${mReg[1]}</span><span class="block whitespace-nowrap leading-tight text-slate-700">${mReg[2]}</span>`;
+      }
+
+      // Pola 2: Format Request LT/WT: ((?:LT|WT)-\d{8}-REQ-\d)(-[A-Za-z0-9_.-]+)
+      const mReq = str.match(/^((?:LT|WT)-\d{8}-REQ-\d)(-[A-Za-z0-9_.-]+)$/i);
+      if (mReq) {
+        return `<span class="block whitespace-nowrap leading-tight">${mReq[1]}</span><span class="block whitespace-nowrap leading-tight text-slate-700">${mReq[2]}</span>`;
+      }
+
+      // Pola 3: Fallback untuk kode ID umum berpola (PREFIX-TYPE-DATE-SHIFT)-(SISANYA)
+      const mGen = str.match(/^([A-Za-z0-9]+-[A-Za-z0-9]+-\d{8}-\d)(-[A-Za-z0-9_.-]+)$/i);
+      if (mGen) {
+        return `<span class="block whitespace-nowrap leading-tight">${mGen[1]}</span><span class="block whitespace-nowrap leading-tight text-slate-700">${mGen[2]}</span>`;
+      }
+
+      // Fallback pembagian segmen tanda hubung jika string panjang
+      if (str.length > 20 && str.includes('-')) {
+        const parts = str.split('-');
+        if (parts.length >= 4) {
+          const midIdx = Math.ceil(parts.length / 2);
+          const p1 = parts.slice(0, midIdx).join('-');
+          const p2 = '-' + parts.slice(midIdx).join('-');
+          return `<span class="block whitespace-nowrap leading-tight">${p1}</span><span class="block whitespace-nowrap leading-tight text-slate-700">${p2}</span>`;
+        }
+      }
+
+      return `<span class="block whitespace-nowrap leading-tight">${str}</span>`;
+    }
+    window.formatJobNoIdDesktopHtml = formatJobNoIdDesktopHtml;
+
+    /**
      * Mengembalikan durasi polosan teks khusus mode desktop
      * Angka durasi dan teks satuan menit ditata proporsional (text-xs) dan diberi jarak rapi (tidak mepet)
      */
@@ -26937,9 +26980,9 @@ Keterangan : ${keterangan}`;
                 class="rounded text-rose-600 focus:ring-rose-500 cursor-pointer w-3.5 h-3.5">
             </td>
           ` : ''}
-          <!-- KOLOM 0: NO ID (PERTAMA, DESKTOP ONLY, KODE MONOSPACE TEBAL POLOSAN CENTER) -->
-          <td class="hidden md:table-cell py-2.5 px-2 text-center font-mono font-bold text-[10px] text-slate-800 break-all select-all tracking-tight leading-tight">
-            ${getJobNoId(job)}
+          <!-- KOLOM 0: NO ID (PERTAMA, DESKTOP ONLY, DIBAGI 2 BARIS RAPI SESUAI PERMINTAAN USER) -->
+          <td class="hidden md:table-cell py-2 px-2 text-center font-mono font-bold text-[9.5px] lg:text-[10px] text-slate-800 select-all tracking-tight leading-tight">
+            ${formatJobNoIdDesktopHtml(getJobNoId(job))}
           </td>
 
           <!-- KOLOM 1: TYPE JOB (TAMPIL DI HP DENGAN BADGE, DESKTOP TEKS POLOSAN) -->
