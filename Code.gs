@@ -320,7 +320,7 @@ function getOrCreateLogSheet(spreadsheet) {
 
 /**
  * ==============================================================================
- * HELPER ROW: Tambahkan Baris Data Baru ke Spreadsheet
+ * HELPER ROW: Tambahkan / Perbarui Baris Data ke Spreadsheet (Anti-Duplicate)
  * ==============================================================================
  */
 function appendLogRow(spreadsheet, info) {
@@ -329,30 +329,63 @@ function appendLogRow(spreadsheet, info) {
   if (!sheet) return;
 
   const lastRow = sheet.getLastRow();
-  const noUrut = Math.max(1, lastRow); // Baris 1 adalah header
   const waktuStr = Utilities.formatDate(new Date(), 'Asia/Makassar', 'dd/MM/yyyy HH:mm:ss');
-
-  // Formula IMAGE untuk menampilkan pratinjau thumbnail langsung di sel spreadsheet
+  const targetSlot = 'Foto ' + info.slot;
+  const targetJobId = String(info.jobId || '').trim();
   const imageFormula = '=IMAGE("' + info.directUrl + '")';
 
-  sheet.appendRow([
-    noUrut,
-    waktuStr,
-    info.unit,
-    info.category,
-    'Foto ' + info.slot,
-    info.jobId,
-    info.fileName,
-    info.fileId,
-    imageFormula,
-    info.directUrl,
-    info.driveViewUrl,
-    'SUKSES'
-  ]);
+  // ANTI-DUPLICATE GUARD:
+  // Cek apakah Job ID dan Slot Foto yang sama sudah pernah tercatat sebelumnya.
+  // Jika sudah ada, cukup update baris yang ada (jangan membuat baris baru ganda).
+  let existingRow = -1;
+  if (targetJobId && targetJobId !== '-' && lastRow > 1) {
+    const numRows = lastRow - 1;
+    // Kolom 5 = Slot Foto, Kolom 6 = Job ID
+    const dataValues = sheet.getRange(2, 5, numRows, 2).getValues();
+    for (let r = dataValues.length - 1; r >= 0; r--) {
+      const slotVal = String(dataValues[r][0] || '').trim();
+      const jobIdVal = String(dataValues[r][1] || '').trim();
+      if (jobIdVal === targetJobId && slotVal === targetSlot) {
+        existingRow = r + 2; // offset ke nomor baris pada sheet (1-indexed, header baris 1)
+        break;
+      }
+    }
+  }
 
-  try {
-    sheet.setRowHeight(sheet.getLastRow(), 50);
-  } catch (e) {}
+  if (existingRow !== -1) {
+    // Perbarui baris lama yang sudah ada agar tidak terjadi duplikasi data
+    sheet.getRange(existingRow, 2).setValue(waktuStr);
+    sheet.getRange(existingRow, 3).setValue(info.unit);
+    sheet.getRange(existingRow, 4).setValue(info.category);
+    sheet.getRange(existingRow, 7).setValue(info.fileName);
+    sheet.getRange(existingRow, 8).setValue(info.fileId);
+    sheet.getRange(existingRow, 9).setFormula(imageFormula);
+    sheet.getRange(existingRow, 10).setValue(info.directUrl);
+    sheet.getRange(existingRow, 11).setValue(info.driveViewUrl);
+    sheet.getRange(existingRow, 12).setValue('UPDATED');
+    Logger.log('ℹ️ [Anti-Duplicate] Baris ke-' + existingRow + ' untuk Job ID ' + targetJobId + ' (' + targetSlot + ') berhasil diperbarui.');
+  } else {
+    // Buat baris baru jika kombinasi Job ID dan Slot Foto belum pernah ada
+    const noUrut = Math.max(1, lastRow); // Baris 1 adalah header
+    sheet.appendRow([
+      noUrut,
+      waktuStr,
+      info.unit,
+      info.category,
+      targetSlot,
+      info.jobId,
+      info.fileName,
+      info.fileId,
+      imageFormula,
+      info.directUrl,
+      info.driveViewUrl,
+      'SUKSES'
+    ]);
+
+    try {
+      sheet.setRowHeight(sheet.getLastRow(), 50);
+    } catch (e) {}
+  }
 }
 
 /**
