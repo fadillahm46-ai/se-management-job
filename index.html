@@ -611,6 +611,24 @@
       border-color: transparent !important;
       box-shadow: none !important;
     }
+
+    /* Style Tombol Silang (Clear Button) Pencarian */
+    .search-clear-btn {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .search-clear-btn:active span {
+      transform: scale(0.88);
+    }
+
+    /* Sembunyikan cancel button bawaan browser agar tidak ganda */
+    input[type="search"]::-webkit-search-cancel-button,
+    input[type="search"]::-webkit-search-decoration {
+      -webkit-appearance: none;
+      appearance: none;
+      display: none;
+    }
   </style>
 </head>
 
@@ -2902,7 +2920,18 @@
               </span>
               <input type="text" id="lt-search-input" oninput="renderLtScheduleTable()"
                 placeholder="Cari unit / lokasi..."
-                class="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-xs transition">
+                class="w-full h-9 pl-9 pr-8 rounded-xl border border-slate-200 font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-xs transition">
+              <button type="button" onclick="clearSearchInput('lt-search-input')" id="clear-lt-search-input"
+                class="search-clear-btn hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                title="Kosongkan pencarian">
+                <span
+                  class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+                  <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                  </svg>
+                </span>
+              </button>
             </div>
           </div>
 
@@ -3070,7 +3099,18 @@
               </span>
               <input type="text" id="wt-search-input" oninput="renderWtScheduleTable()"
                 placeholder="Cari unit / lokasi..."
-                class="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-xs transition">
+                class="w-full h-9 pl-9 pr-8 rounded-xl border border-slate-200 font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-xs transition">
+              <button type="button" onclick="clearSearchInput('wt-search-input')" id="clear-wt-search-input"
+                class="search-clear-btn hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                title="Kosongkan pencarian">
+                <span
+                  class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+                  <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                  </svg>
+                </span>
+              </button>
             </div>
           </div>
 
@@ -3135,7 +3175,19 @@
                 </span>
                 <input type="text" id="admin-jobreq-search-input" oninput="renderAdminJobRequests()"
                   placeholder="Cari unit / lokasi / pemesan..."
-                  class="w-full pl-8 pr-2.5 py-1.5 md:py-2 rounded-xl border border-slate-200 text-xs font-medium bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 transition">
+                  class="w-full pl-8 pr-8 py-1.5 md:py-2 rounded-xl border border-slate-200 text-xs font-medium bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 transition">
+                <button type="button" onclick="clearSearchInput('admin-jobreq-search-input')"
+                  id="clear-admin-jobreq-search-input"
+                  class="search-clear-btn hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                  title="Kosongkan pencarian">
+                  <span
+                    class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
+                      </path>
+                    </svg>
+                  </span>
+                </button>
               </div>
 
               <button onclick="downloadExcelData('JOBREQ')" type="button"
@@ -3525,7 +3577,18 @@
               </span>
               <input type="text" id="pica-search-input" oninput="renderPicaTable()"
                 placeholder="Cari unit / lokasi / OPT..."
-                class="w-full pl-8 pr-2.5 py-1.5 sm:py-2 rounded-xl border border-slate-200 font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-xs transition">
+                class="w-full pl-8 pr-8 py-1.5 sm:py-2 rounded-xl border border-slate-200 font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-xs transition">
+              <button type="button" onclick="clearSearchInput('pica-search-input')" id="clear-pica-search-input"
+                class="search-clear-btn hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                title="Kosongkan pencarian">
+                <span
+                  class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+                  <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                  </svg>
+                </span>
+              </button>
             </div>
 
             <!-- FILTER TANGGAL (DARI, KE, RESET) -->
@@ -3650,14 +3713,14 @@
             class="flex flex-wrap items-center justify-between gap-2.5 bg-white p-3 md:p-4 rounded-2xl border border-slate-200/80 shadow-xs">
             <div class="flex flex-wrap items-center gap-2">
               <button type="button" onclick="navigateTab('profile')"
-                class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center space-x-1.5 transition">
+                class="md:hidden px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center space-x-1.5 transition">
                 <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
                   </path>
                 </svg>
                 <span>Kembali</span>
               </button>
-              <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
+              <div class="h-6 w-px bg-slate-200 hidden sm:block md:hidden"></div>
               <button type="button" onclick="switchMasterSection('roster')" id="btn-master-sec-roster"
                 class="px-3.5 py-2 rounded-xl text-xs font-bold transition bg-brand-200 text-brand-800 shadow-2xs flex items-center space-x-1.5">
                 <svg class="w-4 h-4 text-brand-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3917,9 +3980,22 @@
                     <option value="OM">Oilman</option>
                     <option value="WM">Washingman</option>
                   </select>
-                  <input type="text" id="db-roster-search" oninput="handleRosterSearchChange()"
-                    placeholder="Cari nama / NIK / unit..."
-                    class="px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                  <div class="relative">
+                    <input type="text" id="db-roster-search" oninput="handleRosterSearchChange()"
+                      placeholder="Cari nama / NIK / unit..."
+                      class="px-3 py-2 pr-8 rounded-xl border border-slate-200 text-xs w-full sm:w-auto">
+                    <button type="button" onclick="clearSearchInput('db-roster-search')" id="clear-db-roster-search"
+                      class="search-clear-btn hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                      title="Kosongkan pencarian">
+                      <span
+                        class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -4113,10 +4189,21 @@
                   <option value="non_coal">Non-Coal</option>
                 </select>
               </div>
-              <div class="w-full sm:w-64">
+              <div class="w-full sm:w-64 relative">
                 <input type="text" id="search-unit-input" oninput="renderMasterUnitsTable()"
                   placeholder="Cari nomor lambung unit lapangan..."
-                  class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs">
+                  class="w-full px-3.5 py-2 pr-8 rounded-xl border border-slate-200 text-xs">
+                <button type="button" onclick="clearSearchInput('search-unit-input')" id="clear-search-unit-input"
+                  class="search-clear-btn hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                  title="Kosongkan pencarian">
+                  <span
+                    class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
+                      </path>
+                    </svg>
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -4255,10 +4342,22 @@
                   Total: 10 Operator
                 </span>
               </div>
-              <div class="w-full sm:w-64">
+              <div class="w-full sm:w-64 relative">
                 <input type="text" id="search-operator-input" oninput="handleMasterOperatorsSearchChange()"
                   placeholder="Cari nama, NRP, atau No WA..."
-                  class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs">
+                  class="w-full px-3.5 py-2 pr-8 rounded-xl border border-slate-200 text-xs">
+                <button type="button" onclick="clearSearchInput('search-operator-input')"
+                  id="clear-search-operator-input"
+                  class="search-clear-btn hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                  title="Kosongkan pencarian">
+                  <span
+                    class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
+                      </path>
+                    </svg>
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -4360,10 +4459,21 @@
                   <option value="washingman">Washingman</option>
                 </select>
               </div>
-              <div class="w-full sm:w-64">
+              <div class="w-full sm:w-64 relative">
                 <input type="text" id="search-account-input" oninput="renderMasterAccountsTable()"
                   placeholder="Cari NRP atau nama pegawai..."
-                  class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs">
+                  class="w-full px-3.5 py-2 pr-8 rounded-xl border border-slate-200 text-xs">
+                <button type="button" onclick="clearSearchInput('search-account-input')" id="clear-search-account-input"
+                  class="search-clear-btn hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                  title="Kosongkan pencarian">
+                  <span
+                    class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
+                      </path>
+                    </svg>
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -4530,10 +4640,21 @@
                   </optgroup>
                 </select>
               </div>
-              <div class="w-full sm:w-64">
+              <div class="w-full sm:w-64 relative">
                 <input type="text" id="search-armada-input" oninput="renderMasterArmadaTable()"
                   placeholder="Cari nomor unit armada..."
-                  class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs">
+                  class="w-full px-3.5 py-2 pr-8 rounded-xl border border-slate-200 text-xs">
+                <button type="button" onclick="clearSearchInput('search-armada-input')" id="clear-search-armada-input"
+                  class="search-clear-btn hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                  title="Kosongkan pencarian">
+                  <span
+                    class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
+                      </path>
+                    </svg>
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -4651,7 +4772,18 @@
               </span>
               <input type="text" id="comp-search-input" oninput="renderCompletedTable()"
                 placeholder="Cari unit / lokasi / OPT..."
-                class="w-full pl-8 pr-2.5 py-1.5 sm:py-2 rounded-xl border border-slate-200 font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-xs transition">
+                class="w-full pl-8 pr-8 py-1.5 sm:py-2 rounded-xl border border-slate-200 font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-xs transition">
+              <button type="button" onclick="clearSearchInput('comp-search-input')" id="clear-comp-search-input"
+                class="search-clear-btn hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                title="Kosongkan pencarian">
+                <span
+                  class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+                  <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                  </svg>
+                </span>
+              </button>
             </div>
 
             <!-- BARIS 4 DI HP / ELEMEN 4 DI DESKTOP: TOMBOL AKSI UNDUH & HAPUS MASAL (KHUSUS ADMIN/BASECONTROL) -->
@@ -5214,7 +5346,19 @@
               </span>
               <input type="text" id="search-mp-kontak-input" oninput="handleMpKontakSearchChange()"
                 placeholder="Cari nama operator, NRP, atau No WA..."
-                class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:border-brand-500 bg-slate-50 focus:bg-white transition">
+                class="w-full pl-9 pr-8 py-2 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:border-brand-500 bg-slate-50 focus:bg-white transition">
+              <button type="button" onclick="clearSearchInput('search-mp-kontak-input')"
+                id="clear-search-mp-kontak-input"
+                class="search-clear-btn hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                title="Kosongkan pencarian">
+                <span
+                  class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+                  <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                  </svg>
+                </span>
+              </button>
             </div>
             <div class="flex items-center space-x-2">
               <span class="text-[11px] text-slate-500 font-medium">Klik "Chat WA" untuk langsung menghubungi
@@ -5298,7 +5442,19 @@
                 </span>
                 <input type="text" id="search-aircleaner-input" oninput="renderAirCleanerMonitorTable()"
                   placeholder="Cari nomor unit / tipe..."
-                  class="w-full pl-8 pr-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-medium bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 transition">
+                  class="w-full pl-8 pr-8 py-1.5 rounded-xl border border-slate-200 text-xs font-medium bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 transition">
+                <button type="button" onclick="clearSearchInput('search-aircleaner-input')"
+                  id="clear-search-aircleaner-input"
+                  class="search-clear-btn hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                  title="Kosongkan pencarian">
+                  <span
+                    class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
+                      </path>
+                    </svg>
+                  </span>
+                </button>
               </div>
               <button type="button" id="btn-reset-aircleaner" onclick="resetAirCleanerWeeklyCycle()"
                 class="hidden px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer"
@@ -7470,8 +7626,19 @@
                 </span>
                 <input type="text" id="add-job-unit-search" placeholder="Ketik cari unit (cth: E2168, 8589)..."
                   oninput="filterAddJobUnitOptions()"
-                  class="w-full pl-8 pr-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-xs font-mono font-bold uppercase focus:outline-none focus:border-brand-500 transition"
+                  class="w-full pl-8 pr-8 py-1.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-xs font-mono font-bold uppercase focus:outline-none focus:border-brand-500 transition"
                   autocomplete="off">
+                <button type="button" onclick="clearSearchInput('add-job-unit-search')" id="clear-add-job-unit-search"
+                  class="search-clear-btn hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                  title="Kosongkan pencarian">
+                  <span
+                    class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
+                      </path>
+                    </svg>
+                  </span>
+                </button>
               </div>
 
               <!-- Daftar Unit Hasil Pencarian -->
@@ -7514,8 +7681,20 @@
                 <input type="text" id="add-job-armada-search" placeholder="Pilih / ketik armada..."
                   oninput="filterAddJobArmadaSearch(this.value)" onfocus="openAddJobArmadaDropdown()"
                   onclick="openAddJobArmadaDropdown()" onkeydown="handleArmadaSearchKeyDown(event)"
-                  class="w-full pl-3 pr-8 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 font-mono font-bold text-xs bg-white text-slate-800 uppercase transition shadow-2xs"
+                  class="w-full pl-3 pr-12 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 font-mono font-bold text-xs bg-white text-slate-800 uppercase transition shadow-2xs"
                   autocomplete="off">
+                <button type="button" onclick="clearSearchInput('add-job-armada-search')"
+                  id="clear-add-job-armada-search"
+                  class="search-clear-btn hidden absolute inset-y-0 right-6 pr-1 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                  title="Kosongkan pencarian">
+                  <span
+                    class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
+                      </path>
+                    </svg>
+                  </span>
+                </button>
                 <button type="button" onclick="toggleAddJobArmadaDropdown(event)"
                   class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
                   <svg class="w-4 h-4 transition-transform duration-200" id="add-job-armada-chevron" fill="none"
@@ -8983,7 +9162,17 @@
         </span>
         <input type="text" id="quick-armada-search" placeholder="Ketik nomor armada (contoh: 2535, 101)..."
           oninput="filterQuickArmadaList()" onkeydown="handleQuickArmadaKeydown(event)"
-          class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-mono font-bold uppercase focus:outline-none focus:border-brand-500 bg-slate-50 focus:bg-white transition">
+          class="w-full pl-8 pr-8 py-2 rounded-xl border border-slate-200 text-xs font-mono font-bold uppercase focus:outline-none focus:border-brand-500 bg-slate-50 focus:bg-white transition">
+        <button type="button" onclick="clearSearchInput('quick-armada-search')" id="clear-quick-armada-search"
+          class="search-clear-btn hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+          title="Kosongkan pencarian">
+          <span
+            class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </span>
+        </button>
       </div>
 
       <!-- Quick Cluster Pills -->
@@ -9812,6 +10001,195 @@
       safeStorage.removeItem('SE_AIR_CLEANER');
     } catch (e) { }
 
+    // =========================================================================
+    // UNIVERSAL SEARCH CLEAR BUTTON CONTROLLER (TOMBOL SILANG PENGKOSONG INPUT)
+    // Berlaku untuk semua input pencarian di seluruh halaman & modal aplikasi
+    // =========================================================================
+    function clearSearchInput(inputId) {
+      const input = typeof inputId === 'string' ? document.getElementById(inputId) : inputId;
+      if (!input) return;
+      input.value = '';
+
+      // Sembunyikan tombol clear terkait
+      const parent = input.parentElement;
+      if (parent) {
+        const clearBtn = parent.querySelector('.search-clear-btn');
+        if (clearBtn) clearBtn.classList.add('hidden');
+      }
+      const directBtn = document.getElementById(`clear-${input.id}`);
+      if (directBtn) directBtn.classList.add('hidden');
+
+      // Dispatch event input & change agar filter / query realtime langsung memperbarui tabel
+      try {
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      } catch (e) {
+        if (typeof input.oninput === 'function') input.oninput();
+      }
+      try {
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      } catch (e) {
+        if (typeof input.onchange === 'function') input.onchange();
+      }
+
+      // Trigger fallback fungsi render jika filter tabel belum ter-refresh otomatis
+      try {
+        if (input.id === 'comp-search-input' && typeof renderCompletedTable === 'function') {
+          renderCompletedTable();
+        } else if (input.id === 'lt-search-input' && typeof renderLtScheduleTable === 'function') {
+          renderLtScheduleTable();
+        } else if (input.id === 'wt-search-input' && typeof renderWtScheduleTable === 'function') {
+          renderWtScheduleTable();
+        } else if (input.id === 'admin-jobreq-search-input' && typeof renderAdminJobRequests === 'function') {
+          renderAdminJobRequests();
+        } else if (input.id === 'search-direct-armada' && typeof handleDirectArmadaSearch === 'function') {
+          handleDirectArmadaSearch('');
+        } else if (input.id === 'pica-search-input' && typeof renderPicaTable === 'function') {
+          renderPicaTable();
+        } else if (input.id === 'db-roster-search' && typeof handleRosterSearchChange === 'function') {
+          handleRosterSearchChange();
+        } else if (input.id === 'search-unit-input' && typeof renderMasterUnitsTable === 'function') {
+          renderMasterUnitsTable();
+        } else if (input.id === 'search-operator-input' && typeof handleMasterOperatorsSearchChange === 'function') {
+          handleMasterOperatorsSearchChange();
+        } else if (input.id === 'search-account-input' && typeof renderMasterAccountsTable === 'function') {
+          renderMasterAccountsTable();
+        } else if (input.id === 'search-armada-input' && typeof renderMasterArmadaTable === 'function') {
+          renderMasterArmadaTable();
+        } else if (input.id === 'search-mp-kontak-input' && typeof handleMpKontakSearchChange === 'function') {
+          handleMpKontakSearchChange();
+        } else if (input.id === 'search-aircleaner-input' && typeof renderAirCleanerMonitorTable === 'function') {
+          renderAirCleanerMonitorTable();
+        } else if (input.id === 'add-job-unit-search' && typeof filterAddJobUnitOptions === 'function') {
+          filterAddJobUnitOptions();
+        } else if (input.id === 'add-job-armada-search' && typeof filterAddJobArmadaSearch === 'function') {
+          filterAddJobArmadaSearch('');
+        } else if (input.id === 'quick-armada-search' && typeof filterQuickArmadaList === 'function') {
+          filterQuickArmadaList();
+        }
+      } catch (eFallback) {
+        console.warn('[clearSearchInput] Fallback warning:', eFallback);
+      }
+
+      try {
+        input.focus();
+      } catch (eFocus) { }
+    }
+    window.clearSearchInput = clearSearchInput;
+
+    function initSearchClearButtons() {
+      try {
+        const inputs = document.querySelectorAll(`
+          input[id*="search"],
+          input[id*="cari"],
+          input[placeholder*="Cari"],
+          input[placeholder*="cari"],
+          input[id="db-roster-search"]
+        `);
+
+        inputs.forEach(input => {
+          if (!input || input.type === 'hidden' || input.type === 'checkbox' || input.type === 'radio') return;
+
+          // Pastikan padding kanan cukup agar teks tidak tertumpuk dengan icon silang
+          if (!input.classList.contains('pr-8') && !input.classList.contains('pr-9') && !input.classList.contains('pr-10') && !input.classList.contains('pr-12')) {
+            input.classList.add('pr-8');
+          }
+
+          const parent = input.parentElement;
+          if (!parent) return;
+
+          if (!parent.classList.contains('relative') && !parent.classList.contains('absolute') && !parent.classList.contains('fixed')) {
+            parent.classList.add('relative');
+          }
+
+          let clearBtn = parent.querySelector('.search-clear-btn');
+          if (!clearBtn) {
+            clearBtn = document.createElement('button');
+            clearBtn.type = 'button';
+            if (input.id) clearBtn.id = `clear-${input.id}`;
+            clearBtn.className = 'search-clear-btn hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10';
+            clearBtn.title = 'Kosongkan pencarian';
+            clearBtn.setAttribute('aria-label', 'Kosongkan pencarian');
+            clearBtn.innerHTML = `
+              <span class="w-4 h-4 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors">
+                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </span>
+            `;
+            clearBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              clearSearchInput(input);
+            });
+            parent.appendChild(clearBtn);
+          }
+
+          const updateVisibility = () => {
+            const val = (input.value || '').trim();
+            if (val.length > 0) {
+              clearBtn.classList.remove('hidden');
+            } else {
+              clearBtn.classList.add('hidden');
+            }
+          };
+
+          if (!input._clearBtnAttached) {
+            input._clearBtnAttached = true;
+            input.addEventListener('input', updateVisibility);
+            input.addEventListener('change', updateVisibility);
+            input.addEventListener('keyup', updateVisibility);
+            input.addEventListener('paste', () => setTimeout(updateVisibility, 10));
+          }
+
+          updateVisibility();
+        });
+      } catch (eInit) {
+        console.warn('[initSearchClearButtons] warning:', eInit);
+      }
+    }
+    window.initSearchClearButtons = initSearchClearButtons;
+
+    // Global Event Delegation agar tombol silang selalu sinkron realtime bahkan pada input dinamis
+    if (!window._searchClearGlobalDelegationAttached) {
+      window._searchClearGlobalDelegationAttached = true;
+
+      // Pantau saat user mengetik di search bar mana saja
+      document.addEventListener('input', (e) => {
+        const target = e.target;
+        if (!target || target.tagName !== 'INPUT') return;
+        const isSearch = (target.id && (target.id.toLowerCase().includes('search') || target.id === 'db-roster-search')) ||
+          (target.placeholder && target.placeholder.toLowerCase().includes('cari'));
+        if (isSearch) {
+          const parent = target.parentElement;
+          if (parent) {
+            const btn = parent.querySelector('.search-clear-btn');
+            if (btn) {
+              if ((target.value || '').trim().length > 0) {
+                btn.classList.remove('hidden');
+              } else {
+                btn.classList.add('hidden');
+              }
+            }
+          }
+        }
+      }, true);
+
+      // Pantau klik pada tombol .search-clear-btn di seluruh dokumen
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.search-clear-btn');
+        if (btn) {
+          e.preventDefault();
+          e.stopPropagation();
+          const parent = btn.parentElement;
+          if (parent) {
+            const input = parent.querySelector('input');
+            if (input) {
+              clearSearchInput(input);
+            }
+          }
+        }
+      }, true);
+    }
 
     /**
      * =========================================================================
@@ -10251,7 +10629,17 @@
           try {
             const parsedHist = JSON.parse(savedJobHistory);
             if (Array.isArray(parsedHist)) {
-              state.jobHistory = parsedHist;
+              // Sanitasi Otomatis Residu Zombie: Buang snapshot NON_ACH duplikat hantu tanggal 25
+              state.jobHistory = parsedHist.filter(h => {
+                if (!h || !h.id) return false;
+                const hId = String(h.id);
+                if ((h.tanggal_eksekusi === '2026-10-25' || h.tanggal_rencana === '2026-10-25') &&
+                  String(h.status_final || '').toUpperCase() === 'NON_ACH' &&
+                  /-(2154|2253|0052|0159)$/.test(hId)) {
+                  return false;
+                }
+                return true;
+              });
             }
           } catch (eHist) { }
         }
@@ -13309,6 +13697,12 @@
           loadRosterFromSupabase(null, true);
         }
       }
+
+      try {
+        if (typeof initSearchClearButtons === 'function') {
+          setTimeout(initSearchClearButtons, 50);
+        }
+      } catch (eSecClear) { }
     }
 
     function handleLogout() {
@@ -14310,6 +14704,13 @@
       } else if (tabKey === 'more') {
         renderFullMoreMenu();
       }
+
+      // Pastikan tombol silang pencarian di tab aktif terinisialisasi
+      try {
+        if (typeof initSearchClearButtons === 'function') {
+          setTimeout(initSearchClearButtons, 50);
+        }
+      } catch (eNavClear) { }
     }
 
     function updateMobileNav(tabKey) {
@@ -14541,12 +14942,22 @@
     function getPendingRule(job) {
       if (!job) return '';
       if (isExca300Unit(job)) {
-        return 'Aturan: Excavator 300 series dijadwalkan 2x sehari (S1 & S2). Jika Non-Ach pada shift ini, unit langsung berstatus NON-ACH (TIDAK ADA PENDING).';
+        return 'Aturan SOP: Excavator 300 series dijadwalkan 2x sehari (S1 & S2 terpisah). Jika Non-Ach pada shift ini, unit langsung berstatus NON-ACH.';
       }
-      if (job.shift === 1) {
-        return 'Aturan: Unit Dozer / Exca Non-300 / Big Digger yang kendala di Shift 1 akan dialihkan otomatis ke antrean Shift 2 sebagai status PENDING.';
+      const cat = (job.cat || '').toLowerCase();
+      if (cat === 'digger') {
+        return 'Aturan Big Digger (Interval 3 Hari): Jika tidak ter-action / Non-Ach di Shift 1 akan pending ke Shift 2. Jika tgl ini tidak close, otomatis terpending (rollover H+1) ke tgl selanjutnya dan bergabung dengan jadwal baru.';
       }
-      return 'Aturan: Unit di Shift 2 jika mengalami kendala akan dicatat sebagai NON-ACH dan masuk evaluasi backlog shift berikutnya.';
+      if (cat === 'aircleaner' || cat === 'air_cleaner') {
+        return 'Aturan Air Cleaner (Interval 2 Hari / Seminggu Sekali): Jika tidak close, otomatis terpending (carry-over) ke tgl selanjutnya dalam siklus mingguan (Minggu s/d Sabtu) dan bergabung dengan antrean aktif.';
+      }
+      if (cat === 'topup' || cat === 'topup_oil' || cat === 'top up oil') {
+        return 'Aturan Top Up Oil: Jika tidak close, otomatis terpending (carry-over) ke tgl selanjutnya dan bergabung dengan jadwal Top Up Oil baru.';
+      }
+      if (Number(job.shift) === 1) {
+        return 'Aturan: Pekerjaan di Shift 1 jika kendala/belum selesai akan dialihkan otomatis ke Shift 2 sebagai status PENDING. Jika hari berganti dan belum close, otomatis terpending ke tgl selanjutnya dan bergabung dengan jadwal baru.';
+      }
+      return 'Aturan: Pekerjaan di Shift 2 jika belum selesai / kendala akan terpending (carry-over) ke tgl selanjutnya dan bergabung dengan jadwal baru.';
     }
 
     function getJobEndTimeMinutes(waktuStr) {
@@ -14721,6 +15132,28 @@
         }
       }
 
+      // Proteksi Tambahan Lapis Baja: Periksa apakah unit pada tanggal & shift ini sudah pernah ACHIEVED/SERVICE
+      if (statusFinal === 'NON_ACH') {
+        const targetUnit = String(job.noLambung || job.no_lambung || '').trim().toUpperCase();
+        const targetDate = String(job.tanggal || job.originalDate || getEffectiveTodayString()).trim().split('T')[0];
+        const targetShift = parseInt(job.shift || 1, 10);
+        const alreadyDone = Array.isArray(state.jobHistory) && state.jobHistory.some(h => {
+          const hu = String(h.no_lambung || '').trim().toUpperCase();
+          const hd = String(h.tanggal_eksekusi || h.tanggal_rencana || '').trim().split('T')[0];
+          const hs = parseInt(h.shift_rencana || h.shift || 1, 10);
+          const hst = String(h.status_final || '').toUpperCase();
+          const isDoneSt = ['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR'].includes(hst);
+          if (!isDoneSt || hu !== targetUnit || hd !== targetDate) return false;
+          const isPc300 = (typeof isExca300Unit === 'function') ? isExca300Unit(job) : false;
+          return isPc300 ? (hs === targetShift) : true;
+        });
+
+        if (alreadyDone) {
+          console.warn(`[History Protection] Ditolak mutlak pembuatan NON_ACH untuk unit ${targetUnit} tgl ${targetDate} karena unit sudah ACHIEVED/SERVICE!`);
+          return;
+        }
+      }
+
       const snapshotRecord = {
         id: histId,
         job_id: cleanBaseId,
@@ -14854,17 +15287,23 @@
 
           // Upsert dengan Primary Key 'id' (karena kolom redundan job_id dihapus sesuai permintaan)
           let { error } = await state.supabaseClient.from(targetHistTable).upsert(histPayload, { onConflict: 'id' });
-          if (error && /job_id/i.test(error.message || '')) {
-            // Kompatibilitas sementara jika kolom job_id masih ada di database sebelum skrip SQL dijalankan
+          if (error) {
+            // Kompatibilitas jika constraint database masih menggunakan job_id
             histPayload.job_id = cleanBaseId || cleanId;
-            const resJobId = await state.supabaseClient.from(targetHistTable).upsert(histPayload, { onConflict: 'id' });
-            error = resJobId.error;
+            const resJobId = await state.supabaseClient.from(targetHistTable).upsert(histPayload, { onConflict: 'job_id' });
+            if (!resJobId.error) {
+              error = null;
+            } else {
+              // Fallback langsung update baris yang sudah ada
+              const resUpdate = await state.supabaseClient.from(targetHistTable).update(histPayload).or(`id.eq.${cleanId},job_id.eq.${cleanId},id.eq.${cleanBaseId},job_id.eq.${cleanBaseId}`);
+              if (!resUpdate.error) error = null;
+            }
           }
           if (error && (/hm_start/i.test(error.message || '') || /hm_end/i.test(error.message || '') || error.code === '42703' || error.code === 'PGRST204')) {
             delete histPayload.hm_start;
             delete histPayload.hm_end;
             const resFallback = await state.supabaseClient.from(targetHistTable).upsert(histPayload, { onConflict: 'id' });
-            error = resFallback.error;
+            if (!resFallback.error) error = null;
           }
           if (error && (error.code === 'PGRST205' || error.code === '42P01')) {
             // Fallback jika database belum migrasi ke tabel split
@@ -15302,8 +15741,18 @@
       if (!state._initialJobsReconciled) {
         // Tunda evaluasi sampai rekonsiliasi data dari Supabase selesai agar tidak ada push data zombie ke cloud
         return 0;
-      } // Hemat kuota log saat tab di background
+      }
       if (!state.lubetruckState || !Array.isArray(state.lubetruckState.jobs)) return 0;
+
+      // PENGAMAN MUTLAK ANTI-FALSE-POSITIVE:
+      // Evaluator DILARANG KERAS menutup job jika riwayat Supabase belum dimuat ke memori!
+      if (state.supabaseClient && (!Array.isArray(state.jobHistory) || state.jobHistory.length === 0)) {
+        if (typeof loadJobHistoryFromSupabase === 'function' && !state._jobHistoryLoading) {
+          state._jobHistoryLoading = Date.now();
+          loadJobHistoryFromSupabase(true);
+        }
+        return 0;
+      }
 
       // 1. Cek reset bulanan jika tanggal 1
       checkAndExecuteMonthlyReset();
@@ -15324,24 +15773,23 @@
       ];
 
       // -----------------------------------------------------------------------
-      // PETA UNIT SELESAI / ACH PER TANGGAL (CROSS-JOB PROTECTION):
-      // Mengidentifikasi unit yang sudah selesai (ACH / DONE / SERVICE / BD) pada tanggal tersebut.
-      // KHUSUS untuk kategori GREASING SMALL (D85, PC210, dsb - 1x sehari).
-      // DILARANG KERAS memasukkan kategori WASHING ('coal', 'rom', 'non_coal') ke peta ini
-      // karena unit washing wajar dan wajib dikerjakan berulang (4x sehari).
+      // PETA UNIT SELESAI / ACH PER TANGGAL (CROSS-JOB PROTECTION LENGKAP):
+      // Mengidentifikasi seluruh unit yang sudah selesai (ACH / DONE / SERVICE / BD) pada tanggal tersebut.
+      // Melindungi SEMUA kategori: Small Track, Big Digger, Air Cleaner, Top Up Oil, dsb.
       // -----------------------------------------------------------------------
       const achievedUnitDateMap = new Set();
       if (Array.isArray(state.jobHistory)) {
         state.jobHistory.forEach(h => {
           const st = String(h.status_final || '').toUpperCase();
           if (['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN'].includes(st)) {
-            const d = h.tanggal_eksekusi || h.tanggal_rencana || '';
+            const d = String(h.tanggal_eksekusi || h.tanggal_rencana || '').trim().split('T')[0];
             const u = String(h.no_lambung || '').trim().toUpperCase();
             const c = String(h.cat || '').toLowerCase().trim();
-            // Hanya greasing small yang 1x sehari (Kecualikan PC300 yang 2x sehari per shift):
-            const isPc300 = (typeof isExca300Unit === 'function') ? isExca300Unit(h) : (/PC\s*300/i.test(String(h.type_unit || h.typeUnit || '')) || /E347/i.test(u));
-            if (d && u && (c === 'small') && !isPc300) {
+            const s = String(h.shift_rencana || h.shift || 1);
+            if (d && u) {
               achievedUnitDateMap.add(`${d}_${u}_${c}`);
+              achievedUnitDateMap.add(`${d}_${u}_${c}_${s}`);
+              achievedUnitDateMap.add(`${d}_${u}`); // Universal Key Unit + Tanggal
             }
           }
         });
@@ -15354,13 +15802,14 @@
           const isDone = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown'].includes(s);
           const hasEvidence = (Array.isArray(j.fotos) && j.fotos.some(p => p && typeof p === 'string' && p.trim() !== '')) || (j.serviceNotes && j.serviceNotes.includes('PHOTOS:'));
           if (isDone || hasEvidence || j.isLocked) {
-            const d = j.tanggal || todayStr;
+            const d = String(j.tanggal || todayStr).trim().split('T')[0];
             const u = String(j.noLambung).trim().toUpperCase();
             const c = String(j.cat || '').toLowerCase().trim();
-            // Hanya greasing small (Kecualikan PC300 yang 2x sehari per shift):
-            const isPc300 = (typeof isExca300Unit === 'function') ? isExca300Unit(j) : (/PC\s*300/i.test(String(j.typeUnit || '')) || /E347/i.test(u));
-            if (c === 'small' && !isPc300) {
+            const shiftVal = String(j.shift || 1);
+            if (d && u) {
               achievedUnitDateMap.add(`${d}_${u}_${c}`);
+              achievedUnitDateMap.add(`${d}_${u}_${c}_${shiftVal}`);
+              achievedUnitDateMap.add(`${d}_${u}`);
             }
           }
         });
@@ -15447,9 +15896,16 @@
 
           const jDate = j.tanggal || todayStr;
           const jCat = String(j.cat || '').toLowerCase().trim();
-          const currentUnitDateKey = `${jDate}_${String(j.noLambung || '').trim().toUpperCase()}_small`;
-          // isUnitAlreadyAchieved HANYA berlaku untuk greasing small 1x sehari (BUKAN PC300 yang 2x sehari, BUKAN washing, aircleaner, topup):
-          const isUnitAlreadyAchieved = (jCat === 'small') && !isPc300Unit && achievedUnitDateMap.has(currentUnitDateKey);
+          const jUnitClean = String(j.noLambung || '').trim().toUpperCase();
+          const currentUnitDateKey = `${jDate}_${jUnitClean}_${jCat}`;
+          const currentUnitShiftKey = `${jDate}_${jUnitClean}_${jCat}_${j.shift || 1}`;
+          const currentUnitUniversalKey = `${jDate}_${jUnitClean}`;
+
+          // Unit yang sudah selesai (ACHIEVED / SERVICE / DONE) pada tanggal ini:
+          // Melindungi seluruh kategori (Small Track, Big Digger, Air Cleaner, Top Up Oil, dsb)
+          const isUnitAlreadyAchieved = isPc300Unit
+            ? achievedUnitDateMap.has(currentUnitShiftKey)
+            : (achievedUnitDateMap.has(currentUnitDateKey) || achievedUnitDateMap.has(currentUnitUniversalKey));
 
           // Sanitasi Otomatis: Batalkan false-positive auto-close jika job tidak ada di riwayat dan durasi 0 / keterangan eviden otomatis
           if (!isHistoryDone && j.keterangan === 'Selesai (Eviden Foto Terlampir)' && (!j.durasi || j.durasi === 0) && j.jamStart === j.jamEnd) {
@@ -15469,7 +15925,7 @@
             j.is_locked ||
             isFinishedStatus ||
             isHistoryDone ||
-            (isUnitAlreadyAchieved && isGreasingSmallJob) ||
+            isUnitAlreadyAchieved ||
             (typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(j))
           ) {
             // ATURAN PENGGUNA: Job yang sudah selesai/terkunci otomatis keluar dari antrean jobs_lt / jobs_wt
@@ -15478,7 +15934,7 @@
               state.supabaseClient.from('jobs_lt').delete().eq('id', cleanJobId).then(() => { }).catch(() => { });
               state.supabaseClient.from('jobs_wt').delete().eq('id', cleanJobId).then(() => { }).catch(() => { });
             }
-            return; // LEWATI MUTLAK! DILARANG KERAS DIUBAH JADI PENDING / DI-UPSERT ULANG KE JOBS
+            return; // LEWATI MUTLAK! DILARANG KERAS DIUBAH JADI PENDING / DI-UPSERT ULANG KE JOBS / DITUTUP NON-ACH
           }
 
           // Pengaman Mutlak: Jadwal hari esok / masa depan TIDAK BOLEH dievaluasi atau dialihkan
@@ -15496,8 +15952,6 @@
             case 'GREASING_SMALL': {
               // Perlindungan Mutlak Greasing Small (D85ESS, PC210, dsb):
               // Jika unit sudah selesai/ACH pada tanggal ini, statusnya tetap terkunci ACH!
-              // PENTING: DILARANG KERAS untuk PC300 (isPc300Unit) yang beroperasi 2x sehari terpisah per shift,
-              // dan DILARANG KERAS mengubah job yang statusnya sudah non_ach menjadi ach!
               if (isUnitAlreadyAchieved && !isPc300Unit && s !== 'non_ach' && s !== 'non-ach') {
                 j.isLocked = true;
                 j.isPending = false;
@@ -15514,106 +15968,300 @@
                 return;
               }
 
-              if (Number(j.shift) === 1) {
-                if (isExca300Unit(j)) {
-                  // SOP PC300: Jika tidak ter-action di Shift 1 langsung NON-ACH (tanpa pending)
-                  if (!isFinishedStatus && !isHistoryDone && !hasPhotos && (isPastDate || (isToday && isShift2Now))) {
-                    j.status = 'non_ach';
-                    j.isPending = false;
-                    j.isLocked = true;
-                    j.alasanNonAch = 'Non ACH: PC300 tidak ter-action di Shift 1 (Aturan SOP 2x Sehari)';
-                    j.keterangan = 'Non ACH: SOP PC300';
-                    hasChanges = true;
-                    countClosed++;
-                    lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
-                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
-                  }
-                } else {
-                  // Unit Small Lainnya (D85ESS, PC210, dsb):
-                  // Rules: Ketika job tidak di action atau non ach di Shift 1 akan ter-pending ke Shift 2.
-                  // 1. Jika masih di hari yang sama (isToday) dan sudah masuk Shift 2 (isShift2Now):
-                  //    Dialihkan ke antrean Shift 2 dengan status PENDING.
-                  // 2. Jika hari sudah berganti (isPastDate) dan unit masih di Shift 1 (tidak di-action sama sekali):
-                  //    Tutup sebagai NON-ACH (karena batas 1 hari sudah terlewati).
-                  if (isToday && isShift2Now) {
-                    j.shift = 2;
-                    j.status = 'pending';
-                    j.isPending = true;
-                    j.keterangan = j.keterangan || 'Pending Shift 1 (Otomatis Dialihkan ke Shift 2)';
-                    hasChanges = true;
-                    countMoved++;
-                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
-                  } else if (isPastDate) {
-                    j.status = 'non_ach';
-                    j.isPending = false;
-                    j.isLocked = true;
-                    j.alasanNonAch = 'Non ACH: Batas pengerjaan harian terlewati (Tidak ter-action)';
-                    j.keterangan = 'Non ACH: Maksimal 1 hari';
-                    hasChanges = true;
-                    countClosed++;
-                    lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
-                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
-                  }
-                }
-              } else if (Number(j.shift) === 2) {
-                // Di Shift 2:
-                // Jika hari sudah berganti (isPastDate) dan job di Shift 2 masih pending / belum di-action:
-                // Otomatis statusnya menjadi Non ACH.
-                if (isPastDate && (j.status === 'pending' || j.isPending || j.status === 'scheduled')) {
+              if (isExca300Unit(j)) {
+                // SOP PC300: Jika tidak ter-action di Shift 1 langsung NON-ACH (Aturan SOP 2x Sehari tanpa pending antar hari)
+                if (!isFinishedStatus && !isHistoryDone && !hasPhotos && (isPastDate || (isToday && isShift2Now && Number(j.shift) === 1))) {
                   j.status = 'non_ach';
                   j.isPending = false;
                   j.isLocked = true;
-                  j.alasanNonAch = 'Non ACH: Batas pengerjaan harian (Shift 2) terlewati';
-                  j.keterangan = 'Non ACH: Maksimal 1 hari';
+                  j.alasanNonAch = 'Non ACH: PC300 tidak ter-action di Shift ' + j.shift + ' (Aturan SOP 2x Sehari)';
+                  j.keterangan = 'Non ACH: SOP PC300';
                   hasChanges = true;
                   countClosed++;
                   lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
                   if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                }
+              } else {
+                // Unit Small Lainnya (D85ESS, PC210, dsb):
+                // 1. Jika masih di hari yang sama (isToday) dan sudah masuk Shift 2 (isShift2Now):
+                //    Dialihkan ke antrean Shift 2 dengan status PENDING.
+                if (isToday && isShift2Now && Number(j.shift) === 1) {
+                  j.shift = 2;
+                  j.status = 'pending';
+                  j.isPending = true;
+                  j.keterangan = j.keterangan || 'Pending Shift 1 (Otomatis Dialihkan ke Shift 2)';
+                  hasChanges = true;
+                  countMoved++;
+                  if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                } else if (isPastDate) {
+                  // 2. Jika hari sudah berganti (isPastDate, misal tgl 27 belum close):
+                  // Cek apakah di hari berjalan (todayStr) sudah ada jadwal Greasing Small baru untuk unit ini
+                  const origDate = j.originalDate || jDate;
+                  const existingTodayJob = list.find(other =>
+                    other && other.id !== j.id &&
+                    String(other.noLambung || '').trim().toUpperCase() === String(j.noLambung || '').trim().toUpperCase() &&
+                    String(other.cat || '').toLowerCase().trim() === 'small' &&
+                    (other.tanggal === todayStr)
+                  );
+
+                  if (existingTodayJob) {
+                    // Penggabungan (Merge): Jadwal baru hari ini mewarisi status pending carry-over
+                    existingTodayJob.status = 'pending';
+                    existingTodayJob.isPending = true;
+                    existingTodayJob.originalDate = origDate;
+                    existingTodayJob.carryCount = (Number(existingTodayJob.carryCount || 0)) + 1;
+                    const origDisp = (typeof formatDisplayDate === 'function') ? formatDisplayDate(origDate) : origDate;
+                    existingTodayJob.keterangan = `[Pending tgl ${origDisp}] + Jadwal Hari Ini${existingTodayJob.keterangan ? ' - ' + existingTodayJob.keterangan : ''}`;
+                    j._shouldRemoveFromActiveQueue = true;
+                    if (state.supabaseClient && cleanJobId) {
+                      state.supabaseClient.from('jobs_lt').delete().eq('id', cleanJobId).then(() => { }).catch(() => { });
+                    }
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(existingTodayJob);
+                    hasChanges = true;
+                    countMoved++;
+                  } else {
+                    // Belum ada jadwal baru di todayStr -> Rollover ke todayStr sebagai PENDING
+                    j.originalDate = origDate;
+                    j.tanggal = todayStr;
+                    j.shift = 1;
+                    j.status = 'pending';
+                    j.isPending = true;
+                    j.carryCount = (Number(j.carryCount || 0)) + 1;
+                    const origDisp = (typeof formatDisplayDate === 'function') ? formatDisplayDate(j.originalDate) : j.originalDate;
+                    j.keterangan = `Pending Greasing Small (Carry-over dari ${origDisp})${j.keterangan ? ' - ' + j.keterangan : ''}`;
+                    hasChanges = true;
+                    countMoved++;
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                  }
                 }
               }
               break;
             }
 
             case 'BIG_DIGGER': {
-              // Big Digger: Sesuai arsitektur antrean, jadwal masa lampau yang tidak ter-action langsung ditutup ke riwayat dan dikeluarkan dari antrean aktif
+              // Big Digger: Sesuai SOP 3 hari dan rollover, jika tidak close di hari H otomatis terpending ke hari berikutnya (H+1)
               const isOutstanding = (j.status === 'scheduled' || j.status === 'pending' || Boolean(j.isPending));
               if (isOutstanding && !isFinishedStatus && !isHistoryDone && !hasPhotos) {
-                if (isPastDate) {
-                  j.status = 'non_ach';
-                  j.isPending = false;
-                  j.alasanNonAch = 'Non ACH: Batas pengerjaan harian Big Digger terlewati';
-                  j.keterangan = `Non ACH: Tanggal ${jDate} terlewati`;
+                if (Number(j.shift) === 1 && isToday && isShift2Now) {
+                  j.shift = 2;
+                  j.status = 'pending';
+                  j.isPending = true;
+                  j.keterangan = j.keterangan || 'Pending Shift 1 (Otomatis Dialihkan ke Shift 2)';
                   hasChanges = true;
-                  countClosed++;
-                  lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
+                  countMoved++;
+                  if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                } else if (isPastDate) {
+                  const origDate = j.originalDate || jDate;
+                  const carry = Number(j.carryCount || 0);
+
+                  // Cari apakah di todayStr sudah ada jadwal Big Digger baru untuk unit yang sama
+                  const existingTodayJob = list.find(other =>
+                    other && other.id !== j.id &&
+                    String(other.noLambung || '').trim().toUpperCase() === String(j.noLambung || '').trim().toUpperCase() &&
+                    String(other.cat || '').toLowerCase().trim() === 'digger' &&
+                    (other.tanggal === todayStr)
+                  );
+
+                  if (existingTodayJob) {
+                    // Penggabungan (Merge): Jadwal baru mewarisi status pending
+                    existingTodayJob.status = 'pending';
+                    existingTodayJob.isPending = true;
+                    existingTodayJob.originalDate = origDate;
+                    existingTodayJob.carryCount = carry + 1;
+                    const origDisp = (typeof formatDisplayDate === 'function') ? formatDisplayDate(origDate) : origDate;
+                    existingTodayJob.keterangan = `[Pending tgl ${origDisp}] + Jadwal Hari Ini${existingTodayJob.keterangan ? ' - ' + existingTodayJob.keterangan : ''}`;
+                    j._shouldRemoveFromActiveQueue = true;
+                    if (state.supabaseClient && cleanJobId) {
+                      state.supabaseClient.from('jobs_lt').delete().eq('id', cleanJobId).then(() => { }).catch(() => { });
+                    }
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(existingTodayJob);
+                    hasChanges = true;
+                    countMoved++;
+                  } else if (carry <= 2) {
+                    // Rollover ke todayStr (bergabung dengan jadwal hari ini sebagai PENDING)
+                    j.originalDate = origDate;
+                    j.tanggal = todayStr;
+                    j.shift = 1;
+                    j.status = 'pending';
+                    j.isPending = true;
+                    j.carryCount = carry + 1;
+                    j.waktu = '07:00 s/d 07:15';
+                    const origDisp = (typeof formatDisplayDate === 'function') ? formatDisplayDate(j.originalDate) : j.originalDate;
+                    j.keterangan = `Pending Big Digger (Rollover dari ${origDisp})${j.keterangan ? ' - ' + j.keterangan : ''}`;
+                    hasChanges = true;
+                    countMoved++;
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                  } else {
+                    // Melewati batas maksimal carry-over
+                    j.status = 'non_ach';
+                    j.isPending = false;
+                    j.isLocked = true;
+                    j.alasanNonAch = `Non ACH: Melewati batas maksimal carry-over Big Digger (Asal: ${origDate})`;
+                    j.keterangan = `Non ACH: Maksimal carry-over terlewati (${origDate})`;
+                    hasChanges = true;
+                    countClosed++;
+                    lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                  }
                 }
               }
               break;
             }
 
             case 'AIR_CLEANER_COAL':
-            case 'AIR_CLEANER_NON_COAL':
-            case 'TOP_UP_OIL':
-            case 'WASHING_NON_COAL': {
-              // Jadwal masa lampau yang tidak ter-action langsung ditutup ke riwayat dan dikeluarkan dari antrean aktif
+            case 'AIR_CLEANER_NON_COAL': {
+              // Air Cleaner: Coal (interval 2 hari) & Non-Coal (interval 1 minggu)
+              // Jika tidak close pada hari H, otomatis terpending ke hari berikutnya dalam siklus mingguan
               const isOutstanding = (j.status === 'scheduled' || j.status === 'pending' || Boolean(j.isPending));
               if (isOutstanding && !isFinishedStatus && !isHistoryDone && !hasPhotos) {
                 if (isPastDate) {
-                  j.status = 'non_ach';
-                  j.isPending = false;
-                  j.alasanNonAch = 'Non ACH: Batas waktu jadwal terlewati';
-                  j.keterangan = `Non ACH: Tanggal ${jDate} terlewati`;
-                  hasChanges = true;
-                  countClosed++;
-                  lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
+                  const origDate = j.originalDate || jDate;
+                  const isSameWeek = (typeof isSameMiningWeek === 'function') ? isSameMiningWeek(origDate, todayStr) : true;
+                  const dObj = (typeof parseDateString === 'function') ? parseDateString(jDate) : new Date(jDate);
+                  const isSaturday = (dObj.getDay() === 6);
+
+                  // Cek apakah ada jadwal Air Cleaner baru di todayStr untuk unit ini
+                  const existingTodayJob = list.find(other =>
+                    other && other.id !== j.id &&
+                    String(other.noLambung || '').trim().toUpperCase() === String(j.noLambung || '').trim().toUpperCase() &&
+                    (other.cat === 'aircleaner' || other.cat === 'air_cleaner') &&
+                    (other.tanggal === todayStr)
+                  );
+
+                  if (existingTodayJob) {
+                    // Penggabungan (Merge): Jadwal hari ini mewarisi status pending
+                    existingTodayJob.status = 'pending';
+                    existingTodayJob.isPending = true;
+                    existingTodayJob.originalDate = origDate;
+                    existingTodayJob.carryCount = (Number(existingTodayJob.carryCount || 0)) + 1;
+                    const origDisp = (typeof formatDisplayDate === 'function') ? formatDisplayDate(origDate) : origDate;
+                    existingTodayJob.keterangan = `[Pending tgl ${origDisp}] + Jadwal Hari Ini${existingTodayJob.keterangan ? ' - ' + existingTodayJob.keterangan : ''}`;
+                    j._shouldRemoveFromActiveQueue = true;
+                    if (state.supabaseClient && cleanJobId) {
+                      state.supabaseClient.from('jobs_lt').delete().eq('id', cleanJobId).then(() => { }).catch(() => { });
+                    }
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(existingTodayJob);
+                    hasChanges = true;
+                    countMoved++;
+                  } else if (isSameWeek && !isSaturday) {
+                    // Terpending ke hari berikutnya dalam siklus mingguan
+                    j.originalDate = origDate;
+                    j.tanggal = todayStr;
+                    j.shift = 1;
+                    j.status = 'pending';
+                    j.isPending = true;
+                    j.carryCount = (Number(j.carryCount || 0)) + 1;
+                    const origDisp = (typeof formatDisplayDate === 'function') ? formatDisplayDate(j.originalDate) : j.originalDate;
+                    j.keterangan = `Pending Air Cleaner (Carry-over dari ${origDisp})${j.keterangan ? ' - ' + j.keterangan : ''}`;
+                    hasChanges = true;
+                    countMoved++;
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                  } else {
+                    // Melewati akhir siklus mingguan (Sabtu malam)
+                    j.status = 'non_ach';
+                    j.isPending = false;
+                    j.isLocked = true;
+                    j.alasanNonAch = `Non ACH: Batas akhir siklus mingguan Air Cleaner terlewati (Asal: ${origDate})`;
+                    j.keterangan = `Non ACH: Siklus mingguan terlewati (${origDate})`;
+                    hasChanges = true;
+                    countClosed++;
+                    lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                  }
+                }
+              }
+              break;
+            }
+
+            case 'TOP_UP_OIL': {
+              // Top Up Oil Check: Jika tidak close pada hari H, otomatis terpending ke hari berikutnya dan bergabung
+              const isOutstanding = (j.status === 'scheduled' || j.status === 'pending' || Boolean(j.isPending));
+              if (isOutstanding && !isFinishedStatus && !isHistoryDone && !hasPhotos) {
+                if (isPastDate) {
+                  const origDate = j.originalDate || jDate;
+                  // Cek apakah ada jadwal Top Up Oil baru di todayStr untuk unit ini
+                  const existingTodayJob = list.find(other =>
+                    other && other.id !== j.id &&
+                    String(other.noLambung || '').trim().toUpperCase() === String(j.noLambung || '').trim().toUpperCase() &&
+                    (other.cat === 'topup' || other.cat === 'top up oil' || other.cat === 'topup_oil') &&
+                    (other.tanggal === todayStr)
+                  );
+
+                  if (existingTodayJob) {
+                    // Penggabungan (Merge): Jadwal baru mewarisi status pending
+                    existingTodayJob.status = 'pending';
+                    existingTodayJob.isPending = true;
+                    existingTodayJob.originalDate = origDate;
+                    existingTodayJob.carryCount = (Number(existingTodayJob.carryCount || 0)) + 1;
+                    const origDisp = (typeof formatDisplayDate === 'function') ? formatDisplayDate(origDate) : origDate;
+                    existingTodayJob.keterangan = `[Pending tgl ${origDisp}] + Jadwal Hari Ini${existingTodayJob.keterangan ? ' - ' + existingTodayJob.keterangan : ''}`;
+                    j._shouldRemoveFromActiveQueue = true;
+                    if (state.supabaseClient && cleanJobId) {
+                      state.supabaseClient.from('jobs_lt').delete().eq('id', cleanJobId).then(() => { }).catch(() => { });
+                    }
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(existingTodayJob);
+                    hasChanges = true;
+                    countMoved++;
+                  } else {
+                    // Terpending ke hari berikutnya (todayStr) sebagai PENDING
+                    j.originalDate = origDate;
+                    j.tanggal = todayStr;
+                    j.shift = 1;
+                    j.status = 'pending';
+                    j.isPending = true;
+                    j.carryCount = (Number(j.carryCount || 0)) + 1;
+                    const origDisp = (typeof formatDisplayDate === 'function') ? formatDisplayDate(j.originalDate) : j.originalDate;
+                    j.keterangan = `Pending Top Up Oil (Carry-over dari ${origDisp})${j.keterangan ? ' - ' + j.keterangan : ''}`;
+                    hasChanges = true;
+                    countMoved++;
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                  }
+                }
+              }
+              break;
+            }
+
+            case 'WASHING_NON_COAL': {
+              // Washing Non-Coal: Akumulatif sepanjang minggu berjalan
+              const isOutstanding = (j.status === 'scheduled' || j.status === 'pending' || Boolean(j.isPending));
+              if (isOutstanding && !isFinishedStatus && !isHistoryDone && !hasPhotos) {
+                if (isPastDate) {
+                  const origDate = j.originalDate || jDate;
+                  const isSameWeek = (typeof isSameMiningWeek === 'function') ? isSameMiningWeek(origDate, todayStr) : true;
+                  const dObj = (typeof parseDateString === 'function') ? parseDateString(jDate) : new Date(jDate);
+                  const isSaturday = (dObj.getDay() === 6);
+
+                  if (isSameWeek && !isSaturday) {
+                    j.originalDate = origDate;
+                    j.tanggal = todayStr;
+                    j.shift = 1;
+                    j.status = 'pending';
+                    j.isPending = true;
+                    j.carryCount = (Number(j.carryCount || 0)) + 1;
+                    const origDisp = (typeof formatDisplayDate === 'function') ? formatDisplayDate(j.originalDate) : j.originalDate;
+                    j.keterangan = `Pending Washing Non-Coal (Carry-over dari ${origDisp})${j.keterangan ? ' - ' + j.keterangan : ''}`;
+                    hasChanges = true;
+                    countMoved++;
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                  } else {
+                    j.status = 'non_ach';
+                    j.isPending = false;
+                    j.isLocked = true;
+                    j.alasanNonAch = `Non ACH: Batas akhir siklus mingguan (Sabtu) - Asal: ${origDate}`;
+                    j.keterangan = `Non ACH: Siklus mingguan terlewati (${origDate})`;
+                    hasChanges = true;
+                    countClosed++;
+                    lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
+                    if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
+                  }
                 }
               }
               break;
             }
 
             case 'WASHING_COAL_ROM': {
-              // Aturan SOP Pengguna: Washing Coal & ROM dikerjakan 4x sehari (setiap shift di-washing 2x: awal shift & setelah restime).
-              // Jika job tidak di-action atau non ach, statusnya LANGSUNG NON ACH (TUTUP BUKU), BUKAN PENDING!
+              // Aturan SOP Pengguna: Washing Coal & ROM dikerjakan 4x sehari (setiap shift 2x).
+              // Sesi yang tidak di-action pada shift bersangkutan ditutup NON-ACH per sesi/shift
               const isOutstanding = (j.status === 'scheduled' || j.status === 'pending' || j.isPending);
               if (isOutstanding && !isFinishedStatus && !isHistoryDone && !hasPhotos) {
                 if (Number(j.shift) === 1 && (isPastDate || (isToday && isShift2Now))) {
@@ -22272,13 +22920,25 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       const isPending = (s === 'pending' || job.isPending);
 
+      let pendingBadgeHtml = '';
+      if (isPending) {
+        const origDateStr = String(job.originalDate || '').trim();
+        const currDateStr = String(job.tanggal || '').trim();
+        if (origDateStr && currDateStr && origDateStr !== currDateStr) {
+          const dispOrig = (typeof formatDisplayDate === 'function') ? formatDisplayDate(origDateStr) : origDateStr;
+          pendingBadgeHtml = `<span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-black bg-amber-100 text-amber-950 border border-amber-300 shadow-2xs whitespace-nowrap" title="Pending carry-over dari tgl ${dispOrig}">PENDING (${dispOrig})</span>`;
+        } else {
+          pendingBadgeHtml = `<span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 whitespace-nowrap">PENDING</span>`;
+        }
+      }
+
       // Akses Admin & MP: Sediakan tombol ACTION
       return `
         <div class="flex items-center justify-center gap-1">
           <button type="button" onclick="openActionDecision('${job.id}')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold tracking-wider uppercase transition shadow-2xs cursor-pointer active:scale-95" title="Eksekusi Aksi Job (Admin / MP)">
             ACTION
           </button>
-          ${isPending ? '<span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">PENDING</span>' : ''}
+          ${pendingBadgeHtml}
         </div>
       `;
     }
@@ -26564,6 +27224,20 @@ Keterangan : ${keterangan}`;
           const isShiftMatched = !ex || !h.shift_rencana || !ex.shift || String(ex.shift) === String(h.shift_rencana);
 
           if (ex && isShiftMatched) {
+            const isExAch = ['achieved', 'done', 'service', 'breakdown', 'parkir'].includes(String(ex.status_final || ex.status || '').toLowerCase());
+            const isHAch = ['achieved', 'done', 'service', 'breakdown', 'parkir'].includes(String(h.status_final || '').toLowerCase());
+
+            // ATURAN STATUS EMAS: Jika record history h berstatus ACHIEVED/SERVICE, tetapi ex berstatus NON_ACH:
+            // Status ex WAJIB DIPROMOSIKAN ke status h (ACHIEVED/SERVICE) dan alasan kendala NON-ACH dihapus!
+            if (isHAch && !isExAch) {
+              ex.status = String(h.status_final || 'achieved').toLowerCase();
+              ex.status_final = h.status_final;
+              ex.keterangan = h.keterangan || 'Nihil / Lancar sesuai SOP';
+              ex.alasanNonAch = '';
+              ex.id = h.job_id || h.id;
+              ex.noId = h.no_id || (typeof getJobNoId === 'function' ? getJobNoId(h) : hid);
+            }
+
             // Perkaya jam pelaksanaan & durasi dari job_history jika di job aktif masih kosong
             if ((!ex.jamStart || ex.jamStart === '-') && h.jam_start) ex.jamStart = h.jam_start;
             if ((!ex.jamEnd || ex.jamEnd === '-') && h.jam_end) ex.jamEnd = h.jam_end;
@@ -26625,6 +27299,19 @@ Keterangan : ${keterangan}`;
           }
         });
       }
+
+      // PRIORITAS STATUS EMAS SEBELUM DEDUPLIKASI:
+      // Pastikan status ACHIEVED / SERVICE selalu berada di urutan teratas sebelum deduplikasi
+      allCompleted.sort((a, b) => {
+        const getRank = item => {
+          const s = String(item.status_final || item.status || '').toLowerCase();
+          if (['achieved', 'done'].includes(s)) return 100;
+          if (['service', 'breakdown', 'parkir'].includes(s)) return 80;
+          if (['non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s)) return 10;
+          return 50;
+        };
+        return getRank(b) - getRank(a);
+      });
 
       // Deduplikasi Mutlak: Pastikan setiap unit per shift dan kategori hanya muncul tepat 1 baris
       const seenCompletedKeys = new Set();
@@ -40105,6 +40792,13 @@ Keterangan : ${keterangan}`;
           initScheduleSwipeGestures();
         }
       } catch (eSwipe) { }
+
+      // Inisialisasi tombol silang pengkosong input pencarian di seluruh halaman
+      try {
+        if (typeof initSearchClearButtons === 'function') {
+          initSearchClearButtons();
+        }
+      } catch (eClear) { }
     }
     window.bootApplication = bootApplication;
 
