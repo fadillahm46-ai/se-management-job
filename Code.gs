@@ -164,6 +164,12 @@ function processUploadAndSave(payload) {
   const driveViewUrl = createdFile.getUrl();
   const driveDownloadUrl = 'https://drive.google.com/uc?export=view&id=' + fileId;
 
+  // Tangkap data backup operasional (Armada & Personil)
+  const armada = String(payload.armada || payload.armadaUnit || payload.ltUnit || payload.wtUnit || '-').trim();
+  const opt = String(payload.opt || payload.operator || '-').trim();
+  const mp1 = String(payload.mp1 || payload.manpower1 || '-').trim();
+  const mp2 = String(payload.mp2 || payload.manpower2 || '-').trim();
+
   // Catat riwayat unggahan ke Google Spreadsheet target
   let spreadsheetUrl = '';
   try {
@@ -177,7 +183,11 @@ function processUploadAndSave(payload) {
         fileName: fileName,
         fileId: fileId,
         directUrl: directImageUrl,
-        driveViewUrl: driveViewUrl
+        driveViewUrl: driveViewUrl,
+        armada: armada,
+        opt: opt,
+        mp1: mp1,
+        mp2: mp2
       });
     }
   } catch (sheetErr) {
@@ -274,7 +284,7 @@ function getOrCreateLogSheet(spreadsheet) {
       sheet = spreadsheet.insertSheet(SHEET_TAB_NAME);
     }
 
-    // Format Baris Header
+    // Format Baris Header (16 Kolom Lengkap Termasuk Data Backup Armada & Personil)
     sheet.appendRow([
       'No',
       'Waktu Upload (WITA)',
@@ -287,11 +297,15 @@ function getOrCreateLogSheet(spreadsheet) {
       'Pratinjau Foto',
       'Direct URL Gambar',
       'Link Buka di Google Drive',
-      'Status'
+      'Status',
+      'Nama Armada',
+      'OPT (Operator)',
+      'MP 1',
+      'MP 2'
     ]);
 
     // Beri gaya header yang elegan (Warna Hijau Tambang & Teks Bold)
-    const headerRange = sheet.getRange(1, 1, 1, 12);
+    const headerRange = sheet.getRange(1, 1, 1, 16);
     headerRange.setBackground('#059669');
     headerRange.setFontColor('#FFFFFF');
     headerRange.setFontWeight('bold');
@@ -312,7 +326,29 @@ function getOrCreateLogSheet(spreadsheet) {
       sheet.setColumnWidth(10, 250); // Direct URL
       sheet.setColumnWidth(11, 200); // Drive Link
       sheet.setColumnWidth(12, 80);  // Status
+      sheet.setColumnWidth(13, 110); // Nama Armada
+      sheet.setColumnWidth(14, 130); // OPT (Operator)
+      sheet.setColumnWidth(15, 130); // MP 1
+      sheet.setColumnWidth(16, 130); // MP 2
     } catch (cwErr) {}
+  } else {
+    // AUTO-MIGRATE: Jika sheet lama sudah ada dan kolom 13-16 belum memiliki header
+    try {
+      if (sheet.getLastColumn() < 16 || !sheet.getRange(1, 13).getValue()) {
+        sheet.getRange(1, 13, 1, 4).setValues([['Nama Armada', 'OPT (Operator)', 'MP 1', 'MP 2']]);
+        const extraHeader = sheet.getRange(1, 13, 1, 4);
+        extraHeader.setBackground('#059669');
+        extraHeader.setFontColor('#FFFFFF');
+        extraHeader.setFontWeight('bold');
+        extraHeader.setHorizontalAlignment('center');
+        sheet.setColumnWidth(13, 110);
+        sheet.setColumnWidth(14, 130);
+        sheet.setColumnWidth(15, 130);
+        sheet.setColumnWidth(16, 130);
+      }
+    } catch (migErr) {
+      Logger.log('Auto-migrate header kolom tambahan error: ' + migErr.toString());
+    }
   }
 
   return sheet;
@@ -363,6 +399,10 @@ function appendLogRow(spreadsheet, info) {
     sheet.getRange(existingRow, 10).setValue(info.directUrl);
     sheet.getRange(existingRow, 11).setValue(info.driveViewUrl);
     sheet.getRange(existingRow, 12).setValue('UPDATED');
+    sheet.getRange(existingRow, 13).setValue(info.armada || '-');
+    sheet.getRange(existingRow, 14).setValue(info.opt || '-');
+    sheet.getRange(existingRow, 15).setValue(info.mp1 || '-');
+    sheet.getRange(existingRow, 16).setValue(info.mp2 || '-');
     Logger.log('ℹ️ [Anti-Duplicate] Baris ke-' + existingRow + ' untuk Job ID ' + targetJobId + ' (' + targetSlot + ') berhasil diperbarui.');
   } else {
     // Buat baris baru jika kombinasi Job ID dan Slot Foto belum pernah ada
@@ -379,7 +419,11 @@ function appendLogRow(spreadsheet, info) {
       imageFormula,
       info.directUrl,
       info.driveViewUrl,
-      'SUKSES'
+      'SUKSES',
+      info.armada || '-',
+      info.opt || '-',
+      info.mp1 || '-',
+      info.mp2 || '-'
     ]);
 
     try {
@@ -415,6 +459,10 @@ function testUploadFoto() {
     category: 'TEST_ACH',
     slot: 1,
     jobId: 'TEST-JOB-' + Math.floor(1000 + Math.random() * 9000),
+    armada: 'LT01',
+    opt: 'Ahmad',
+    mp1: 'Budi',
+    mp2: 'Joko',
     filename: 'TEST_PHOTO_' + Utilities.formatDate(new Date(), 'Asia/Makassar', 'yyyyMMdd_HHmmss') + '.png'
   };
 

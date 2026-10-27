@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -15343,16 +15343,16 @@
 
             // Hapus juga job selesai dari antrean jadwal aktif di memori frontend (jobs_lt / jobs_wt)
             if (state.lubetruckState && Array.isArray(state.lubetruckState.jobs)) {
-              state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => 
-                !candidateDeleteIds.includes(String(j.id)) && 
-                !candidateDeleteIds.includes(String(j.noId)) && 
+              state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j =>
+                !candidateDeleteIds.includes(String(j.id)) &&
+                !candidateDeleteIds.includes(String(j.noId)) &&
                 !candidateDeleteIds.includes(String(j.no_id))
               );
             }
             if (state.watertruckState && Array.isArray(state.watertruckState.jobs)) {
-              state.watertruckState.jobs = state.watertruckState.jobs.filter(j => 
-                !candidateDeleteIds.includes(String(j.id)) && 
-                !candidateDeleteIds.includes(String(j.noId)) && 
+              state.watertruckState.jobs = state.watertruckState.jobs.filter(j =>
+                !candidateDeleteIds.includes(String(j.id)) &&
+                !candidateDeleteIds.includes(String(j.noId)) &&
                 !candidateDeleteIds.includes(String(j.no_id))
               );
             }
@@ -28840,7 +28840,7 @@ Keterangan : ${keterangan}`;
 
     // HELPER: Upload satu foto Base64 ke Google Drive via Google Apps Script
     // Memastikan kolom Job ID di Google Spreadsheet mengikuti NO ID baku yang ada pada Job Story / Riwayat Selesai
-    async function uploadBase64PhotoToDrive(photoDataUrl, unit, category, slotIdx, jobId) {
+    async function uploadBase64PhotoToDrive(photoDataUrl, unit, category, slotIdx, jobId, extraData = null) {
       const endpointUrl = APPS_SCRIPT_CONFIG.uploadEndpointUrl || safeStorage.getItem('SE_APPS_SCRIPT_URL') || '';
       if (!endpointUrl || !endpointUrl.trim().startsWith('http')) {
         throw new Error('URL Google Apps Script belum terpasang.');
@@ -28876,12 +28876,27 @@ Keterangan : ${keterangan}`;
         finalJobId = (typeof jobId === 'string' ? jobId : '') || '';
       }
 
+      // Ambil data personil & armada cadangan (backup data)
+      const formArmada = document.getElementById('ach-lt-unit')?.value || '';
+      const formOpt = document.getElementById('ach-opt')?.value || '';
+      const formMp1 = document.getElementById('ach-mp1')?.value || '';
+      const formMp2 = document.getElementById('ach-mp2')?.value || '';
+
+      const armadaVal = (extraData && extraData.armada) || (targetJob ? (targetJob.armada || targetJob.armadaUnit || targetJob.armada_unit || targetJob.ltUnit || targetJob.wtUnit) : '') || formArmada || '-';
+      const optVal = (extraData && extraData.opt) || (targetJob ? (targetJob.opt || targetJob.operator) : '') || formOpt || '-';
+      const mp1Val = (extraData && extraData.mp1) || (targetJob ? (targetJob.mp1 || targetJob.manpower1) : '') || formMp1 || '-';
+      const mp2Val = (extraData && extraData.mp2) || (targetJob ? (targetJob.mp2 || targetJob.manpower2) : '') || formMp2 || '-';
+
       const payload = {
         base64: photoDataUrl,
         unit: unit || (targetJob ? targetJob.noLambung : 'UNIT'),
         category: category || (targetJob ? targetJob.cat : 'ACH'),
         slot: (typeof slotIdx === 'number' ? slotIdx + 1 : 1),
-        jobId: finalJobId
+        jobId: finalJobId,
+        armada: armadaVal,
+        opt: optVal,
+        mp1: mp1Val,
+        mp2: mp2Val
       };
 
       const res = await fetch(endpointUrl, {
@@ -30678,7 +30693,12 @@ Keterangan : ${keterangan}`;
         const photosToUpload = [...uploadedPhotos];
         const uploadPromises = photosToUpload.map(async (photoSrc, i) => {
           if (photoSrc && typeof photoSrc === 'string' && photoSrc.startsWith('data:image/')) {
-            const driveUrl = await uploadBase64PhotoToDrive(photoSrc, job.noLambung, job.cat, i, job.id);
+            const driveUrl = await uploadBase64PhotoToDrive(photoSrc, job.noLambung, job.cat, i, job.id, {
+              armada: job.armada || job.armadaUnit || job.armada_unit || job.ltUnit || job.wtUnit || '-',
+              opt: job.opt || '-',
+              mp1: job.mp1 || '-',
+              mp2: job.mp2 || '-'
+            });
             if (driveUrl && typeof driveUrl === 'string' && driveUrl.startsWith('http')) {
               photosToUpload[i] = driveUrl;
             } else {
