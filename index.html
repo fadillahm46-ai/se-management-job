@@ -15022,23 +15022,140 @@
       return sun1.getTime() === sun2.getTime();
     }
 
-    function isUnitCoal(noLambung, job) {
-      if (job?.kategori === 'coal' || job?.unitKategori === 'coal') return true;
-      if (job?.kategori === 'non_coal' || job?.unitKategori === 'non_coal') return false;
-      if (job?.cat === 'coal' || job?.cat === 'rom') return true;
-      if (job?.cat === 'non_coal') return false;
-      const clean = (noLambung || '').trim().toUpperCase();
-      const u = (state.masterUnits || []).find(m => (m.lambung || m.no_lambung || '').toUpperCase() === clean);
-      if (u && (u.kategori === 'coal' || u.kategori === 'rom')) return true;
+    // Helper komprehensif pencarian Master Unit
+    function findMasterUnitRecord(unitNo) {
+      if (!unitNo) return null;
+      const raw = String(unitNo).trim().toUpperCase();
+      const clean = raw.replace(/[\s\-_]/g, '');
+
+      let list = Array.isArray(state.masterUnits) ? state.masterUnits : [];
+      if (list.length === 0) {
+        try {
+          const saved = safeStorage.getItem('SE_MASTER_UNITS');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              list = parsed;
+              state.masterUnits = parsed;
+            }
+          }
+        } catch (e) { }
+      }
+
+      let found = list.find(u => {
+        const lb = String(u.lambung || u.no_lambung || u.unit || '').trim().toUpperCase();
+        if (lb === raw) return true;
+        const lbClean = lb.replace(/[\s\-_]/g, '');
+        return lbClean && lbClean === clean;
+      });
+      if (found) return found;
+
+      let armadaList = Array.isArray(state.masterArmada) ? state.masterArmada : [];
+      if (armadaList.length === 0) {
+        try {
+          const savedA = safeStorage.getItem('SE_MASTER_ARMADA');
+          if (savedA) {
+            const parsedA = JSON.parse(savedA);
+            if (Array.isArray(parsedA)) armadaList = parsedA;
+          }
+        } catch (e) { }
+      }
+      found = armadaList.find(a => {
+        const alb = String(a.unit || a.lambung || a.noLambung || '').trim().toUpperCase();
+        if (alb === raw) return true;
+        const aClean = alb.replace(/[\s\-_]/g, '');
+        return aClean && aClean === clean;
+      });
+      return found || null;
+    }
+    window.findMasterUnitRecord = findMasterUnitRecord;
+
+    // Helper deteksi Big Digger vs Small Track
+    function isBigDiggerUnit(j) {
+      if (!j) return false;
+      if (j.cat === 'digger') return true;
+      if (j.cat === 'small') return false;
+
+      const noUnit = String(j.noLambung || j.unit || j.no_lambung || '').trim().toUpperCase();
+      const cleanNo = noUnit.replace(/[\s\-_]/g, '');
+      const mUnit = findMasterUnitRecord(noUnit);
+
+      const typeUnit = String(j.typeUnit || j.type || j.type_unit || '').trim().toUpperCase();
+      const masterType = String(mUnit?.type || mUnit?.type_model || '').trim().toUpperCase();
+      const fullType = `${typeUnit} ${masterType}`.toUpperCase();
+
+      if (/(PC\s*2000|PC\s*1250|PC\s*3400|PC\s*850|PC\s*800|CAT\s*395|CAT395|EX\s*1200|EX\s*2000|EX\s*2600|EX\s*3600|BIG\s*DIGGER)/i.test(fullType)) {
+        return true;
+      }
+
+      if (/^E340\d/i.test(cleanNo)) return true;
+      if (/^E20\d{2}/i.test(cleanNo) || /^E520\d+/i.test(cleanNo)) return true;
+      if (/^E12\d{2}/i.test(cleanNo) || /^E512\d{2,}/i.test(cleanNo)) return true;
+      if (/^E85\d{2}/i.test(cleanNo)) return true;
+      if (/^E39\d{2}/i.test(cleanNo)) return true;
+      if (/^DM\d+/i.test(cleanNo)) return true;
+
+      if (/(PC\s*300(?!\d)|PC\s*200(?!\d)|PC\s*210(?!\d)|PC\s*500(?!\d)|SY\s*215|SY\s*600|D155|D85|GD|DOZER|GRADER|CRANE|SUPPORT)/i.test(fullType)) {
+        return false;
+      }
+
       return false;
     }
+    window.isBigDiggerUnit = isBigDiggerUnit;
+
+    // Helper deteksi Unit Coal vs Non-Coal
+    function isCoalUnit(j) {
+      if (!j) return false;
+      const noUnit = String(j.noLambung || j.unit || j.no_lambung || '').trim().toUpperCase();
+      const cleanNo = noUnit.replace(/[\s\-_]/g, '');
+      const mUnit = findMasterUnitRecord(noUnit);
+
+      if (mUnit) {
+        const mKat = String(mUnit.kategori || mUnit.cat || mUnit.kategori_unit || '').trim().toLowerCase();
+        if (mKat.includes('non')) return false;
+        if (mKat.includes('coal')) return true;
+        const masterLokasi = String(mUnit.lokasi || '').toUpperCase();
+        if (/(COAL|BATUBARA|ROM|\bP1\b|PIT\s*1\b)/i.test(masterLokasi)) return true;
+      }
+
+      const jKat = String(j.kategori || j.cat || '').trim().toLowerCase();
+      if (jKat.includes('non')) return false;
+      if (jKat.includes('coal')) return true;
+
+      const jobLokasi = String(j.lokasi || '').toUpperCase();
+      if (/(COAL|BATUBARA|ROM|\bP1\b|PIT\s*1\b)/i.test(jobLokasi)) return true;
+
+      const ket = `${j.keterangan || ''} ${j.deskripsi || ''}`.toUpperCase();
+      if (/(COAL|BATUBARA|\bP1\b)/i.test(ket)) return true;
+
+      const inWtCoal = (state.watertruckState?.jobs || []).some(wj => {
+        if (!wj || wj.cat !== 'coal') return false;
+        const wNo = String(wj.noLambung || wj.unit || '').trim().toUpperCase().replace(/[\s\-_]/g, '');
+        return wNo === cleanNo;
+      });
+      if (inWtCoal) return true;
+
+      return false;
+    }
+    window.isCoalUnit = isCoalUnit;
+
+    function isUnitCoal(noLambung, job) {
+      const obj = job || { noLambung };
+      return isCoalUnit(obj);
+    }
+    window.isUnitCoal = isUnitCoal;
 
     function getJobCategoryRule(job) {
       const cat = (job.cat || '').toLowerCase().trim();
       if (cat === 'small') return 'GREASING_SMALL';
       if (cat === 'digger') return 'BIG_DIGGER';
       if (cat === 'aircleaner' || cat === 'air_cleaner') {
-        return isUnitCoal(job.noLambung, job) ? 'AIR_CLEANER_COAL' : 'AIR_CLEANER_NON_COAL';
+        const isCoal = isCoalUnit(job);
+        if (isCoal) {
+          const isBig = isBigDiggerUnit(job);
+          return isBig ? 'AIR_CLEANER_COAL_BIG_DIGGER' : 'AIR_CLEANER_COAL_SMALL_TRACK';
+        }
+        return 'AIR_CLEANER_NON_COAL';
       }
       if (cat === 'topup' || cat === 'top up oil' || cat === 'topup_oil') return 'TOP_UP_OIL';
       if (cat === 'coal' || cat === 'rom') return 'WASHING_COAL_ROM';
@@ -15632,16 +15749,56 @@
             break;
           }
 
+          case 'AIR_CLEANER_COAL_BIG_DIGGER': {
+            // Sesuai instruksi pengguna:
+            // Big Digger Coal dikerjakan 3x seminggu: MINGGU (0), SELASA (2), KAMIS (4).
+            // Hari SABTU (6) LIBUR unit coal (tidak dijadwalkan).
+            if (dayOfWeek === 6) {
+              shouldInclude = false; // Sabtu Libur
+            } else if (dayOfWeek === 0 || dayOfWeek === 2 || dayOfWeek === 4) {
+              shouldInclude = true;
+            } else {
+              shouldInclude = false;
+            }
+            break;
+          }
+
+          case 'AIR_CLEANER_COAL_SMALL_TRACK': {
+            // Sesuai instruksi pengguna:
+            // Small Track Coal dikerjakan 3x seminggu: SENIN (1), RABU (3), JUMAT (5).
+            // Hari SABTU (6) LIBUR unit coal (tidak dijadwalkan).
+            if (dayOfWeek === 6) {
+              shouldInclude = false; // Sabtu Libur
+            } else if (dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5) {
+              shouldInclude = true;
+            } else {
+              shouldInclude = false;
+            }
+            break;
+          }
+
           case 'AIR_CLEANER_COAL': {
-            // Frekuensi 2 hari sekali
-            const diff = Math.abs(day - baseDayNum);
-            if (diff % 2 === 0) shouldInclude = true;
+            // Fallback pendeteksi jika langsung rule AIR_CLEANER_COAL
+            const isBig = (typeof isBigDiggerUnit === 'function') ? isBigDiggerUnit(baseJob) : false;
+            if (dayOfWeek === 6) {
+              shouldInclude = false; // Sabtu Libur
+            } else if (isBig) {
+              shouldInclude = (dayOfWeek === 0 || dayOfWeek === 2 || dayOfWeek === 4);
+            } else {
+              shouldInclude = (dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5);
+            }
             break;
           }
 
           case 'AIR_CLEANER_NON_COAL': {
-            // Frekuensi 1 minggu sekali (berulang pada hari yang sama setiap minggunya)
-            if (dayOfWeek === baseDayOfWeek) shouldInclude = true;
+            // Sesuai instruksi pengguna:
+            // Unit Non-Coal (termasuk PC500 Non-Coal, D85, dsb.):
+            // Otomatis terduplikasi pada hari yang sama setiap minggunya (dayOfWeek === baseDayOfWeek).
+            // Ketika didaftarkan lagi di hari lain dalam minggu yang sama (misal 3 hari lagi),
+            // sistem TETAP memasukkan jadwal baru tersebut dan menduplikasikannya ke hari yang sama di minggu depan.
+            if (dayOfWeek === baseDayOfWeek) {
+              shouldInclude = true;
+            }
             break;
           }
 
@@ -16068,6 +16225,8 @@
             }
 
             case 'AIR_CLEANER_COAL':
+            case 'AIR_CLEANER_COAL_BIG_DIGGER':
+            case 'AIR_CLEANER_COAL_SMALL_TRACK':
             case 'AIR_CLEANER_NON_COAL': {
               // Air Cleaner: Jika belum close di hari H, tetap di tanggal aslinya sebagai pending sampai batas siklus mingguan (Sabtu)
               const isOutstanding = (j.status === 'scheduled' || j.status === 'pending' || Boolean(j.isPending));
@@ -40013,119 +40172,10 @@ Keterangan : ${keterangan}`;
         return parts.join(' ');
       };
 
-      // Helper komprehensif pencarian Master Unit
-      const findMasterUnitRecord = (unitNo) => {
-        if (!unitNo) return null;
-        const raw = String(unitNo).trim().toUpperCase();
-        const clean = raw.replace(/[\s\-_]/g, '');
-
-        let list = Array.isArray(state.masterUnits) ? state.masterUnits : [];
-        if (list.length === 0) {
-          try {
-            const saved = safeStorage.getItem('SE_MASTER_UNITS');
-            if (saved) {
-              const parsed = JSON.parse(saved);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                list = parsed;
-                state.masterUnits = parsed;
-              }
-            }
-          } catch (e) { }
-        }
-
-        let found = list.find(u => {
-          const lb = String(u.lambung || u.no_lambung || u.unit || '').trim().toUpperCase();
-          if (lb === raw) return true;
-          const lbClean = lb.replace(/[\s\-_]/g, '');
-          return lbClean && lbClean === clean;
-        });
-        if (found) return found;
-
-        let armadaList = Array.isArray(state.masterArmada) ? state.masterArmada : [];
-        if (armadaList.length === 0) {
-          try {
-            const savedA = safeStorage.getItem('SE_MASTER_ARMADA');
-            if (savedA) {
-              const parsedA = JSON.parse(savedA);
-              if (Array.isArray(parsedA)) armadaList = parsedA;
-            }
-          } catch (e) { }
-        }
-        found = armadaList.find(a => {
-          const alb = String(a.unit || a.lambung || a.noLambung || '').trim().toUpperCase();
-          if (alb === raw) return true;
-          const aClean = alb.replace(/[\s\-_]/g, '');
-          return aClean && aClean === clean;
-        });
-        return found || null;
-      };
-
-      // Helper deteksi Big Digger vs Small Track
-      const isBigDiggerUnit = (j) => {
-        if (!j) return false;
-        if (j.cat === 'digger') return true;
-        if (j.cat === 'small') return false;
-
-        const noUnit = String(j.noLambung || j.unit || '').trim().toUpperCase();
-        const cleanNo = noUnit.replace(/[\s\-_]/g, '');
-        const mUnit = findMasterUnitRecord(noUnit);
-
-        const typeUnit = String(j.typeUnit || j.type || '').trim().toUpperCase();
-        const masterType = String(mUnit?.type || mUnit?.type_model || '').trim().toUpperCase();
-        const fullType = `${typeUnit} ${masterType}`.toUpperCase();
-
-        if (/(PC\s*2000|PC\s*1250|PC\s*3400|PC\s*850|PC\s*800|CAT\s*395|CAT395|EX\s*1200|EX\s*2000|EX\s*2600|EX\s*3600|BIG\s*DIGGER)/i.test(fullType)) {
-          return true;
-        }
-
-        if (/^E340\d/i.test(cleanNo)) return true;
-        if (/^E20\d{2}/i.test(cleanNo) || /^E520\d+/i.test(cleanNo)) return true;
-        if (/^E12\d{2}/i.test(cleanNo) || /^E512\d{2,}/i.test(cleanNo)) return true;
-        if (/^E85\d{2}/i.test(cleanNo)) return true;
-        if (/^E39\d{2}/i.test(cleanNo)) return true;
-        if (/^DM\d+/i.test(cleanNo)) return true;
-
-        if (/(PC\s*300(?!\d)|PC\s*200(?!\d)|PC\s*210(?!\d)|PC\s*500(?!\d)|SY\s*215|SY\s*600|D155|D85|GD|DOZER|GRADER|CRANE|SUPPORT)/i.test(fullType)) {
-          return false;
-        }
-
-        return false;
-      };
-
-      // Helper deteksi Unit Coal vs Non-Coal
-      const isCoalUnit = (j) => {
-        if (!j) return false;
-        const noUnit = String(j.noLambung || j.unit || '').trim().toUpperCase();
-        const cleanNo = noUnit.replace(/[\s\-_]/g, '');
-        const mUnit = findMasterUnitRecord(noUnit);
-
-        if (mUnit) {
-          const mKat = String(mUnit.kategori || mUnit.cat || mUnit.kategori_unit || '').trim().toLowerCase();
-          if (mKat.includes('non')) return false;
-          if (mKat.includes('coal')) return true;
-          const masterLokasi = String(mUnit.lokasi || '').toUpperCase();
-          if (/(COAL|BATUBARA|ROM|\bP1\b|PIT\s*1\b)/i.test(masterLokasi)) return true;
-        }
-
-        const jKat = String(j.kategori || j.cat || '').trim().toLowerCase();
-        if (jKat.includes('non')) return false;
-        if (jKat.includes('coal')) return true;
-
-        const jobLokasi = String(j.lokasi || '').toUpperCase();
-        if (/(COAL|BATUBARA|ROM|\bP1\b|PIT\s*1\b)/i.test(jobLokasi)) return true;
-
-        const ket = `${j.keterangan || ''} ${j.deskripsi || ''}`.toUpperCase();
-        if (/(COAL|BATUBARA|\bP1\b)/i.test(ket)) return true;
-
-        const inWtCoal = (state.watertruckState?.jobs || []).some(wj => {
-          if (!wj || wj.cat !== 'coal') return false;
-          const wNo = String(wj.noLambung || wj.unit || '').trim().toUpperCase().replace(/[\s\-_]/g, '');
-          return wNo === cleanNo;
-        });
-        if (inWtCoal) return true;
-
-        return false;
-      };
+      // Helper komprehensif pencarian Master Unit & klasifikasi (merujuk ke implementasi global)
+      const findMasterUnitRecord = (unitNo) => (typeof window.findMasterUnitRecord === 'function' ? window.findMasterUnitRecord(unitNo) : null);
+      const isBigDiggerUnit = (j) => (typeof window.isBigDiggerUnit === 'function' ? window.isBigDiggerUnit(j) : false);
+      const isCoalUnit = (j) => (typeof window.isCoalUnit === 'function' ? window.isCoalUnit(j) : false);
 
       const getJobParentCluster = (j) => {
         let c = '';
