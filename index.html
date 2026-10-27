@@ -639,9 +639,10 @@
       filter: none;
     }
 
-    /* Pastikan tombol sub-kategori tab (Greasing Small, Big Digger, Air Cleaner, Top Up) tidak membesar atau ber-outline hitam saat diklik */
+    /* Pastikan tombol sub-kategori tab (Greasing Small, Big Digger, Air Cleaner, Top Up, Non Coal, Coal) tidak membesar atau ber-outline hitam saat diklik */
     #tab-lt-schedule button[id^="btn-lt-cat-"],
-    #tab-wt-schedule button[id^="btn-wt-cat-"] {
+    #tab-wt-schedule button[id^="btn-wt-cat-"],
+    #tab-air-cleaner button[id^="btn-ac-sub-"] {
       outline: none !important;
       border: 1px solid transparent !important;
       box-sizing: border-box !important;
@@ -653,7 +654,10 @@
     #tab-lt-schedule button[id^="btn-lt-cat-"]:active,
     #tab-wt-schedule button[id^="btn-wt-cat-"]:focus,
     #tab-wt-schedule button[id^="btn-wt-cat-"]:focus-visible,
-    #tab-wt-schedule button[id^="btn-wt-cat-"]:active {
+    #tab-wt-schedule button[id^="btn-wt-cat-"]:active,
+    #tab-air-cleaner button[id^="btn-ac-sub-"]:focus,
+    #tab-air-cleaner button[id^="btn-ac-sub-"]:focus-visible,
+    #tab-air-cleaner button[id^="btn-ac-sub-"]:active {
       outline: none !important;
       border-color: transparent !important;
       box-shadow: none !important;
@@ -671,10 +675,14 @@
 
     /* Sembunyikan cancel button bawaan browser agar tidak ganda */
     input[type="search"]::-webkit-search-cancel-button,
-    input[type="search"]::-webkit-search-decoration {
+    input[type="search"]::-webkit-search-decoration,
+    input::-ms-clear,
+    input::-ms-reveal {
       -webkit-appearance: none;
       appearance: none;
-      display: none;
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
     }
   </style>
 </head>
@@ -1053,8 +1061,10 @@
     <!-- DESKTOP SIDEBAR (Frozen/Sticky with Independent Scroll) -->
     <!-- Desktop Sidebar Navigation (PRD Section 4.1 & Layout Standards) -->
     <aside
-      class="hidden md:flex md:w-56 flex-col bg-white border-r border-slate-200/80 shrink-0 z-30 justify-between md:h-screen md:sticky md:top-0 overflow-y-auto select-none">
-      <div>
+      class="hidden md:flex md:w-56 flex-col bg-white border-r border-slate-200/80 shrink-0 z-30 md:h-screen md:sticky md:top-0 select-none">
+
+      <!-- Top Brand & Shift Widget -->
+      <div class="shrink-0">
         <!-- App Logo & Brand -->
         <div class="p-4 border-b border-slate-100 flex items-center justify-between">
           <div class="flex items-center space-x-2.5">
@@ -1084,294 +1094,297 @@
             27 Sep 2026 • 08:30:00 WITA
           </div>
         </div>
+      </div>
 
-        <!-- Navigation Links (Dynamic per Role with Categorized Sections) -->
-        <nav class="p-3 space-y-3 text-xs font-semibold">
+      <!-- Navigation Links (Dynamic per Role with Categorized Sections) -->
+      <nav class="flex-1 p-3 space-y-3 text-xs font-semibold overflow-y-auto">
 
-          <!-- SECTION 1: HOME (Semua Role) -->
-          <div id="sidebar-sec-home" class="space-y-1">
-            <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">HOME</span>
-            <!-- Dashboard (All Roles) -->
-            <button onclick="navigateTab('dashboard')" id="nav-btn-dashboard"
+        <!-- SECTION 1: HOME (Semua Role) -->
+        <div id="sidebar-sec-home" class="space-y-1">
+          <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">HOME</span>
+          <!-- Dashboard (All Roles) -->
+          <button onclick="navigateTab('dashboard')" id="nav-btn-dashboard"
+            class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+              </path>
+            </svg>
+            <span>Dashboard</span>
+          </button>
+        </div>
+
+        <!-- SECTION 2: PEKERJAAN -->
+        <div id="sidebar-sec-pekerjaan" class="space-y-1">
+          <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">PEKERJAAN</span>
+
+          <!-- Menu Pekerjaan Khusus Manpower (Oilman & Washingman) -->
+          <div id="nav-group-mp" class="hidden space-y-1">
+            <button onclick="handleMpScheduleClick()" id="nav-btn-mp-schedule"
               class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-              <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
-                </path>
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
               </svg>
-              <span>Dashboard</span>
+              <span>Schedule</span>
+            </button>
+            <button onclick="handleMpUnscheduleClick()" id="nav-btn-mp-unschedule"
+              class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span>Job Request</span>
             </button>
           </div>
 
-          <!-- SECTION 2: PEKERJAAN -->
-          <div id="sidebar-sec-pekerjaan" class="space-y-1">
-            <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">PEKERJAAN</span>
-
-            <!-- Menu Pekerjaan Khusus Manpower (Oilman & Washingman) -->
-            <div id="nav-group-mp" class="hidden space-y-1">
-              <button onclick="handleMpScheduleClick()" id="nav-btn-mp-schedule"
-                class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                <span>Schedule</span>
-              </button>
-              <button onclick="handleMpUnscheduleClick()" id="nav-btn-mp-unschedule"
-                class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>Job Request</span>
-              </button>
-            </div>
-
-            <!-- Menu Pekerjaan Khusus Admin -->
-            <div id="nav-group-admin" class="space-y-1">
-              <button onclick="navigateTab('lt-schedule')" id="nav-btn-lt"
-                class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h2">
-                  </path>
-                </svg>
-                <span>Lubetruck</span>
-              </button>
-
-              <button onclick="navigateTab('wt-schedule')" id="nav-btn-wt"
-                class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h2">
-                  </path>
-                </svg>
-                <span>Water Truck</span>
-              </button>
-
-              <button onclick="navigateTab('job-requests')" id="nav-btn-admin-jobreq"
-                class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span id="nav-text-admin-jobreq">Job Request</span>
-              </button>
-
-              <button onclick="navigateTab('orders')" id="nav-group-order"
-                class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
-                  </path>
-                </svg>
-                <span id="nav-text-order">Order Lapangan</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- SECTION 3: MONITORING (Pemisah Baru: Riwayat & Clean Air Cleaner) -->
-          <div id="sidebar-sec-monitoring" class="space-y-1">
-            <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">MONITORING</span>
-
-            <!-- Menu Monitoring Khusus MP -->
-            <div id="nav-group-mp-monitoring" class="hidden space-y-1">
-              <button onclick="navigateTab('completed')" id="nav-group-completed"
-                class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>Riwayat</span>
-              </button>
-              <button onclick="navigateTab('air-cleaner-monitor')" id="nav-btn-mp-aircleaner"
-                class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                <span>Clean Air Cleaner</span>
-              </button>
-            </div>
-
-            <!-- Menu Monitoring Khusus Admin -->
-            <div id="nav-group-admin-monitoring" class="space-y-1">
-              <button onclick="navigateTab('completed')" id="nav-btn-admin-completed"
-                class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>Riwayat Selesai</span>
-              </button>
-              <button onclick="navigateTab('air-cleaner-monitor')" id="nav-btn-admin-aircleaner"
-                class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                <span>Clean Air Cleaner</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- SECTION 4: LAINNYA (Pemisah Baru ke-2: Kontak Pro & Flow meter) -->
-          <div id="sidebar-sec-lainnya" class="space-y-1">
-            <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">LAINNYA</span>
-
-            <!-- Menu Lainnya Khusus MP -->
-            <div id="nav-group-mp-lainnya" class="hidden space-y-1">
-              <button onclick="navigateTab('mp-kontak-pro')" id="nav-btn-mp-kontak"
-                class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                  </path>
-                </svg>
-                <span>Kontak Pro</span>
-              </button>
-
-              <a href="https://sounding-fm.vercel.app/" target="_blank" rel="noopener noreferrer"
-                id="nav-btn-mp-flowmeter"
-                class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <div class="flex items-center space-x-3">
-                  <svg class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 12l3-3m-6 3a3 3 0 116 0 3 3 0 01-6 0z"></path>
-                  </svg>
-                  <span>Flow meter</span>
-                </div>
-                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                </svg>
-              </a>
-
-              <!-- Menu Khusus Washingman: Input Ceklist Washing di Sidebar Desktop -->
-              <a href="https://plant.ppabib.com/pems/wash/load3.php" target="_blank" rel="noopener noreferrer"
-                id="nav-btn-mp-wash-checklist"
-                class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <div class="flex items-center space-x-3">
-                  <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
-                    </path>
-                  </svg>
-                  <span>Input Ceklist Washing</span>
-                </div>
-                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                </svg>
-              </a>
-            </div>
-
-            <!-- Menu Lainnya Khusus Admin -->
-            <div id="nav-group-admin-lainnya" class="space-y-1">
-              <button onclick="navigateTab('mp-kontak-pro')" id="nav-btn-admin-kontak"
-                class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                  </path>
-                </svg>
-                <span>Kontak Pro</span>
-              </button>
-
-              <a href="https://sounding-fm.vercel.app/" target="_blank" rel="noopener noreferrer"
-                id="nav-btn-admin-flowmeter"
-                class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <div class="flex items-center space-x-3">
-                  <svg class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 12l3-3m-6 3a3 3 0 116 0 3 3 0 01-6 0z"></path>
-                  </svg>
-                  <span>Flow meter</span>
-                </div>
-                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                </svg>
-              </a>
-
-              <a href="https://plant.ppabib.com/pems/wash/load3.php" target="_blank" rel="noopener noreferrer"
-                id="nav-btn-admin-wash-checklist"
-                class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-                <div class="flex items-center space-x-3">
-                  <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
-                    </path>
-                  </svg>
-                  <span>Ceklist Washing</span>
-                </div>
-                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                </svg>
-              </a>
-            </div>
-          </div>
-
-          <!-- SECTION 5: KENDALA (Khusus Admin) -->
-          <div id="sidebar-sec-kendala" class="space-y-1">
-            <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">KENDALA</span>
-            <button onclick="navigateTab('pica')" id="nav-group-pica"
+          <!-- Menu Pekerjaan Khusus Admin -->
+          <div id="nav-group-admin" class="space-y-1">
+            <button onclick="navigateTab('lt-schedule')" id="nav-btn-lt"
               class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-              <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                  d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h2">
                 </path>
               </svg>
-              <span>Log PICA Kendala</span>
+              <span>Lubetruck</span>
             </button>
-          </div>
 
-          <!-- SECTION 6: MASTER (Khusus Admin) -->
-          <div id="sidebar-sec-master" class="space-y-1">
-            <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">MASTER</span>
-            <button onclick="navigateTab('master-data')" id="nav-group-master"
-              class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-              <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4">
-                </path>
-              </svg>
-              <span>Data Master</span>
-            </button>
-          </div>
-
-          <!-- SECTION 7: AKUN (Semua Role - Paling Bawah Kiri Sidebar) -->
-          <div id="sidebar-sec-akun" class="space-y-1 pt-2 border-t border-slate-100">
-            <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">AKUN</span>
-            <button onclick="navigateTab('profile')" id="nav-btn-profile"
+            <button onclick="navigateTab('wt-schedule')" id="nav-btn-wt"
               class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
               <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h2">
+                </path>
               </svg>
-              <span>Profil Pengguna</span>
+              <span>Water Truck</span>
             </button>
 
-            <!-- Tombol Keluar Akun Mode Desktop (Paling Bawah Kiri) -->
-            <button onclick="openProfileLogoutModal()" id="nav-btn-desktop-logout"
-              class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition cursor-pointer font-semibold group">
-              <svg class="w-4 h-4 text-rose-500 group-hover:translate-x-0.5 transition-transform" fill="none"
-                stroke="currentColor" viewBox="0 0 24 24">
+            <button onclick="navigateTab('job-requests')" id="nav-btn-admin-jobreq"
+              class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
-              <span>Keluar</span>
+              <span id="nav-text-admin-jobreq">Job Request</span>
+            </button>
+
+            <button onclick="navigateTab('orders')" id="nav-group-order"
+              class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                </path>
+              </svg>
+              <span id="nav-text-order">Order Lapangan</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- SECTION 3: MONITORING (Pemisah Baru: Riwayat & Clean Air Cleaner) -->
+        <div id="sidebar-sec-monitoring" class="space-y-1">
+          <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">MONITORING</span>
+
+          <!-- Menu Monitoring Khusus MP -->
+          <div id="nav-group-mp-monitoring" class="hidden space-y-1">
+            <button onclick="navigateTab('completed')" id="nav-group-completed"
+              class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span>Riwayat</span>
+            </button>
+            <button onclick="navigateTab('air-cleaner-monitor')" id="nav-btn-mp-aircleaner"
+              class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <span>Clean Air Cleaner</span>
             </button>
           </div>
 
-        </nav>
+          <!-- Menu Monitoring Khusus Admin -->
+          <div id="nav-group-admin-monitoring" class="space-y-1">
+            <button onclick="navigateTab('completed')" id="nav-btn-admin-completed"
+              class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span>Riwayat Selesai</span>
+            </button>
+            <button onclick="navigateTab('air-cleaner-monitor')" id="nav-btn-admin-aircleaner"
+              class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <span>Clean Air Cleaner</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- SECTION 4: LAINNYA (Pemisah Baru ke-2: Kontak Pro & Flow meter) -->
+        <div id="sidebar-sec-lainnya" class="space-y-1">
+          <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">LAINNYA</span>
+
+          <!-- Menu Lainnya Khusus MP -->
+          <div id="nav-group-mp-lainnya" class="hidden space-y-1">
+            <button onclick="navigateTab('mp-kontak-pro')" id="nav-btn-mp-kontak"
+              class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                </path>
+              </svg>
+              <span>Kontak Pro</span>
+            </button>
+
+            <a href="https://sounding-fm.vercel.app/" target="_blank" rel="noopener noreferrer"
+              id="nav-btn-mp-flowmeter"
+              class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              <div class="flex items-center space-x-3">
+                <svg class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 12l3-3m-6 3a3 3 0 116 0 3 3 0 01-6 0z"></path>
+                </svg>
+                <span>Flow meter</span>
+              </div>
+              <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+            </a>
+
+            <!-- Menu Khusus Washingman: Input Ceklist Washing di Sidebar Desktop -->
+            <a href="https://plant.ppabib.com/pems/wash/load3.php" target="_blank" rel="noopener noreferrer"
+              id="nav-btn-mp-wash-checklist"
+              class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              <div class="flex items-center space-x-3">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                  </path>
+                </svg>
+                <span>Input Ceklist Washing</span>
+              </div>
+              <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+            </a>
+          </div>
+
+          <!-- Menu Lainnya Khusus Admin -->
+          <div id="nav-group-admin-lainnya" class="space-y-1">
+            <button onclick="navigateTab('mp-kontak-pro')" id="nav-btn-admin-kontak"
+              class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                </path>
+              </svg>
+              <span>Kontak Pro</span>
+            </button>
+
+            <a href="https://sounding-fm.vercel.app/" target="_blank" rel="noopener noreferrer"
+              id="nav-btn-admin-flowmeter"
+              class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              <div class="flex items-center space-x-3">
+                <svg class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 12l3-3m-6 3a3 3 0 116 0 3 3 0 01-6 0z"></path>
+                </svg>
+                <span>Flow meter</span>
+              </div>
+              <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+            </a>
+
+            <a href="https://plant.ppabib.com/pems/wash/load3.php" target="_blank" rel="noopener noreferrer"
+              id="nav-btn-admin-wash-checklist"
+              class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+              <div class="flex items-center space-x-3">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                  </path>
+                </svg>
+                <span>Ceklist Washing</span>
+              </div>
+              <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- SECTION 5: KENDALA (Khusus Admin) -->
+        <div id="sidebar-sec-kendala" class="space-y-1">
+          <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">KENDALA</span>
+          <button onclick="navigateTab('pica')" id="nav-group-pica"
+            class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+            <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+              </path>
+            </svg>
+            <span>Log PICA Kendala</span>
+          </button>
+        </div>
+
+        <!-- SECTION 6: MASTER (Khusus Admin) -->
+        <div id="sidebar-sec-master" class="space-y-1">
+          <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">MASTER</span>
+          <button onclick="navigateTab('master-data')" id="nav-group-master"
+            class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4">
+              </path>
+            </svg>
+            <span>Data Master</span>
+          </button>
+        </div>
+
+        <!-- SECTION 7: AKUN (Semua Role) -->
+        <div id="sidebar-sec-akun" class="space-y-1 pt-2 border-t border-slate-100">
+          <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">AKUN</span>
+          <button onclick="navigateTab('profile')" id="nav-btn-profile"
+            class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            <span>Profil Pengguna</span>
+          </button>
+        </div>
+
+      </nav>
+
+      <!-- Footer Sidebar Desktop: Tombol Keluar (Paling Bawah Kiri - Semua Akses) -->
+      <div class="shrink-0 p-3 border-t border-slate-100 bg-white">
+        <button onclick="openProfileLogoutModal()" id="nav-btn-desktop-logout"
+          class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition cursor-pointer font-semibold group"
+          title="Keluar dari akun">
+          <svg class="w-4 h-4 text-rose-500 group-hover:translate-x-0.5 transition-transform shrink-0" fill="none"
+            stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+          </svg>
+          <span class="text-xs font-bold">Keluar</span>
+        </button>
       </div>
 
     </aside>
@@ -2253,27 +2266,22 @@
                           </div>
                         </div>
 
-                        <!-- Legend Horizontal Sesuai Spesifikasi -->
-                        <div class="grid grid-cols-2 gap-x-2 gap-y-1.5 pt-2 text-xs">
+                        <!-- Legend Horizontal Sesuai Spesifikasi (3 Kategori Lapangan: Breakdown, Service, Washing Request) -->
+                        <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 pt-2 text-xs">
+                          <div class="flex items-center space-x-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#DC2626] shadow-2xs shrink-0"></span>
+                            <span id="kpi-unsch-dur-legend-breakdown"
+                              class="font-bold text-slate-800 text-[11px]">Breakdown (0%)</span>
+                          </div>
                           <div class="flex items-center space-x-1.5">
                             <span class="w-2.5 h-2.5 rounded-full bg-[#0284C7] shadow-2xs shrink-0"></span>
-                            <span id="kpi-unsch-dur-legend-greasing"
-                              class="font-bold text-slate-800 text-[11px]">Greasing (0%)</span>
-                          </div>
-                          <div class="flex items-center space-x-1.5">
-                            <span class="w-2.5 h-2.5 rounded-full bg-[#EA580C] shadow-2xs shrink-0"></span>
-                            <span id="kpi-unsch-dur-legend-topup" class="font-bold text-slate-800 text-[11px]">Top Up
-                              (0%)</span>
-                          </div>
-                          <div class="flex items-center space-x-1.5">
-                            <span class="w-2.5 h-2.5 rounded-full bg-[#16A34A] shadow-2xs shrink-0"></span>
-                            <span id="kpi-unsch-dur-legend-air" class="font-bold text-slate-800 text-[11px]">Air Cleaner
+                            <span id="kpi-unsch-dur-legend-service" class="font-bold text-slate-800 text-[11px]">Service
                               (0%)</span>
                           </div>
                           <div class="flex items-center space-x-1.5">
                             <span class="w-2.5 h-2.5 rounded-full bg-[#06B6D4] shadow-2xs shrink-0"></span>
-                            <span id="kpi-unsch-dur-legend-noncoal" class="font-bold text-slate-800 text-[11px]">Washing
-                              Non Coal (0%)</span>
+                            <span id="kpi-unsch-dur-legend-washing" class="font-bold text-slate-800 text-[11px]">Washing
+                              Request (0%)</span>
                           </div>
                         </div>
                       </div>
@@ -2290,28 +2298,21 @@
                           <table class="w-full text-xs">
                             <tbody class="divide-y divide-slate-100 font-semibold">
                               <tr class="hover:bg-red-50/40 transition">
-                                <td class="py-2.5 px-3 text-slate-800 text-xs sm:text-[13px] font-bold">GREASING</td>
-                                <td id="kpi-unsch-dur-table-greasing"
+                                <td class="py-2.5 px-3 text-slate-800 text-xs sm:text-[13px] font-bold">BREAKDOWN</td>
+                                <td id="kpi-unsch-dur-table-breakdown"
+                                  class="py-2.5 px-3 text-right font-black font-mono text-[#DC2626] text-lg sm:text-xl md:text-[22px] leading-tight whitespace-nowrap">
+                                  0 Jam 0 Menit</td>
+                              </tr>
+                              <tr class="hover:bg-red-50/40 transition">
+                                <td class="py-2.5 px-3 text-slate-800 text-xs sm:text-[13px] font-bold">SERVICE</td>
+                                <td id="kpi-unsch-dur-table-service"
                                   class="py-2.5 px-3 text-right font-black font-mono text-[#0284C7] text-lg sm:text-xl md:text-[22px] leading-tight whitespace-nowrap">
                                   0 Jam 0 Menit</td>
                               </tr>
                               <tr class="hover:bg-red-50/40 transition">
-                                <td class="py-2.5 px-3 text-slate-800 text-xs sm:text-[13px] font-bold">TOP UP</td>
-                                <td id="kpi-unsch-dur-table-topup"
-                                  class="py-2.5 px-3 text-right font-black font-mono text-[#EA580C] text-lg sm:text-xl md:text-[22px] leading-tight whitespace-nowrap">
-                                  0 Jam 0 Menit</td>
-                              </tr>
-                              <tr class="hover:bg-red-50/40 transition">
-                                <td class="py-2.5 px-3 text-slate-800 text-xs sm:text-[13px] font-bold">CLEAN AIR
-                                  CLEANER</td>
-                                <td id="kpi-unsch-dur-table-aircleaner"
-                                  class="py-2.5 px-3 text-right font-black font-mono text-[#16A34A] text-lg sm:text-xl md:text-[22px] leading-tight whitespace-nowrap">
-                                  0 Jam 0 Menit</td>
-                              </tr>
-                              <tr class="hover:bg-red-50/40 transition">
-                                <td class="py-2.5 px-3 text-slate-800 text-xs sm:text-[13px] font-bold">WASHING NON COAL
+                                <td class="py-2.5 px-3 text-slate-800 text-xs sm:text-[13px] font-bold">WASHING REQUEST
                                 </td>
-                                <td id="kpi-unsch-dur-table-noncoal"
+                                <td id="kpi-unsch-dur-table-washing"
                                   class="py-2.5 px-3 text-right font-black font-mono text-[#06B6D4] text-lg sm:text-xl md:text-[22px] leading-tight whitespace-nowrap">
                                   0 Jam 0 Menit</td>
                               </tr>
@@ -3283,10 +3284,7 @@
           <!-- SUBPANE 1: FORM ORDER (Alur masuk ke Job Request & di-done-kan tim lapangan) -->
           <div id="order-subpane-form"
             class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200/80 shadow-xs w-full max-w-2xl mx-auto">
-            <h3 class="text-base font-extrabold text-slate-900 mb-1">Form Permintaan Lapangan (Order)</h3>
-            <p class="text-xs text-slate-500 mb-6">Input manual oleh Admin berdasarkan permintaan tim di lapangan via
-              radio / grup. Alurnya akan masuk ke antrean Job Request untuk dikerjakan & diselesaikan oleh tim lapangan.
-            </p>
+            <h3 class="text-base font-extrabold text-slate-900 mb-6">Form Permintaan Lapangan (Order)</h3>
 
             <form onsubmit="handleOrderSubmit(event)" class="space-y-4 text-xs font-semibold">
               <!-- Baris 1: Nama Pemesan & No Lambung Unit -->
@@ -3366,11 +3364,13 @@
                   <div class="flex space-x-4 pt-2">
                     <label class="flex items-center space-x-2 cursor-pointer">
                       <input type="radio" name="order-tipe-service" value="lubetruck" checked
+                        onchange="handleOrderServiceTypeChange(this.value)"
                         class="text-brand-600 focus:ring-brand-500 cursor-pointer">
                       <span>Lubetruck (LT)</span>
                     </label>
                     <label class="flex items-center space-x-2 cursor-pointer">
                       <input type="radio" name="order-tipe-service" value="watertruck"
+                        onchange="handleOrderServiceTypeChange(this.value)"
                         class="text-brand-600 focus:ring-brand-500 cursor-pointer">
                       <span>Water Truck (WT)</span>
                     </label>
@@ -3412,7 +3412,12 @@
               </h3>
             </div>
 
-            <form onsubmit="handleDirectCompletionSubmit(event)" class="space-y-4 text-xs font-semibold">
+            <form id="form-direct-completion" onsubmit="handleDirectCompletionSubmit(event)" novalidate
+              class="space-y-4 text-xs font-semibold">
+              <!-- Datalist untuk Autocomplete Personil Lapangan -->
+              <datalist id="direct-opt-datalist"></datalist>
+              <datalist id="direct-mp-datalist"></datalist>
+
               <!-- Baris 1: Tipe Layanan & Kode Unit -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -3438,10 +3443,13 @@
                     <span class="text-[10px] text-slate-400 font-normal">Pilih unit atau ketik manual</span>
                   </div>
                   <input type="text" id="direct-kode-unit" list="order-units-datalist"
-                    placeholder="Contoh: E2168 / D8589" required oninput="triggerAutoFillForDirectOrder(this.value)"
-                    onchange="triggerAutoFillForDirectOrder(this.value)" onfocus="populateOrderUnitsDatalist()"
-                    autocomplete="off"
+                    placeholder="Contoh: E2168 / D8589"
+                    oninput="triggerAutoFillForDirectOrder(this.value); clearDirectFieldError('direct-kode-unit')"
+                    onchange="triggerAutoFillForDirectOrder(this.value); clearDirectFieldError('direct-kode-unit')"
+                    onfocus="populateOrderUnitsDatalist()" autocomplete="off"
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 font-mono font-bold uppercase text-slate-900 bg-white">
+                  <p id="err-direct-kode-unit" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi
+                  </p>
                 </div>
               </div>
 
@@ -3450,13 +3458,16 @@
                 <div>
                   <label class="block text-slate-700 font-medium mb-1.5">Cluster</label>
                   <input type="text" id="direct-cluster" list="order-clusters-datalist"
-                    placeholder="Contoh: KGU Selatan" required
+                    placeholder="Contoh: KGU Selatan" oninput="clearDirectFieldError('direct-cluster')"
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 bg-white font-medium text-slate-900">
+                  <p id="err-direct-cluster" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi</p>
                 </div>
                 <div>
                   <label class="block text-slate-700 font-medium mb-1.5">Lokasi Pit</label>
-                  <input type="text" id="direct-lokasi" placeholder="Contoh: BALANAI / PIT UTARA" required
+                  <input type="text" id="direct-lokasi" placeholder="Contoh: BALANAI / PIT UTARA"
+                    oninput="clearDirectFieldError('direct-lokasi')"
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 uppercase font-medium bg-white text-slate-900">
+                  <p id="err-direct-lokasi" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi</p>
                 </div>
               </div>
 
@@ -3465,8 +3476,9 @@
                 <label class="block text-slate-700 mb-1.5">Deskripsi Pekerjaan</label>
                 <textarea id="direct-deskripsi" rows="2"
                   placeholder="Deskripsi pekerjaan (contoh: Greasing boom & stick, Top Up Oli SAE 15W40 10L, Cuci Radiator)..."
-                  required
+                  oninput="clearDirectFieldError('direct-deskripsi')"
                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500"></textarea>
+                <p id="err-direct-deskripsi" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi</p>
               </div>
 
               <!-- Baris 4: HM Start & HM Finish -->
@@ -3474,12 +3486,18 @@
                 <div>
                   <label class="block text-slate-700 mb-1.5">HM Start</label>
                   <input type="number" step="any" id="direct-hm-start" placeholder="Contoh: 12500"
+                    oninput="clearDirectFieldError('direct-hm-start')"
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                  <p id="err-direct-hm-start" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi
+                  </p>
                 </div>
                 <div>
                   <label class="block text-slate-700 mb-1.5">HM Finish</label>
                   <input type="number" step="any" id="direct-hm-finish" placeholder="Contoh: 12502"
+                    oninput="clearDirectFieldError('direct-hm-finish')"
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                  <p id="err-direct-hm-finish" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi
+                  </p>
                 </div>
               </div>
 
@@ -3487,26 +3505,33 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-slate-700 mb-1.5">Jam Start</label>
-                  <input type="time" id="direct-jam-start" required
-                    onchange="if(typeof handleDirectJamStartChange === 'function') handleDirectJamStartChange(this.value)"
+                  <input type="time" id="direct-jam-start" value=""
+                    onchange="if(typeof handleDirectJamStartChange === 'function') handleDirectJamStartChange(this.value); clearDirectFieldError('direct-jam-start')"
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                  <p id="err-direct-jam-start" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi
+                  </p>
                 </div>
                 <div>
                   <label class="block text-slate-700 mb-1.5">Jam Finish</label>
-                  <input type="time" id="direct-jam-finish" required
+                  <input type="time" id="direct-jam-finish" value=""
+                    onchange="clearDirectFieldError('direct-jam-finish')"
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                  <p id="err-direct-jam-finish" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi
+                  </p>
                 </div>
               </div>
 
-              <!-- Baris 6: Status (Hanya Service dan Breakdown) & Armada Searchable Dropdown -->
+              <!-- Baris 6: Status & Armada Searchable Dropdown -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-slate-700 mb-1.5">Status</label>
-                  <select id="direct-status"
+                  <select id="direct-status" onchange="clearDirectFieldError('direct-status')"
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-800 focus:outline-none focus:border-emerald-500 bg-white cursor-pointer">
-                    <option value="SERVICE" selected>SERVICE (Maintenance/PCR)</option>
+                    <option value="" selected disabled>-- Pilih Status --</option>
                     <option value="BREAKDOWN">BREAKDOWN (Kendala Unit)</option>
+                    <option value="SERVICE">SERVICE (Maintenance/PCR)</option>
                   </select>
+                  <p id="err-direct-status" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi</p>
                 </div>
                 <div class="relative" id="container-direct-armada">
                   <div class="flex items-center justify-between mb-1.5">
@@ -3515,9 +3540,10 @@
                   </div>
                   <div class="relative">
                     <input type="text" id="search-direct-armada" placeholder="-- Ketik / Cari Armada (misal: LT2510) --"
-                      autocomplete="off"
+                      autocomplete="off" value=""
                       class="w-full px-3.5 py-2.5 pr-8 rounded-xl border border-slate-200 bg-white text-slate-900 font-bold text-xs focus:outline-none focus:border-emerald-500 shadow-2xs transition truncate cursor-pointer"
-                      onfocus="openDirectArmadaDropdown()" oninput="filterDirectArmadaDropdown(this.value)"
+                      onfocus="openDirectArmadaDropdown()"
+                      oninput="filterDirectArmadaDropdown(this.value); clearDirectFieldError('direct-armada')"
                       onclick="openDirectArmadaDropdown()" onkeydown="handleDirectArmadaKeydown(event)">
                     <button type="button" id="clear-direct-armada" onclick="clearDirectArmadaSelect()"
                       class="hidden absolute right-7 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
@@ -3534,9 +3560,10 @@
                     </div>
                   </div>
                   <!-- Native select hidden untuk integritas data formulir -->
-                  <select id="direct-armada" class="hidden" required>
+                  <select id="direct-armada" class="hidden">
                     <option value="">-- Pilih Armada --</option>
                   </select>
+                  <p id="err-direct-armada" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi</p>
                   <div id="dropdown-direct-armada"
                     class="hidden absolute left-0 right-0 z-50 mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 divide-y divide-slate-100 text-xs">
                   </div>
@@ -3548,23 +3575,32 @@
                 <div class="flex items-center justify-between mb-2">
                   <span class="text-xs font-bold text-slate-700">Personil Lapangan</span>
                   <span class="text-[10px] text-slate-400 font-medium">Otomatis terisi dari Roster saat Armada dipilih
-                    (dapat disesuaikan)</span>
+                    (dapat dicari & disesuaikan)</span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label class="block text-slate-700 text-[11px] mb-1 font-bold">Operator (Opt)</label>
-                    <input type="text" id="direct-opt-name" placeholder="Nama Operator" required
+                    <input type="text" id="direct-opt-name" list="direct-opt-datalist" placeholder="Nama Operator"
+                      oninput="clearDirectFieldError('direct-opt-name')" onfocus="populateDirectPersonnelDatalists()"
                       class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 bg-white font-medium text-slate-900">
+                    <p id="err-direct-opt-name" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi
+                    </p>
                   </div>
                   <div>
                     <label class="block text-slate-700 text-[11px] mb-1 font-bold">MP 1</label>
-                    <input type="text" id="direct-mp1-name" placeholder="Nama MP 1" required
+                    <input type="text" id="direct-mp1-name" list="direct-mp-datalist" placeholder="Nama MP 1"
+                      oninput="clearDirectFieldError('direct-mp1-name')" onfocus="populateDirectPersonnelDatalists()"
                       class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 bg-white font-medium text-slate-900">
+                    <p id="err-direct-mp1-name" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi
+                    </p>
                   </div>
                   <div>
                     <label class="block text-slate-700 text-[11px] mb-1 font-bold">MP 2</label>
-                    <input type="text" id="direct-mp2-name" placeholder="Nama MP 2 (Opsional)"
+                    <input type="text" id="direct-mp2-name" list="direct-mp-datalist" placeholder="Nama MP 2"
+                      oninput="clearDirectFieldError('direct-mp2-name')" onfocus="populateDirectPersonnelDatalists()"
                       class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 bg-white font-medium text-slate-900">
+                    <p id="err-direct-mp2-name" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi
+                    </p>
                   </div>
                 </div>
               </div>
@@ -3574,7 +3610,10 @@
                 <label class="block text-slate-700 mb-1.5">Keterangan</label>
                 <textarea id="direct-keterangan" rows="2"
                   placeholder="Catatan hasil pekerjaan atau keterangan khusus..."
+                  oninput="clearDirectFieldError('direct-keterangan')"
                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500"></textarea>
+                <p id="err-direct-keterangan" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi
+                </p>
               </div>
 
               <!-- Tombol Submit Penyelesaian Job -->
@@ -3728,18 +3767,94 @@
             <div class="overflow-x-auto">
               <table class="w-full table-fixed text-left text-xs">
                 <thead
-                  class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-200 font-extrabold">
+                  class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-200 font-extrabold select-none">
                   <tr>
-                    <th class="py-2.5 px-3 w-[25%] md:w-[11%]">WAKTU KENDALA</th>
-                    <th class="py-2.5 px-3 w-[27%] md:w-[13%]"><span class="md:hidden">UNIT</span><span
-                        class="hidden md:inline">NO &amp; TYPE UNIT</span></th>
-                    <th class="py-2.5 px-3 w-[28%] md:w-[14%]"><span class="md:hidden">CLUSTER</span><span
-                        class="hidden md:inline">CLUSTER &amp; LOKASI</span></th>
-                    <th class="hidden md:table-cell py-2.5 px-3 md:w-[9%] text-center">ARMADA</th>
-                    <th class="hidden md:table-cell py-2.5 px-3 md:w-[14%]">PERSONIL</th>
-                    <th class="hidden md:table-cell py-2.5 px-3 md:w-[6%] text-center">FOTO</th>
-                    <th class="hidden md:table-cell py-2.5 px-3 md:w-[23%]">KETERANGAN PICA (PENYEBAB)</th>
-                    <th class="py-2.5 px-3 w-[20%] md:w-[10%] text-center">STATUS</th>
+                    <th onclick="sortPicaBy('noId')"
+                      class="hidden md:table-cell py-2.5 px-2.5 md:w-[11%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      title="Urutkan berdasarkan No ID (Klik 3x untuk reset)">
+                      <div class="flex items-center justify-start space-x-1">
+                        <span>NO ID</span>
+                        <span id="pica-sort-icon-noId"
+                          class="inline-block ml-0.5 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition">⇅</span>
+                      </div>
+                    </th>
+                    <th onclick="sortPicaBy('typeJob')"
+                      class="py-2.5 px-2 w-[12%] md:w-[5.5%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      title="Urutkan berdasarkan Type Job (Klik 3x untuk reset)">
+                      <div class="flex items-center justify-start space-x-1">
+                        <span>TYPE JOB</span>
+                        <span id="pica-sort-icon-typeJob"
+                          class="inline-block ml-0.5 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition">⇅</span>
+                      </div>
+                    </th>
+                    <th onclick="sortPicaBy('waktu')"
+                      class="hidden md:table-cell py-2.5 px-2 md:w-[8.5%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      title="Urutkan berdasarkan Waktu Kendala (Klik 3x untuk reset)">
+                      <div class="flex items-center justify-start space-x-1">
+                        <span>WAKTU</span>
+                        <span id="pica-sort-icon-waktu"
+                          class="inline-block ml-0.5 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition">⇅</span>
+                      </div>
+                    </th>
+                    <th onclick="sortPicaBy('unit')"
+                      class="py-2.5 px-2 w-[20%] md:w-[10.5%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      title="Urutkan berdasarkan No Lambung & Tipe Unit (Klik 3x untuk reset)">
+                      <div class="flex items-center justify-start space-x-1">
+                        <span class="md:hidden">NO UNIT</span>
+                        <span class="hidden md:inline">NO &amp; TYPE UNIT</span>
+                        <span id="pica-sort-icon-unit"
+                          class="inline-block ml-0.5 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition">⇅</span>
+                      </div>
+                    </th>
+                    <th onclick="sortPicaBy('cluster')"
+                      class="py-2.5 px-2 w-[24%] md:w-[12%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      title="Urutkan berdasarkan Cluster & Lokasi Pit (Klik 3x untuk reset)">
+                      <div class="flex items-center justify-start space-x-1">
+                        <span>CLUSTER &amp; LOKASI</span>
+                        <span id="pica-sort-icon-cluster"
+                          class="inline-block ml-0.5 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition">⇅</span>
+                      </div>
+                    </th>
+                    <th onclick="sortPicaBy('armada')"
+                      class="py-2.5 px-2 w-[12%] md:w-[5.5%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      title="Urutkan berdasarkan Armada (Klik 3x untuk reset)">
+                      <div class="flex items-center justify-start space-x-1">
+                        <span>ARMADA</span>
+                        <span id="pica-sort-icon-armada"
+                          class="inline-block ml-0.5 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition">⇅</span>
+                      </div>
+                    </th>
+                    <th onclick="sortPicaBy('personil')"
+                      class="hidden md:table-cell py-2.5 px-2.5 md:w-[16%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      title="Urutkan berdasarkan Personil (Klik 3x untuk reset)">
+                      <div class="flex items-center justify-start space-x-1">
+                        <span>PERSONIL</span>
+                        <span id="pica-sort-icon-personil"
+                          class="inline-block ml-0.5 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition">⇅</span>
+                      </div>
+                    </th>
+                    <th onclick="sortPicaBy('keterangan')"
+                      class="hidden md:table-cell py-2.5 px-2.5 md:w-[17.5%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      title="Urutkan berdasarkan Keterangan Kendala PICA (Klik 3x untuk reset)">
+                      <div class="flex items-center justify-start space-x-1">
+                        <span>KETERANGAN PICA (PENYEBAB)</span>
+                        <span id="pica-sort-icon-keterangan"
+                          class="inline-block ml-0.5 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition">⇅</span>
+                      </div>
+                    </th>
+                    <th onclick="sortPicaBy('status')"
+                      class="py-2.5 px-1 md:px-2 w-[14%] md:w-[5.5%] text-center align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      title="Urutkan berdasarkan Status Pekerjaan (Klik 3x untuk reset)">
+                      <div class="flex items-center justify-center space-x-1">
+                        <span>STATUS</span>
+                        <span id="pica-sort-icon-status"
+                          class="inline-block ml-0.5 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition">⇅</span>
+                      </div>
+                    </th>
+                    <th
+                      class="py-2.5 px-1 md:px-2 w-[18%] md:w-[8%] text-center align-middle font-extrabold select-none">
+                      <span>AKSI</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody id="pica-logs-tbody" class="divide-y divide-slate-100 text-slate-700 font-medium">
@@ -5513,36 +5628,24 @@
 
           <!-- 2 SUB-MENU TABS: NON COAL (6x) & COAL (3x) (Tersedia di Semua Akses) -->
           <div
-            class="flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200/80 shadow-xs">
-            <div
-              class="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200/60 text-xs font-bold">
+            class="bg-white p-2.5 rounded-2xl border border-slate-200/80 shadow-2xs mb-3 flex flex-wrap items-center justify-between gap-2.5">
+            <div class="flex flex-wrap items-center gap-2">
               <button type="button" id="btn-ac-sub-noncoal" onclick="setAirCleanerCategoryTab('non_coal')"
-                class="px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-xs bg-white text-emerald-800">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-brand-200 text-brand-800 shadow-2xs cursor-pointer flex items-center gap-2 outline-none focus:outline-none">
                 <span>NON COAL (6x)</span>
                 <span id="badge-ac-count-noncoal"
-                  class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-900 font-mono">0
+                  class="px-2 py-0.5 rounded-full text-[10px] font-black bg-white/70 text-brand-900 font-mono">0
                   Unit</span>
               </button>
               <button type="button" id="btn-ac-sub-coal" onclick="setAirCleanerCategoryTab('coal')"
-                class="px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer text-slate-600 hover:text-slate-900">
-                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer flex items-center gap-2 outline-none focus:outline-none">
                 <span>COAL (3x)</span>
                 <span id="badge-ac-count-coal"
                   class="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-700 font-mono">0
                   Unit</span>
               </button>
             </div>
-
-            <div class="text-[11.5px] font-medium text-slate-500 flex items-center gap-2 pr-2">
-              <span id="ac-tab-rule-desc" class="inline-flex items-center gap-1.5 text-slate-700 font-semibold">
-                <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>Aturan NON COAL: <b>Maksimal 6x semprot</b>, pada semprotan ke-6 langsung wajib replace.</span>
-              </span>
-            </div>
+            <div id="ac-tab-rule-desc" class="hidden"></div>
           </div>
 
           <!-- Table Container -->
@@ -6259,19 +6362,22 @@
               <label class="block text-slate-700 mb-1">Armada <span class="text-rose-500 font-bold">*</span></label>
               <div class="relative">
                 <input type="text" id="search-ach-lt-custom" placeholder="-- Ketik / Cari Armada --" autocomplete="off"
-                  class="w-full px-3 py-2 pr-7 rounded-xl border border-slate-200 bg-white text-slate-900 font-mono font-bold text-xs focus:outline-none focus:border-brand-500 shadow-2xs transition truncate uppercase cursor-pointer"
+                  class="w-full px-3 py-2 pr-12 rounded-xl border border-slate-200 bg-white text-slate-900 font-mono font-bold text-xs focus:outline-none focus:border-brand-500 shadow-2xs transition truncate uppercase cursor-pointer"
                   onfocus="openSearchableDropdown('ach-lt-custom')"
                   oninput="filterSearchableDropdown('ach-lt-custom', this.value)"
                   onclick="openSearchableDropdown('ach-lt-custom')">
-                <button type="button" id="clear-ach-lt-custom" onclick="clearSearchableSelect('ach-lt-custom')"
-                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-                  title="Hapus pilihan">
+                <button type="button" id="clear-ach-lt-custom"
+                  onmousedown="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-lt-custom');"
+                  onclick="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-lt-custom');"
+                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1 cursor-pointer z-20"
+                  title="Hapus pilihan armada">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
                     </path>
                   </svg>
                 </button>
-                <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                <div class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer p-0.5"
+                  onclick="toggleSearchableDropdown(event, 'ach-lt-custom')">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                   </svg>
@@ -6288,19 +6394,22 @@
               <label class="block text-slate-700 mb-1">Nama OPT <span class="text-rose-500 font-bold">*</span></label>
               <div class="relative">
                 <input type="text" id="search-ach-opt-name" placeholder="-- Ketik / Cari Nama OPT --" autocomplete="off"
-                  class="w-full px-3 py-2 pr-7 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-brand-500 shadow-2xs transition truncate"
+                  class="w-full px-3 py-2 pr-12 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-brand-500 shadow-2xs transition truncate"
                   onfocus="openSearchableDropdown('ach-opt-name')"
                   oninput="filterSearchableDropdown('ach-opt-name', this.value)"
                   onclick="openSearchableDropdown('ach-opt-name')">
-                <button type="button" id="clear-ach-opt-name" onclick="clearSearchableSelect('ach-opt-name')"
-                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-                  title="Hapus pilihan">
+                <button type="button" id="clear-ach-opt-name"
+                  onmousedown="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-opt-name');"
+                  onclick="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-opt-name');"
+                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1 cursor-pointer z-20"
+                  title="Hapus nama OPT">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
                     </path>
                   </svg>
                 </button>
-                <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                <div class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer p-0.5"
+                  onclick="toggleSearchableDropdown(event, 'ach-opt-name')">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                   </svg>
@@ -6321,19 +6430,22 @@
               <label class="block text-slate-700 mb-1">Nama MP 1 <span class="text-rose-500 font-bold">*</span></label>
               <div class="relative">
                 <input type="text" id="search-ach-mp1-name" placeholder="-- Ketik / Cari MP 1 --" autocomplete="off"
-                  class="w-full px-3 py-2 pr-7 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-brand-500 shadow-2xs transition truncate"
+                  class="w-full px-3 py-2 pr-12 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-brand-500 shadow-2xs transition truncate"
                   onfocus="openSearchableDropdown('ach-mp1-name')"
                   oninput="filterSearchableDropdown('ach-mp1-name', this.value)"
                   onclick="openSearchableDropdown('ach-mp1-name')">
-                <button type="button" id="clear-ach-mp1-name" onclick="clearSearchableSelect('ach-mp1-name')"
-                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-                  title="Hapus pilihan">
+                <button type="button" id="clear-ach-mp1-name"
+                  onmousedown="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-mp1-name');"
+                  onclick="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-mp1-name');"
+                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1 cursor-pointer z-20"
+                  title="Hapus nama MP 1">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
                     </path>
                   </svg>
                 </button>
-                <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                <div class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer p-0.5"
+                  onclick="toggleSearchableDropdown(event, 'ach-mp1-name')">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                   </svg>
@@ -6350,19 +6462,22 @@
               <label class="block text-slate-700 mb-1">Nama MP 2 <span class="text-rose-500 font-bold">*</span></label>
               <div class="relative">
                 <input type="text" id="search-ach-mp2-name" placeholder="-- Ketik / Cari MP 2 --" autocomplete="off"
-                  class="w-full px-3 py-2 pr-7 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-brand-500 shadow-2xs transition truncate"
+                  class="w-full px-3 py-2 pr-12 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-brand-500 shadow-2xs transition truncate"
                   onfocus="openSearchableDropdown('ach-mp2-name')"
                   oninput="filterSearchableDropdown('ach-mp2-name', this.value)"
                   onclick="openSearchableDropdown('ach-mp2-name')">
-                <button type="button" id="clear-ach-mp2-name" onclick="clearSearchableSelect('ach-mp2-name')"
-                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-                  title="Hapus pilihan">
+                <button type="button" id="clear-ach-mp2-name"
+                  onmousedown="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-mp2-name');"
+                  onclick="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-mp2-name');"
+                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1 cursor-pointer z-20"
+                  title="Hapus nama MP 2">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
                     </path>
                   </svg>
                 </button>
-                <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                <div class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer p-0.5"
+                  onclick="toggleSearchableDropdown(event, 'ach-mp2-name')">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                   </svg>
@@ -10229,8 +10344,11 @@
           renderAirCleanerMonitorTable();
         } else if (input.id === 'add-job-unit-search' && typeof filterAddJobUnitOptions === 'function') {
           filterAddJobUnitOptions();
-        } else if (input.id === 'add-job-armada-search' && typeof filterAddJobArmadaSearch === 'function') {
-          filterAddJobArmadaSearch('');
+        } else if (input.id === 'add-job-armada-search') {
+          const selLt = document.getElementById('add-job-lt');
+          if (selLt) selLt.value = '';
+          if (typeof handleArmadaSelectChange === 'function') handleArmadaSelectChange('');
+          if (typeof openAddJobArmadaDropdown === 'function') openAddJobArmadaDropdown();
         } else if (input.id === 'quick-armada-search' && typeof filterQuickArmadaList === 'function') {
           filterQuickArmadaList();
         }
@@ -10256,6 +10374,8 @@
 
         inputs.forEach(input => {
           if (!input || input.type === 'hidden' || input.type === 'checkbox' || input.type === 'radio') return;
+          // Abaikan input dropdown searchable modal ACH karena sudah memiliki tombol clear tersendiri
+          if (input.id && (input.id.startsWith('search-ach-') || input.id.startsWith('ach-'))) return;
 
           // Pastikan padding kanan cukup agar teks tidak tertumpuk dengan icon silang
           if (!input.classList.contains('pr-8') && !input.classList.contains('pr-9') && !input.classList.contains('pr-10') && !input.classList.contains('pr-12')) {
@@ -10325,6 +10445,7 @@
       document.addEventListener('input', (e) => {
         const target = e.target;
         if (!target || target.tagName !== 'INPUT') return;
+        if (target.id && (target.id.startsWith('search-ach-') || target.id.startsWith('ach-'))) return;
         const isSearch = (target.id && (target.id.toLowerCase().includes('search') || target.id === 'db-roster-search')) ||
           (target.placeholder && target.placeholder.toLowerCase().includes('cari'));
         if (isSearch) {
@@ -12030,61 +12151,82 @@
         if (kpiUnscheduledDurationChartInstance) kpiUnscheduledDurationChartInstance.destroy();
 
         const unschAchJobs = filteredUnsch.filter(j => j.status === 'ach' || j.status === 'done');
-        const calcUnschMins = (catKey, subKey) => {
-          return unschAchJobs
-            .filter(j => (j.cat === catKey || (j.cat && j.cat.includes(catKey)) || (j.job && String(j.job).toUpperCase().includes(subKey))))
-            .reduce((sum, j) => sum + calcJobDurationMins(j), 0);
+        const isJobBreakdown = (j) => {
+          const cond = String(j.kondisi || j.unitCondition || j.status || j.status_final || '').toLowerCase();
+          const desc = String(j.deskripsi || j.keterangan || '').toLowerCase();
+          return cond.includes('breakdown') || cond === 'bd' || desc.includes('breakdown') || desc.includes('bd');
         };
 
-        const minsGreasing = calcUnschMins('small', 'GREASING') + calcUnschMins('digger', 'GREASING');
-        const minsTopup = calcUnschMins('topup', 'TOP UP');
-        const minsAir = calcUnschMins('aircleaner', 'AIR CLEANER');
-        const minsNoncoal = calcUnschMins('non_coal', 'WASHING');
+        const isJobWashing = (j) => {
+          const isWt = (j.targetType === 'WT' || j.serviceType === 'watertruck' || ['coal', 'rom', 'non_coal', 'washing'].includes(j.cat) || String(j.id || '').includes('WT'));
+          const cond = String(j.kondisi || j.unitCondition || j.status || j.status_final || '').toLowerCase();
+          const desc = String(j.deskripsi || j.keterangan || '').toLowerCase();
+          return isWt && (cond.includes('wash') || desc.includes('wash') || cond.includes('cuci') || desc.includes('cuci') || ['coal', 'rom', 'non_coal'].includes(j.cat));
+        };
 
-        const totalUnschMins = minsGreasing + minsTopup + minsAir + minsNoncoal;
+        const isJobService = (j) => {
+          return !isJobBreakdown(j) && !isJobWashing(j);
+        };
 
-        const pctGreasing = totalUnschMins > 0 ? Math.round((minsGreasing / totalUnschMins) * 100) : 0;
-        const pctTopup = totalUnschMins > 0 ? Math.round((minsTopup / totalUnschMins) * 100) : 0;
-        const pctAir = totalUnschMins > 0 ? Math.round((minsAir / totalUnschMins) * 100) : 0;
-        const pctNoncoal = totalUnschMins > 0 ? Math.round((minsNoncoal / totalUnschMins) * 100) : 0;
+        const minsBreakdown = unschAchJobs.filter(isJobBreakdown).reduce((sum, j) => sum + calcJobDurationMins(j), 0);
+        const minsService = unschAchJobs.filter(isJobService).reduce((sum, j) => sum + calcJobDurationMins(j), 0);
+        const minsWashing = unschAchJobs.filter(isJobWashing).reduce((sum, j) => sum + calcJobDurationMins(j), 0);
 
-        const unschTableGreasing = document.getElementById('kpi-unsch-dur-table-greasing');
-        const unschTableTopup = document.getElementById('kpi-unsch-dur-table-topup');
-        const unschTableAir = document.getElementById('kpi-unsch-dur-table-aircleaner');
-        const unschTableNoncoal = document.getElementById('kpi-unsch-dur-table-noncoal');
+        const totalUnschMins = minsBreakdown + minsService + minsWashing;
+
+        const pctBreakdown = totalUnschMins > 0 ? Math.round((minsBreakdown / totalUnschMins) * 100) : 0;
+        const pctService = totalUnschMins > 0 ? Math.round((minsService / totalUnschMins) * 100) : 0;
+        const pctWashing = totalUnschMins > 0 ? Math.round((minsWashing / totalUnschMins) * 100) : 0;
+
+        const unschTableBreakdown = document.getElementById('kpi-unsch-dur-table-breakdown');
+        const unschTableService = document.getElementById('kpi-unsch-dur-table-service');
+        const unschTableWashing = document.getElementById('kpi-unsch-dur-table-washing');
         const unschTableTotal = document.getElementById('kpi-unsch-dur-table-total');
         const unschHeaderTotal = document.getElementById('kpi-unsch-dur-header-total');
         const unschCenterPct = document.getElementById('kpi-unsch-dur-center-pct');
         const unschCenterLabel = document.getElementById('kpi-unsch-dur-center-label');
 
-        const unschLegGreasing = document.getElementById('kpi-unsch-dur-legend-greasing');
-        const unschLegTopup = document.getElementById('kpi-unsch-dur-legend-topup');
-        const unschLegAir = document.getElementById('kpi-unsch-dur-legend-air');
-        const unschLegNoncoal = document.getElementById('kpi-unsch-dur-legend-noncoal');
+        const unschLegBreakdown = document.getElementById('kpi-unsch-dur-legend-breakdown');
+        const unschLegService = document.getElementById('kpi-unsch-dur-legend-service');
+        const unschLegWashing = document.getElementById('kpi-unsch-dur-legend-washing');
 
-        if (unschTableGreasing) unschTableGreasing.textContent = formatMinsToHoursMins(minsGreasing);
-        if (unschTableTopup) unschTableTopup.textContent = formatMinsToHoursMins(minsTopup);
-        if (unschTableAir) unschTableAir.textContent = formatMinsToHoursMins(minsAir);
-        if (unschTableNoncoal) unschTableNoncoal.textContent = formatMinsToHoursMins(minsNoncoal);
+        if (unschTableBreakdown) unschTableBreakdown.textContent = formatMinsToHoursMins(minsBreakdown);
+        if (unschTableService) unschTableService.textContent = formatMinsToHoursMins(minsService);
+        if (unschTableWashing) unschTableWashing.textContent = formatMinsToHoursMins(minsWashing);
         if (unschTableTotal) unschTableTotal.textContent = formatMinsToHoursMins(totalUnschMins);
         if (unschHeaderTotal) unschHeaderTotal.textContent = `Total: ${formatMinsToHoursMins(totalUnschMins)}`;
 
-        if (unschLegGreasing) unschLegGreasing.textContent = `Greasing (${pctGreasing}%)`;
-        if (unschLegTopup) unschLegTopup.textContent = `Top Up (${pctTopup}%)`;
-        if (unschLegAir) unschLegAir.textContent = `Air Cleaner (${pctAir}%)`;
-        if (unschLegNoncoal) unschLegNoncoal.textContent = `Washing Non Coal (${pctNoncoal}%)`;
+        if (unschLegBreakdown) unschLegBreakdown.textContent = `Breakdown (${pctBreakdown}%)`;
+        if (unschLegService) unschLegService.textContent = `Service (${pctService}%)`;
+        if (unschLegWashing) unschLegWashing.textContent = `Washing Request (${pctWashing}%)`;
 
-        if (unschCenterPct) unschCenterPct.textContent = totalUnschMins > 0 ? `${pctTopup}%` : '0%';
-        if (unschCenterLabel) unschCenterLabel.textContent = totalUnschMins > 0 ? (pctTopup > 0 ? 'TOP UP' : 'UNSCHEDULE') : '-';
+        // Cari kategori dominan untuk angka tengah donat
+        let dominantPct = 0;
+        let dominantLabel = '-';
+        if (totalUnschMins > 0) {
+          if (minsBreakdown >= minsService && minsBreakdown >= minsWashing) {
+            dominantPct = pctBreakdown;
+            dominantLabel = 'BREAKDOWN';
+          } else if (minsService >= minsBreakdown && minsService >= minsWashing) {
+            dominantPct = pctService;
+            dominantLabel = 'SERVICE';
+          } else {
+            dominantPct = pctWashing;
+            dominantLabel = 'WASHING';
+          }
+        }
+
+        if (unschCenterPct) unschCenterPct.textContent = totalUnschMins > 0 ? `${dominantPct}%` : '0%';
+        if (unschCenterLabel) unschCenterLabel.textContent = totalUnschMins > 0 ? dominantLabel : '-';
 
         const hasUnschDur = totalUnschMins > 0;
         kpiUnscheduledDurationChartInstance = new Chart(ctxUnschDur, {
           type: 'doughnut',
           data: {
-            labels: hasUnschDur ? ['GREASING', 'TOP UP', 'CLEAN AIR CLEANER', 'WASHING NON COAL'] : ['Belum Ada Permintaan'],
+            labels: hasUnschDur ? ['BREAKDOWN', 'SERVICE', 'WASHING REQUEST'] : ['Belum Ada Permintaan'],
             datasets: [{
-              data: hasUnschDur ? [pctGreasing, pctTopup, pctAir, pctNoncoal] : [1],
-              backgroundColor: hasUnschDur ? ['#0284C7', '#EA580C', '#16A34A', '#06B6D4'] : ['#E2E8F0'],
+              data: hasUnschDur ? [pctBreakdown, pctService, pctWashing] : [1],
+              backgroundColor: hasUnschDur ? ['#DC2626', '#0284C7', '#06B6D4'] : ['#E2E8F0'],
               borderWidth: 2,
               borderColor: '#FFFFFF'
             }]
@@ -12100,10 +12242,9 @@
                 callbacks: {
                   label: (c) => {
                     const durasiMap = {
-                      'GREASING': formatMinsToHoursMins(minsGreasing),
-                      'TOP UP': formatMinsToHoursMins(minsTopup),
-                      'CLEAN AIR CLEANER': formatMinsToHoursMins(minsAir),
-                      'WASHING NON COAL': formatMinsToHoursMins(minsNoncoal)
+                      'BREAKDOWN': formatMinsToHoursMins(minsBreakdown),
+                      'SERVICE': formatMinsToHoursMins(minsService),
+                      'WASHING REQUEST': formatMinsToHoursMins(minsWashing)
                     };
                     return ` ${c.label}: ${c.raw}% (${durasiMap[c.label] || ''})`;
                   }
@@ -16995,49 +17136,128 @@
       const startDate = document.getElementById('pica-filter-start-date')?.value || state.picaFilterStartDate || '';
       const endDate = document.getElementById('pica-filter-end-date')?.value || state.picaFilterEndDate || '';
 
-      const isNonAch = j => {
-        const st = String(j.status || j.status_final || '').toLowerCase();
-        return st === 'non_ach' || st === 'non-ach';
+      const isPicaEligible = j => {
+        if (!j) return false;
+        const st = String(j.status_final || j.status || '').toLowerCase().trim();
+        const idStr = String(j.id || '');
+        const isCarry = Boolean(j.isPending || j.isPendingShift || j.pendingFromShift || j.isCarryOver);
+
+        // 1. NON-ACH, CANCEL, PENDING, BREAKDOWN (BD), PARKIR PASTI OTOMATIS MASUK PICA
+        const isDefiniteNonAch = ['non_ach', 'non-ach', 'pending', 'cancel', 'cancelled', 'bd', 'breakdown', 'parkir'].includes(st) ||
+          idStr.includes('NON-ACH') || idStr.includes('NON_ACH') || isCarry;
+        if (isDefiniteNonAch) return true;
+
+        // Ambil seluruh teks catatan kendala
+        const rawReason = String(j.non_ach_reason || j.alasanNonAch || j.problem_description || '').trim();
+        const rawKet = String(j.keterangan || j.service_notes || j.bd_notes || '').trim();
+        const combinedLower = `${rawReason} ${rawKet}`.toLowerCase();
+
+        // Cek indikasi khusus "Pending" atau "Dialihkan" di keterangan
+        if (combinedLower.includes('pending shift') || combinedLower.includes('dialihkan ke shift') || combinedLower.includes('non ach') || combinedLower.includes('non-ach')) {
+          return true;
+        }
+
+        // 2. Jika status SCHEDULED (antrean belum selesai):
+        if (st === 'scheduled') {
+          // Hanya masuk ke PICA jika ada catatan kendala / dialihkan
+          const hasObstacle = combinedLower.includes('crowded') || combinedLower.includes('hujan') || combinedLower.includes('rain') ||
+            combinedLower.includes('badai') || combinedLower.includes('kendala') || combinedLower.includes('breakdown') ||
+            combinedLower.includes('antri') || combinedLower.includes('antre') || combinedLower.includes('slip') ||
+            combinedLower.includes('licin') || combinedLower.includes('blasting') || combinedLower.includes('dialihkan') ||
+            combinedLower.includes('pending') || combinedLower.includes('terhambat');
+          return hasObstacle;
+        }
+
+        // 3. Untuk Job ACH / ACHIEVED / DONE / SERVICE:
+        // ATURAN PENGGUNA: Jika job ACH tapi ada keterangan kendala (crowded, hujan, dll) -> masuk PICA.
+        // Jika cuma "Nihil / Lancar sesuai SOP", "selesai", "aman", atau kosong -> TIDAK MASUK PICA!
+        const isAchievedStatus = ['ach', 'achieved', 'done', 'service'].includes(st) || !st;
+        if (isAchievedStatus) {
+          // Fungsi pembersih teks default normal/aman
+          const isSafeOrNormalText = (txt) => {
+            if (!txt) return true;
+            const t = txt.toLowerCase().trim();
+            if (t === '-' || t === 'tidak ada' || t === 'nihil' || t === 'aman' || t === 'operasional' || t === 'normal') return true;
+            if (t === 'selesai' || t === 'done' || t === 'ok' || t === 'sesuai sop' || t === 'aman sudah') return true;
+            if (t.includes('nihil / lancar') || t.includes('lancar sesuai sop') || t.includes('selesai sesuai sop')) return true;
+            if (t === 'tidak ada kendala' || t === 'aman lancar' || t === 'lancar aman' || t === 'lancar') return true;
+            return false;
+          };
+
+          const hasSpecificReason = rawReason && !isSafeOrNormalText(rawReason);
+          const hasSpecificKet = rawKet && !isSafeOrNormalText(rawKet);
+
+          // Jika teks hanya kosong atau status normal/aman -> TIDAK MASUK PICA
+          if (!hasSpecificReason && !hasSpecificKet) return false;
+
+          // Periksa apakah memuat kata kunci kendala yang menghambat job
+          const obstacleKeywords = [
+            'crowded', 'hujan', 'rain', 'badai', 'terhambat', 'telat', 'delay',
+            'antri', 'antre', 'antrian', 'amblas', 'slip', 'licin', 'becek',
+            'blasting', 'ledakan', 'trouble', 'rusak', 'bocor', 'pecah', 'pica',
+            'kendala', 'menunggu', 'tunggu', 'breakdown', 'bd', 'pending',
+            'dialihkan', 'carry over', 'tertutup', 'parkir', 'terkendala'
+          ];
+
+          const hasKeyword = obstacleKeywords.some(kw => combinedLower.includes(kw));
+          if (hasKeyword) return true;
+
+          // Jika ada catatan khusus dari MP yang panjangnya signifikan dan bukan kata aman/lancar
+          if (hasSpecificReason && rawReason.length > 3) return true;
+          if (hasSpecificKet && rawKet.length > 3) {
+            const stripped = rawKet.toLowerCase().replace(/^(job|unit)?\s*(selesai|aman|sudah|done)\s*/g, '').trim();
+            if (stripped.length > 2 && !stripped.includes('lancar') && !stripped.includes('sop') && !stripped.includes('aman')) {
+              return true;
+            }
+          }
+
+          return false;
+        }
+
+        return false;
       };
 
       let pool = [
-        ...(state.lubetruckState?.jobs || []).filter(isNonAch),
-        ...(state.watertruckState?.jobs || []).filter(isNonAch),
-        ...(state.unscheduledLtJobs || []).filter(isNonAch),
-        ...(state.unscheduledWtJobs || []).filter(isNonAch)
+        ...(state.lubetruckState?.jobs || []).filter(isPicaEligible),
+        ...(state.watertruckState?.jobs || []).filter(isPicaEligible),
+        ...(state.unscheduledLtJobs || []).filter(isPicaEligible),
+        ...(state.unscheduledWtJobs || []).filter(isPicaEligible)
       ];
 
       if (Array.isArray(state.jobHistory) && state.jobHistory.length > 0) {
         const existingIds = new Set(pool.map(j => String(j.id || '')));
         state.jobHistory.forEach(h => {
-          if (isNonAch(h) && !existingIds.has(String(h.job_id || ''))) {
+          const targetHid = String(h.job_id || h.id || '');
+          if (isPicaEligible(h) && targetHid && !existingIds.has(targetHid)) {
+            const rawStatus = h.status_final || h.status || 'ACH';
             pool.push({
-              id: h.job_id,
-              noLambung: h.no_lambung,
-              typeUnit: h.type_unit,
+              id: targetHid,
+              noLambung: h.no_lambung || h.noLambung,
+              typeUnit: h.type_unit || h.typeUnit,
               cat: h.cat,
-              tanggal: h.tanggal_rencana || h.tanggal_eksekusi,
-              tanggalRealisasi: h.tanggal_eksekusi,
-              shift: h.shift_rencana,
-              waktu: h.waktu_rencana,
+              tanggal: h.tanggal_rencana || h.tanggal_eksekusi || h.tanggal,
+              tanggalRealisasi: h.tanggal_eksekusi || h.tanggalRealisasi || h.tanggal,
+              shift: h.shift_rencana || h.shift,
+              waktu: h.waktu_rencana || h.waktu,
               cluster: h.cluster,
               lokasi: h.lokasi,
-              armada: h.armada_unit,
-              ltUnit: h.armada_unit,
-              wtUnit: h.armada_unit,
-              armada_unit: h.armada_unit,
-              opt: h.opt_name,
-              mp1: h.mp1,
-              mp2: h.mp2,
-              jamStart: h.jam_start,
-              jamEnd: h.jam_end,
+              armada: h.armada_unit || h.armada || h.ltUnit || h.wtUnit || '-',
+              ltUnit: h.armada_unit || h.ltUnit || '-',
+              wtUnit: h.armada_unit || h.wtUnit || '-',
+              armada_unit: h.armada_unit || h.armada || '-',
+              opt: h.opt_name || h.opt || '-',
+              mp1: h.mp1 || '-',
+              mp2: h.mp2 || '-',
+              jamStart: h.jam_start || h.jamStart,
+              jamEnd: h.jam_end || h.jamEnd,
               durasi: h.durasi,
-              status: 'non_ach',
+              status: rawStatus,
+              status_final: h.status_final || (typeof rawStatus === 'string' ? rawStatus.toUpperCase() : 'ACH'),
               keterangan: h.keterangan || h.non_ach_reason,
-              alasanNonAch: h.non_ach_reason,
-              fotos: (Array.isArray(h.fotos) && h.fotos.length > 0) ? h.fotos : (JSON.parse(safeStorage.getItem('SE_JOB_FOTOS_' + h.job_id) || '[]'))
+              alasanNonAch: h.non_ach_reason || h.keterangan,
+              fotos: (Array.isArray(h.fotos) && h.fotos.length > 0) ? h.fotos : (JSON.parse(safeStorage.getItem('SE_JOB_FOTOS_' + targetHid) || '[]'))
             });
-            existingIds.add(String(h.job_id || ''));
+            existingIds.add(targetHid);
           }
         });
       }
@@ -17048,6 +17268,15 @@
         state.picaCloudRecords.forEach(p => {
           const jId = String(p.job_id || p.id || '');
           if (jId && !existingIds.has(jId)) {
+            const candidate = {
+              status: p.status_final || p.status || 'ACH',
+              status_final: p.status_final || (p.status ? String(p.status).toUpperCase() : 'ACH'),
+              keterangan: p.problem_description || p.root_cause || '-',
+              alasanNonAch: p.problem_description || '-',
+              non_ach_reason: p.problem_description || ''
+            };
+            if (!isPicaEligible(candidate)) return;
+
             pool.push({
               id: jId,
               noLambung: p.no_lambung,
@@ -17066,10 +17295,10 @@
               mp2: '-',
               jamStart: '',
               jamEnd: '',
-              durasi: null,
-              status: 'non_ach',
-              keterangan: p.problem_description || p.root_cause || '-',
-              alasanNonAch: p.problem_description || '-',
+              status: candidate.status,
+              status_final: candidate.status_final,
+              keterangan: candidate.keterangan,
+              alasanNonAch: candidate.alasanNonAch,
               nonAchCategory: p.kategori || 'Operasional',
               fotos: []
             });
@@ -17133,12 +17362,85 @@
     }
     window.getFilteredPicaJobs = getFilteredPicaJobs;
 
+    /**
+     * Helper ikon indikator sorting tabel Log PICA Kendala
+     */
+    function updatePicaSortHeaderIcons() {
+      const cols = ['noId', 'typeJob', 'waktu', 'unit', 'cluster', 'armada', 'personil', 'keterangan', 'status'];
+      const curCol = state.picaSort?.column;
+      const curDir = state.picaSort?.direction;
+      cols.forEach(c => {
+        const el = document.getElementById(`pica-sort-icon-${c}`);
+        if (!el) return;
+        if (curCol !== c || !curDir) {
+          el.className = 'inline-block ml-0.5 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition';
+          el.textContent = '⇅';
+        } else if (curDir === 'asc') {
+          el.className = 'inline-block ml-0.5 text-emerald-600 font-black text-[10px] leading-none';
+          el.textContent = '▲';
+        } else {
+          el.className = 'inline-block ml-0.5 text-emerald-600 font-black text-[10px] leading-none';
+          el.textContent = '▼';
+        }
+      });
+    }
+    window.updatePicaSortHeaderIcons = updatePicaSortHeaderIcons;
+
+    /**
+     * Tri-State Sort Kolom Tabel Log PICA Kendala:
+     * - Klik 1: Arah pertama (ASC, atau DESC untuk kolom waktu)
+     * - Klik 2: Arah sebaliknya
+     * - Klik 3: Reset sortir kembali ke awal (urutan default tanpa sort kolom)
+     */
+    function sortPicaBy(col) {
+      const defaultDescCols = ['waktu'];
+      const initialDirection = defaultDescCols.includes(col) ? 'desc' : 'asc';
+      const oppositeDirection = (initialDirection === 'asc' ? 'desc' : 'asc');
+
+      if (!state.picaSort || state.picaSort.column !== col) {
+        state.picaSort = { column: col, direction: initialDirection, step: 1 };
+      } else if (state.picaSort.step === 1) {
+        state.picaSort.direction = oppositeDirection;
+        state.picaSort.step = 2;
+      } else {
+        state.picaSort = null;
+      }
+      renderPicaTable();
+    }
+    window.sortPicaBy = sortPicaBy;
+
+    function getPicaStatusBadgeHtml(job) {
+      const raw = String(job.status_final || job.status || '').toLowerCase().trim();
+      if (['ach', 'achieved', 'done', 'service'].includes(raw)) {
+        return `<span class="inline-flex items-center justify-center min-w-[54px] px-2.5 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">ACH</span>`;
+      }
+      if (['non_ach', 'non-ach'].includes(raw)) {
+        return `<span class="inline-flex items-center justify-center min-w-[54px] px-2.5 py-0.5 rounded-full text-[9.5px] font-bold bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs">NON-ACH</span>`;
+      }
+      if (['bd', 'breakdown'].includes(raw)) {
+        return `<span class="inline-flex items-center justify-center min-w-[54px] px-2.5 py-0.5 rounded-full text-[9.5px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shadow-2xs">BD</span>`;
+      }
+      if (['pending'].includes(raw)) {
+        return `<span class="inline-flex items-center justify-center min-w-[54px] px-2.5 py-0.5 rounded-full text-[9.5px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shadow-2xs">PENDING</span>`;
+      }
+      if (['parkir'].includes(raw)) {
+        return `<span class="inline-flex items-center justify-center min-w-[54px] px-2.5 py-0.5 rounded-full text-[9.5px] font-bold bg-purple-100 text-purple-800 border border-purple-300 shadow-2xs">PARKIR</span>`;
+      }
+      const label = (job.status_final || job.status || 'ACH').toUpperCase();
+      return `<span class="inline-flex items-center justify-center min-w-[54px] px-2.5 py-0.5 rounded-full text-[9.5px] font-bold bg-slate-100 text-slate-800 border border-slate-300 shadow-2xs">${label}</span>`;
+    }
+    window.getPicaStatusBadgeHtml = getPicaStatusBadgeHtml;
+
     function renderPicaTable() {
       const tbody = document.getElementById('pica-logs-tbody');
       const badge = document.getElementById('pica-count-badge');
       if (!tbody) return;
 
-      const nonAchJobs = getFilteredPicaJobs();
+      if (typeof updatePicaSortHeaderIcons === 'function') {
+        updatePicaSortHeaderIcons();
+      }
+
+      let nonAchJobs = getFilteredPicaJobs();
 
       if (badge) {
         badge.textContent = `Total Kendala: ${nonAchJobs.length} Unit`;
@@ -17148,7 +17450,7 @@
       if (nonAchJobs.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="8" class="py-8 text-center text-slate-400 italic text-[11px]">
+            <td colspan="10" class="py-8 text-center text-slate-400 italic text-xs">
               Tidak ada catatan kendala PICA untuk kriteria pencarian / filter ini.
             </td>
           </tr>
@@ -17156,45 +17458,312 @@
         return;
       }
 
+      // Terapkan sortir tri-state jika kolom aktif
+      if (state.picaSort && state.picaSort.column && state.picaSort.direction) {
+        const col = state.picaSort.column;
+        const mult = (state.picaSort.direction === 'asc') ? 1 : -1;
+        nonAchJobs.sort((a, b) => {
+          if (col === 'noId') {
+            const valA = (typeof getJobNoId === 'function') ? getJobNoId(a) : (a.id || '');
+            const valB = (typeof getJobNoId === 'function') ? getJobNoId(b) : (b.id || '');
+            return String(valA).localeCompare(String(valB)) * mult;
+          }
+          if (col === 'typeJob') {
+            const valA = (typeof getJobTypeCode === 'function') ? getJobTypeCode(a) : (a.cat || '');
+            const valB = (typeof getJobTypeCode === 'function') ? getJobTypeCode(b) : (b.cat || '');
+            return String(valA).localeCompare(String(valB)) * mult;
+          }
+          if (col === 'waktu') {
+            const tA = (typeof getCompletedJobSortTime === 'function') ? getCompletedJobSortTime(a) : 0;
+            const tB = (typeof getCompletedJobSortTime === 'function') ? getCompletedJobSortTime(b) : 0;
+            return (tA - tB) * mult;
+          }
+          if (col === 'unit') {
+            const valA = String(a.noLambung || '').toUpperCase();
+            const valB = String(b.noLambung || '').toUpperCase();
+            return valA.localeCompare(valB) * mult;
+          }
+          if (col === 'cluster') {
+            const valA = (String(a.cluster || '') + ' ' + String(a.lokasi || '')).toUpperCase();
+            const valB = (String(b.cluster || '') + ' ' + String(b.lokasi || '')).toUpperCase();
+            return valA.localeCompare(valB) * mult;
+          }
+          if (col === 'armada') {
+            const valA = String((typeof resolveJobArmada === 'function' ? resolveJobArmada(a) : a.armada) || '').toUpperCase();
+            const valB = String((typeof resolveJobArmada === 'function' ? resolveJobArmada(b) : b.armada) || '').toUpperCase();
+            return valA.localeCompare(valB) * mult;
+          }
+          if (col === 'personil') {
+            const valA = String(a.opt || a.opt_name || '').toUpperCase();
+            const valB = String(b.opt || b.opt_name || '').toUpperCase();
+            return valA.localeCompare(valB) * mult;
+          }
+          if (col === 'keterangan') {
+            const valA = String(a.keterangan || a.alasanNonAch || '').toUpperCase();
+            const valB = String(b.keterangan || b.alasanNonAch || '').toUpperCase();
+            return valA.localeCompare(valB) * mult;
+          }
+          if (col === 'status') {
+            const valA = String(a.status_final || a.status || '').toUpperCase();
+            const valB = String(b.status_final || b.status || '').toUpperCase();
+            return valA.localeCompare(valB) * mult;
+          }
+          return 0;
+        });
+      }
+
       nonAchJobs.forEach(job => {
         const unitType = getUnitTypeFromMaster(job.noLambung, job.typeUnit || 'Unit');
-        const isWt = (job.cat === 'coal' || job.cat === 'rom' || job.cat === 'non_coal' || (job.id && job.id.startsWith('WTJ')) || job.serviceType === 'watertruck');
+        const planDateDisplay = (typeof formatDisplayDate === 'function') ? formatDisplayDate(job.tanggal || '2026-10-27') : (job.tanggal || '-');
+        const waktuKendala = (job.jamStart && job.jamEnd) ? `${job.jamStart} s/d ${job.jamEnd}` : (job.waktu || job.jamStart || '-');
+
+        // Evaluasi armada dan personil akurat persis seperti di tabel Riwayat Selesai
+        let rawArmada = (job.armada && job.armada !== '-') ? job.armada : ((job.wtUnit && job.wtUnit !== '-') ? job.wtUnit : ((job.ltUnit && job.ltUnit !== '-') ? job.ltUnit : ((job.armadaUnit && job.armadaUnit !== '-') ? job.armadaUnit : '')));
+        let finalArmada = rawArmada || (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '') || '';
+
+        const targetDate = job.tanggalRealisasi || job.tanggal_eksekusi || job.tanggal || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : '');
+        const targetShift = Number(job.shift || job.shift_rencana || 1);
+
+        // Fallback cerdas: Jika armada belum ketemu, cari dari nama operator di Master Roster
+        const rawOpt = String(job.opt || job.opt_name || '').trim().toUpperCase();
+        if ((!finalArmada || finalArmada === '-' || finalArmada.startsWith('--')) && rawOpt && rawOpt !== '-' && Array.isArray(state.masterRoster)) {
+          const rOpt = state.masterRoster.find(r =>
+            String(r.nama || '').trim().toUpperCase() === rawOpt &&
+            (!targetDate || r.tanggal === targetDate) &&
+            (!r.shift || Number(r.shift) === targetShift) &&
+            (r.unitEfektif || r.unit_efektif || r.unit) &&
+            (r.unitEfektif !== 'SPARE' && r.unit_efektif !== 'SPARE')
+          );
+          if (rOpt) {
+            finalArmada = String(rOpt.unitEfektif || rOpt.unit_efektif || rOpt.unit || '').trim().toUpperCase();
+          }
+        }
+
+        // Fallback kluster jika armada belum ada
+        if (!finalArmada || finalArmada === '-' || finalArmada.startsWith('--')) {
+          const isWt = (job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat) || String(job.id || '').includes('WT'));
+          const assignedMap = isWt ? state.clusterWtAssigned : state.clusterLtAssigned;
+          if (assignedMap && job.cluster && assignedMap[job.cluster]) {
+            const firstAssigned = assignedMap[job.cluster].split(',')[0].trim().toUpperCase();
+            if (firstAssigned && firstAssigned !== '-') finalArmada = firstAssigned;
+          }
+        }
+
+        if (!finalArmada) finalArmada = '-';
+
+        // Personil fallback dari roster armada jika belum tersimpan di job
+        const crewFallback = (finalArmada !== '-' && typeof getPersonnelForArmada === 'function')
+          ? getPersonnelForArmada(finalArmada, job.cluster, targetShift, targetDate)
+          : { opt: '-', mp1: '-', mp2: '-' };
+
+        const optDisplay = !isDummyPersonnelName(job.opt) ? job.opt : (!isDummyPersonnelName(crewFallback.opt) ? crewFallback.opt : (job.opt && job.opt !== '-' ? job.opt : '-'));
+        const mp1Display = !isDummyPersonnelName(job.mp1) ? job.mp1 : (!isDummyPersonnelName(crewFallback.mp1) ? crewFallback.mp1 : (job.mp1 && job.mp1 !== '-' ? job.mp1 : '-'));
+        const mp2Display = !isDummyPersonnelName(job.mp2) ? job.mp2 : (!isDummyPersonnelName(crewFallback.mp2) ? crewFallback.mp2 : (job.mp2 && job.mp2 !== '-' ? job.mp2 : '-'));
+
+        let mpCombined = '-';
+        if (mp1Display !== '-' && mp2Display !== '-') {
+          mpCombined = `${mp1Display} & ${mp2Display}`;
+        } else if (mp1Display !== '-') {
+          mpCombined = mp1Display;
+        } else if (mp2Display !== '-') {
+          mpCombined = mp2Display;
+        }
+
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50/80 transition align-top';
+        tr.className = 'hover:bg-slate-50/80 transition align-middle';
         tr.innerHTML = `
-          <td class="py-2.5 px-3 font-mono text-[11px] text-slate-700 break-words">
-            <div class="font-extrabold text-slate-900 text-[11px] leading-tight">${job.tanggal || '2026-09-27'}</div>
-            <div class="text-slate-500 text-[11px] font-semibold mt-0.5 leading-tight">${job.jamStart || job.waktu || '07:40'} WITA</div>
+          <!-- KOLOM 0: NO ID (RATA KIRI TENGAH) -->
+          <td class="hidden md:table-cell py-2.5 px-2.5 text-left align-middle font-mono font-bold text-[9.5px] lg:text-[10px] text-slate-800 select-all tracking-tight leading-tight">
+            ${(typeof formatJobNoIdDesktopHtml === 'function' && typeof getJobNoId === 'function') ? formatJobNoIdDesktopHtml(getJobNoId(job)) : (job.noId || job.id || '-')}
           </td>
-          <td class="py-2.5 px-3 break-words">
-            <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-bold text-slate-900 font-mono hover:text-emerald-700 text-left cursor-pointer text-[11.5px] md:text-xs leading-snug tracking-wide">
+
+          <!-- KOLOM 1: TYPE JOB (RATA KIRI TENGAH) -->
+          <td class="py-2.5 px-2 text-left align-middle break-words">
+            <span class="md:hidden flex items-center justify-start cursor-pointer" onclick="openJobDetailModal('${job.id}')" title="Klik untuk lihat detail">${(typeof getJobSchBadgeHtml === 'function') ? getJobSchBadgeHtml(job) : (job.cat || 'JOB')}</span>
+            <span class="hidden md:inline font-bold text-slate-800 text-[10px] leading-tight text-left">${(typeof getJobSchPlainHtml === 'function') ? getJobSchPlainHtml(job) : (job.cat || 'JOB')}</span>
+          </td>
+
+          <!-- KOLOM 2: WAKTU KENDALA (RATA KIRI TENGAH) -->
+          <td class="hidden md:table-cell py-2.5 px-2 text-left align-middle text-slate-700 break-words">
+            <div class="font-bold text-slate-900 text-[10px] leading-tight text-left">${planDateDisplay}</div>
+            <div class="text-slate-500 text-[10px] font-semibold mt-0.5 leading-tight text-left">${waktuKendala}</div>
+          </td>
+
+          <!-- KOLOM 3: NO UNIT (RATA KIRI TENGAH) -->
+          <td class="py-2.5 px-2 text-left align-middle break-words">
+            <button type="button" onclick="openJobDetailModal('${job.id}')" class="font-bold text-slate-900 hover:text-emerald-700 text-left cursor-pointer text-[10px] leading-snug tracking-wide block w-full">
               ${job.noLambung}
             </button>
-            <span class="text-[11px] font-semibold text-slate-500 block uppercase tracking-tight leading-tight mt-0.5">${unitType}</span>
+            <span class="hidden md:block text-[10px] font-semibold text-slate-500 uppercase tracking-tight mt-0.5 text-left">${unitType}</span>
           </td>
-          <td class="py-2.5 px-3 break-words">
-            <span class="font-bold text-slate-800 text-[11.5px] block leading-tight">KGU ${job.cluster || 'Selatan'}</span>
-            <span class="text-[11px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block truncate">${job.lokasi || '-'}</span>
+
+          <!-- KOLOM 4: CLUSTER & LOKASI (RATA KIRI TENGAH) -->
+          <td class="py-2.5 px-2 text-left align-middle break-words">
+            <span class="font-bold text-slate-800 text-[10px] block leading-tight text-left">${(typeof formatClusterLabel === 'function') ? formatClusterLabel(job.cluster) : (job.cluster || '-')}</span>
+            <span class="text-[10px] text-slate-500 font-semibold uppercase mt-0.5 block leading-tight text-left">${job.lokasi || '-'}</span>
           </td>
-          <td class="hidden md:table-cell py-2.5 px-3 text-center align-middle">
-            ${renderArmadaCell(job, isWt)}
+
+          <!-- KOLOM 5: ARMADA (RATA KIRI TENGAH) -->
+          <td class="py-2.5 px-2 text-left align-middle break-words">
+            <span class="font-bold text-[10px] text-left block leading-tight ${finalArmada !== '-' ? 'text-slate-800' : 'text-slate-300'}">
+              ${finalArmada}
+            </span>
           </td>
-          <td class="hidden md:table-cell py-2.5 px-3 break-words text-[11px]">
-            ${renderPersonnelCell(job)}
+
+          <!-- KOLOM 6: PERSONIL (RATA KIRI TENGAH) -->
+          <td class="hidden md:table-cell py-2.5 px-2.5 text-left align-middle break-words text-[10px]">
+            <div class="leading-tight space-y-0.5 text-left">
+              <div class="truncate text-left" title="Operator (OPT): ${optDisplay}">
+                <span class="text-slate-400 font-semibold text-[9.5px] uppercase tracking-wider">OPT:</span>
+                <span class="font-bold text-slate-800 text-[10px] ml-0.5">${optDisplay}</span>
+              </div>
+              <div class="truncate text-slate-600 text-left" title="Manpower (MP): ${mpCombined}">
+                <span class="text-slate-400 font-semibold text-[9.5px] uppercase tracking-wider">MP:</span>
+                <span class="font-semibold text-slate-700 text-[10px] ml-0.5">${mpCombined}</span>
+              </div>
+            </div>
           </td>
-          <td class="hidden md:table-cell py-2.5 px-3 text-center text-[11px] align-middle">
-            <span class="inline-block px-2 py-0.5 rounded bg-slate-100 font-mono font-bold text-slate-700 text-[11px]">${job.fotos ? job.fotos.length : 0}/4</span>
+
+          <!-- KOLOM 7: KETERANGAN PICA (PENYEBAB) -->
+          <td class="hidden md:table-cell py-2.5 px-2.5 text-left align-middle break-words">
+            <span class="text-rose-700 font-medium text-[10px] leading-relaxed block">${job.keterangan || job.alasanNonAch || 'Kendala operasional di pit tambang'}</span>
           </td>
-          <td class="hidden md:table-cell py-2.5 px-3 text-[11.5px] text-rose-700 font-medium break-words">
-            ${job.keterangan || job.alasanNonAch || 'Kendala operasional di pit tambang'}
+
+          <!-- KOLOM 8: STATUS (RATA TENGAH - DIAMBIL DARI DATA ASLI) -->
+          <td class="py-2.5 px-1 md:px-2 text-center align-middle">
+            <div class="flex items-center justify-center">
+              ${getPicaStatusBadgeHtml(job)}
+            </div>
           </td>
-          <td class="py-2.5 px-3 text-center align-middle">
-            <span class="inline-flex items-center justify-center min-w-[54px] px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs">NON-ACH</span>
+
+          <!-- KOLOM 9: AKSI (ACTION / DETAIL) -->
+          <td class="py-2.5 px-1 md:px-2 text-center align-middle">
+            ${renderPicaActionCell(job)}
           </td>
         `;
         tbody.appendChild(tr);
       });
     }
+
+    /**
+     * Render Tombol Aksi di Tabel Log PICA Kendala:
+     * - Jika job masih SCHEDULED / PENDING (belum di-close/selesai): Sediakan tombol ACTION langsung dan JADWAL ↗
+     * - Jika job sudah selesai (ACH, NON-ACH, SERVICE, BD, CANCEL): Sediakan tombol DETAIL
+     */
+    function renderPicaActionCell(job) {
+      if (!job) return '<span class="text-slate-300">-</span>';
+      const rawStatus = String(job.status_final || job.status || '').toLowerCase().trim();
+      const isPendingOrScheduled = (rawStatus === 'scheduled' || rawStatus === 'pending' || Boolean(job.isPending));
+
+      if (isPendingOrScheduled) {
+        return `
+          <div class="flex items-center justify-center gap-1 flex-wrap">
+            <button type="button" onclick="openPicaJobAction('${job.id}')"
+              class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[9px] uppercase transition shadow-2xs cursor-pointer active:scale-95 whitespace-nowrap"
+              title="Tindakan Langsung: Selesaikan (ACH) atau Tutup (Non-ACH)">
+              ACTION
+            </button>
+            <button type="button" onclick="jumpFromPicaToSchedule('${job.id}')"
+              class="px-1.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[9px] transition shadow-2xs cursor-pointer active:scale-95 whitespace-nowrap"
+              title="Lompat ke Layar Jadwal sesuai Tanggal (${job.tanggal || '-'}) &amp; Kategori">
+              SCH ↗
+            </button>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="flex items-center justify-center">
+          <button type="button" onclick="openJobDetailModal('${job.id}')"
+            class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[9px] transition shadow-2xs cursor-pointer active:scale-95 whitespace-nowrap"
+            title="Lihat Detail Riwayat &amp; Bukti Foto">
+            DETAIL
+          </button>
+        </div>
+      `;
+    }
+    window.renderPicaActionCell = renderPicaActionCell;
+
+    /**
+     * Membuka form aksi (ACH / Non-ACH) langsung dari tabel Log PICA Kendala
+     */
+    async function openPicaJobAction(jobId) {
+      if (!jobId) return;
+      let job = (typeof findJobById === 'function') ? findJobById(jobId) : null;
+      if (!job) {
+        const picaList = (typeof getFilteredPicaJobs === 'function') ? getFilteredPicaJobs() : [];
+        job = picaList.find(j => String(j.id) === String(jobId));
+      }
+      if (!job) {
+        showToast('Data pekerjaan kendala tidak ditemukan!', 'error');
+        return;
+      }
+
+      // Pastikan job ada di daftar antrean aktif agar sinkronisasi dan form aksi bekerja mulus
+      const isWt = (typeof isJobWaterTruck === 'function' ? isJobWaterTruck(job) : false) || String(job.id).includes('WT');
+      const targetList = isWt ? (state.watertruckState?.jobs || []) : (state.lubetruckState?.jobs || []);
+      const existsInActive = targetList.some(x => String(x.id) === String(job.id));
+      if (!existsInActive && Array.isArray(targetList)) {
+        targetList.push(job);
+      }
+
+      // Buka modal keputusan tindakan (ACH vs NON-ACH)
+      if (typeof openActionDecision === 'function') {
+        openActionDecision(job.id);
+      } else {
+        showToast('Modal tindakan tidak tersedia.', 'warning');
+      }
+    }
+    window.openPicaJobAction = openPicaJobAction;
+
+    /**
+     * Navigasi cerdas: Lompat dari Log PICA langsung ke layar menu jadwal LT / WT
+     * dengan tanggal, kategori, dan shift yang otomatis terpasang sesuai job tersebut.
+     */
+    function jumpFromPicaToSchedule(jobId) {
+      if (!jobId) return;
+      let job = (typeof findJobById === 'function') ? findJobById(jobId) : null;
+      if (!job) {
+        const picaList = (typeof getFilteredPicaJobs === 'function') ? getFilteredPicaJobs() : [];
+        job = picaList.find(j => String(j.id) === String(jobId));
+      }
+      if (!job) {
+        showToast('Data pekerjaan tidak ditemukan.', 'error');
+        return;
+      }
+
+      const isWt = (typeof isJobWaterTruck === 'function' ? isJobWaterTruck(job) : false) || String(job.id).includes('WT');
+      const targetTab = isWt ? 'wt-schedule' : 'lt-schedule';
+      const targetDate = String(job.tanggal || job.tanggal_rencana || job.tanggalRealisasi || getEffectiveTodayString()).split('T')[0];
+      const targetCat = job.cat || (isWt ? 'coal' : 'small');
+      const targetShift = String(job.shift || 1);
+
+      if (isWt) {
+        if (!state.watertruckState) state.watertruckState = {};
+        state.watertruckState.filterDate = targetDate;
+        state.watertruckState.activeCategory = targetCat;
+        state.watertruckState.filterShift = targetShift;
+        const dInp = document.getElementById('wt-filter-date');
+        if (dInp) dInp.value = targetDate;
+        const sInp = document.getElementById('wt-filter-shift');
+        if (sInp) sInp.value = targetShift;
+        if (typeof switchWtCategory === 'function') switchWtCategory(targetCat);
+      } else {
+        if (!state.lubetruckState) state.lubetruckState = {};
+        state.lubetruckState.filterDate = targetDate;
+        state.lubetruckState.activeCategory = targetCat;
+        state.lubetruckState.filterShift = targetShift;
+        const dInp = document.getElementById('lt-filter-date');
+        if (dInp) dInp.value = targetDate;
+        const sInp = document.getElementById('lt-filter-shift');
+        if (sInp) sInp.value = targetShift;
+        if (typeof switchLtCategory === 'function') switchLtCategory(targetCat);
+      }
+
+      navigateTab(targetTab);
+      showToast(`Membuka Jadwal: ${targetCat.toUpperCase()} • Tgl ${targetDate} (Shift ${targetShift})`, 'info');
+    }
+    window.jumpFromPicaToSchedule = jumpFromPicaToSchedule;
 
     function switchLtCategory(cat) {
       state.lubetruckState.activeCategory = cat;
@@ -21005,7 +21574,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       const achieved = schJobs.filter(j => window.isAchLikeStatus(j)).length;
       const nonAchieved = schJobs.filter(j => j.status === 'non_ach').length;
-      const pending = schJobs.filter(j => j.status === 'pending' || j.isPending).length;
+      const pending = schJobs.filter(j => (j.status === 'pending' || j.isPending) && !window.isAchLikeStatus(j) && j.status !== 'non_ach').length;
 
       // Hitung Rasio Ketercapaian KPI Riil MURNI DARI JADWAL SCH (HANYA SCH):
       const achRateNum = totalScheduled > 0 ? (achieved / totalScheduled) * 100 : 0;
@@ -28551,11 +29120,13 @@ Keterangan : ${keterangan}`;
             ? `<span class="inline-flex items-center justify-center min-w-[44px] md:min-w-[48px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px] tracking-wide uppercase text-center" title="${job.serviceNotes || job.keterangan || '-'}">SERVICE</span>`
             : (['bd', 'breakdown'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'BREAKDOWN'
               ? `<span class="inline-flex items-center justify-center min-w-[44px] md:min-w-[48px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 font-bold text-[10px] tracking-wide uppercase text-center" title="${job.bdNotes || job.keterangan || '-'}">BD</span>`
-              : ['ach', 'achieved', 'done'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'ACHIEVED'
-                ? `<span class="inline-flex items-center justify-center min-w-[44px] md:min-w-[48px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] tracking-wide uppercase text-center">ACH</span>`
-                : (['non_ach', 'non-ach'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'NON_ACH'
-                  ? `<span class="inline-flex items-center justify-center min-w-[44px] md:min-w-[48px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold text-[10px] tracking-wide uppercase text-center" title="${job.alasanNonAch || job.keterangan || '-'}">NON-ACH</span>`
-                  : `<span class="inline-flex items-center justify-center min-w-[44px] md:min-w-[48px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px] tracking-wide uppercase text-center">${job.status || 'DONE'}</span>`))}
+              : (['washing', 'wash'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'WASHING REQUEST' || job.kondisi === 'WASHING'
+                ? `<span class="inline-flex items-center justify-center min-w-[44px] md:min-w-[48px] px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 font-bold text-[10px] tracking-wide uppercase text-center" title="${job.keterangan || '-'}">WASHING</span>`
+                : (['ach', 'achieved', 'done'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'ACHIEVED'
+                  ? `<span class="inline-flex items-center justify-center min-w-[44px] md:min-w-[48px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] tracking-wide uppercase text-center">ACH</span>`
+                  : (['non_ach', 'non-ach'].includes(String(job.status || '').toLowerCase()) || job.status_final === 'NON_ACH'
+                    ? `<span class="inline-flex items-center justify-center min-w-[44px] md:min-w-[48px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold text-[10px] tracking-wide uppercase text-center" title="${job.alasanNonAch || job.keterangan || '-'}">NON-ACH</span>`
+                    : `<span class="inline-flex items-center justify-center min-w-[44px] md:min-w-[48px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px] tracking-wide uppercase text-center">${job.status || 'DONE'}</span>`))))}
             </div>
           </td>
 
@@ -30014,6 +30585,20 @@ Keterangan : ${keterangan}`;
     }
     window.closeSearchableDropdown = closeSearchableDropdown;
 
+    function toggleSearchableDropdown(e, fieldId) {
+      if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+      }
+      const dropdownEl = document.getElementById(`dropdown-${fieldId}`);
+      if (dropdownEl && !dropdownEl.classList.contains('hidden')) {
+        closeSearchableDropdown(fieldId);
+      } else {
+        openSearchableDropdown(fieldId);
+      }
+    }
+    window.toggleSearchableDropdown = toggleSearchableDropdown;
+
     function filterSearchableDropdown(fieldId, query = '') {
       const dropdownEl = document.getElementById(`dropdown-${fieldId}`);
       const clearBtn = document.getElementById(`clear-${fieldId}`);
@@ -30159,7 +30744,8 @@ Keterangan : ${keterangan}`;
       }
 
       if (inputEl) {
-        if (value === '-') inputEl.value = '- (Tidak Ada)';
+        if (!value || value === '') inputEl.value = '';
+        else if (value === '-') inputEl.value = '- (Tidak Ada)';
         else if (customLabel) inputEl.value = customLabel;
         else {
           const matchedItem = (window._searchablePersonnelData[fieldId] || []).find(i => i.value === value);
@@ -30168,7 +30754,7 @@ Keterangan : ${keterangan}`;
       }
 
       if (clearBtn) {
-        if (value && value !== '') clearBtn.classList.remove('hidden');
+        if (value && value !== '' && value !== '-') clearBtn.classList.remove('hidden');
         else clearBtn.classList.add('hidden');
       }
 
@@ -30182,7 +30768,7 @@ Keterangan : ${keterangan}`;
       const clearBtn = document.getElementById(`clear-${fieldId}`);
 
       if (nativeSelect) {
-        nativeSelect.value = (fieldId === 'ach-mp2-name' ? '-' : '');
+        nativeSelect.value = '';
         try {
           const ev = new Event('change', { bubbles: true });
           nativeSelect.dispatchEvent(ev);
@@ -30195,6 +30781,17 @@ Keterangan : ${keterangan}`;
       }
 
       if (clearBtn) clearBtn.classList.add('hidden');
+
+      // Khusus armada: jika armada di-clear, kosongkan juga personil yang terkait
+      if (fieldId === 'ach-lt-custom') {
+        const job = (typeof findJobById === 'function') ? findJobById(state.currentActionJobId) : null;
+        const isWashing = job ? Boolean(job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat)) : false;
+        populateAchPersonnelSelects('', '', '', isWashing);
+        clearSearchableSelect('ach-opt-name');
+        clearSearchableSelect('ach-mp1-name');
+        clearSearchableSelect('ach-mp2-name');
+      }
+
       openSearchableDropdown(fieldId);
     }
     window.clearSearchableSelect = clearSearchableSelect;
@@ -30210,21 +30807,28 @@ Keterangan : ${keterangan}`;
             const inputEl = document.getElementById(`search-${fieldId}`);
             if (inputEl && nativeSelect) {
               const rawInput = (inputEl.value || '').trim();
-              if (rawInput !== '' && rawInput !== '- (Tidak Ada)') {
+              if (rawInput === '' || rawInput === '- (Tidak Ada)') {
+                // User memang sengaja mengosongkan field, jangan dipulihkan teks lama
+                if (rawInput === '- (Tidak Ada)' || (fieldId === 'ach-mp2-name' && rawInput === '-')) {
+                  nativeSelect.value = '-';
+                  inputEl.value = '- (Tidak Ada)';
+                } else {
+                  nativeSelect.value = '';
+                  inputEl.value = '';
+                }
+                const clearBtn = document.getElementById(`clear-${fieldId}`);
+                if (clearBtn) {
+                  if (inputEl.value !== '') clearBtn.classList.remove('hidden');
+                  else clearBtn.classList.add('hidden');
+                }
+              } else {
                 const rawList = window._searchablePersonnelData[fieldId] || [];
                 const matched = rawList.find(item => item.value && (item.value.toLowerCase() === rawInput.toLowerCase() || item.label.toLowerCase() === rawInput.toLowerCase() || item.label.toLowerCase().startsWith(rawInput.toLowerCase())));
                 if (matched) {
                   selectSearchableOption(fieldId, matched.value, matched.label);
-                } else if (!nativeSelect.value || nativeSelect.value === '-') {
+                } else {
                   selectSearchableOption(fieldId, rawInput.toUpperCase(), rawInput.toUpperCase());
                 }
-              }
-              if (nativeSelect.value === '-') inputEl.value = '- (Tidak Ada)';
-              else if (nativeSelect.value) {
-                const matched = (window._searchablePersonnelData[fieldId] || []).find(item => item.value === nativeSelect.value);
-                inputEl.value = (matched ? matched.label : nativeSelect.value) || '';
-              } else {
-                inputEl.value = '';
               }
             }
           }
@@ -33048,30 +33652,27 @@ Keterangan : ${keterangan}`;
 
       if (btnTabNonCoal && btnTabCoal) {
         if (isTabCoal) {
-          btnTabNonCoal.className = 'px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer text-slate-600 hover:text-slate-900 font-bold';
-          btnTabCoal.className = 'px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-xs bg-white text-amber-900 border border-amber-200/80 font-bold';
+          btnTabNonCoal.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer flex items-center gap-2 outline-none focus:outline-none';
+          btnTabCoal.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-brand-200 text-brand-800 shadow-2xs cursor-pointer flex items-center gap-2 outline-none focus:outline-none';
         } else {
-          btnTabNonCoal.className = 'px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-xs bg-white text-emerald-800 border border-slate-200/60 font-bold';
-          btnTabCoal.className = 'px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer text-slate-600 hover:text-slate-900 font-bold';
+          btnTabNonCoal.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-brand-200 text-brand-800 shadow-2xs cursor-pointer flex items-center gap-2 outline-none focus:outline-none';
+          btnTabCoal.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer flex items-center gap-2 outline-none focus:outline-none';
+        }
+      }
+
+      if (badgeNonCoal && badgeCoal) {
+        if (isTabCoal) {
+          badgeNonCoal.className = 'px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-700 font-mono';
+          badgeCoal.className = 'px-2 py-0.5 rounded-full text-[10px] font-black bg-white/70 text-brand-900 font-mono';
+        } else {
+          badgeNonCoal.className = 'px-2 py-0.5 rounded-full text-[10px] font-black bg-white/70 text-brand-900 font-mono';
+          badgeCoal.className = 'px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-700 font-mono';
         }
       }
 
       if (ruleDescEl) {
-        if (isTabCoal) {
-          ruleDescEl.innerHTML = `
-            <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span class="text-amber-900">Aturan COAL: <b>Maksimal 3x semprot</b>, pada semprotan ke-3 langsung wajib replace.</span>
-          `;
-        } else {
-          ruleDescEl.innerHTML = `
-            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span class="text-emerald-900">Aturan NON COAL: <b>Maksimal 6x semprot</b>, pada semprotan ke-6 langsung wajib replace.</span>
-          `;
-        }
+        ruleDescEl.innerHTML = '';
+        ruleDescEl.className = 'hidden';
       }
 
       // Atur visibilitas kolom KE 4, KE 5, KE 6 di header tabel
@@ -37958,6 +38559,8 @@ Keterangan : ${keterangan}`;
       if (jamStartEl && !jamStartEl.value) jamStartEl.value = jamNow;
       if (jamFinishEl && !jamFinishEl.value) jamFinishEl.value = jamNow;
 
+      populateDirectPersonnelDatalists();
+
       if (currentOrderSubtab === 'direct') {
         populateDirectArmadaOptions();
       }
@@ -37983,6 +38586,7 @@ Keterangan : ${keterangan}`;
         }
 
         populateDirectArmadaOptions();
+        populateDirectPersonnelDatalists();
       } else {
         if (formPane) formPane.classList.remove('hidden');
         if (directPane) directPane.classList.add('hidden');
@@ -37997,10 +38601,104 @@ Keterangan : ${keterangan}`;
     }
     window.switchOrderSubtab = switchOrderSubtab;
 
+    function handleOrderServiceTypeChange(svcType) {
+      const isWt = (svcType === 'watertruck');
+      const orderKeadaanSel = document.getElementById('order-keadaan-unit');
+      if (orderKeadaanSel) {
+        if (isWt) {
+          orderKeadaanSel.innerHTML = `
+            <option value="BREAKDOWN">Breakdown</option>
+            <option value="SERVICE">Service / Maintenance</option>
+            <option value="WASHING">Washing Request</option>
+          `;
+        } else {
+          orderKeadaanSel.innerHTML = `
+            <option value="BREAKDOWN">Breakdown</option>
+            <option value="SERVICE">Service / Maintenance</option>
+          `;
+        }
+      }
+    }
+    window.handleOrderServiceTypeChange = handleOrderServiceTypeChange;
+
     function handleDirectServiceTypeChange(svcType) {
+      const isWt = (svcType === 'watertruck');
+      const statusSel = document.getElementById('direct-status');
+      if (statusSel) {
+        if (isWt) {
+          statusSel.innerHTML = `
+            <option value="" selected disabled>-- Pilih Status --</option>
+            <option value="BREAKDOWN">BREAKDOWN (Kendala Unit)</option>
+            <option value="SERVICE">SERVICE (Maintenance/PCR)</option>
+            <option value="WASHING">WASHING REQUEST (Pencucian Unit)</option>
+          `;
+        } else {
+          statusSel.innerHTML = `
+            <option value="" selected disabled>-- Pilih Status --</option>
+            <option value="BREAKDOWN">BREAKDOWN (Kendala Unit)</option>
+            <option value="SERVICE">SERVICE (Maintenance/PCR)</option>
+          `;
+        }
+      }
       populateDirectArmadaOptions();
     }
     window.handleDirectServiceTypeChange = handleDirectServiceTypeChange;
+
+    function populateDirectPersonnelDatalists() {
+      const optDatalist = document.getElementById('direct-opt-datalist');
+      const mpDatalist = document.getElementById('direct-mp-datalist');
+      if (!optDatalist || !mpDatalist) return;
+
+      const optSet = new Set();
+      const mpSet = new Set();
+
+      // Ambil personil dari Master Roster
+      if (Array.isArray(state.masterRoster)) {
+        state.masterRoster.forEach(r => {
+          if (r.operator && r.operator !== '-' && !isDummyPersonnelName(r.operator)) optSet.add(r.operator.trim());
+          if (r.opt && r.opt !== '-' && !isDummyPersonnelName(r.opt)) optSet.add(r.opt.trim());
+          if (r.mp1 && r.mp1 !== '-' && !isDummyPersonnelName(r.mp1)) mpSet.add(r.mp1.trim());
+          if (r.mp2 && r.mp2 !== '-' && !isDummyPersonnelName(r.mp2)) mpSet.add(r.mp2.trim());
+          if (r.manpower && r.manpower !== '-' && !isDummyPersonnelName(r.manpower)) mpSet.add(r.manpower.trim());
+        });
+      }
+
+      // Ambil personil dari Master Manpower
+      if (Array.isArray(state.masterManpower)) {
+        state.masterManpower.forEach(m => {
+          const nm = m.nama || m.name;
+          const pos = (m.posisi || m.jabatan || m.role || '').toUpperCase();
+          if (nm && nm !== '-' && !isDummyPersonnelName(nm)) {
+            if (pos.includes('OPT') || pos.includes('OPERATOR')) optSet.add(nm.trim());
+            else mpSet.add(nm.trim());
+          }
+        });
+      }
+
+      optDatalist.innerHTML = Array.from(optSet).sort().map(name => `<option value="${escapeHtml(name)}">`).join('');
+      mpDatalist.innerHTML = Array.from(mpSet).sort().map(name => `<option value="${escapeHtml(name)}">`).join('');
+    }
+    window.populateDirectPersonnelDatalists = populateDirectPersonnelDatalists;
+
+    function clearDirectFieldError(fieldId) {
+      const errEl = document.getElementById(`err-${fieldId}`);
+      if (errEl) errEl.classList.add('hidden');
+      const inputEl = document.getElementById(fieldId);
+      if (inputEl) {
+        inputEl.classList.remove('border-rose-500', 'bg-rose-50/20');
+      }
+    }
+    window.clearDirectFieldError = clearDirectFieldError;
+
+    function setDirectFieldError(fieldId) {
+      const errEl = document.getElementById(`err-${fieldId}`);
+      if (errEl) errEl.classList.remove('hidden');
+      const inputEl = document.getElementById(fieldId);
+      if (inputEl) {
+        inputEl.classList.add('border-rose-500', 'bg-rose-50/20');
+      }
+    }
+    window.setDirectFieldError = setDirectFieldError;
 
     window._directArmadaData = [];
 
@@ -38059,15 +38757,10 @@ Keterangan : ${keterangan}`;
         armadaSelect.appendChild(grp);
       });
 
-      // Pilih armada pertama jika ada data
-      if (window._directArmadaData.length > 0) {
-        const first = window._directArmadaData[0];
-        selectDirectArmadaOption(first.value, first.label);
-      } else {
-        armadaSelect.value = '';
-        if (searchInput) searchInput.value = '';
-        if (clearBtn) clearBtn.classList.add('hidden');
-      }
+      // Armada dikosongkan secara default agar diisi manual oleh pengguna
+      armadaSelect.value = '';
+      if (searchInput) searchInput.value = '';
+      if (clearBtn) clearBtn.classList.add('hidden');
     }
     window.populateDirectArmadaOptions = populateDirectArmadaOptions;
 
@@ -38313,31 +39006,59 @@ Keterangan : ${keterangan}`;
       if (event) event.preventDefault();
 
       const svcType = document.querySelector('input[name="direct-tipe-service"]:checked')?.value || 'lubetruck';
-      const lambung = document.getElementById('direct-kode-unit')?.value?.trim().toUpperCase();
-      const cluster = document.getElementById('direct-cluster')?.value?.trim() || 'Selatan';
-      const lokasi = document.getElementById('direct-lokasi')?.value?.trim().toUpperCase();
-      const deskripsi = document.getElementById('direct-deskripsi')?.value?.trim() || '';
+      const lambung = (document.getElementById('direct-kode-unit')?.value || '').trim().toUpperCase();
+      const cluster = (document.getElementById('direct-cluster')?.value || '').trim();
+      const lokasi = (document.getElementById('direct-lokasi')?.value || '').trim().toUpperCase();
+      const deskripsi = (document.getElementById('direct-deskripsi')?.value || '').trim();
       const hmStart = (document.getElementById('direct-hm-start')?.value || '').trim();
       const hmFinish = (document.getElementById('direct-hm-finish')?.value || '').trim();
-      const jamStart = document.getElementById('direct-jam-start')?.value || '';
-      const jamFinish = document.getElementById('direct-jam-finish')?.value || '';
-      const statusChoice = document.getElementById('direct-status')?.value || 'SERVICE';
-      const armada = document.getElementById('direct-armada')?.value?.trim().toUpperCase();
-      const opt = document.getElementById('direct-opt-name')?.value?.trim() || '-';
-      const mp1 = document.getElementById('direct-mp1-name')?.value?.trim() || '-';
-      const mp2 = document.getElementById('direct-mp2-name')?.value?.trim() || '-';
-      const keterangan = document.getElementById('direct-keterangan')?.value?.trim() || deskripsi || 'Selesai sesuai SOP';
+      const jamStart = (document.getElementById('direct-jam-start')?.value || '').trim();
+      const jamFinish = (document.getElementById('direct-jam-finish')?.value || '').trim();
+      const statusChoice = (document.getElementById('direct-status')?.value || '').trim();
+      const armada = (document.getElementById('direct-armada')?.value || '').trim().toUpperCase();
+      const opt = (document.getElementById('direct-opt-name')?.value || '').trim();
+      const mp1 = (document.getElementById('direct-mp1-name')?.value || '').trim();
+      const mp2 = (document.getElementById('direct-mp2-name')?.value || '').trim();
+      const keterangan = (document.getElementById('direct-keterangan')?.value || '').trim();
 
-      if (!lambung || !lokasi) {
-        showToast('Nomor lambung dan lokasi pit wajib diisi!', 'warning');
-        return;
-      }
-      if (!armada) {
-        showToast('Armada wajib dipilih!', 'warning');
-        return;
-      }
-      if (!jamStart || !jamFinish) {
-        showToast('Jam start dan jam selesai wajib diisi!', 'warning');
+      // Validasi semua kolom wajib isi (keterangan error di bawah masing-masing kolom)
+      const fieldsToCheck = [
+        { id: 'direct-kode-unit', val: lambung },
+        { id: 'direct-cluster', val: cluster },
+        { id: 'direct-lokasi', val: lokasi },
+        { id: 'direct-deskripsi', val: deskripsi },
+        { id: 'direct-hm-start', val: hmStart },
+        { id: 'direct-hm-finish', val: hmFinish },
+        { id: 'direct-jam-start', val: jamStart },
+        { id: 'direct-jam-finish', val: jamFinish },
+        { id: 'direct-status', val: statusChoice },
+        { id: 'direct-armada', val: armada },
+        { id: 'direct-opt-name', val: opt },
+        { id: 'direct-mp1-name', val: mp1 },
+        { id: 'direct-mp2-name', val: mp2 },
+        { id: 'direct-keterangan', val: keterangan }
+      ];
+
+      let hasError = false;
+      let firstErrorEl = null;
+
+      fieldsToCheck.forEach(f => {
+        const strVal = String(f.val || '').trim();
+        if (!strVal || strVal === '-' || (f.id === 'direct-status' && strVal === '')) {
+          setDirectFieldError(f.id);
+          hasError = true;
+          if (!firstErrorEl) {
+            firstErrorEl = (f.id === 'direct-armada')
+              ? document.getElementById('search-direct-armada')
+              : document.getElementById(f.id);
+          }
+        } else {
+          clearDirectFieldError(f.id);
+        }
+      });
+
+      if (hasError) {
+        if (firstErrorEl) firstErrorEl.focus();
         return;
       }
 
@@ -38364,14 +39085,14 @@ Keterangan : ${keterangan}`;
         const shiftPart = (typeof getEffectiveShift === 'function') ? getEffectiveShift(jamStart) : (parseInt(state.currentShift || 1, 10) || 1);
         const cleanLambung = String(lambung).trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || 'UNIT';
         const randId = Math.random().toString(36).substring(2, 6).toUpperCase();
-        const finalJobId = `${prefix}-${datePart}-DIR-${shiftPart}-${cleanLambung}-${randId}`;
+        const finalJobId = `${prefix}-${datePart}-REQ-${shiftPart}-${cleanLambung}-${randId}`;
 
         const durasi = (typeof calculateDurationRaw === 'function') ? calculateDurationRaw(jamStart, jamFinish) : null;
         let hmUnit = '-';
         if (hmStart && hmFinish) hmUnit = `${hmStart} s/d ${hmFinish}`;
         else if (hmStart || hmFinish) hmUnit = hmStart || hmFinish;
 
-        // Map status (Khusus SERVICE & BREAKDOWN)
+        // Map status (BREAKDOWN, SERVICE, atau WASHING REQUEST)
         let finalStatus = 'service';
         let unitCond = 'service';
         let histStatus = 'SERVICE';
@@ -38380,6 +39101,10 @@ Keterangan : ${keterangan}`;
           finalStatus = 'bd';
           unitCond = 'breakdown';
           histStatus = 'BREAKDOWN';
+        } else if (statusChoice === 'WASHING') {
+          finalStatus = 'washing';
+          unitCond = 'washing';
+          histStatus = 'WASHING REQUEST';
         } else {
           finalStatus = 'service';
           unitCond = 'service';
@@ -38395,8 +39120,11 @@ Keterangan : ${keterangan}`;
           kode_order: finalJobId,
           serviceType: svcType,
           targetType: isWt ? 'WT' : 'LT',
-          job_type: isWt ? 'direct_wt' : 'direct_lt',
+          job_type: isWt ? 'unsch_wt' : 'unsch_lt',
           cat: 'unscheduled',
+          isRequest: true,
+          is_request: true,
+          isUnscheduled: true,
           shift: shiftPart,
           tanggal: tanggalStr,
           tanggalRealisasi: tanggalStr,
@@ -38417,8 +39145,9 @@ Keterangan : ${keterangan}`;
           hmReady: hmFinish || '',
           hmUnit: hmUnit,
           status: finalStatus,
+          status_final: histStatus,
           unitCondition: unitCond,
-          kondisi: (statusChoice === 'BREAKDOWN' || statusChoice === 'SERVICE') ? statusChoice : 'NORMAL',
+          kondisi: (statusChoice === 'BREAKDOWN' || statusChoice === 'SERVICE' || statusChoice === 'WASHING') ? statusChoice : 'NORMAL',
           armada: armada,
           armadaUnit: armada,
           armada_unit: armada,
@@ -38481,14 +39210,27 @@ Keterangan : ${keterangan}`;
 
         showToast(`Pekerjaan unit ${lambung} berhasil diselesaikan & langsung masuk ke Riwayat Selesai!`, 'success');
 
-        // Reset form
+        // Reset form sepenuhnya ke kondisi bersih
         if (document.getElementById('direct-kode-unit')) document.getElementById('direct-kode-unit').value = '';
         if (document.getElementById('direct-cluster')) document.getElementById('direct-cluster').value = '';
         if (document.getElementById('direct-lokasi')) document.getElementById('direct-lokasi').value = '';
         if (document.getElementById('direct-deskripsi')) document.getElementById('direct-deskripsi').value = '';
         if (document.getElementById('direct-hm-start')) document.getElementById('direct-hm-start').value = '';
         if (document.getElementById('direct-hm-finish')) document.getElementById('direct-hm-finish').value = '';
+        if (document.getElementById('direct-jam-start')) document.getElementById('direct-jam-start').value = '';
+        if (document.getElementById('direct-jam-finish')) document.getElementById('direct-jam-finish').value = '';
+        if (document.getElementById('direct-status')) document.getElementById('direct-status').value = '';
+        if (document.getElementById('search-direct-armada')) document.getElementById('search-direct-armada').value = '';
+        if (document.getElementById('direct-armada')) document.getElementById('direct-armada').value = '';
+        if (document.getElementById('direct-opt-name')) document.getElementById('direct-opt-name').value = '';
+        if (document.getElementById('direct-mp1-name')) document.getElementById('direct-mp1-name').value = '';
+        if (document.getElementById('direct-mp2-name')) document.getElementById('direct-mp2-name').value = '';
         if (document.getElementById('direct-keterangan')) document.getElementById('direct-keterangan').value = '';
+        const clearBtn = document.getElementById('clear-direct-armada');
+        if (clearBtn) clearBtn.classList.add('hidden');
+
+        // Bersihkan seluruh status error
+        fieldsToCheck.forEach(f => clearDirectFieldError(f.id));
 
         // Otomatis refresh render riwayat selesai & notifikasi data changed
         if (typeof renderCompletedTable === 'function') {

@@ -1,20 +1,17 @@
 /**
  * Service Worker: SE MANAGEMENT JOB - Mine Operations
- * Versi Cache: se-mine-ops-v12
+ * Versi Cache: se-mine-ops-v22
  * Fitur: Offline Caching, Network-First untuk Halaman Utama (Navigation), Stale-While-Revalidate untuk aset statis
  */
 
-const CACHE_NAME = 'se-mine-ops-v12';
+const CACHE_NAME = 'se-mine-ops-v22';
 
 // Daftar aset statis utama yang dicache saat instalasi
 const PRECACHE_ASSETS = [
   './',
   './index.html',
   './xlsx.full.min.js',
-  './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon.svg'
+  './manifest.json'
 ];
 
 // 1. EVENT INSTALL: Pre-cache aset inti & lewati antrean
