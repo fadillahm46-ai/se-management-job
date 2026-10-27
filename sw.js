@@ -4,7 +4,7 @@
  * Fitur: Offline Caching, Network-First untuk Halaman Utama (Navigation), Stale-While-Revalidate untuk aset statis
  */
 
-const CACHE_NAME = 'se-mine-ops-v3';
+const CACHE_NAME = 'se-mine-ops-v4';
 
 // Daftar aset statis utama yang dicache saat instalasi
 const PRECACHE_ASSETS = [
@@ -42,7 +42,7 @@ self.addEventListener('install', (event) => {
         )
       );
     }).then(() => {
-      console.log('[SW] Service Worker v1.0.7 berhasil diinstal.');
+      console.log('[SW] Service Worker v1.0.8 berhasil diinstal.');
       return self.skipWaiting();
     })
   );
@@ -61,7 +61,7 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => {
-      console.log('[SW] Service Worker v1.0.7 aktif dan mengontrol halaman.');
+      console.log('[SW] Service Worker v1.0.8 aktif dan mengontrol halaman.');
       return self.clients.claim();
     })
   );
@@ -78,6 +78,20 @@ self.addEventListener('fetch', (event) => {
 
   // Abaikan request ke skema selain http/https (misal chrome-extension://)
   if (!url.protocol.startsWith('http')) return;
+
+  // DILARANG KERAS intercept API Supabase, Google Apps Script, Google Drive, atau request dinamis!
+  // Biarkan browser mengeksekusinya langsung melalui jaringan asli (Network Direct)
+  if (
+    url.hostname.includes('supabase.co') ||
+    url.hostname.includes('script.google.com') ||
+    url.hostname.includes('googleusercontent.com') ||
+    url.hostname.includes('drive.google.com') ||
+    url.pathname.includes('/rest/v1/') ||
+    url.pathname.includes('/auth/v1/') ||
+    url.pathname.includes('/realtime/v1/')
+  ) {
+    return;
+  }
 
   // PRIORITAS UTAMA: Request navigasi (HTML / buka halaman) menggunakan strategi NETWORK-FIRST
   // Agar saat ada pembaruan di GitHub/Server, browser langsung menampilkan kode terbaru
@@ -125,7 +139,8 @@ self.addEventListener('fetch', (event) => {
 
         return networkResponse;
       }).catch((error) => {
-        throw error;
+        // Jangan melempar error tak tertangani ke konsol browser
+        return new Response('', { status: 408, statusText: 'Request Offline or Aborted' });
       });
     })
   );
