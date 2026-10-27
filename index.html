@@ -6170,8 +6170,8 @@
           </div>
           <select id="ach-execution-shift" onchange="handleAchShiftChange(this.value)"
             class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 font-bold text-xs focus:outline-none focus:border-brand-500 shadow-2xs cursor-pointer">
-            <option value="1">Shift 1 (Siang: 06:00 - 18:00)</option>
-            <option value="2">Shift 2 (Malam: 18:00 - 06:00)</option>
+            <option value="1">Shift 1 (Siang: 05:00 - 16:59)</option>
+            <option value="2">Shift 2 (Malam: 17:00 - 04:59)</option>
           </select>
           <p class="text-[10.5px] text-slate-400 leading-tight">Ubah ke <span class="font-bold text-slate-600">Shift 1</span> jika unit ini pekerjaan Shift 1 yang terlambat / lupa di-input agar nama personil otomatis mengikuti tim Shift 1.</p>
         </div>
@@ -9380,8 +9380,8 @@
             <label class="block text-slate-700 mb-1">Shift Kerja</label>
             <select id="edit-roster-shift" required
               class="w-full px-3 py-2 rounded-xl border border-slate-200 text-slate-800 font-bold focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
-              <option value="1">Shift 1 (Siang: 06.00 - 18.00)</option>
-              <option value="2">Shift 2 (Malam: 18.00 - 06.00)</option>
+              <option value="1">Shift 1 (Siang: 05:00 - 16:59)</option>
+              <option value="2">Shift 2 (Malam: 17:00 - 04:59)</option>
             </select>
           </div>
         </div>
@@ -25740,13 +25740,13 @@ Keterangan : ${keterangan}`;
       },
       // 2. Washing Non Coal
       non_coal: {
-        shift1: ['06:00 s/d 16:45'],
-        shift2: ['18:00 s/d 04:45']
+        shift1: ['05:00 s/d 16:45'],
+        shift2: ['17:00 s/d 04:45']
       },
       // 3. Greasing Small Track
       small: {
-        shift1: ['06:00 s/d 16:45'],
-        shift2: ['18:00 s/d 04:45']
+        shift1: ['05:00 s/d 16:45'],
+        shift2: ['17:00 s/d 04:45']
       },
       // 4. Greasing Big Digger
       digger: {

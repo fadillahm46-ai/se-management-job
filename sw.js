@@ -4,7 +4,7 @@
  * Fitur: Offline Caching, Network-First untuk Halaman Utama (Navigation), Stale-While-Revalidate untuk aset statis
  */
 
-const CACHE_NAME = 'se-mine-ops-v4';
+const CACHE_NAME = 'se-mine-ops-v5';
 
 // Daftar aset statis utama yang dicache saat instalasi
 const PRECACHE_ASSETS = [
