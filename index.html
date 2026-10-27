@@ -3284,7 +3284,18 @@
           <!-- SUBPANE 1: FORM ORDER (Alur masuk ke Job Request & di-done-kan tim lapangan) -->
           <div id="order-subpane-form"
             class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200/80 shadow-xs w-full max-w-2xl mx-auto">
-            <h3 class="text-base font-extrabold text-slate-900 mb-6">Form Permintaan Lapangan (Order)</h3>
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-base font-extrabold text-slate-900">Form Permintaan Lapangan (Order)</h3>
+              <button type="button" onclick="resetOrderForm()" title="Reset formulir order"
+                class="text-xs text-slate-400 hover:text-rose-600 font-semibold flex items-center gap-1 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                  </path>
+                </svg>
+                <span>Reset</span>
+              </button>
+            </div>
 
             <form onsubmit="handleOrderSubmit(event)" class="space-y-4 text-xs font-semibold">
               <!-- Baris 1: Nama Pemesan & No Lambung Unit -->
@@ -3394,10 +3405,11 @@
                   class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500"></textarea>
               </div>
 
-              <div class="pt-2">
-                <button type="submit"
-                  class="px-6 py-3 rounded-2xl bg-brand-200 hover:bg-brand-300 text-brand-800 font-extrabold uppercase tracking-wider transition cursor-pointer shadow-xs">
-                  Kirim ke Job Request MP
+              <!-- Tombol Submit Form Order Lapangan (Di sebelah kanan) -->
+              <div class="pt-2 flex items-center justify-end">
+                <button type="submit" id="btn-order-submit"
+                  class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-brand-200 hover:bg-brand-300 text-brand-800 font-extrabold uppercase tracking-wider transition cursor-pointer shadow-xs active:scale-98 flex items-center justify-center">
+                  <span>SUBMIT</span>
                 </button>
               </div>
             </form>
@@ -3410,6 +3422,15 @@
               <h3 class="text-base font-extrabold text-slate-900">
                 Penyelesaian Job Lapangan
               </h3>
+              <button type="button" onclick="resetDirectCompletionForm()" title="Reset formulir penyelesaian job"
+                class="text-xs text-slate-400 hover:text-rose-600 font-semibold flex items-center gap-1 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                  </path>
+                </svg>
+                <span>Reset</span>
+              </button>
             </div>
 
             <form id="form-direct-completion" onsubmit="handleDirectCompletionSubmit(event)" novalidate
@@ -3481,7 +3502,31 @@
                 <p id="err-direct-deskripsi" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi</p>
               </div>
 
-              <!-- Baris 4: HM Start & HM Finish -->
+              <!-- Baris 4: Tanggal & Shift (Otomatis & Fleksibel) -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-slate-700 font-medium mb-1.5">Tanggal</label>
+                  <input type="date" id="direct-tanggal"
+                    onchange="if(typeof handleDirectDateOrShiftChange === 'function') handleDirectDateOrShiftChange(); clearDirectFieldError('direct-tanggal')"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 font-mono bg-white font-medium text-slate-900">
+                  <p id="err-direct-tanggal" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi</p>
+                </div>
+                <div>
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-slate-700 font-medium">Shift</label>
+                    <span class="text-[10px] text-emerald-600 font-bold">Otomatis dari Jam Start</span>
+                  </div>
+                  <select id="direct-shift"
+                    onchange="if(typeof handleDirectDateOrShiftChange === 'function') handleDirectDateOrShiftChange(); clearDirectFieldError('direct-shift')"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-800 focus:outline-none focus:border-emerald-500 bg-white cursor-pointer">
+                    <option value="1">Shift 1 (Siang: 05:00 - 17:59)</option>
+                    <option value="2">Shift 2 (Malam: 18:00 - 04:59)</option>
+                  </select>
+                  <p id="err-direct-shift" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi</p>
+                </div>
+              </div>
+
+              <!-- Baris 5: HM Start & HM Finish -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-slate-700 mb-1.5">HM Start</label>
@@ -3501,11 +3546,12 @@
                 </div>
               </div>
 
-              <!-- Baris 5: Jam Start & Jam Finish -->
+              <!-- Baris 6: Jam Start & Jam Finish -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-slate-700 mb-1.5">Jam Start</label>
                   <input type="time" id="direct-jam-start" value=""
+                    oninput="if(typeof handleDirectJamStartChange === 'function') handleDirectJamStartChange(this.value); clearDirectFieldError('direct-jam-start')"
                     onchange="if(typeof handleDirectJamStartChange === 'function') handleDirectJamStartChange(this.value); clearDirectFieldError('direct-jam-start')"
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
                   <p id="err-direct-jam-start" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi
@@ -6326,9 +6372,6 @@
             <option value="1">Shift 1 (Siang: 05:00 - 16:59)</option>
             <option value="2">Shift 2 (Malam: 17:00 - 04:59)</option>
           </select>
-          <p class="text-[10.5px] text-slate-400 leading-tight">Ubah ke <span class="font-bold text-slate-600">Shift
-              1</span> jika unit ini pekerjaan Shift 1 yang terlambat / lupa di-input agar nama personil otomatis
-            mengikuti tim Shift 1.</p>
         </div>
 
         <!-- Kontainer Isian Validasi Normal -->
@@ -6367,9 +6410,10 @@
                   oninput="filterSearchableDropdown('ach-lt-custom', this.value)"
                   onclick="openSearchableDropdown('ach-lt-custom')">
                 <button type="button" id="clear-ach-lt-custom"
-                  onmousedown="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-lt-custom');"
-                  onclick="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-lt-custom');"
-                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1 cursor-pointer z-20"
+                  onclick="handleClearSearchableClick(event, 'ach-lt-custom')"
+                  onmousedown="handleClearSearchableClick(event, 'ach-lt-custom')"
+                  ontouchend="handleClearSearchableClick(event, 'ach-lt-custom')"
+                  class="hidden absolute right-7 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1.5 cursor-pointer z-30 touch-manipulation"
                   title="Hapus pilihan armada">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
@@ -6399,9 +6443,10 @@
                   oninput="filterSearchableDropdown('ach-opt-name', this.value)"
                   onclick="openSearchableDropdown('ach-opt-name')">
                 <button type="button" id="clear-ach-opt-name"
-                  onmousedown="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-opt-name');"
-                  onclick="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-opt-name');"
-                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1 cursor-pointer z-20"
+                  onclick="handleClearSearchableClick(event, 'ach-opt-name')"
+                  onmousedown="handleClearSearchableClick(event, 'ach-opt-name')"
+                  ontouchend="handleClearSearchableClick(event, 'ach-opt-name')"
+                  class="hidden absolute right-7 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1.5 cursor-pointer z-30 touch-manipulation"
                   title="Hapus nama OPT">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
@@ -6435,9 +6480,10 @@
                   oninput="filterSearchableDropdown('ach-mp1-name', this.value)"
                   onclick="openSearchableDropdown('ach-mp1-name')">
                 <button type="button" id="clear-ach-mp1-name"
-                  onmousedown="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-mp1-name');"
-                  onclick="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-mp1-name');"
-                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1 cursor-pointer z-20"
+                  onclick="handleClearSearchableClick(event, 'ach-mp1-name')"
+                  onmousedown="handleClearSearchableClick(event, 'ach-mp1-name')"
+                  ontouchend="handleClearSearchableClick(event, 'ach-mp1-name')"
+                  class="hidden absolute right-7 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1.5 cursor-pointer z-30 touch-manipulation"
                   title="Hapus nama MP 1">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
@@ -6467,9 +6513,10 @@
                   oninput="filterSearchableDropdown('ach-mp2-name', this.value)"
                   onclick="openSearchableDropdown('ach-mp2-name')">
                 <button type="button" id="clear-ach-mp2-name"
-                  onmousedown="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-mp2-name');"
-                  onclick="event.preventDefault(); event.stopPropagation(); clearSearchableSelect('ach-mp2-name');"
-                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1 cursor-pointer z-20"
+                  onclick="handleClearSearchableClick(event, 'ach-mp2-name')"
+                  onmousedown="handleClearSearchableClick(event, 'ach-mp2-name')"
+                  ontouchend="handleClearSearchableClick(event, 'ach-mp2-name')"
+                  class="hidden absolute right-7 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1.5 cursor-pointer z-30 touch-manipulation"
                   title="Hapus nama MP 2">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12">
@@ -17127,6 +17174,54 @@
     }
     window.resetPicaMiningWeekFilter = resetPicaMiningWeekFilter;
 
+    /**
+     * Memeriksa apakah pekerjaan merupakan Unit Request (Job Request / Order Lapangan / Unscheduled Job)
+     */
+    function isUnitReqJob(j) {
+      if (!j) return false;
+      const rawId = String(j.id || j.job_id || j.noId || j.no_id || '').toUpperCase();
+      if (rawId.startsWith('LT-REQ') || rawId.startsWith('WT-REQ') || rawId.startsWith('REQ') || rawId.startsWith('UNS') || rawId.includes('-REQ-')) {
+        return true;
+      }
+      const cat = String(j.cat || '').toLowerCase().trim();
+      if (cat === 'unscheduled' || cat === 'request' || cat === 'job_request') {
+        return true;
+      }
+      if (j.isRequest || j.is_request || j.isUnscheduled || j.is_unscheduled || j.isJobRequest || j.isOrder) {
+        return true;
+      }
+      const jType = String(j.job_type || '').toLowerCase().trim();
+      if (jType === 'unsch_lt' || jType === 'unsch_wt' || jType === 'request' || jType === 'job_request') {
+        return true;
+      }
+      const sType = String(j.serviceType || j.service_type || '').toLowerCase().trim();
+      if (sType === 'job request' || sType === 'job_request') {
+        return true;
+      }
+      if (Boolean(j.namaPemesan || j.pemesan || j.kondisi) && !j.washingRound && j.cat !== 'digger' && j.cat !== 'small' && j.cat !== 'aircleaner' && j.cat !== 'topup' && j.cat !== 'coal' && j.cat !== 'rom' && j.cat !== 'non_coal') {
+        return true;
+      }
+      return false;
+    }
+    window.isUnitReqJob = isUnitReqJob;
+
+    /**
+     * Memeriksa apakah pekerjaan merupakan Job Schedule Resmi (Small Track, Big Digger, Air Cleaner, Top Up Oil, Washing Coal, ROM, Non-Coal)
+     */
+    function isScheduleJob(j) {
+      if (!j) return false;
+      if (isUnitReqJob(j)) return false;
+      const cat = String(j.cat || '').toLowerCase().trim();
+      const schCats = ['small', 'digger', 'aircleaner', 'air_cleaner', 'topup', 'topup_oil', 'top up oil', 'coal', 'rom', 'non_coal'];
+      if (schCats.includes(cat)) return true;
+      const rawId = String(j.id || j.job_id || j.noId || j.no_id || '').toUpperCase();
+      if (rawId.startsWith('LT-SCH') || rawId.startsWith('WT-SCH') || rawId.startsWith('LTJ') || rawId.startsWith('WTJ') || rawId.startsWith('SCH-') || rawId.startsWith('PLT-') || rawId.startsWith('PWT-')) {
+        return true;
+      }
+      return false;
+    }
+    window.isScheduleJob = isScheduleJob;
+
     function getFilteredPicaJobs() {
       const categorySelect = document.getElementById('pica-filter-category');
       const activeCat = categorySelect ? categorySelect.value : (state.picaCategory || 'ALL');
@@ -17138,6 +17233,10 @@
 
       const isPicaEligible = j => {
         if (!j) return false;
+        // ATURAN PENGGUNA: Unit Request (Job Request / Order Lapangan / Unscheduled) TIDAK MASUK ke dalam Log PICA!
+        // Log PICA khusus untuk Job Schedule saja!
+        if (isUnitReqJob(j) || !isScheduleJob(j)) return false;
+
         const st = String(j.status_final || j.status || '').toLowerCase().trim();
         const idStr = String(j.id || '');
         const isCarry = Boolean(j.isPending || j.isPendingShift || j.pendingFromShift || j.isCarryOver);
@@ -17217,16 +17316,18 @@
         return false;
       };
 
+      // PICA HANYA DARI JOB SCHEDULE (Lubetruck & Water Truck Schedule)
+      // Unit Request (unscheduledLtJobs / unscheduledWtJobs) DIKECUALIKAN TOTAL
       let pool = [
         ...(state.lubetruckState?.jobs || []).filter(isPicaEligible),
-        ...(state.watertruckState?.jobs || []).filter(isPicaEligible),
-        ...(state.unscheduledLtJobs || []).filter(isPicaEligible),
-        ...(state.unscheduledWtJobs || []).filter(isPicaEligible)
+        ...(state.watertruckState?.jobs || []).filter(isPicaEligible)
       ];
 
       if (Array.isArray(state.jobHistory) && state.jobHistory.length > 0) {
         const existingIds = new Set(pool.map(j => String(j.id || '')));
         state.jobHistory.forEach(h => {
+          // Filter ketat: Unit request tidak masuk ke Log PICA
+          if (isUnitReqJob(h) || !isScheduleJob(h)) return;
           const targetHid = String(h.job_id || h.id || '');
           if (isPicaEligible(h) && targetHid && !existingIds.has(targetHid)) {
             const rawStatus = h.status_final || h.status || 'ACH';
@@ -17262,11 +17363,13 @@
         });
       }
 
-      // SINKRONISASI PICA CLOUD: Gabungkan data kendala dari tabel pica_records Supabase
+      // SINKRONISASI PICA CLOUD: Gabungkan data kendala dari tabel pica_records Supabase (Khusus Job Schedule)
       if (Array.isArray(state.picaCloudRecords) && state.picaCloudRecords.length > 0) {
         const existingIds = new Set(pool.map(j => String(j.id || '')));
         state.picaCloudRecords.forEach(p => {
           const jId = String(p.job_id || p.id || '');
+          // Filter ketat: Jangan masukkan record jika berasal dari unit request
+          if (isUnitReqJob(p) || isUnitReqJob({ id: jId }) || (!isScheduleJob(p) && !isScheduleJob({ id: jId, cat: p.cat }))) return;
           if (jId && !existingIds.has(jId)) {
             const candidate = {
               status: p.status_final || p.status || 'ACH',
@@ -17307,20 +17410,19 @@
         });
       }
 
-      // 1. Filter Kategori PICA
+      // 1. Filter Kategori PICA (Hanya Job Schedule)
       if (activeCat !== 'ALL') {
         pool = pool.filter(j => {
-          const req = (j.requestedJob || '').toLowerCase();
           if (activeCat === 'greasing') {
-            return j.cat === 'small' || j.cat === 'digger' || req.includes('greas');
+            return j.cat === 'small' || j.cat === 'digger';
           } else if (activeCat === 'aircleaner') {
-            return j.cat === 'aircleaner' || req.includes('air');
+            return j.cat === 'aircleaner';
           } else if (activeCat === 'topup') {
-            return j.cat === 'topup' || req.includes('top');
+            return j.cat === 'topup';
           } else if (activeCat === 'washing_coal') {
-            return j.cat === 'coal' || j.cat === 'rom' || req.includes('coal');
+            return j.cat === 'coal' || j.cat === 'rom';
           } else if (activeCat === 'washing_non_coal') {
-            return j.cat === 'non_coal' || req.includes('non coal');
+            return j.cat === 'non_coal';
           }
           return true;
         });
@@ -23729,7 +23831,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       // Sinkronisasi ke Supabase (jobs dan pica_records)
       if (state.supabaseClient) {
         if (typeof syncJobToSupabase === 'function') syncJobToSupabase(job);
-        if (typeof syncPicaToSupabase === 'function') syncPicaToSupabase(job, kategori, alasan);
+        if (typeof syncPicaToSupabase === 'function' && !isUnitReqJob(job) && isScheduleJob(job)) {
+          syncPicaToSupabase(job, kategori, alasan);
+        }
       }
 
       saveDatabaseSync();
@@ -24750,6 +24854,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
     window.isAchLikeStatus = isAchLikeStatus;
 
     function isJobAnOrderRequest(j) {
+      if (typeof isUnitReqJob === 'function') return isUnitReqJob(j);
       if (!j) return false;
       const idStr = String(j.id || j.job_id || j.noId || '').toUpperCase();
       const cat = String(j.cat || '').toLowerCase().trim();
@@ -28042,6 +28147,7 @@ Keterangan : ${keterangan}`;
      * Mengecek apakah sebuah objek job adalah Permintaan Lapangan (Job Request / Order Unscheduled)
      */
     function isJobAnOrderRequest(j) {
+      if (typeof isUnitReqJob === 'function') return isUnitReqJob(j);
       if (!j) return false;
       const rawId = String(j.id || j.job_id || j.noId || j.no_id || '').toUpperCase();
       if (rawId.includes('-REQ-') || rawId.startsWith('UNS') || rawId.startsWith('REQ-')) return true;
@@ -30564,6 +30670,14 @@ Keterangan : ${keterangan}`;
       'ach-mp2-name': []
     };
 
+    // Flag proteksi: menandai personil yang telah diubah atau dihapus manual oleh user
+    // agar TIDAK ditimpa kembali secara otomatis oleh background roster sync
+    window._achPersonnelManualOverride = {
+      'ach-opt-name': false,
+      'ach-mp1-name': false,
+      'ach-mp2-name': false
+    };
+
     function openSearchableDropdown(fieldId) {
       ['ach-lt-custom', 'ach-opt-name', 'ach-mp1-name', 'ach-mp2-name'].forEach(id => {
         if (id !== fieldId) closeSearchableDropdown(id);
@@ -30572,6 +30686,7 @@ Keterangan : ${keterangan}`;
       const inputEl = document.getElementById(`search-${fieldId}`);
       if (!dropdownEl) return;
       dropdownEl.classList.remove('hidden');
+      // Tampilkan seluruh daftar nama (query kosong) saat pertama kali dibuka agar user dapat melihat semua pilihan
       filterSearchableDropdown(fieldId, '');
       if (inputEl) {
         inputEl.select();
@@ -30608,7 +30723,9 @@ Keterangan : ${keterangan}`;
       const cleanQ = String(query || '').trim().toLowerCase();
 
       if (clearBtn) {
-        if (cleanQ !== '') clearBtn.classList.remove('hidden');
+        const inputEl = document.getElementById(`search-${fieldId}`);
+        const curVal = (inputEl ? inputEl.value : cleanQ).trim();
+        if (curVal !== '' && curVal !== '-') clearBtn.classList.remove('hidden');
         else clearBtn.classList.add('hidden');
       }
 
@@ -30634,6 +30751,20 @@ Keterangan : ${keterangan}`;
         `;
         return;
       }
+
+      const createOptionClickHandler = (item) => {
+        return (e) => {
+          if (e) {
+            if (typeof e.preventDefault === 'function') e.preventDefault();
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+          }
+          if (['ach-opt-name', 'ach-mp1-name', 'ach-mp2-name'].includes(fieldId)) {
+            if (!window._achPersonnelManualOverride) window._achPersonnelManualOverride = {};
+            window._achPersonnelManualOverride[fieldId] = true;
+          }
+          selectSearchableOption(fieldId, item.value, item.label, true);
+        };
+      };
 
       // Khusus Armada: Kelompokkan per Cluster (UTARA, TENGAH, SELATAN, WORKSHOP, dll)
       if (fieldId === 'ach-lt-custom') {
@@ -30672,10 +30803,15 @@ Keterangan : ${keterangan}`;
               <span class="truncate font-mono">${labelHtml}</span>
               ${isSelected ? '<svg class="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>' : ''}
             `;
+            const pickHandler = createOptionClickHandler(item);
+            row.onclick = pickHandler;
             row.onmousedown = (e) => {
-              e.preventDefault();
-              selectSearchableOption(fieldId, item.value, item.label);
+              if (e) {
+                if (typeof e.preventDefault === 'function') e.preventDefault();
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
+              }
             };
+            row.ontouchend = pickHandler;
             dropdownEl.appendChild(row);
           });
         });
@@ -30701,10 +30837,15 @@ Keterangan : ${keterangan}`;
             <span class="truncate">${labelHtml}</span>
             ${isSelected ? '<svg class="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>' : ''}
           `;
+          const pickHandler = createOptionClickHandler(item);
+          row.onclick = pickHandler;
           row.onmousedown = (e) => {
-            e.preventDefault();
-            selectSearchableOption(fieldId, item.value, item.label);
+            if (e) {
+              if (typeof e.preventDefault === 'function') e.preventDefault();
+              if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            }
           };
+          row.ontouchend = pickHandler;
           dropdownEl.appendChild(row);
         });
       }
@@ -30719,7 +30860,12 @@ Keterangan : ${keterangan}`;
     }
     window.filterSearchableDropdown = filterSearchableDropdown;
 
-    function selectSearchableOption(fieldId, value, customLabel) {
+    function selectSearchableOption(fieldId, value, customLabel, isUserManualAction = true) {
+      if (isUserManualAction && ['ach-opt-name', 'ach-mp1-name', 'ach-mp2-name'].includes(fieldId)) {
+        if (!window._achPersonnelManualOverride) window._achPersonnelManualOverride = {};
+        window._achPersonnelManualOverride[fieldId] = true;
+      }
+
       const nativeSelect = document.getElementById(fieldId);
       const inputEl = document.getElementById(`search-${fieldId}`);
       const clearBtn = document.getElementById(`clear-${fieldId}`);
@@ -30736,11 +30882,16 @@ Keterangan : ${keterangan}`;
             window._searchablePersonnelData[fieldId].push({ value: value, label: customLabel || value });
           }
         }
+        const prevVal = nativeSelect.value;
         nativeSelect.value = value || '';
-        try {
-          const ev = new Event('change', { bubbles: true });
-          nativeSelect.dispatchEvent(ev);
-        } catch (e) { }
+        // PENTING: Hanya dispatch event 'change' jika nilai native select benar-benar berubah!
+        // Mencegah Armada me-reset personil jika pengguna hanya mengklik opsi yang sama atau mengklik di luar field
+        if (prevVal !== (value || '')) {
+          try {
+            const ev = new Event('change', { bubbles: true });
+            nativeSelect.dispatchEvent(ev);
+          } catch (e) { }
+        }
       }
 
       if (inputEl) {
@@ -30763,16 +30914,24 @@ Keterangan : ${keterangan}`;
     window.selectSearchableOption = selectSearchableOption;
 
     function clearSearchableSelect(fieldId) {
+      if (['ach-opt-name', 'ach-mp1-name', 'ach-mp2-name'].includes(fieldId)) {
+        if (!window._achPersonnelManualOverride) window._achPersonnelManualOverride = {};
+        window._achPersonnelManualOverride[fieldId] = true;
+      }
+
       const nativeSelect = document.getElementById(fieldId);
       const inputEl = document.getElementById(`search-${fieldId}`);
       const clearBtn = document.getElementById(`clear-${fieldId}`);
 
       if (nativeSelect) {
+        const prevVal = nativeSelect.value;
         nativeSelect.value = '';
-        try {
-          const ev = new Event('change', { bubbles: true });
-          nativeSelect.dispatchEvent(ev);
-        } catch (e) { }
+        if (prevVal !== '') {
+          try {
+            const ev = new Event('change', { bubbles: true });
+            nativeSelect.dispatchEvent(ev);
+          } catch (e) { }
+        }
       }
 
       if (inputEl) {
@@ -30792,9 +30951,20 @@ Keterangan : ${keterangan}`;
         clearSearchableSelect('ach-mp2-name');
       }
 
+      // Buka dropdown opsi nama agar user bisa langsung memilih nama pengganti
       openSearchableDropdown(fieldId);
     }
     window.clearSearchableSelect = clearSearchableSelect;
+
+    // Handler terpadu untuk tombol X (Clear) yang ramah touch & desktop
+    function handleClearSearchableClick(e, fieldId) {
+      if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+      }
+      clearSearchableSelect(fieldId);
+    }
+    window.handleClearSearchableClick = handleClearSearchableClick;
 
     // Menutup popup dropdown jika user mengklik area lain
     if (!window._searchableDropdownListenerAttached) {
@@ -30802,13 +30972,19 @@ Keterangan : ${keterangan}`;
         ['ach-lt-custom', 'ach-opt-name', 'ach-mp1-name', 'ach-mp2-name'].forEach(fieldId => {
           const container = document.getElementById(`container-${fieldId}`);
           if (container && !container.contains(e.target)) {
+            const dropdownEl = document.getElementById(`dropdown-${fieldId}`);
+            const wasOpen = dropdownEl && !dropdownEl.classList.contains('hidden');
             closeSearchableDropdown(fieldId);
+            // KUNCI UTAMA: Jika dropdown field ini tidak sedang dibuka, JANGAN lakukan proses rekonsiliasi apapun!
+            // Ini mencegah Armada memicu reset personil saat user memilih Nama OPT / MP!
+            if (!wasOpen) return;
+
             const nativeSelect = document.getElementById(fieldId);
             const inputEl = document.getElementById(`search-${fieldId}`);
             if (inputEl && nativeSelect) {
               const rawInput = (inputEl.value || '').trim();
               if (rawInput === '' || rawInput === '- (Tidak Ada)') {
-                // User memang sengaja mengosongkan field, jangan dipulihkan teks lama
+                // User memang sengaja mengosongkan field, pertahankan kosong secara permanen!
                 if (rawInput === '- (Tidak Ada)' || (fieldId === 'ach-mp2-name' && rawInput === '-')) {
                   nativeSelect.value = '-';
                   inputEl.value = '- (Tidak Ada)';
@@ -30825,9 +31001,9 @@ Keterangan : ${keterangan}`;
                 const rawList = window._searchablePersonnelData[fieldId] || [];
                 const matched = rawList.find(item => item.value && (item.value.toLowerCase() === rawInput.toLowerCase() || item.label.toLowerCase() === rawInput.toLowerCase() || item.label.toLowerCase().startsWith(rawInput.toLowerCase())));
                 if (matched) {
-                  selectSearchableOption(fieldId, matched.value, matched.label);
+                  selectSearchableOption(fieldId, matched.value, matched.label, true);
                 } else {
-                  selectSearchableOption(fieldId, rawInput.toUpperCase(), rawInput.toUpperCase());
+                  selectSearchableOption(fieldId, rawInput.toUpperCase(), rawInput.toUpperCase(), true);
                 }
               }
             }
@@ -31055,6 +31231,13 @@ Keterangan : ${keterangan}`;
       const job = findJobById(state.currentActionJobId);
       const isWashing = job ? Boolean(job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat)) : false;
 
+      // Reset manual override jika armada baru dipilih
+      window._achPersonnelManualOverride = {
+        'ach-opt-name': false,
+        'ach-mp1-name': false,
+        'ach-mp2-name': false
+      };
+
       // Jika user memilih opsi kosong ("-- Pilih Armada --"), kosongkan seluruh field crew
       if (!armadaUnit) {
         populateAchPersonnelSelects('', '', '', isWashing);
@@ -31088,9 +31271,14 @@ Keterangan : ${keterangan}`;
             const userOpt = (document.getElementById('ach-opt-name')?.value || document.getElementById('search-ach-opt-name')?.value || '').trim();
             const userMp1 = (document.getElementById('ach-mp1-name')?.value || document.getElementById('search-ach-mp1-name')?.value || '').trim();
             const userMp2 = (document.getElementById('ach-mp2-name')?.value || document.getElementById('search-ach-mp2-name')?.value || '').trim();
-            const freshOpt = (userOpt && userOpt !== '-' && !userOpt.startsWith('--')) ? userOpt : ((updatedCrew.opt && updatedCrew.opt !== '-') ? updatedCrew.opt : targetOpt);
-            const freshMp1 = (userMp1 && userMp1 !== '-' && !userMp1.startsWith('--')) ? userMp1 : ((updatedCrew.mp1 && updatedCrew.mp1 !== '-') ? updatedCrew.mp1 : targetMp1);
-            const freshMp2 = (userMp2 && !userMp2.startsWith('--')) ? userMp2 : ((updatedCrew.mp2 && updatedCrew.mp2 !== '-') ? updatedCrew.mp2 : targetMp2);
+
+            const isOptOverridden = window._achPersonnelManualOverride && window._achPersonnelManualOverride['ach-opt-name'];
+            const isMp1Overridden = window._achPersonnelManualOverride && window._achPersonnelManualOverride['ach-mp1-name'];
+            const isMp2Overridden = window._achPersonnelManualOverride && window._achPersonnelManualOverride['ach-mp2-name'];
+
+            const freshOpt = isOptOverridden ? userOpt : ((userOpt && userOpt !== '-' && !userOpt.startsWith('--')) ? userOpt : ((updatedCrew.opt && updatedCrew.opt !== '-') ? updatedCrew.opt : targetOpt));
+            const freshMp1 = isMp1Overridden ? userMp1 : ((userMp1 && userMp1 !== '-' && !userMp1.startsWith('--')) ? userMp1 : ((updatedCrew.mp1 && updatedCrew.mp1 !== '-') ? updatedCrew.mp1 : targetMp1));
+            const freshMp2 = isMp2Overridden ? userMp2 : ((userMp2 && !userMp2.startsWith('--')) ? userMp2 : ((updatedCrew.mp2 && updatedCrew.mp2 !== '-') ? updatedCrew.mp2 : targetMp2));
             populateAchPersonnelSelects(freshOpt, freshMp1, freshMp2, isWashing);
           }
         });
@@ -31106,6 +31294,13 @@ Keterangan : ${keterangan}`;
       const shiftNum = parseInt(newShiftVal, 10) || 1;
       const job = findJobById(state.currentActionJobId);
       const isWashing = job ? Boolean(job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat)) : false;
+
+      // Reset manual override saat shift sengaja diganti oleh user
+      window._achPersonnelManualOverride = {
+        'ach-opt-name': false,
+        'ach-mp1-name': false,
+        'ach-mp2-name': false
+      };
 
       const shiftBadge = document.getElementById('ach-shift-badge-info');
       if (shiftBadge) {
@@ -31168,9 +31363,17 @@ Keterangan : ${keterangan}`;
             const shiftCheck = document.getElementById('ach-execution-shift')?.value;
             if (parseInt(shiftCheck, 10) === shiftNum) {
               const updatedCrew = getPersonnelForArmada(cleanArmada, cluster, shiftNum, tanggal);
-              const freshOpt = targetOpt || ((updatedCrew.opt && updatedCrew.opt !== '-') ? updatedCrew.opt : '');
-              const freshMp1 = targetMp1 || ((updatedCrew.mp1 && updatedCrew.mp1 !== '-') ? updatedCrew.mp1 : '');
-              const freshMp2 = (targetMp2 && targetMp2 !== '-') ? targetMp2 : ((updatedCrew.mp2 && updatedCrew.mp2 !== '-') ? updatedCrew.mp2 : '-');
+              const userOpt = (document.getElementById('ach-opt-name')?.value || document.getElementById('search-ach-opt-name')?.value || '').trim();
+              const userMp1 = (document.getElementById('ach-mp1-name')?.value || document.getElementById('search-ach-mp1-name')?.value || '').trim();
+              const userMp2 = (document.getElementById('ach-mp2-name')?.value || document.getElementById('search-ach-mp2-name')?.value || '').trim();
+
+              const isOptOverridden = window._achPersonnelManualOverride && window._achPersonnelManualOverride['ach-opt-name'];
+              const isMp1Overridden = window._achPersonnelManualOverride && window._achPersonnelManualOverride['ach-mp1-name'];
+              const isMp2Overridden = window._achPersonnelManualOverride && window._achPersonnelManualOverride['ach-mp2-name'];
+
+              const freshOpt = isOptOverridden ? userOpt : (targetOpt || ((updatedCrew.opt && updatedCrew.opt !== '-') ? updatedCrew.opt : ''));
+              const freshMp1 = isMp1Overridden ? userMp1 : (targetMp1 || ((updatedCrew.mp1 && updatedCrew.mp1 !== '-') ? updatedCrew.mp1 : ''));
+              const freshMp2 = isMp2Overridden ? userMp2 : ((targetMp2 && targetMp2 !== '-') ? targetMp2 : ((updatedCrew.mp2 && updatedCrew.mp2 !== '-') ? updatedCrew.mp2 : '-'));
               populateAchPersonnelSelects(freshOpt, freshMp1, freshMp2, isWashing);
             }
           }
@@ -31448,6 +31651,13 @@ Keterangan : ${keterangan}`;
       const job = findJobById(state.currentActionJobId);
       if (!job) return;
 
+      // Reset manual override flag saat form dibuka fresh
+      window._achPersonnelManualOverride = {
+        'ach-opt-name': false,
+        'ach-mp1-name': false,
+        'ach-mp2-name': false
+      };
+
       const isJobRequest = isJobAnOrderRequest(job);
       const isWashing = (job.cat === 'coal' || job.cat === 'rom' || job.cat === 'non_coal' || (job.id && job.id.startsWith('WTJ')) || job.serviceType === 'watertruck');
 
@@ -31665,9 +31875,13 @@ Keterangan : ${keterangan}`;
                 const userOpt = (document.getElementById('ach-opt-name')?.value || document.getElementById('search-ach-opt-name')?.value || '').trim();
                 const userMp1 = (document.getElementById('ach-mp1-name')?.value || document.getElementById('search-ach-mp1-name')?.value || '').trim();
                 const userMp2 = (document.getElementById('ach-mp2-name')?.value || document.getElementById('search-ach-mp2-name')?.value || '').trim();
-                const curOpt = (userOpt && userOpt !== '-' && !userOpt.startsWith('--')) ? userOpt : (!isDummyPersonnelName(updatedCrew.opt) ? updatedCrew.opt : (cleanActiveArmada === cleanArmada ? currentOpt : ''));
-                const curMp1 = (userMp1 && userMp1 !== '-' && !userMp1.startsWith('--')) ? userMp1 : (!isDummyPersonnelName(updatedCrew.mp1) ? updatedCrew.mp1 : (cleanActiveArmada === cleanArmada ? currentMp1 : ''));
-                const curMp2 = (userMp2 && userMp2 !== '-' && !userMp2.startsWith('--')) ? userMp2 : (!isDummyPersonnelName(updatedCrew.mp2) ? updatedCrew.mp2 : (cleanActiveArmada === cleanArmada ? currentMp2 : ''));
+                const isOptOverridden = window._achPersonnelManualOverride && window._achPersonnelManualOverride['ach-opt-name'];
+                const isMp1Overridden = window._achPersonnelManualOverride && window._achPersonnelManualOverride['ach-mp1-name'];
+                const isMp2Overridden = window._achPersonnelManualOverride && window._achPersonnelManualOverride['ach-mp2-name'];
+
+                const curOpt = isOptOverridden ? userOpt : ((userOpt && userOpt !== '-' && !userOpt.startsWith('--')) ? userOpt : (!isDummyPersonnelName(updatedCrew.opt) ? updatedCrew.opt : (cleanActiveArmada === cleanArmada ? currentOpt : '')));
+                const curMp1 = isMp1Overridden ? userMp1 : ((userMp1 && userMp1 !== '-' && !userMp1.startsWith('--')) ? userMp1 : (!isDummyPersonnelName(updatedCrew.mp1) ? updatedCrew.mp1 : (cleanActiveArmada === cleanArmada ? currentMp1 : '')));
+                const curMp2 = isMp2Overridden ? userMp2 : ((userMp2 && userMp2 !== '-' && !userMp2.startsWith('--')) ? userMp2 : (!isDummyPersonnelName(updatedCrew.mp2) ? updatedCrew.mp2 : (cleanActiveArmada === cleanArmada ? currentMp2 : '')));
                 populateAchPersonnelSelects(curOpt, curMp1, curMp2, isWashing);
               }
             });
@@ -38550,14 +38764,23 @@ Keterangan : ${keterangan}`;
       if (switcherWrapper) switcherWrapper.classList.remove('hidden');
       if (directTabBtn) directTabBtn.classList.remove('hidden');
 
-      // Set tanggal default untuk jam start / finish jika kosong
-      const now = new Date();
-      const pad = (n) => String(n).padStart(2, '0');
-      const jamNow = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      // Tanggal default diset ke hari ini jika belum terisi
+      const tanggalEl = document.getElementById('direct-tanggal');
+      if (tanggalEl && !tanggalEl.value) {
+        tanggalEl.value = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+      }
+
+      // Shift default diset ke shift aktif sistem jika belum dipilih
+      const shiftEl = document.getElementById('direct-shift');
+      if (shiftEl && !shiftEl.value) {
+        shiftEl.value = String(state.currentShift || 1);
+      }
+
+      // Jam start & jam finish tetap kosong agar diisi manual oleh pengguna
       const jamStartEl = document.getElementById('direct-jam-start');
       const jamFinishEl = document.getElementById('direct-jam-finish');
-      if (jamStartEl && !jamStartEl.value) jamStartEl.value = jamNow;
-      if (jamFinishEl && !jamFinishEl.value) jamFinishEl.value = jamNow;
+      if (jamStartEl && !jamStartEl.value) jamStartEl.value = '';
+      if (jamFinishEl && !jamFinishEl.value) jamFinishEl.value = '';
 
       populateDirectPersonnelDatalists();
 
@@ -38926,9 +39149,11 @@ Keterangan : ${keterangan}`;
       if (!armadaUnit) return;
       const cleanArmada = String(armadaUnit).trim().toUpperCase();
       const cluster = document.getElementById('direct-cluster')?.value || 'Selatan';
+      const shiftVal = document.getElementById('direct-shift')?.value;
       const jamStart = document.getElementById('direct-jam-start')?.value || '';
-      const shift = (typeof getEffectiveShift === 'function') ? getEffectiveShift(jamStart) : (state.currentShift || 1);
-      const tanggal = typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : '';
+      const shift = shiftVal ? parseInt(shiftVal, 10) : ((typeof getEffectiveShift === 'function') ? getEffectiveShift(jamStart) : (state.currentShift || 1));
+      const tanggalInput = document.getElementById('direct-tanggal')?.value;
+      const tanggal = tanggalInput || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : '');
 
       // Panggil fungsi getPersonnelForArmada yang sinkron dengan master roster
       if (typeof getPersonnelForArmada === 'function') {
@@ -38945,12 +39170,30 @@ Keterangan : ${keterangan}`;
     window.handleDirectArmadaChange = handleDirectArmadaChange;
 
     function handleDirectJamStartChange(val) {
+      if (val) {
+        // Otomatis deteksi shift dari angka depan Jam Start (misal 12:00 -> Shift 1, 08:00 -> Shift 1, 20:00 -> Shift 2)
+        const detectedShift = (typeof detectShiftFromTimeString === 'function')
+          ? detectShiftFromTimeString(val)
+          : ((typeof getEffectiveShift === 'function') ? getEffectiveShift(val) : null);
+        if (detectedShift) {
+          const shiftSel = document.getElementById('direct-shift');
+          if (shiftSel) shiftSel.value = String(detectedShift);
+        }
+      }
       const armada = document.getElementById('direct-armada')?.value;
       if (armada) {
         handleDirectArmadaChange(armada);
       }
     }
     window.handleDirectJamStartChange = handleDirectJamStartChange;
+
+    function handleDirectDateOrShiftChange() {
+      const armada = document.getElementById('direct-armada')?.value;
+      if (armada) {
+        handleDirectArmadaChange(armada);
+      }
+    }
+    window.handleDirectDateOrShiftChange = handleDirectDateOrShiftChange;
 
     function triggerAutoFillForDirectOrder(val) {
       if (!val) return;
@@ -39022,11 +39265,15 @@ Keterangan : ${keterangan}`;
       const keterangan = (document.getElementById('direct-keterangan')?.value || '').trim();
 
       // Validasi semua kolom wajib isi (keterangan error di bawah masing-masing kolom)
+      const tanggalInputVal = (document.getElementById('direct-tanggal')?.value || '').trim();
+      const shiftInputVal = (document.getElementById('direct-shift')?.value || '').trim();
       const fieldsToCheck = [
         { id: 'direct-kode-unit', val: lambung },
         { id: 'direct-cluster', val: cluster },
         { id: 'direct-lokasi', val: lokasi },
         { id: 'direct-deskripsi', val: deskripsi },
+        { id: 'direct-tanggal', val: tanggalInputVal },
+        { id: 'direct-shift', val: shiftInputVal },
         { id: 'direct-hm-start', val: hmStart },
         { id: 'direct-hm-finish', val: hmFinish },
         { id: 'direct-jam-start', val: jamStart },
@@ -39080,9 +39327,9 @@ Keterangan : ${keterangan}`;
       try {
         const isWt = (svcType === 'watertruck');
         const prefix = isWt ? 'WT' : 'LT';
-        const tanggalStr = getEffectiveTodayString();
+        const tanggalStr = tanggalInputVal || getEffectiveTodayString();
         const datePart = (typeof formatDateToDDMMYYYY === 'function') ? formatDateToDDMMYYYY(tanggalStr) : '24102026';
-        const shiftPart = (typeof getEffectiveShift === 'function') ? getEffectiveShift(jamStart) : (parseInt(state.currentShift || 1, 10) || 1);
+        const shiftPart = shiftInputVal ? parseInt(shiftInputVal, 10) : ((typeof getEffectiveShift === 'function') ? getEffectiveShift(jamStart) : (parseInt(state.currentShift || 1, 10) || 1));
         const cleanLambung = String(lambung).trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || 'UNIT';
         const randId = Math.random().toString(36).substring(2, 6).toUpperCase();
         const finalJobId = `${prefix}-${datePart}-REQ-${shiftPart}-${cleanLambung}-${randId}`;
@@ -39211,26 +39458,7 @@ Keterangan : ${keterangan}`;
         showToast(`Pekerjaan unit ${lambung} berhasil diselesaikan & langsung masuk ke Riwayat Selesai!`, 'success');
 
         // Reset form sepenuhnya ke kondisi bersih
-        if (document.getElementById('direct-kode-unit')) document.getElementById('direct-kode-unit').value = '';
-        if (document.getElementById('direct-cluster')) document.getElementById('direct-cluster').value = '';
-        if (document.getElementById('direct-lokasi')) document.getElementById('direct-lokasi').value = '';
-        if (document.getElementById('direct-deskripsi')) document.getElementById('direct-deskripsi').value = '';
-        if (document.getElementById('direct-hm-start')) document.getElementById('direct-hm-start').value = '';
-        if (document.getElementById('direct-hm-finish')) document.getElementById('direct-hm-finish').value = '';
-        if (document.getElementById('direct-jam-start')) document.getElementById('direct-jam-start').value = '';
-        if (document.getElementById('direct-jam-finish')) document.getElementById('direct-jam-finish').value = '';
-        if (document.getElementById('direct-status')) document.getElementById('direct-status').value = '';
-        if (document.getElementById('search-direct-armada')) document.getElementById('search-direct-armada').value = '';
-        if (document.getElementById('direct-armada')) document.getElementById('direct-armada').value = '';
-        if (document.getElementById('direct-opt-name')) document.getElementById('direct-opt-name').value = '';
-        if (document.getElementById('direct-mp1-name')) document.getElementById('direct-mp1-name').value = '';
-        if (document.getElementById('direct-mp2-name')) document.getElementById('direct-mp2-name').value = '';
-        if (document.getElementById('direct-keterangan')) document.getElementById('direct-keterangan').value = '';
-        const clearBtn = document.getElementById('clear-direct-armada');
-        if (clearBtn) clearBtn.classList.add('hidden');
-
-        // Bersihkan seluruh status error
-        fieldsToCheck.forEach(f => clearDirectFieldError(f.id));
+        resetDirectCompletionForm();
 
         // Otomatis refresh render riwayat selesai & notifikasi data changed
         if (typeof renderCompletedTable === 'function') {
@@ -39251,6 +39479,41 @@ Keterangan : ${keterangan}`;
       }
     }
     window.handleDirectCompletionSubmit = handleDirectCompletionSubmit;
+
+    function resetDirectCompletionForm() {
+      if (document.getElementById('direct-kode-unit')) document.getElementById('direct-kode-unit').value = '';
+      if (document.getElementById('direct-cluster')) document.getElementById('direct-cluster').value = '';
+      if (document.getElementById('direct-lokasi')) document.getElementById('direct-lokasi').value = '';
+      if (document.getElementById('direct-deskripsi')) document.getElementById('direct-deskripsi').value = '';
+      const tanggalEl = document.getElementById('direct-tanggal');
+      if (tanggalEl) tanggalEl.value = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+      const shiftEl = document.getElementById('direct-shift');
+      if (shiftEl) shiftEl.value = String(state.currentShift || 1);
+      if (document.getElementById('direct-hm-start')) document.getElementById('direct-hm-start').value = '';
+      if (document.getElementById('direct-hm-finish')) document.getElementById('direct-hm-finish').value = '';
+      if (document.getElementById('direct-jam-start')) document.getElementById('direct-jam-start').value = '';
+      if (document.getElementById('direct-jam-finish')) document.getElementById('direct-jam-finish').value = '';
+      if (document.getElementById('direct-status')) document.getElementById('direct-status').value = '';
+      if (document.getElementById('search-direct-armada')) document.getElementById('search-direct-armada').value = '';
+      if (document.getElementById('direct-armada')) document.getElementById('direct-armada').value = '';
+      if (document.getElementById('direct-opt-name')) document.getElementById('direct-opt-name').value = '';
+      if (document.getElementById('direct-mp1-name')) document.getElementById('direct-mp1-name').value = '';
+      if (document.getElementById('direct-mp2-name')) document.getElementById('direct-mp2-name').value = '';
+      if (document.getElementById('direct-keterangan')) document.getElementById('direct-keterangan').value = '';
+      const clearBtn = document.getElementById('clear-direct-armada');
+      if (clearBtn) clearBtn.classList.add('hidden');
+
+      const allFields = [
+        'direct-kode-unit', 'direct-cluster', 'direct-lokasi', 'direct-deskripsi',
+        'direct-tanggal', 'direct-shift', 'direct-hm-start', 'direct-hm-finish',
+        'direct-jam-start', 'direct-jam-finish', 'direct-status', 'direct-armada',
+        'direct-opt-name', 'direct-mp1-name', 'direct-mp2-name', 'direct-keterangan'
+      ];
+      allFields.forEach(fId => {
+        if (typeof clearDirectFieldError === 'function') clearDirectFieldError(fId);
+      });
+    }
+    window.resetDirectCompletionForm = resetDirectCompletionForm;
 
 
     async function fetchEntireSupabaseTable(tableName, selectCols = '*', orderCol = null, ascending = true) {
@@ -40891,9 +41154,18 @@ Keterangan : ${keterangan}`;
     }
     window.loadJobHistoryFromSupabase = loadJobHistoryFromSupabase;
 
-    // 4. SINKRONISASI TUNGGAL PICA KE TABEL pica_records DI SUPABASE
+    // 4. SINKRONISASI TUNGGAL PICA KE TABEL pica_records DI SUPABASE (HANYA UNTUK JOB SCHEDULE)
     async function syncPicaToSupabase(job, kategori = '', alasan = '') {
       if (!state.supabaseClient || !job) return;
+      // Guard: Unit Request / Unscheduled Job TIDAK BOLEH disimpan ke tabel pica_records
+      if (typeof isUnitReqJob === 'function' && isUnitReqJob(job)) {
+        console.log('[Supabase PICA Guard] Unit request dikecualikan dari pica_records:', job.id);
+        return;
+      }
+      if (typeof isScheduleJob === 'function' && !isScheduleJob(job)) {
+        console.log('[Supabase PICA Guard] Pekerjaan non-schedule dikecualikan dari pica_records:', job.id);
+        return;
+      }
       try {
         const cleanId = String(job.id || Date.now());
         const picaId = 'PICA-' + cleanId;
