@@ -3793,8 +3793,8 @@
               </select>
             </div>
 
-            <!-- TOMBOL UNDUH EXCEL DI UJUNG KANAN -->
-            <div class="order-4 md:order-4 md:ml-auto flex items-center justify-end shrink-0">
+            <!-- TOMBOL UNDUH EXCEL & HAPUS MASAL DI UJUNG KANAN -->
+            <div class="order-4 md:order-4 md:ml-auto flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
               <button type="button" onclick="downloadExcelData('PICA')"
                 title="Unduh log kendala PICA dalam format Excel (.xlsx)"
                 class="btn-export-excel px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer">
@@ -3804,6 +3804,48 @@
                   </path>
                 </svg>
                 <span>Unduh</span>
+              </button>
+              <button type="button" id="btn-toggle-select-pica" onclick="togglePicaSelectMode()"
+                title="Pilih dan Hapus Masal Kendala PICA"
+                class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-200 text-slate-700 font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                  </path>
+                </svg>
+                <span id="btn-toggle-select-pica-text">Pilih &amp; Hapus Masal</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- PICA BULK ACTIONS BAR -->
+          <div id="pica-bulk-actions-bar"
+            class="hidden p-2.5 md:p-3 rounded-2xl bg-rose-50 border border-rose-200 flex flex-wrap items-center justify-between gap-2.5 text-xs mb-3 shadow-2xs">
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+              <span class="font-extrabold text-rose-900" id="pica-selected-count">0 Kendala Terpilih</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <button type="button" onclick="selectAllFilteredPica()"
+                class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white border border-rose-200 hover:bg-rose-100 text-rose-800 font-bold text-xs transition cursor-pointer shadow-2xs">
+                Pilih Semua di Tabel
+              </button>
+              <button type="button" onclick="deselectAllPica()"
+                class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer shadow-2xs">
+                Batal Pilih
+              </button>
+              <button type="button" id="btn-prompt-delete-pica" onclick="promptBulkDeletePica()"
+                class="px-3 sm:px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs transition shadow-2xs cursor-pointer flex items-center space-x-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                  </path>
+                </svg>
+                <span>Hapus Terpilih</span>
+              </button>
+              <button type="button" onclick="cancelPicaSelectMode()"
+                class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition cursor-pointer shadow-2xs">
+                Batal
               </button>
             </div>
           </div>
@@ -3815,6 +3857,12 @@
                 <thead
                   class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-200 font-extrabold select-none">
                   <tr>
+                    <th id="pica-th-select"
+                      class="hidden py-2.5 px-2 w-[8%] md:w-[3.5%] text-center align-middle select-none"
+                      title="Pilih Semua yang Tampil">
+                      <input type="checkbox" id="pica-check-all" onchange="toggleSelectAllPicaCheckboxes(this.checked)"
+                        class="rounded text-rose-600 focus:ring-rose-500 cursor-pointer w-3.5 h-3.5">
+                    </th>
                     <th onclick="sortPicaBy('noId')"
                       class="hidden md:table-cell py-2.5 px-2.5 md:w-[11%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
                       title="Urutkan berdasarkan No ID (Klik 3x untuk reset)">
@@ -9832,6 +9880,36 @@
     </div>
   </div>
 
+  <!-- MODAL: KONFIRMASI HAPUS MASAL KENDALA PICA -->
+  <div id="modal-confirm-bulk-delete-pica"
+    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center">
+      <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-2xs">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+          </path>
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-sm font-black text-slate-900">Hapus Kendala PICA Terpilih?</h3>
+        <p class="text-xs text-slate-500 mt-1 leading-relaxed" id="bulk-pica-delete-desc">
+          Apakah Anda yakin ingin menghapus data kendala PICA yang dipilih secara permanen dari antrean dan database?
+        </p>
+      </div>
+      <div class="flex items-center space-x-2 pt-2">
+        <button type="button" id="btn-confirm-bulk-delete-pica" onclick="executeBulkDeletePica()"
+          class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition cursor-pointer">
+          Ya, Hapus Kendala
+        </button>
+        <button type="button" onclick="toggleModal('modal-confirm-bulk-delete-pica', false)"
+          class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
+          Batal
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="modal-confirm-bulk-delete-selected-jobs"
     class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center">
@@ -11181,6 +11259,9 @@
       isCompSelectMode: false,
       selectedCompJobIds: new Set(),
       _lastFilteredCompletedIds: [],
+      isPicaSelectMode: false,
+      selectedPicaJobIds: new Set(),
+      _lastFilteredPicaIds: [],
       masterUsers: [],
       currentAchPhotos: ['', '', '', ''],
       isRosterSelectMode: false,
@@ -13187,7 +13268,8 @@
       const bulkSelectBtns = [
         document.getElementById('btn-toggle-select-lt-sched'),
         document.getElementById('btn-toggle-select-wt-sched'),
-        document.getElementById('btn-toggle-select-comp')
+        document.getElementById('btn-toggle-select-comp'),
+        document.getElementById('btn-toggle-select-pica')
       ];
       bulkSelectBtns.forEach(btn => {
         if (btn) {
@@ -13202,6 +13284,7 @@
           if (state.isLtSchedSelectMode && typeof cancelLtScheduleSelectMode === 'function') cancelLtScheduleSelectMode();
           if (state.isWtSchedSelectMode && typeof cancelWtScheduleSelectMode === 'function') cancelWtScheduleSelectMode();
           if (state.isCompSelectMode && typeof cancelCompletedSelectMode === 'function') cancelCompletedSelectMode();
+          if (state.isPicaSelectMode && typeof cancelPicaSelectMode === 'function') cancelPicaSelectMode();
         }
       }
 
@@ -17548,11 +17631,23 @@
         badge.textContent = `Total Kendala: ${nonAchJobs.length} Unit`;
       }
 
+      state._lastFilteredPicaIds = nonAchJobs.map(j => String(j.id));
+
+      const thSelect = document.getElementById('pica-th-select');
+      if (thSelect) {
+        if (state.isPicaSelectMode) thSelect.classList.remove('hidden');
+        else thSelect.classList.add('hidden');
+      }
+      const checkAllEl = document.getElementById('pica-check-all');
+      if (checkAllEl) {
+        checkAllEl.checked = nonAchJobs.length > 0 && nonAchJobs.every(j => state.selectedPicaJobIds && state.selectedPicaJobIds.has(String(j.id)));
+      }
+
       tbody.innerHTML = '';
       if (nonAchJobs.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="10" class="py-8 text-center text-slate-400 italic text-xs">
+            <td colspan="${state.isPicaSelectMode ? 11 : 10}" class="py-8 text-center text-slate-400 italic text-xs">
               Tidak ada catatan kendala PICA untuk kriteria pencarian / filter ini.
             </td>
           </tr>
@@ -17671,9 +17766,19 @@
           mpCombined = mp2Display;
         }
 
+        const isChecked = Boolean(state.isPicaSelectMode && state.selectedPicaJobIds && state.selectedPicaJobIds.has(String(job.id)));
+        const tdCheck = state.isPicaSelectMode ? `
+          <td class="py-2.5 px-2 text-center align-middle">
+            <input type="checkbox" value="${job.id}" ${isChecked ? 'checked' : ''}
+              onchange="togglePicaJobSelection('${job.id}', this.checked)"
+              class="rounded text-rose-600 focus:ring-rose-500 cursor-pointer w-3.5 h-3.5">
+          </td>
+        ` : '';
+
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50/80 transition align-middle';
+        tr.className = `hover:bg-slate-50/80 transition align-middle ${isChecked ? 'bg-rose-50/60' : ''}`;
         tr.innerHTML = `
+          ${tdCheck}
           <!-- KOLOM 0: NO ID (RATA KIRI TENGAH) -->
           <td class="hidden md:table-cell py-2.5 px-2.5 text-left align-middle font-mono font-bold text-[9.5px] lg:text-[10px] text-slate-800 select-all tracking-tight leading-tight">
             ${(typeof formatJobNoIdDesktopHtml === 'function' && typeof getJobNoId === 'function') ? formatJobNoIdDesktopHtml(getJobNoId(job)) : (job.noId || job.id || '-')}
@@ -17866,6 +17971,244 @@
       showToast(`Membuka Jadwal: ${targetCat.toUpperCase()} • Tgl ${targetDate} (Shift ${targetShift})`, 'info');
     }
     window.jumpFromPicaToSchedule = jumpFromPicaToSchedule;
+
+    // ========================================================================
+    // CONTROLLER & LOGIKA HAPUS MASAL LOG PICA KENDALA
+    // ========================================================================
+    function togglePicaSelectMode() {
+      if (state.currentUser?.role !== 'admin') {
+        if (typeof showToast === 'function') showToast('Fitur ini hanya dapat diakses oleh Administrator.', 'warning');
+        return;
+      }
+      state.isPicaSelectMode = !state.isPicaSelectMode;
+      const btn = document.getElementById("btn-toggle-select-pica");
+      const btnText = document.getElementById("btn-toggle-select-pica-text");
+      const bar = document.getElementById("pica-bulk-actions-bar");
+
+      if (state.isPicaSelectMode) {
+        if (btnText) btnText.textContent = "Keluar Mode Pilih";
+        if (btn) btn.className = "px-3.5 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-900 font-extrabold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-2xs border border-rose-300";
+        if (bar) bar.classList.remove("hidden");
+      } else {
+        if (btnText) btnText.textContent = "Pilih & Hapus Masal";
+        if (btn) btn.className = "px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-200 text-slate-700 font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer";
+        if (bar) bar.classList.add("hidden");
+        if (state.selectedPicaJobIds) state.selectedPicaJobIds.clear();
+      }
+      updatePicaBulkActionBar();
+      renderPicaTable();
+    }
+    window.togglePicaSelectMode = togglePicaSelectMode;
+
+    function cancelPicaSelectMode() {
+      state.isPicaSelectMode = false;
+      if (state.selectedPicaJobIds) state.selectedPicaJobIds.clear();
+      const btn = document.getElementById("btn-toggle-select-pica");
+      const btnText = document.getElementById("btn-toggle-select-pica-text");
+      const bar = document.getElementById("pica-bulk-actions-bar");
+      if (btnText) btnText.textContent = "Pilih & Hapus Masal";
+      if (btn) btn.className = "px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-200 text-slate-700 font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer";
+      if (bar) bar.classList.add("hidden");
+      updatePicaBulkActionBar();
+      renderPicaTable();
+    }
+    window.cancelPicaSelectMode = cancelPicaSelectMode;
+
+    function togglePicaJobSelection(jobId, isChecked) {
+      if (!state.selectedPicaJobIds) state.selectedPicaJobIds = new Set();
+      const idStr = String(jobId);
+      if (isChecked) {
+        state.selectedPicaJobIds.add(idStr);
+      } else {
+        state.selectedPicaJobIds.delete(idStr);
+      }
+      updatePicaBulkActionBar();
+      renderPicaTable();
+    }
+    window.togglePicaJobSelection = togglePicaJobSelection;
+
+    function toggleSelectAllPicaCheckboxes(isChecked) {
+      if (!state.selectedPicaJobIds) state.selectedPicaJobIds = new Set();
+      const targetIds = state._lastFilteredPicaIds || [];
+      if (isChecked) {
+        targetIds.forEach(id => state.selectedPicaJobIds.add(String(id)));
+      } else {
+        targetIds.forEach(id => state.selectedPicaJobIds.delete(String(id)));
+      }
+      updatePicaBulkActionBar();
+      renderPicaTable();
+    }
+    window.toggleSelectAllPicaCheckboxes = toggleSelectAllPicaCheckboxes;
+
+    function selectAllFilteredPica() {
+      if (!state.selectedPicaJobIds) state.selectedPicaJobIds = new Set();
+      const currentIds = state._lastFilteredPicaIds || [];
+      currentIds.forEach(id => state.selectedPicaJobIds.add(String(id)));
+      updatePicaBulkActionBar();
+      renderPicaTable();
+    }
+    window.selectAllFilteredPica = selectAllFilteredPica;
+
+    function deselectAllPica() {
+      if (state.selectedPicaJobIds) state.selectedPicaJobIds.clear();
+      updatePicaBulkActionBar();
+      renderPicaTable();
+    }
+    window.deselectAllPica = deselectAllPica;
+
+    function updatePicaBulkActionBar() {
+      const selectedCount = state.selectedPicaJobIds ? state.selectedPicaJobIds.size : 0;
+      const countEl = document.getElementById("pica-selected-count");
+      const deleteBtn = document.getElementById("btn-prompt-delete-pica");
+      if (countEl) countEl.textContent = selectedCount + " Kendala Terpilih";
+      if (deleteBtn) {
+        deleteBtn.disabled = (selectedCount === 0);
+        if (selectedCount === 0) {
+          deleteBtn.classList.add("opacity-50", "cursor-not-allowed");
+        } else {
+          deleteBtn.classList.remove("opacity-50", "cursor-not-allowed");
+        }
+      }
+    }
+    window.updatePicaBulkActionBar = updatePicaBulkActionBar;
+
+    function promptBulkDeletePica() {
+      const selectedCount = state.selectedPicaJobIds ? state.selectedPicaJobIds.size : 0;
+      if (selectedCount === 0) {
+        showToast("Silakan pilih minimal 1 catatan kendala PICA yang ingin dihapus!", "warning");
+        return;
+      }
+      const descEl = document.getElementById("bulk-pica-delete-desc");
+      if (descEl) {
+        descEl.textContent = "Apakah Anda yakin ingin menghapus " + selectedCount + " data kendala PICA terpilih secara permanen dari antrean dan database?";
+      }
+      toggleModal("modal-confirm-bulk-delete-pica", true);
+    }
+    window.promptBulkDeletePica = promptBulkDeletePica;
+
+    async function executeBulkDeletePica() {
+      const deleteIds = Array.from(state.selectedPicaJobIds || []);
+      if (deleteIds.length === 0) {
+        toggleModal("modal-confirm-bulk-delete-pica", false);
+        return;
+      }
+
+      const confirmBtn = document.getElementById("btn-confirm-bulk-delete-pica");
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = "<span>Menghapus...</span>";
+      }
+
+      // Kumpulkan seluruh variasi ID target (id, job_id, no_id)
+      const allTargetIds = new Set(deleteIds.map(String));
+      const scanList = [
+        ...(state.lubetruckState?.jobs || []),
+        ...(state.watertruckState?.jobs || []),
+        ...(state.unscheduledLtJobs || []),
+        ...(state.unscheduledWtJobs || []),
+        ...(Array.isArray(state.jobHistory) ? state.jobHistory : []),
+        ...(Array.isArray(state.picaCloudRecords) ? state.picaCloudRecords : [])
+      ];
+
+      scanList.forEach(item => {
+        if (!item) return;
+        const sId = String(item.id || '');
+        const sJobId = String(item.job_id || '');
+        const sNoId = String(item.noId || item.no_id || '');
+        if (allTargetIds.has(sId) || allTargetIds.has(sJobId) || allTargetIds.has(sNoId)) {
+          if (sId) allTargetIds.add(sId);
+          if (sJobId) allTargetIds.add(sJobId);
+          if (sNoId) allTargetIds.add(sNoId);
+        }
+      });
+      const deleteSet = allTargetIds;
+
+      try {
+        const matchesDel = (item) => {
+          if (!item) return false;
+          return deleteSet.has(String(item.id || '')) ||
+            deleteSet.has(String(item.job_id || '')) ||
+            deleteSet.has(String(item.noId || item.no_id || '')) ||
+            deleteSet.has(String(item.kode_order || ''));
+        };
+
+        // 1. Hapus dari state lokal
+        if (state.lubetruckState && Array.isArray(state.lubetruckState.jobs)) {
+          state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => !matchesDel(j));
+        }
+        if (state.watertruckState && Array.isArray(state.watertruckState.jobs)) {
+          state.watertruckState.jobs = state.watertruckState.jobs.filter(j => !matchesDel(j));
+        }
+        if (Array.isArray(state.unscheduledLtJobs)) {
+          state.unscheduledLtJobs = state.unscheduledLtJobs.filter(j => !matchesDel(j));
+        }
+        if (Array.isArray(state.unscheduledWtJobs)) {
+          state.unscheduledWtJobs = state.unscheduledWtJobs.filter(j => !matchesDel(j));
+        }
+        if (Array.isArray(state.jobHistory)) {
+          state.jobHistory = state.jobHistory.filter(h => !matchesDel(h));
+        }
+        if (Array.isArray(state.picaCloudRecords)) {
+          state.picaCloudRecords = state.picaCloudRecords.filter(p => !matchesDel(p));
+        }
+
+        saveDatabaseSync();
+
+        if (window.globalDataCache) {
+          deleteSet.forEach(id => {
+            if (window.globalDataCache.jobs) window.globalDataCache.jobs.delete(id);
+            if (window.globalDataCache.orderRequests) window.globalDataCache.orderRequests.delete(id);
+          });
+        }
+        if (typeof safeSaveTrimmedJobsToStorage === 'function') {
+          safeSaveTrimmedJobsToStorage();
+        }
+
+        // 2. Hapus dari Supabase cloud secara permanen dari tabel fisik
+        if (state.supabaseClient) {
+          try {
+            const fullList = Array.from(allTargetIds);
+            for (let i = 0; i < fullList.length; i += 50) {
+              const chunk = fullList.slice(i, i + 50);
+              await Promise.allSettled([
+                state.supabaseClient.from("jobs_lt").delete().in("id", chunk),
+                state.supabaseClient.from("jobs_wt").delete().in("id", chunk),
+                state.supabaseClient.from("job_history_lt").delete().in("id", chunk),
+                state.supabaseClient.from("job_history_wt").delete().in("id", chunk),
+                state.supabaseClient.from("pica_records").delete().in("id", chunk),
+                state.supabaseClient.from("pica_records").delete().in("job_id", chunk)
+              ]);
+            }
+            console.log("[Supabase Bulk Delete PICA] " + deleteIds.length + " kendala berhasil dihapus dari cloud.");
+          } catch (supaErr) {
+            console.warn("[Supabase Bulk Delete PICA Warning]", supaErr);
+          }
+        }
+
+        toggleModal("modal-confirm-bulk-delete-pica", false);
+        showToast("Berhasil menghapus masal " + deleteIds.length + " data kendala PICA!", "success");
+
+        cancelPicaSelectMode();
+        if (typeof notifyDataChanged === "function") {
+          notifyDataChanged({ source: "bulk_delete_pica" });
+        }
+        if (typeof refreshDashboardData === "function") {
+          refreshDashboardData();
+        }
+        if (typeof refreshActiveTable === "function") {
+          refreshActiveTable();
+        }
+      } catch (err) {
+        console.error("[Execute Bulk Delete PICA Error]", err);
+        showToast("Terjadi kesalahan saat menghapus data: " + err.message, "error");
+      } finally {
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.innerHTML = "<span>Ya, Hapus Kendala</span>";
+        }
+      }
+    }
+    window.executeBulkDeletePica = executeBulkDeletePica;
 
     function switchLtCategory(cat) {
       state.lubetruckState.activeCategory = cat;
@@ -19194,15 +19537,98 @@
     }
     window.renderSchedSortIcon = renderSchedSortIcon;
 
+    /**
+     * Helper ranking model unit khusus Air Cleaner:
+     * - Small Track: PC small 200/210, PC 300, PC 500, D85, D15, baru GD
+     * - Big Digger: PC 3000 / PC 3400 baru PC 2000, dst.
+     */
+    function getAirCleanerUnitModelRank(job) {
+      if (!job) return 999;
+      const lambung = String(job.noLambung || job.unit || job.no_lambung || '').trim().toUpperCase();
+      const cleanNo = lambung.replace(/[\s\-_]/g, '');
+      const mUnit = (typeof findMasterUnitRecord === 'function') ? findMasterUnitRecord(lambung) : null;
+      const masterType = String(mUnit?.type || mUnit?.type_model || '').toUpperCase();
+      const jobType = String(job.typeUnit || job.type || job.type_unit || '').toUpperCase();
+      const resolvedType = (typeof getUnitTypeFromMaster === 'function') ? getUnitTypeFromMaster(lambung, jobType).toUpperCase() : '';
+      const fullType = `${lambung} ${resolvedType} ${jobType} ${masterType}`.toUpperCase();
+
+      const isBig = (typeof isBigDiggerUnit === 'function') ? isBigDiggerUnit(job) : false;
+
+      if (isBig) {
+        // Big Digger: PC3000 / PC3400 baru PC2000, dst.
+        if (/PC\s*3400|PC\s*3000|PC3400|PC3000|EX\s*3600|EX3600/i.test(fullType) || /^E34/i.test(cleanNo)) return 110;
+        if (/PC\s*2000|PC2000|EX\s*2600|EX2600|EX\s*2000|EX2000/i.test(fullType) || /^E20/i.test(cleanNo) || /^E520/i.test(cleanNo)) return 120;
+        if (/PC\s*1250|PC1250|EX\s*1200|EX1200/i.test(fullType) || /^E12/i.test(cleanNo) || /^E512/i.test(cleanNo)) return 130;
+        if (/PC\s*850|PC850|PC\s*800|PC800|CAT\s*395|CAT395/i.test(fullType) || /^E85/i.test(cleanNo) || /^E39/i.test(cleanNo)) return 140;
+        return 190;
+      }
+
+      // Small Track: PC small 200, 300, 500, d85, d15, baru GD
+      // 1. PC 200 / PC 210
+      if (/PC\s*210|PC210|PC\s*200(?!\d)|PC200(?!\d)/i.test(fullType) || /^E21/i.test(cleanNo) || /^E25/i.test(cleanNo) || /^E28/i.test(cleanNo) || /^EX21/i.test(cleanNo) || /^EX001/i.test(cleanNo)) {
+        return 10;
+      }
+      // 2. PC 300
+      if (/PC\s*300(?!\d)|PC300(?!\d)/i.test(fullType) || /^E3\d{2}/i.test(cleanNo) || /^EX3/i.test(cleanNo) || /^EX002/i.test(cleanNo)) {
+        return 20;
+      }
+      // 3. PC 500
+      if (/PC\s*500|PC500/i.test(fullType) || /^E5/i.test(cleanNo)) {
+        return 30;
+      }
+      // 4. D85
+      if (/D\s*85|D85|DZ85/i.test(fullType) || /^D85/i.test(cleanNo) || /^DZ85/i.test(cleanNo) || /^D8/i.test(cleanNo)) {
+        return 40;
+      }
+      // 5. D15 / D155 (and D245)
+      if (/D\s*155|D155|D\s*15(?!\d)|D15(?!\d)|D\s*245|D245/i.test(fullType) || /^D15/i.test(cleanNo) || /^DZ15/i.test(cleanNo) || /^D1/i.test(cleanNo) || /^D24/i.test(cleanNo)) {
+        return 50;
+      }
+      // 6. GD (Motor Grader)
+      if (/GD|GRADER|GD\s*705|GD705|GD\s*755|GD755|GD\s*825|GD825/i.test(fullType) || /^GD/i.test(cleanNo) || /^G\d/i.test(cleanNo)) {
+        return 60;
+      }
+
+      return 90;
+    }
+    window.getAirCleanerUnitModelRank = getAirCleanerUnitModelRank;
+
+    function sortAirCleanerJobsList(jobsList) {
+      if (!jobsList || !jobsList.length) return jobsList;
+      jobsList.sort((a, b) => {
+        const rankA = getAirCleanerUnitModelRank(a);
+        const rankB = getAirCleanerUnitModelRank(b);
+        if (rankA !== rankB) return rankA - rankB;
+
+        // Jika model sama, urutkan nomor lambung secara alami (numerik)
+        const noA = String(a.noLambung || a.unit || '').trim().toUpperCase();
+        const noB = String(b.noLambung || b.unit || '').trim().toUpperCase();
+        return noA.localeCompare(noB, undefined, { numeric: true });
+      });
+      return jobsList;
+    }
+    window.sortAirCleanerJobsList = sortAirCleanerJobsList;
+
     function sortSchedJobsList(jobsList, sortConfig) {
       if (!jobsList || !jobsList.length) return jobsList;
 
       if (!sortConfig || !sortConfig.column) {
-        // Default: Pending selalu di posisi atas, disusul waktu rencana
+        // Default: Pending selalu di posisi atas, disusul waktu rencana / ranking model
         jobsList.sort((a, b) => {
           const aPending = (a.status === 'pending' || a.isPending) ? 1 : 0;
           const bPending = (b.status === 'pending' || b.isPending) ? 1 : 0;
           if (bPending !== aPending) return bPending - aPending;
+
+          const isAc = (a.cat === 'aircleaner' || a.cat === 'air_cleaner' || b.cat === 'aircleaner' || b.cat === 'air_cleaner');
+          if (isAc && typeof getAirCleanerUnitModelRank === 'function') {
+            const rankA = getAirCleanerUnitModelRank(a);
+            const rankB = getAirCleanerUnitModelRank(b);
+            if (rankA !== rankB) return rankA - rankB;
+            const noA = String(a.noLambung || a.unit || '').trim().toUpperCase();
+            const noB = String(b.noLambung || b.unit || '').trim().toUpperCase();
+            return noA.localeCompare(noB, undefined, { numeric: true });
+          }
+
           return (a.waktu || '').localeCompare(b.waktu || '');
         });
         return jobsList;
@@ -42227,7 +42653,11 @@ Keterangan : ${keterangan}`;
           aoa.push(['']);
           aoa.push([grp.title]);
           const grpJobs = jobs.filter(grp.filter);
-          if (typeof sortSchedJobsList === 'function') sortSchedJobsList(grpJobs, sortConfig);
+          if (typeof sortAirCleanerJobsList === 'function') {
+            sortAirCleanerJobsList(grpJobs);
+          } else if (typeof sortSchedJobsList === 'function') {
+            sortSchedJobsList(grpJobs, sortConfig);
+          }
           grpJobs.forEach(j => {
             aoa.push([buildUnitLine(j, activeCat, grp.type)]);
           });
