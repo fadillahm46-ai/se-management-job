@@ -1,32 +1,20 @@
 /**
  * Service Worker: SE MANAGEMENT JOB - Mine Operations
- * Versi Cache: se-mine-ops-v3
+ * Versi Cache: se-mine-ops-v12
  * Fitur: Offline Caching, Network-First untuk Halaman Utama (Navigation), Stale-While-Revalidate untuk aset statis
  */
 
-const CACHE_NAME = 'se-mine-ops-v6';
+const CACHE_NAME = 'se-mine-ops-v12';
 
 // Daftar aset statis utama yang dicache saat instalasi
 const PRECACHE_ASSETS = [
   './',
   './index.html',
   './xlsx.full.min.js',
-  './TEMPLATE_ROSTER_SE_MANAGEMENT.xlsx',
-  './TEMPLATE_DATA_MASTER_ARMADA.xlsx',
-  './TEMPLATE_POPULASI_UNIT_SE_MANAGEMENT.xlsx',
-  './TEMPLATE_NO_OPT_PRODUKSI_SE_MANAGEMENT.xlsx',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './icons/icon.svg',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap',
-  'https://cdn.tailwindcss.com',
-  'https://cdn.jsdelivr.net/npm/chart.js',
-  'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
-  'https://lh3.googleusercontent.com/d/1wwl4IRJggVH1EBW54ANXb2Mi3dnUejEU',
-  'https://lh3.googleusercontent.com/d/1HdWJm4xe7WoW7rkbBfZN_T6YRT2Er86F',
-  'https://lh3.googleusercontent.com/d/1kTftX1-eoOfOYWaB8ZhjwyNLxG7-_uDY'
+  './icons/icon.svg'
 ];
 
 // 1. EVENT INSTALL: Pre-cache aset inti & lewati antrean
@@ -122,7 +110,7 @@ self.addEventListener('fetch', (event) => {
           if (networkResponse && networkResponse.status === 200) {
             caches.open(CACHE_NAME).then((cache) => cache.put(request, networkResponse.clone()));
           }
-        }).catch(() => {});
+        }).catch(() => { });
         return cachedResponse;
       }
 

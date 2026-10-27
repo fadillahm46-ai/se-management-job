@@ -510,15 +510,12 @@
       line-height: 1.1 !important;
     }
 
-    /* Cluster & Lokasi */
-    #lt-schedule-table-container td span[class*="text-slate-800"],
-    #wt-schedule-table-container td span[class*="text-slate-800"] {
-      font-size: 0.70rem !important;
-    }
-
-    #lt-schedule-table-container td span[class*="text-slate-500"],
-    #wt-schedule-table-container td span[class*="text-slate-500"] {
-      font-size: 0.65rem !important;
+    /* Kolom Lokasi SCH LT & WT (Teks Hitam) */
+    #lt-schedule-table-container td span[class*="text-slate-950"],
+    #wt-schedule-table-container td span[class*="text-slate-950"] {
+      font-size: 0.72rem !important;
+      color: #020617 !important;
+      font-weight: 700 !important;
     }
 
     /* Badge Armada */
@@ -559,6 +556,56 @@
     #wt-schedule-table-container span[class*="border-blue-200"] {
       padding: 0.05rem 0.25rem !important;
       font-size: 0.58rem !important;
+    }
+
+    /* ========================================================================== */
+    /* SISTEM DROPDOWN MODERN ALA FOTO 2 UNTUK SEMUA DROPDOWN & SELECT PADA WEB */
+    /* ========================================================================== */
+    select:not(.native-hidden-select):not(.hidden) {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      background-color: #ffffff;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2.2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 0.75rem center !important;
+      background-size: 0.95rem 0.95rem !important;
+      padding-right: 2.25rem !important;
+      cursor: pointer;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    }
+
+    select:not(.native-hidden-select):not(.hidden):hover {
+      border-color: #059669;
+      background-color: #f8fafc;
+    }
+
+    select:not(.native-hidden-select):not(.hidden):focus {
+      outline: none !important;
+      border-color: #059669 !important;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18) !important;
+      background-color: #ffffff !important;
+    }
+
+    select optgroup {
+      font-weight: 800;
+      font-size: 0.72rem;
+      color: #334155;
+      background-color: #f1f5f9;
+      padding: 0.4rem 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    select option {
+      font-weight: 600;
+      font-size: 0.78rem;
+      color: #1e293b;
+      background-color: #ffffff;
+      padding: 0.45rem 0.6rem;
     }
   </style>
 
@@ -2793,7 +2840,7 @@
             <div class="flex flex-wrap items-center gap-2">
               <button onclick="switchLtCategory('small')" id="btn-lt-cat-small"
                 class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-brand-200 text-brand-800 shadow-2xs cursor-pointer outline-none focus:outline-none">
-                Greasing Small Track
+                Small Track
               </button>
               <button onclick="switchLtCategory('digger')" id="btn-lt-cat-digger"
                 class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer outline-none focus:outline-none">
@@ -4751,7 +4798,7 @@
                 class="w-full md:w-auto px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:outline-none focus:border-brand-500 cursor-pointer shadow-2xs text-[11px] sm:text-xs"
                 title="Pilih Kategori Riwayat Pekerjaan">
                 <option value="all">Semua Riwayat</option>
-                <option value="small">Greasing Small</option>
+                <option value="small">Small Track</option>
                 <option value="digger">Big Digger</option>
                 <option value="aircleaner">Air Cleaner</option>
                 <option value="topup">Top Up Oil</option>
@@ -6208,12 +6255,34 @@
 
           <!-- Baris 1: Armada & Nama OPT (Dropdown List dari Roster dengan Fitur Pencarian) -->
           <div class="grid grid-cols-2 gap-3">
-            <div>
+            <div class="relative" id="container-ach-lt-custom">
               <label class="block text-slate-700 mb-1">Armada <span class="text-rose-500 font-bold">*</span></label>
-              <select id="ach-lt-custom" onchange="handleAchArmadaInput(this.value)"
-                class="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono font-bold uppercase bg-white text-slate-900 focus:outline-none focus:border-brand-500 text-xs shadow-2xs">
+              <div class="relative">
+                <input type="text" id="search-ach-lt-custom" placeholder="-- Ketik / Cari Armada --" autocomplete="off"
+                  class="w-full px-3 py-2 pr-7 rounded-xl border border-slate-200 bg-white text-slate-900 font-mono font-bold text-xs focus:outline-none focus:border-brand-500 shadow-2xs transition truncate uppercase cursor-pointer"
+                  onfocus="openSearchableDropdown('ach-lt-custom')"
+                  oninput="filterSearchableDropdown('ach-lt-custom', this.value)"
+                  onclick="openSearchableDropdown('ach-lt-custom')">
+                <button type="button" id="clear-ach-lt-custom" onclick="clearSearchableSelect('ach-lt-custom')"
+                  class="hidden absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                  title="Hapus pilihan">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                  </svg>
+                </button>
+                <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+              <select id="ach-lt-custom" onchange="handleAchArmadaInput(this.value)" class="hidden">
                 <option value="">-- Pilih Armada --</option>
               </select>
+              <div id="dropdown-ach-lt-custom"
+                class="hidden absolute left-0 right-0 z-50 mt-1 max-h-52 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 divide-y divide-slate-100 text-xs">
+              </div>
             </div>
             <div class="relative" id="container-ach-opt-name">
               <label class="block text-slate-700 mb-1">Nama OPT <span class="text-rose-500 font-bold">*</span></label>
@@ -7589,7 +7658,8 @@
             <div class="space-y-1.5">
               <div class="relative">
                 <input type="text" id="add-job-waktu" list="add-job-waktu-list" value=""
-                  placeholder="Pilih atau ketik waktu..." oninput="updateAddJobTimePillsHighlight(this.value)"
+                  placeholder="Pilih atau ketik waktu..." oninput="handleWaktuInputChanged(this.value)"
+                  onchange="handleWaktuInputChanged(this.value)"
                   class="w-full pl-3 pr-7 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 font-mono text-xs font-bold text-slate-800 bg-white transition">
                 <datalist id="add-job-waktu-list"></datalist>
                 <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-slate-400">
@@ -7613,7 +7683,7 @@
           <select id="add-job-cat" onchange="handleCatChangeInAddModal(this.value)"
             class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 bg-white font-semibold text-slate-800">
             <option value="">-- Pilih Kategori Jadwal --</option>
-            <option value="small">Greasing Small Track (Daily)</option>
+            <option value="small">Small Track (Daily)</option>
             <option value="digger">Big Digger (Siklus 3 Hari)</option>
             <option value="aircleaner">Air Cleaner (Filter Udara)</option>
             <option value="topup">Top Up Oil (Mingguan)</option>
@@ -7738,20 +7808,94 @@
         </div>
 
         <div class="grid grid-cols-3 gap-2">
-          <div>
-            <label class="block text-slate-700 mb-1">Nama OPT (Auto Roster)</label>
-            <input type="text" id="add-job-opt"
-              class="w-full px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-medium">
+          <!-- DROPDOWN NAMA OPT (AUTO ROSTER) ALA FOTO 2 -->
+          <div class="relative" id="add-job-opt-wrapper">
+            <label class="block text-slate-700 mb-1 font-bold truncate text-[11px]" title="Nama OPT (Auto Roster)">Nama
+              OPT (Auto Roster)</label>
+            <div class="relative">
+              <input type="text" id="add-job-opt" placeholder="Pilih / ketik OPT..."
+                oninput="filterAddJobPersonnelDropdown('opt', this.value)" onfocus="openAddJobPersonnelDropdown('opt')"
+                onclick="openAddJobPersonnelDropdown('opt')" onkeydown="handleAddJobPersonnelKeyDown(event, 'opt')"
+                class="w-full pl-2.5 pr-10 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 font-bold text-[11px] bg-white text-slate-800 transition shadow-2xs"
+                autocomplete="off">
+              <button type="button" onclick="clearAddJobPersonnelInput('opt')" id="clear-add-job-opt"
+                class="search-clear-btn hidden absolute inset-y-0 right-6 pr-1 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                title="Kosongkan nama">
+                <span
+                  class="w-3.5 h-3.5 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 flex items-center justify-center text-[10px]">✕</span>
+              </button>
+              <button type="button" onclick="toggleAddJobPersonnelDropdown(event, 'opt')"
+                class="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
+                <svg class="w-3.5 h-3.5 transition-transform duration-200" id="add-job-opt-chevron" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+            </div>
+            <!-- Panel Popover Dropdown OPT Ala Foto 2 -->
+            <div id="add-job-opt-dropdown-menu"
+              class="hidden absolute z-50 left-0 -right-12 sm:right-0 mt-1 max-h-56 overflow-y-auto bg-white rounded-xl border border-slate-200 shadow-2xl p-1.5 space-y-2">
+            </div>
           </div>
-          <div>
-            <label class="block text-slate-700 mb-1" id="add-job-mp1-label">Nama MP 1</label>
-            <input type="text" id="add-job-mp1"
-              class="w-full px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-medium">
+
+          <!-- DROPDOWN NAMA MP 1 ALA FOTO 2 -->
+          <div class="relative" id="add-job-mp1-wrapper">
+            <label class="block text-slate-700 mb-1 font-bold truncate text-[11px]" id="add-job-mp1-label"
+              title="Nama MP 1">Nama MP 1</label>
+            <div class="relative">
+              <input type="text" id="add-job-mp1" placeholder="Pilih / ketik MP 1..."
+                oninput="filterAddJobPersonnelDropdown('mp1', this.value)" onfocus="openAddJobPersonnelDropdown('mp1')"
+                onclick="openAddJobPersonnelDropdown('mp1')" onkeydown="handleAddJobPersonnelKeyDown(event, 'mp1')"
+                class="w-full pl-2.5 pr-10 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 font-bold text-[11px] bg-white text-slate-800 transition shadow-2xs"
+                autocomplete="off">
+              <button type="button" onclick="clearAddJobPersonnelInput('mp1')" id="clear-add-job-mp1"
+                class="search-clear-btn hidden absolute inset-y-0 right-6 pr-1 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                title="Kosongkan nama">
+                <span
+                  class="w-3.5 h-3.5 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 flex items-center justify-center text-[10px]">✕</span>
+              </button>
+              <button type="button" onclick="toggleAddJobPersonnelDropdown(event, 'mp1')"
+                class="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
+                <svg class="w-3.5 h-3.5 transition-transform duration-200" id="add-job-mp1-chevron" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+            </div>
+            <!-- Panel Popover Dropdown MP 1 Ala Foto 2 -->
+            <div id="add-job-mp1-dropdown-menu"
+              class="hidden absolute z-50 -left-6 -right-6 sm:left-0 sm:right-0 mt-1 max-h-56 overflow-y-auto bg-white rounded-xl border border-slate-200 shadow-2xl p-1.5 space-y-2">
+            </div>
           </div>
-          <div>
-            <label class="block text-slate-700 mb-1" id="add-job-mp2-label">Nama MP 2</label>
-            <input type="text" id="add-job-mp2"
-              class="w-full px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-medium">
+
+          <!-- DROPDOWN NAMA MP 2 ALA FOTO 2 -->
+          <div class="relative" id="add-job-mp2-wrapper">
+            <label class="block text-slate-700 mb-1 font-bold truncate text-[11px]" id="add-job-mp2-label"
+              title="Nama MP 2">Nama MP 2</label>
+            <div class="relative">
+              <input type="text" id="add-job-mp2" placeholder="Pilih / ketik MP 2..."
+                oninput="filterAddJobPersonnelDropdown('mp2', this.value)" onfocus="openAddJobPersonnelDropdown('mp2')"
+                onclick="openAddJobPersonnelDropdown('mp2')" onkeydown="handleAddJobPersonnelKeyDown(event, 'mp2')"
+                class="w-full pl-2.5 pr-10 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 font-bold text-[11px] bg-white text-slate-800 transition shadow-2xs"
+                autocomplete="off">
+              <button type="button" onclick="clearAddJobPersonnelInput('mp2')" id="clear-add-job-mp2"
+                class="search-clear-btn hidden absolute inset-y-0 right-6 pr-1 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer z-10"
+                title="Kosongkan nama">
+                <span
+                  class="w-3.5 h-3.5 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-500 flex items-center justify-center text-[10px]">✕</span>
+              </button>
+              <button type="button" onclick="toggleAddJobPersonnelDropdown(event, 'mp2')"
+                class="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
+                <svg class="w-3.5 h-3.5 transition-transform duration-200" id="add-job-mp2-chevron" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+            </div>
+            <!-- Panel Popover Dropdown MP 2 Ala Foto 2 -->
+            <div id="add-job-mp2-dropdown-menu"
+              class="hidden absolute z-50 -left-12 sm:left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white rounded-xl border border-slate-200 shadow-2xl p-1.5 space-y-2">
+            </div>
           </div>
         </div>
 
@@ -15626,6 +15770,10 @@
       if (cat === 'digger') {
         updateDiggerCycleInAddModal(newDate);
       }
+      const curArmada = document.getElementById('add-job-lt')?.value || document.getElementById('add-job-armada-search')?.value || '';
+      if (curArmada && typeof handleArmadaSelectChange === 'function') {
+        handleArmadaSelectChange(curArmada);
+      }
     }
     window.handleDateChangeInAddModal = handleDateChangeInAddModal;
 
@@ -16487,6 +16635,10 @@
       const isLocked = (typeof isJobLockedOrFinished === 'function') && isJobLockedOrFinished(job);
 
       job.waktu = waktu || job.waktu;
+      const detectedShift = (typeof detectShiftFromTimeString === 'function') ? detectShiftFromTimeString(job.waktu) : null;
+      if (detectedShift) {
+        job.shift = detectedShift;
+      }
       job.noLambung = noLambung;
       job.keterangan = keterangan !== undefined ? keterangan : job.keterangan;
       job.typeUnit = getUnitTypeFromMaster(noLambung, job.typeUnit || 'Unit');
@@ -17161,7 +17313,7 @@
       const yesterdayDateStr = getYesterdayDateStr(selectedDate);
 
       const catNames = {
-        small: 'Greasing Small Track',
+        small: 'Small Track',
         digger: 'Greasing Big Digger',
         coal: 'Washing Coal',
         non_coal: 'Washing Non-Coal'
@@ -18796,9 +18948,9 @@
                     ${renderSchedSortIcon('unit', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[28%] md:w-[24%]' : 'w-[24%] md:w-[24%]') : (!isAdmin ? 'w-[32%] md:w-[23%]' : 'w-[27%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Cluster & Lokasi Pit">
+                <th onclick="sortLtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[28%] md:w-[24%]' : 'w-[24%] md:w-[24%]') : (!isAdmin ? 'w-[32%] md:w-[23%]' : 'w-[27%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Lokasi Pit">
                   <div class="flex items-center space-x-0.5">
-                    <span>CLUSTER & LOKASI</span>
+                    <span>LOKASI</span>
                     ${renderSchedSortIcon('lokasi', 'LT')}
                   </div>
                 </th>
@@ -18906,8 +19058,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                   ${isAdmin ? `<span class="text-[7.5px] sm:text-[8px] font-bold text-slate-400 block uppercase tracking-wider leading-tight mt-0.5">${unitType}</span>` : ''}
                 </td>
                 <td class="py-1 px-1 md:py-1.5 md:px-1.5 break-words">
-                  <span class="font-bold text-slate-800 text-[9px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
-                  <span class="text-[8.5px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
+                  <span class="text-[9px] md:text-[9.5px] text-slate-950 font-bold uppercase leading-tight block">${job.lokasi || '-'}</span>
                 </td>
                 <td class="py-1 px-1 md:px-1.5 text-center font-mono font-bold text-emerald-800 text-[9px] align-middle">
                   ${renderArmadaOnlyCell(job, false)}
@@ -19012,9 +19163,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                     ${renderSchedSortIcon('unit', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[28%] md:w-[24%]' : 'w-[24%] md:w-[24%]') : (!isAdmin ? 'w-[32%] md:w-[23%]' : 'w-[27%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Cluster & Lokasi Pit">
+                <th onclick="sortLtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[28%] md:w-[24%]' : 'w-[24%] md:w-[24%]') : (!isAdmin ? 'w-[32%] md:w-[23%]' : 'w-[27%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Lokasi Pit">
                   <div class="flex items-center space-x-0.5">
-                    <span>CLUSTER & LOKASI</span>
+                    <span>LOKASI</span>
                     ${renderSchedSortIcon('lokasi', 'LT')}
                   </div>
                 </th>
@@ -19121,8 +19272,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                   ${isAdmin ? `<span class="text-[7.5px] sm:text-[8px] font-bold text-slate-400 block uppercase tracking-wider leading-tight mt-0.5">${unitType}</span>` : ''}
                 </td>
                 <td class="py-1 px-1 md:py-1.5 md:px-1.5 break-words">
-                  <span class="font-bold text-slate-800 text-[9px] block leading-tight">${formatClusterLabel(job.cluster)}</span>
-                  <span class="text-[8.5px] text-slate-500 font-semibold uppercase leading-tight mt-0.5 block">${job.lokasi}</span>
+                  <span class="text-[9px] md:text-[9.5px] text-slate-950 font-bold uppercase leading-tight block">${job.lokasi || '-'}</span>
                 </td>
                 <td class="py-1 px-1 md:px-1.5 text-center align-middle">
                   ${renderArmadaCell(job, false)}
@@ -20590,7 +20740,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         ];
       } else {
         categories = [
-          { key: 'small', label: 'Greasing Small', round: null },
+          { key: 'small', label: 'Small Track', round: null },
           { key: 'digger', label: 'Greasing Big Digger', round: null },
           { key: 'aircleaner', label: 'Clean Air Cleaner', round: null },
           { key: 'topup', label: 'Top Up Oil', round: null }
@@ -20710,7 +20860,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                 <span class="text-[9px] text-slate-500 font-semibold uppercase">${job.lokasi}</span>
               </td>
               <td class="hidden sm:table-cell py-2 px-2.5 text-[10px] text-slate-600 font-semibold">
-                ${job.cat === 'small' ? 'Greasing Small' : (job.cat === 'digger' ? 'Big Digger' : (job.cat === 'coal' ? 'Washing Coal' : (job.cat === 'rom' ? 'Washing ROM' : (job.cat === 'non_coal' ? 'Washing Non-Coal' : (job.cat === 'aircleaner' ? 'Clean Air Cleaner' : 'Top Up Oil')))))}
+                ${job.cat === 'small' ? 'Small Track' : (job.cat === 'digger' ? 'Big Digger' : (job.cat === 'coal' ? 'Washing Coal' : (job.cat === 'rom' ? 'Washing ROM' : (job.cat === 'non_coal' ? 'Washing Non-Coal' : (job.cat === 'aircleaner' ? 'Clean Air Cleaner' : 'Top Up Oil')))))}
               </td>
               <td class="hidden sm:table-cell py-2 px-2.5 text-center">
                 <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-100 text-amber-900 border border-amber-200">
@@ -22781,7 +22931,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       if (isAdmin || userRole === 'basecontrol' || userRole === 'track') {
         categories = [
           { id: 'all', label: 'Semua Riwayat' },
-          { id: 'small', label: 'Greasing Small' },
+          { id: 'small', label: 'Small Track' },
           { id: 'digger', label: 'Big Digger' },
           { id: 'aircleaner', label: 'Air Cleaner' },
           { id: 'topup', label: 'Top Up Oil' },
@@ -22801,7 +22951,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       } else {
         categories = [
           { id: 'all', label: 'Semua Riwayat' },
-          { id: 'small', label: 'Greasing Small' },
+          { id: 'small', label: 'Small Track' },
           { id: 'digger', label: 'Big Digger' },
           { id: 'aircleaner', label: 'Air Cleaner' },
           { id: 'topup', label: 'Top Up Oil' },
@@ -24092,7 +24242,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         deskripsi = job.deskripsi || job.keterangan || job.alasan || job.kondisi || job.requestedJob || '-';
       } else {
         const catMap = {
-          small: 'Greasing Small Track',
+          small: 'Small Track',
           digger: 'Greasing Big Digger',
           coal: 'Washing Coal',
           non_coal: 'Washing Non-Coal',
@@ -25331,7 +25481,7 @@ Keterangan : ${keterangan}`;
         } else {
           if (catLabelEl) catLabelEl.textContent = 'Kategori Jadwal';
           catSelect.innerHTML = `
-            <option value="small">Greasing Small Track</option>
+            <option value="small">Small Track</option>
             <option value="digger">Big Digger</option>
             <option value="aircleaner">Air Cleaner</option>
             <option value="topup">Top Up Oil</option>
@@ -25364,9 +25514,22 @@ Keterangan : ${keterangan}`;
       if (typeof updateAddJobTimePresets === 'function') {
         updateAddJobTimePresets(currentActiveCat, shift, washingRound);
       }
+      if (currentActiveCat === 'digger') {
+        if (waktuInp) waktuInp.value = '12:00 s/d 13:00';
+        const waktuSelect = document.getElementById('add-job-waktu-select');
+        if (waktuSelect) waktuSelect.value = '12:00 s/d 13:00';
+        if (typeof syncShiftAndPersonnelFromWaktu === 'function') {
+          syncShiftAndPersonnelFromWaktu('12:00 s/d 13:00');
+        }
+      }
       if (optInp) optInp.value = '';
       if (mp1Inp) mp1Inp.value = '';
       if (mp2Inp) mp2Inp.value = '';
+      ['opt', 'mp1', 'mp2'].forEach(t => {
+        const clr = document.getElementById(`clear-add-job-${t}`);
+        if (clr) clr.classList.add('hidden');
+        if (typeof closeAddJobPersonnelDropdown === 'function') closeAddJobPersonnelDropdown(t);
+      });
       if (ketInp) ketInp.value = '';
       if (trigText) {
         trigText.textContent = '-- Pilih dari Populasi Unit --';
@@ -25527,6 +25690,11 @@ Keterangan : ${keterangan}`;
       if (optInp) optInp.value = '';
       if (mp1Inp) mp1Inp.value = '';
       if (mp2Inp) mp2Inp.value = '';
+      ['opt', 'mp1', 'mp2'].forEach(t => {
+        const clr = document.getElementById(`clear-add-job-${t}`);
+        if (clr) clr.classList.add('hidden');
+        if (typeof closeAddJobPersonnelDropdown === 'function') closeAddJobPersonnelDropdown(t);
+      });
     }
     window.populateAddJobArmadaOptions = populateAddJobArmadaOptions;
 
@@ -25660,11 +25828,270 @@ Keterangan : ${keterangan}`;
     }
     window.closeAddJobArmadaDropdown = closeAddJobArmadaDropdown;
 
+    // =========================================================================
+    // SEARCHABLE DROPDOWN PERSONEL (NAMA OPT, MP 1, MP 2) ALA FOTO 2
+    // =========================================================================
+    function getAddJobPersonnelPool(type) {
+      const isWashing = (document.getElementById('add-job-target-type')?.value === 'WT' || ['coal', 'rom', 'non_coal'].includes(document.getElementById('add-job-cat')?.value));
+      const pool = [];
+      const seen = new Set();
+
+      function addPerson(nama, cluster, role, shift) {
+        if (!nama || typeof nama !== 'string') return;
+        const cleanName = nama.trim().toUpperCase();
+        if (!cleanName || cleanName === '-' || cleanName.startsWith('--') || seen.has(cleanName)) return;
+        seen.add(cleanName);
+        pool.push({
+          nama: cleanName,
+          cluster: (typeof getStandardArmadaCluster === 'function') ? getStandardArmadaCluster(cluster) : (cluster || 'KGU Selatan'),
+          role: role || (type === 'opt' ? 'OPT' : 'MP'),
+          shift: shift || ''
+        });
+      }
+
+      if (type === 'opt') {
+        // 1. Dari masterRoster yang memiliki jenis OPT
+        if (Array.isArray(state.masterRoster)) {
+          state.masterRoster.forEach(r => {
+            if (r.jenis === 'OPT' || r.tipe_karyawan === 'OPT') {
+              addPerson(r.nama, r.cluster || r.kgu, 'OPT', r.shift);
+            }
+          });
+        }
+        // 2. Dari masterOperators (Kontak Produksi)
+        if (Array.isArray(state.masterOperators)) {
+          state.masterOperators.forEach(o => {
+            addPerson(o.nama, o.cluster, 'OPT', '');
+          });
+        }
+        // 3. Dari masterUsers dengan role operator
+        if (Array.isArray(state.masterUsers)) {
+          state.masterUsers.forEach(u => {
+            if (u.role === 'operator') {
+              addPerson(u.nama, u.cluster, 'OPT', '');
+            }
+          });
+        }
+        // 4. Default operator populer jika pool masih sedikit
+        if (pool.length === 0) {
+          ['NASRUDIN', 'BUDI UTOMO', 'AHMAD RIFAI', 'ZAENAL', 'HERI', 'HAIRUL', 'NUR', 'PUTRA', 'EVAN'].forEach(name => {
+            addPerson(name, 'KGU Selatan', 'OPT', '');
+          });
+        }
+      } else {
+        // type === 'mp1' atau 'mp2'
+        const filterJenis = isWashing ? 'WM' : 'OM';
+        if (Array.isArray(state.masterRoster)) {
+          state.masterRoster.forEach(r => {
+            if (r.jenis === filterJenis || r.jenis === 'OM' || r.jenis === 'WM' || r.jenis === 'MP' || r.tipe_karyawan === 'MP') {
+              addPerson(r.nama, r.cluster || r.kgu, r.jenis || 'MP', r.shift);
+            }
+          });
+        }
+        if (Array.isArray(state.masterUsers)) {
+          state.masterUsers.forEach(u => {
+            if (u.role === 'mp_lt' || u.role === 'mp_wt' || u.role === 'oilman' || u.role === 'washingman' || u.role === 'mp') {
+              addPerson(u.nama, u.cluster, u.role.toUpperCase(), '');
+            }
+          });
+        }
+        if (pool.length === 0) {
+          ['I MADE ARYE', 'FEBRIANSYAH', 'AHMAD FAUZI', 'ZAENAL ABIDIN', 'HERI PRASETYO', 'HAIRULLAH', 'NUR HASAN'].forEach(name => {
+            addPerson(name, 'KGU Selatan', 'MP', '');
+          });
+        }
+      }
+
+      // Sertakan nilai yang saat ini tertulis di form jika belum ada di list
+      const curInpVal = (document.getElementById(`add-job-${type}`)?.value || '').trim();
+      if (curInpVal && curInpVal !== '-') {
+        addPerson(curInpVal, 'Aktif', type.toUpperCase(), '');
+      }
+
+      return pool;
+    }
+    window.getAddJobPersonnelPool = getAddJobPersonnelPool;
+
+    function renderAddJobPersonnelDropdown(type, filterKeyword = '') {
+      const menu = document.getElementById(`add-job-${type}-dropdown-menu`);
+      if (!menu) return;
+
+      const rawList = getAddJobPersonnelPool(type);
+      const kw = String(filterKeyword || '').trim().toLowerCase();
+
+      const filtered = kw ? rawList.filter(p => {
+        const n = String(p.nama || '').toLowerCase();
+        const c = String(p.cluster || '').toLowerCase();
+        return n.includes(kw) || c.includes(kw);
+      }) : rawList;
+
+      state[`_filteredAddJobPersonnel_${type}`] = filtered;
+
+      let itemsHtml = '';
+
+      // Opsi Khusus MP 2: Nihil / Tidak Ada
+      if (type === 'mp2' && (!kw || '-'.includes(kw) || 'tidak ada'.includes(kw) || 'nihil'.includes(kw))) {
+        itemsHtml += `
+          <div class="pb-1 mb-1 border-b border-slate-100">
+            <div onclick="selectAddJobPersonnel('mp2', '-')" class="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-brand-500 hover:bg-slate-50 text-slate-600 cursor-pointer transition flex items-center justify-between shadow-2xs group">
+              <span class="font-bold text-xs text-slate-600 group-hover:text-brand-900">- (Tidak Ada MP 2)</span>
+              <span class="text-[9px] text-slate-400 font-semibold">Nihil</span>
+            </div>
+          </div>
+        `;
+      }
+
+      if (filtered.length === 0) {
+        itemsHtml += `<div class="py-3 text-center text-slate-400 text-xs italic">Personil tidak ditemukan untuk "${escapeHtml(filterKeyword)}"</div>`;
+        menu.innerHTML = itemsHtml;
+        return;
+      }
+
+      // Kelompokkan hasil per cluster: KGU Selatan, KGU Tengah, KGU Utara, Workshop, dll
+      const groups = {};
+      filtered.forEach(p => {
+        const grp = (typeof getStandardArmadaCluster === 'function') ? getStandardArmadaCluster(p.cluster) : (p.cluster || 'KGU Selatan');
+        if (!groups[grp]) groups[grp] = [];
+        groups[grp].push(p);
+      });
+
+      const targetCluster = document.getElementById('add-job-cluster')?.value || 'Selatan';
+      const activeStd = (typeof getStandardArmadaCluster === 'function') ? getStandardArmadaCluster(targetCluster) : 'KGU Selatan';
+      const baseOrder = ['KGU Selatan', 'KGU Tengah', 'KGU Utara', 'Workshop', 'ROM Area', 'Lainnya'];
+      const clusterOrder = [activeStd];
+      baseOrder.forEach(c => { if (!clusterOrder.includes(c)) clusterOrder.push(c); });
+      Object.keys(groups).forEach(c => { if (!clusterOrder.includes(c)) clusterOrder.push(c); });
+
+      clusterOrder.forEach(grpName => {
+        const list = groups[grpName];
+        if (list && list.length > 0) {
+          itemsHtml += `
+            <div class="personnel-cluster-group pb-1 mb-1 border-b border-slate-100 last:border-b-0 last:mb-0">
+              <div class="px-2 py-1 bg-slate-50 rounded-md text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center justify-between mb-1">
+                <span>${grpName}</span>
+                <span class="text-[9px] text-slate-400 font-bold">${list.length} Personil</span>
+              </div>
+              <div class="grid grid-cols-1 gap-1 px-0.5">
+          `;
+          list.forEach(p => {
+            const shortCluster = (p.cluster || '').replace(/^KGU\s+/i, '');
+            itemsHtml += `
+              <div onclick="selectAddJobPersonnel('${type}', '${escapeHtml(p.nama)}')" class="px-2.5 py-1.5 rounded-lg border border-slate-200/70 hover:border-brand-500 hover:bg-brand-50/60 text-slate-800 cursor-pointer transition flex items-center justify-between shadow-2xs group">
+                <span class="font-mono font-bold text-xs group-hover:text-brand-900 truncate">${escapeHtml(p.nama)}</span>
+                <span class="text-[9px] text-slate-400 group-hover:text-brand-700 font-semibold shrink-0 ml-1.5">${escapeHtml(shortCluster)}</span>
+              </div>
+            `;
+          });
+          itemsHtml += `
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      menu.innerHTML = itemsHtml;
+    }
+    window.renderAddJobPersonnelDropdown = renderAddJobPersonnelDropdown;
+
+    function openAddJobPersonnelDropdown(type) {
+      ['opt', 'mp1', 'mp2'].forEach(t => {
+        if (t !== type) closeAddJobPersonnelDropdown(t);
+      });
+      if (typeof closeAddJobArmadaDropdown === 'function') closeAddJobArmadaDropdown();
+
+      const menu = document.getElementById(`add-job-${type}-dropdown-menu`);
+      const chevron = document.getElementById(`add-job-${type}-chevron`);
+      const input = document.getElementById(`add-job-${type}`);
+      if (menu) {
+        menu.classList.remove('hidden');
+        renderAddJobPersonnelDropdown(type, input?.value || '');
+      }
+      if (chevron) chevron.classList.add('rotate-180');
+    }
+    window.openAddJobPersonnelDropdown = openAddJobPersonnelDropdown;
+
+    function closeAddJobPersonnelDropdown(type) {
+      const menu = document.getElementById(`add-job-${type}-dropdown-menu`);
+      const chevron = document.getElementById(`add-job-${type}-chevron`);
+      if (menu) menu.classList.add('hidden');
+      if (chevron) chevron.classList.remove('rotate-180');
+    }
+    window.closeAddJobPersonnelDropdown = closeAddJobPersonnelDropdown;
+
+    function toggleAddJobPersonnelDropdown(e, type) {
+      if (e && e.stopPropagation) e.stopPropagation();
+      const menu = document.getElementById(`add-job-${type}-dropdown-menu`);
+      if (menu && !menu.classList.contains('hidden')) {
+        closeAddJobPersonnelDropdown(type);
+      } else {
+        openAddJobPersonnelDropdown(type);
+      }
+    }
+    window.toggleAddJobPersonnelDropdown = toggleAddJobPersonnelDropdown;
+
+    function filterAddJobPersonnelDropdown(type, kw) {
+      const clearBtn = document.getElementById(`clear-add-job-${type}`);
+      if (clearBtn) {
+        if (kw && kw.trim()) clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+      }
+      openAddJobPersonnelDropdown(type);
+      renderAddJobPersonnelDropdown(type, kw);
+    }
+    window.filterAddJobPersonnelDropdown = filterAddJobPersonnelDropdown;
+
+    function selectAddJobPersonnel(type, nama) {
+      const input = document.getElementById(`add-job-${type}`);
+      const clearBtn = document.getElementById(`clear-add-job-${type}`);
+      if (input) {
+        input.value = nama;
+      }
+      if (clearBtn) {
+        if (nama && nama !== '-') clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+      }
+      closeAddJobPersonnelDropdown(type);
+    }
+    window.selectAddJobPersonnel = selectAddJobPersonnel;
+
+    function clearAddJobPersonnelInput(type) {
+      const input = document.getElementById(`add-job-${type}`);
+      const clearBtn = document.getElementById(`clear-add-job-${type}`);
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+      if (clearBtn) clearBtn.classList.add('hidden');
+      renderAddJobPersonnelDropdown(type, '');
+    }
+    window.clearAddJobPersonnelInput = clearAddJobPersonnelInput;
+
+    function handleAddJobPersonnelKeyDown(e, type) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const list = state[`_filteredAddJobPersonnel_${type}`] || [];
+        if (list.length > 0) {
+          selectAddJobPersonnel(type, list[0].nama);
+        } else if (type === 'mp2' && e.target.value === '-') {
+          selectAddJobPersonnel('mp2', '-');
+        }
+      } else if (e.key === 'Escape') {
+        closeAddJobPersonnelDropdown(type);
+      }
+    }
+    window.handleAddJobPersonnelKeyDown = handleAddJobPersonnelKeyDown;
+
     document.addEventListener('click', function (e) {
       const wrapper = document.getElementById('add-job-armada-wrapper');
       if (wrapper && !wrapper.contains(e.target)) {
         closeAddJobArmadaDropdown();
       }
+      ['opt', 'mp1', 'mp2'].forEach(t => {
+        const wrap = document.getElementById(`add-job-${t}-wrapper`);
+        if (wrap && !wrap.contains(e.target)) {
+          closeAddJobPersonnelDropdown(t);
+        }
+      });
       const unitContainer = document.getElementById('add-job-unit-dropdown-container');
       if (unitContainer && !unitContainer.contains(e.target)) {
         const unitMenu = document.getElementById('add-job-unit-menu');
@@ -25678,6 +26105,9 @@ Keterangan : ${keterangan}`;
 
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
+        ['opt', 'mp1', 'mp2'].forEach(t => {
+          closeAddJobPersonnelDropdown(t);
+        });
         const unitMenu = document.getElementById('add-job-unit-menu');
         if (unitMenu && !unitMenu.classList.contains('hidden')) {
           unitMenu.classList.add('hidden');
@@ -25702,21 +26132,38 @@ Keterangan : ${keterangan}`;
         if (optInp) optInp.value = '';
         if (mp1Inp) mp1Inp.value = '';
         if (mp2Inp) mp2Inp.value = '';
+        ['opt', 'mp1', 'mp2'].forEach(t => {
+          const clr = document.getElementById(`clear-add-job-${t}`);
+          if (clr) clr.classList.add('hidden');
+        });
         return;
       }
 
-      const shift = parseInt(document.getElementById('add-job-shift')?.value || '1', 10);
+      // Deteksi shift otomatis dari waktu jika sudah ditentukan, fallback ke hidden shift input
+      const waktuVal = document.getElementById('add-job-waktu')?.value;
+      const detectedShift = (typeof detectShiftFromTimeString === 'function') ? detectShiftFromTimeString(waktuVal) : null;
+      const shift = detectedShift || parseInt(document.getElementById('add-job-shift')?.value || '1', 10);
       const cluster = document.getElementById('add-job-cluster')?.value || 'Selatan';
       const catVal = (document.getElementById('add-job-cat')?.value || '').toLowerCase();
       const targetTypeInp = (document.getElementById('add-job-target-type')?.value || '').toUpperCase();
       const isWt = (targetTypeInp === 'WT' || ['coal', 'rom', 'non_coal'].includes(catVal));
-      const today = (isWt ? state.watertruckState?.filterDate : state.lubetruckState?.filterDate) || getEffectiveTodayString();
+      const dateInModal = document.getElementById('add-job-tanggal')?.value;
+      const today = dateInModal || (isWt ? state.watertruckState?.filterDate : state.lubetruckState?.filterDate) || getEffectiveTodayString();
 
       const crew = getPersonnelForArmada(armada, cluster, shift, today);
 
       if (optInp) optInp.value = crew.opt || '-';
       if (mp1Inp) mp1Inp.value = crew.mp1 || '-';
       if (mp2Inp) mp2Inp.value = crew.mp2 || '-';
+
+      ['opt', 'mp1', 'mp2'].forEach(t => {
+        const inp = document.getElementById(`add-job-${t}`);
+        const clr = document.getElementById(`clear-add-job-${t}`);
+        if (clr) {
+          if (inp && inp.value && inp.value !== '-') clr.classList.remove('hidden');
+          else clr.classList.add('hidden');
+        }
+      });
     }
     window.handleArmadaSelectChange = handleArmadaSelectChange;
 
@@ -25753,11 +26200,11 @@ Keterangan : ${keterangan}`;
         shift1: ['05:00 s/d 16:45'],
         shift2: ['17:00 s/d 04:45']
       },
-      // 4. Greasing Big Digger
+      // 4. Greasing Big Digger (Otomatis memakai opsi utama 12:00 s/d 13:00)
       digger: {
-        shift1: ['08:00 s/d 09:00', '12:00 s/d 13:00', '16:00 s/d 16:12'],
+        shift1: ['12:00 s/d 13:00', '08:00 s/d 09:00', '16:00 s/d 16:12'],
         shift2: ['20:00 s/d 21:00', '00:00 s/d 01:00'],
-        all: ['08:00 s/d 09:00', '12:00 s/d 13:00', '16:00 s/d 16:12', '20:00 s/d 21:00', '00:00 s/d 01:00']
+        all: ['12:00 s/d 13:00', '08:00 s/d 09:00', '16:00 s/d 16:12', '20:00 s/d 21:00', '00:00 s/d 01:00']
       },
       // 5. Air Cleaner
       aircleaner: {
@@ -25818,6 +26265,57 @@ Keterangan : ${keterangan}`;
     }
     window.getScheduledTimeOptions = getScheduledTimeOptions;
 
+    /**
+     * Scan angka depan waktu untuk mendeteksi siklus Shift 1 atau Shift 2
+     * Contoh:
+     * - '12:00 s/d 13:00' -> angka depan 12 -> Shift 1
+     * - '08:00 s/d 09:00' -> angka depan 08 -> Shift 1
+     * - '16:00 s/d 16:12' -> angka depan 16 -> Shift 1
+     * - '20:00 s/d 21:00' -> angka depan 20 -> Shift 2
+     * - '00:00 s/d 01:00' -> angka depan 00 -> Shift 2
+     */
+    function detectShiftFromTimeString(timeStr) {
+      if (!timeStr || typeof timeStr !== 'string') return null;
+      const match = timeStr.trim().match(/^(\d{1,2})/);
+      if (!match) return null;
+      const hour = parseInt(match[1], 10);
+      if (isNaN(hour)) return null;
+      // Shift 1: Jam 05.00 - 16.59 (angka depan 05 s/d 16)
+      // Shift 2: Jam 17.00 - 04.59 (angka depan 17 s/d 23 atau 00 s/d 04)
+      return (hour >= 5 && hour < 17) ? 1 : 2;
+    }
+    window.detectShiftFromTimeString = detectShiftFromTimeString;
+
+    /**
+     * Sinkronkan shift pada sistem dan otomatis perbarui personil armada sesuai waktu yang ditentukan
+     */
+    function syncShiftAndPersonnelFromWaktu(timeVal) {
+      const detectedShift = detectShiftFromTimeString(timeVal);
+      if (!detectedShift) return;
+
+      const shiftInp = document.getElementById('add-job-shift');
+      if (shiftInp) shiftInp.value = detectedShift;
+
+      // Update subtitle modal agar menampilkan shift yang sesuai (Shift 1 / Shift 2)
+      const subtitleEl = document.getElementById('add-job-modal-subtitle');
+      if (subtitleEl) {
+        const clusterInp = document.getElementById('add-job-cluster');
+        const targetTypeInp = document.getElementById('add-job-target-type');
+        const washingRoundInp = document.getElementById('add-job-washing-round');
+        const effectiveCluster = clusterInp ? clusterInp.value : '';
+        const isWt = (targetTypeInp?.value === 'WT');
+        const washingRound = washingRoundInp ? washingRoundInp.value : 1;
+        subtitleEl.textContent = `Shift ${detectedShift}   ${effectiveCluster ? 'KGU ' + effectiveCluster : 'Semua Cluster'}${isWt ? `   Washing Ke ${washingRound}` : ''}`;
+      }
+
+      // Otomatis perbarui personil armada (OPT, MP1, MP2) mengikuti shift dari waktu yang dipilih
+      const curArmada = document.getElementById('add-job-lt')?.value || document.getElementById('add-job-armada-search')?.value || '';
+      if (curArmada && typeof handleArmadaSelectChange === 'function') {
+        handleArmadaSelectChange(curArmada);
+      }
+    }
+    window.syncShiftAndPersonnelFromWaktu = syncShiftAndPersonnelFromWaktu;
+
     function updateAddJobTimePresets(cat, shift, round) {
       const waktuInp = document.getElementById('add-job-waktu');
       const datalist = document.getElementById('add-job-waktu-list');
@@ -25870,6 +26368,7 @@ Keterangan : ${keterangan}`;
         waktuInp.value = options.primary[0];
         if (select) select.value = options.primary[0];
         updateAddJobTimePillsHighlight(options.primary[0]);
+        syncShiftAndPersonnelFromWaktu(options.primary[0]);
       }
       if (waktuInp && options.primary.length > 0) {
         waktuInp.placeholder = `Contoh: ${options.primary[0]}`;
@@ -25882,8 +26381,15 @@ Keterangan : ${keterangan}`;
       const waktuInp = document.getElementById('add-job-waktu');
       if (waktuInp) waktuInp.value = val;
       updateAddJobTimePillsHighlight(val);
+      syncShiftAndPersonnelFromWaktu(val);
     }
     window.handlePredefinedWaktuSelect = handlePredefinedWaktuSelect;
+
+    function handleWaktuInputChanged(val) {
+      updateAddJobTimePillsHighlight(val);
+      syncShiftAndPersonnelFromWaktu(val);
+    }
+    window.handleWaktuInputChanged = handleWaktuInputChanged;
 
     function updateAddJobTimePillsHighlight(val) {
       const clean = (val || '').trim();
@@ -25994,6 +26500,15 @@ Keterangan : ${keterangan}`;
         const shift = document.getElementById('add-job-shift')?.value || 1;
         const round = document.getElementById('add-job-washing-round')?.value || 1;
         updateAddJobTimePresets(val, shift, round);
+      }
+      if (val === 'digger') {
+        const waktuInp = document.getElementById('add-job-waktu');
+        if (waktuInp) waktuInp.value = '12:00 s/d 13:00';
+        const waktuSelect = document.getElementById('add-job-waktu-select');
+        if (waktuSelect) waktuSelect.value = '12:00 s/d 13:00';
+        if (typeof syncShiftAndPersonnelFromWaktu === 'function') {
+          syncShiftAndPersonnelFromWaktu('12:00 s/d 13:00');
+        }
       }
 
       // Selalu refresh armada sesuai kategori (WT untuk washing, LT untuk lubetruck)
@@ -26187,14 +26702,15 @@ Keterangan : ${keterangan}`;
     function handleSaveNewJob(e) {
       if (e && e.preventDefault) e.preventDefault();
 
-      const shift = parseInt(document.getElementById('add-job-shift')?.value || '1', 10);
+      const waktuInpVal = document.getElementById('add-job-waktu')?.value?.trim();
+      const detectedShift = (typeof detectShiftFromTimeString === 'function') ? detectShiftFromTimeString(waktuInpVal) : null;
+      const shift = detectedShift || parseInt(document.getElementById('add-job-shift')?.value || '1', 10);
       const cluster = document.getElementById('add-job-cluster')?.value || 'Selatan';
       const targetTypeInp = (document.getElementById('add-job-target-type')?.value || '').toUpperCase();
       const rawCat = document.getElementById('add-job-cat')?.value || '';
       const isWtJob = (targetTypeInp === 'WT' || ['coal', 'rom', 'non_coal'].includes(rawCat.toLowerCase()));
       const targetType = isWtJob ? 'WT' : 'LT';
       const cat = rawCat || (isWtJob ? 'non_coal' : 'small');
-      const waktuInpVal = document.getElementById('add-job-waktu')?.value?.trim();
       const waktu = waktuInpVal || '-';
       const noLambung = document.getElementById('add-job-no-unit')?.value?.trim().toUpperCase();
       const lokasi = document.getElementById('add-job-lokasi')?.value?.trim().toUpperCase();
@@ -26775,7 +27291,7 @@ Keterangan : ${keterangan}`;
         return 'Job Request';
       }
       const cat = j.cat;
-      if (cat === 'small') return 'Greasing Small';
+      if (cat === 'small') return 'Small Track';
       if (cat === 'digger') return 'Big Digger';
       if (cat === 'aircleaner') return 'Air Cleaner';
       if (cat === 'topup') return 'Top Up';
@@ -29471,20 +29987,20 @@ Keterangan : ${keterangan}`;
     // SEARCHABLE DROPDOWN COMPONENT UNTUK FORM ACH (NAMA OPT, MP 1, MP 2)
     // =========================================================================
     window._searchablePersonnelData = {
+      'ach-lt-custom': [],
       'ach-opt-name': [],
       'ach-mp1-name': [],
       'ach-mp2-name': []
     };
 
     function openSearchableDropdown(fieldId) {
-      ['ach-opt-name', 'ach-mp1-name', 'ach-mp2-name'].forEach(id => {
+      ['ach-lt-custom', 'ach-opt-name', 'ach-mp1-name', 'ach-mp2-name'].forEach(id => {
         if (id !== fieldId) closeSearchableDropdown(id);
       });
       const dropdownEl = document.getElementById(`dropdown-${fieldId}`);
       const inputEl = document.getElementById(`search-${fieldId}`);
       if (!dropdownEl) return;
       dropdownEl.classList.remove('hidden');
-      // Tampilkan seluruh daftar opsi secara lengkap (jangan disaring berdasarkan teks nama yang sedang terpilih agar semua nama bisa dipilih bebas)
       filterSearchableDropdown(fieldId, '');
       if (inputEl) {
         inputEl.select();
@@ -29513,11 +30029,11 @@ Keterangan : ${keterangan}`;
 
       const filtered = cleanQ === ''
         ? rawList
-        : rawList.filter(item => String(item.value || '').toLowerCase().includes(cleanQ) || String(item.label || '').toLowerCase().includes(cleanQ));
+        : rawList.filter(item => String(item.value || '').toLowerCase().includes(cleanQ) || String(item.label || '').toLowerCase().includes(cleanQ) || String(item.cluster || '').toLowerCase().includes(cleanQ));
 
       const nativeSelect = document.getElementById(fieldId);
       if (cleanQ !== '' && nativeSelect) {
-        const exactMatch = rawList.find(item => item.value && item.value.toLowerCase() === cleanQ);
+        const exactMatch = rawList.find(item => item.value && (item.value.toLowerCase() === cleanQ || item.label.toLowerCase() === cleanQ));
         if (exactMatch) {
           nativeSelect.value = exactMatch.value;
         }
@@ -29528,39 +30044,85 @@ Keterangan : ${keterangan}`;
       if (filtered.length === 0) {
         dropdownEl.innerHTML = `
           <div class="px-3 py-2.5 text-center text-slate-400 italic">
-            <span>Nama tidak ditemukan</span>
+            <span>${fieldId === 'ach-lt-custom' ? 'Armada tidak ditemukan' : 'Nama tidak ditemukan'}</span>
           </div>
         `;
         return;
       }
 
-      filtered.forEach(item => {
-        const isSelected = (item.value === currentSelectedVal);
-        const row = document.createElement('div');
-        row.className = `px-3 py-2 text-left cursor-pointer transition flex items-center justify-between ${isSelected ? 'bg-emerald-50 text-emerald-800 font-bold' : 'hover:bg-slate-50 text-slate-800 font-semibold'}`;
-        if (isSelected) row.setAttribute('data-selected', 'true');
+      // Khusus Armada: Kelompokkan per Cluster (UTARA, TENGAH, SELATAN, WORKSHOP, dll)
+      if (fieldId === 'ach-lt-custom') {
+        const grouped = {};
+        filtered.forEach(item => {
+          if (!item.value) return;
+          const cName = (item.cluster || 'LAINNYA').toUpperCase();
+          if (!grouped[cName]) grouped[cName] = [];
+          grouped[cName].push(item);
+        });
 
-        let labelHtml = item.label;
-        if (cleanQ !== '' && item.value !== '' && item.value !== '-') {
-          const idx = item.label.toLowerCase().indexOf(cleanQ);
-          if (idx !== -1) {
-            const before = item.label.slice(0, idx);
-            const match = item.label.slice(idx, idx + cleanQ.length);
-            const after = item.label.slice(idx + cleanQ.length);
-            labelHtml = `${before}<span class="text-brand-600 bg-brand-50 font-bold underline">${match}</span>${after}`;
+        Object.keys(grouped).forEach(cName => {
+          const header = document.createElement('div');
+          header.className = 'px-3 py-1 bg-slate-100 font-bold text-slate-600 text-[10px] uppercase tracking-wider sticky top-0 z-10';
+          header.textContent = cName;
+          dropdownEl.appendChild(header);
+
+          grouped[cName].forEach(item => {
+            const isSelected = (item.value === currentSelectedVal);
+            const row = document.createElement('div');
+            row.className = `px-3 py-2 text-left cursor-pointer transition flex items-center justify-between ${isSelected ? 'bg-emerald-50 text-emerald-800 font-bold' : 'hover:bg-slate-50 text-slate-800 font-semibold'}`;
+            if (isSelected) row.setAttribute('data-selected', 'true');
+
+            let labelHtml = item.label;
+            if (cleanQ !== '' && item.value !== '') {
+              const idx = item.label.toLowerCase().indexOf(cleanQ);
+              if (idx !== -1) {
+                const before = item.label.slice(0, idx);
+                const match = item.label.slice(idx, idx + cleanQ.length);
+                const after = item.label.slice(idx + cleanQ.length);
+                labelHtml = `${before}<span class="text-brand-600 bg-brand-50 font-bold underline">${match}</span>${after}`;
+              }
+            }
+
+            row.innerHTML = `
+              <span class="truncate font-mono">${labelHtml}</span>
+              ${isSelected ? '<svg class="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>' : ''}
+            `;
+            row.onmousedown = (e) => {
+              e.preventDefault();
+              selectSearchableOption(fieldId, item.value, item.label);
+            };
+            dropdownEl.appendChild(row);
+          });
+        });
+      } else {
+        filtered.forEach(item => {
+          const isSelected = (item.value === currentSelectedVal);
+          const row = document.createElement('div');
+          row.className = `px-3 py-2 text-left cursor-pointer transition flex items-center justify-between ${isSelected ? 'bg-emerald-50 text-emerald-800 font-bold' : 'hover:bg-slate-50 text-slate-800 font-semibold'}`;
+          if (isSelected) row.setAttribute('data-selected', 'true');
+
+          let labelHtml = item.label;
+          if (cleanQ !== '' && item.value !== '' && item.value !== '-') {
+            const idx = item.label.toLowerCase().indexOf(cleanQ);
+            if (idx !== -1) {
+              const before = item.label.slice(0, idx);
+              const match = item.label.slice(idx, idx + cleanQ.length);
+              const after = item.label.slice(idx + cleanQ.length);
+              labelHtml = `${before}<span class="text-brand-600 bg-brand-50 font-bold underline">${match}</span>${after}`;
+            }
           }
-        }
 
-        row.innerHTML = `
-          <span class="truncate">${labelHtml}</span>
-          ${isSelected ? '<svg class="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>' : ''}
-        `;
-        row.onmousedown = (e) => {
-          e.preventDefault();
-          selectSearchableOption(fieldId, item.value);
-        };
-        dropdownEl.appendChild(row);
-      });
+          row.innerHTML = `
+            <span class="truncate">${labelHtml}</span>
+            ${isSelected ? '<svg class="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>' : ''}
+          `;
+          row.onmousedown = (e) => {
+            e.preventDefault();
+            selectSearchableOption(fieldId, item.value, item.label);
+          };
+          dropdownEl.appendChild(row);
+        });
+      }
 
       // Auto-scroll ke posisi opsi yang sedang terpilih agar nyaman di HP
       try {
@@ -29572,7 +30134,7 @@ Keterangan : ${keterangan}`;
     }
     window.filterSearchableDropdown = filterSearchableDropdown;
 
-    function selectSearchableOption(fieldId, value) {
+    function selectSearchableOption(fieldId, value, customLabel) {
       const nativeSelect = document.getElementById(fieldId);
       const inputEl = document.getElementById(`search-${fieldId}`);
       const clearBtn = document.getElementById(`clear-${fieldId}`);
@@ -29581,12 +30143,12 @@ Keterangan : ${keterangan}`;
         if (value && value !== '-' && ![...nativeSelect.options].some(o => o.value === value)) {
           const opt = document.createElement('option');
           opt.value = value;
-          opt.textContent = value;
+          opt.textContent = customLabel || value;
           nativeSelect.appendChild(opt);
         }
         if (value && value !== '-' && window._searchablePersonnelData && window._searchablePersonnelData[fieldId]) {
           if (!window._searchablePersonnelData[fieldId].some(item => item.value === value)) {
-            window._searchablePersonnelData[fieldId].push({ value: value, label: value });
+            window._searchablePersonnelData[fieldId].push({ value: value, label: customLabel || value });
           }
         }
         nativeSelect.value = value || '';
@@ -29598,7 +30160,11 @@ Keterangan : ${keterangan}`;
 
       if (inputEl) {
         if (value === '-') inputEl.value = '- (Tidak Ada)';
-        else inputEl.value = value || '';
+        else if (customLabel) inputEl.value = customLabel;
+        else {
+          const matchedItem = (window._searchablePersonnelData[fieldId] || []).find(i => i.value === value);
+          inputEl.value = (matchedItem ? matchedItem.label : value) || '';
+        }
       }
 
       if (clearBtn) {
@@ -29636,7 +30202,7 @@ Keterangan : ${keterangan}`;
     // Menutup popup dropdown jika user mengklik area lain
     if (!window._searchableDropdownListenerAttached) {
       document.addEventListener('click', (e) => {
-        ['ach-opt-name', 'ach-mp1-name', 'ach-mp2-name'].forEach(fieldId => {
+        ['ach-lt-custom', 'ach-opt-name', 'ach-mp1-name', 'ach-mp2-name'].forEach(fieldId => {
           const container = document.getElementById(`container-${fieldId}`);
           if (container && !container.contains(e.target)) {
             closeSearchableDropdown(fieldId);
@@ -29646,16 +30212,20 @@ Keterangan : ${keterangan}`;
               const rawInput = (inputEl.value || '').trim();
               if (rawInput !== '' && rawInput !== '- (Tidak Ada)') {
                 const rawList = window._searchablePersonnelData[fieldId] || [];
-                const matched = rawList.find(item => item.value && (item.value.toLowerCase() === rawInput.toLowerCase() || item.label.toLowerCase() === rawInput.toLowerCase()));
+                const matched = rawList.find(item => item.value && (item.value.toLowerCase() === rawInput.toLowerCase() || item.label.toLowerCase() === rawInput.toLowerCase() || item.label.toLowerCase().startsWith(rawInput.toLowerCase())));
                 if (matched) {
-                  selectSearchableOption(fieldId, matched.value);
+                  selectSearchableOption(fieldId, matched.value, matched.label);
                 } else if (!nativeSelect.value || nativeSelect.value === '-') {
-                  selectSearchableOption(fieldId, rawInput.toUpperCase());
+                  selectSearchableOption(fieldId, rawInput.toUpperCase(), rawInput.toUpperCase());
                 }
               }
               if (nativeSelect.value === '-') inputEl.value = '- (Tidak Ada)';
-              else if (nativeSelect.value) inputEl.value = nativeSelect.value;
-              else inputEl.value = '';
+              else if (nativeSelect.value) {
+                const matched = (window._searchablePersonnelData[fieldId] || []).find(item => item.value === nativeSelect.value);
+                inputEl.value = (matched ? matched.label : nativeSelect.value) || '';
+              } else {
+                inputEl.value = '';
+              }
             }
           }
         });
@@ -29949,13 +30519,16 @@ Keterangan : ${keterangan}`;
       // Ambil armada yang sedang terpilih di form
       const ltEl = document.getElementById('ach-lt-custom');
       let chosenArmada = ltEl ? ltEl.value : '';
+      if (!chosenArmada) {
+        chosenArmada = document.getElementById('search-ach-lt-custom')?.value || '';
+      }
       if (!chosenArmada && job) {
         chosenArmada = (job.armada && job.armada !== '-') ? job.armada : ((job.wtUnit && job.wtUnit !== '-') ? job.wtUnit : ((job.ltUnit && job.ltUnit !== '-') ? job.ltUnit : ''));
         if (!chosenArmada || chosenArmada === '-') {
           chosenArmada = (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '');
         }
-        if (chosenArmada && ltEl && [...ltEl.options].some(o => o.value === chosenArmada)) {
-          ltEl.value = chosenArmada;
+        if (chosenArmada) {
+          selectSearchableOption('ach-lt-custom', chosenArmada);
         }
       }
 
@@ -30427,6 +31000,10 @@ Keterangan : ${keterangan}`;
           // Tidak ada armada dummy - murni dari master data
         }
 
+        window._searchablePersonnelData['ach-lt-custom'] = [
+          { value: '', label: '-- Pilih Armada --', cluster: '' }
+        ];
+
         Object.keys(clusterGroups).forEach(cName => {
           const grp = document.createElement('optgroup');
           grp.label = cName;
@@ -30435,6 +31012,12 @@ Keterangan : ${keterangan}`;
             opt.value = u;
             opt.textContent = `${u} (${cName})`;
             grp.appendChild(opt);
+
+            window._searchablePersonnelData['ach-lt-custom'].push({
+              value: u,
+              label: `${u} (${cName})`,
+              cluster: cName
+            });
           });
           ltCustom.appendChild(grp);
         });
@@ -30445,10 +31028,13 @@ Keterangan : ${keterangan}`;
           existingArmada = (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '');
         }
 
-        if (existingArmada && [...ltCustom.options].some(o => o.value === existingArmada)) {
-          ltCustom.value = existingArmada;
+        const cleanExisting = String(existingArmada || '').replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
+        const matchedItem = window._searchablePersonnelData['ach-lt-custom'].find(i => i.value === cleanExisting || i.value === existingArmada);
+
+        if (cleanExisting && (matchedItem || [...ltCustom.options].some(o => o.value === cleanExisting))) {
+          selectSearchableOption('ach-lt-custom', cleanExisting, matchedItem ? matchedItem.label : cleanExisting);
           const selectedShiftVal = shiftSelect ? (parseInt(shiftSelect.value, 10) || 1) : currentLiveShift;
-          const cleanArmada = String(existingArmada).replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
+          const cleanArmada = cleanExisting;
           const crew = getPersonnelForArmada(cleanArmada, job.cluster, selectedShiftVal, job.tanggal);
           let currentOpt = !isDummyPersonnelName(crew.opt) ? crew.opt : '';
           let currentMp1 = !isDummyPersonnelName(crew.mp1) ? crew.mp1 : '';
@@ -30469,7 +31055,7 @@ Keterangan : ${keterangan}`;
               if (state.currentActionJobId === job.id) {
                 const shiftCheck = document.getElementById('ach-execution-shift');
                 const curShift = shiftCheck ? (parseInt(shiftCheck.value, 10) || 1) : selectedShiftVal;
-                const activeArmada = document.getElementById('ach-lt-custom')?.value || existingArmada;
+                const activeArmada = document.getElementById('ach-lt-custom')?.value || document.getElementById('search-ach-lt-custom')?.value || existingArmada;
                 const cleanActiveArmada = String(activeArmada || '').replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
                 const updatedCrew = getPersonnelForArmada(cleanActiveArmada, job.cluster, curShift, job.tanggal);
                 const userOpt = (document.getElementById('ach-opt-name')?.value || document.getElementById('search-ach-opt-name')?.value || '').trim();
@@ -30483,9 +31069,7 @@ Keterangan : ${keterangan}`;
             });
           }
         } else {
-          // Sesuai permintaan pengguna: Jika armada belum dipilih, kosongkan dulu OPT, MP1, dan MP2!
-          // Baru ketika memilih armada di dropdown, nama-nama crew akan muncul otomatis sesuai roster
-          ltCustom.value = '';
+          selectSearchableOption('ach-lt-custom', '', '');
           populateAchPersonnelSelects('', '', '', isWashing);
         }
       }
@@ -34884,7 +35468,7 @@ Keterangan : ${keterangan}`;
 
       if (categoryKey === 'greasing' || categoryKey === 'small') {
         targetJobs = allLt.filter(j => j.cat === 'small' || j.cat === 'digger');
-        catName = 'Greasing Small Track & Big Digger';
+        catName = 'Small Track & Big Digger';
       } else if (categoryKey === 'digger') {
         targetJobs = allLt.filter(j => j.cat === 'digger');
         catName = 'Big Digger';
@@ -39819,7 +40403,7 @@ Keterangan : ${keterangan}`;
       const activeCat = isWt ? (state.watertruckState?.activeCategory || 'coal') : (state.lubetruckState?.activeCategory || 'small');
 
       const catNames = {
-        small: 'Greasing Small Track', digger: 'Big Digger', aircleaner: 'Air Cleaner', topup: 'Top Up Oil',
+        small: 'Small Track', digger: 'Big Digger', aircleaner: 'Air Cleaner', topup: 'Top Up Oil',
         coal: 'Washing Coal', rom: 'Washing ROM', non_coal: 'Washing Non-Coal'
       };
 
@@ -40476,37 +41060,6 @@ Keterangan : ${keterangan}`;
         return false;
       };
 
-      // Helper format string per baris unit
-      const buildUnitLine = (j, cat) => {
-        const noUnit = String(j.noLambung || j.unit || '').trim().toUpperCase();
-        const lokasi = String(j.lokasi || '').trim().toUpperCase();
-
-        let rawArmada = (j.armada && j.armada !== '-') ? j.armada : ((j.wtUnit && j.wtUnit !== '-') ? j.wtUnit : ((j.ltUnit && j.ltUnit !== '-') ? j.ltUnit : ((j.armadaUnit && j.armadaUnit !== '-') ? j.armadaUnit : '')));
-        if (!rawArmada || rawArmada === '-' || rawArmada.startsWith('--')) {
-          rawArmada = (typeof resolveJobArmada === 'function') ? resolveJobArmada(j) : '';
-        }
-        const armada = String(rawArmada || '').trim().toUpperCase();
-        const cleanArmada = (armada === '-' || armada.startsWith('--')) ? '' : armada;
-
-        const parts = [];
-        if (noUnit && noUnit !== '-') parts.push(noUnit);
-        if (lokasi && lokasi !== '-') parts.push(lokasi);
-        if (cleanArmada) parts.push(cleanArmada);
-
-        const targetD = j.tanggal || rawDate;
-        if (cat === 'digger' || cat === 'small') {
-          if (hasAirCleanerSchedule(noUnit, targetD)) {
-            parts.push('+ AC');
-          }
-        } else if (cat === 'aircleaner' || cat === 'air_cleaner') {
-          if (hasGreasingSchedule(noUnit, targetD)) {
-            parts.push('+ GRS');
-          }
-        }
-
-        return parts.join(' ');
-      };
-
       // Helper komprehensif pencarian Master Unit & klasifikasi (merujuk ke implementasi global)
       const findMasterUnitRecord = (unitNo) => (typeof window.findMasterUnitRecord === 'function' ? window.findMasterUnitRecord(unitNo) : null);
       const isBigDiggerUnit = (j) => (typeof window.isBigDiggerUnit === 'function' ? window.isBigDiggerUnit(j) : false);
@@ -40524,6 +41077,68 @@ Keterangan : ${keterangan}`;
         if (cu.includes('TENGAH')) return 'TENGAH';
         if (cu.includes('UTARA')) return 'UTARA';
         return 'SELATAN';
+      };
+
+      // Helper format string per baris unit
+      const buildUnitLine = (j, cat, grpType = null) => {
+        const noUnit = String(j.noLambung || j.unit || '').trim().toUpperCase();
+        const lokasi = String(j.lokasi || '').trim().toUpperCase();
+
+        let rawArmada = (j.armada && j.armada !== '-') ? j.armada : ((j.wtUnit && j.wtUnit !== '-') ? j.wtUnit : ((j.ltUnit && j.ltUnit !== '-') ? j.ltUnit : ((j.armadaUnit && j.armadaUnit !== '-') ? j.armadaUnit : '')));
+        if (!rawArmada || rawArmada === '-' || rawArmada.startsWith('--')) {
+          rawArmada = (typeof resolveJobArmada === 'function') ? resolveJobArmada(j) : '';
+        }
+        const armada = String(rawArmada || '').replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
+        const cleanArmada = (armada === '-' || armada.startsWith('--')) ? '' : armada;
+
+        const parts = [];
+        if (noUnit && noUnit !== '-') parts.push(noUnit);
+
+        // Aturan Format Sesuai Permintaan Pengguna:
+        // 1. Big Digger (cat === 'digger'): Format (unit waktu armada) TANPA LOKASI
+        // 2. Air Cleaner (cat === 'aircleaner' | 'air_cleaner'):
+        //    - Big Digger Non Coal, Big Digger Coal, Small Coal -> Format (unit waktu armada) TANPA LOKASI
+        //    - Small Non Coal -> Tetap pakai format (unit lokasi armada)
+        // 3. Kategori lainnya (small, topup, dll) -> Tetap format (unit lokasi armada)
+        const isAcCategory = (cat === 'aircleaner' || cat === 'air_cleaner');
+        const isBigDigger = isBigDiggerUnit(j);
+        const isCoal = isCoalUnit(j);
+
+        let useTimeFormatWithoutLocation = false;
+        if (cat === 'digger') {
+          useTimeFormatWithoutLocation = true;
+        } else if (isAcCategory) {
+          if (grpType === 'small_non_coal' || (!isBigDigger && !isCoal)) {
+            useTimeFormatWithoutLocation = false; // Small Non Coal tetap pakai lokasi
+          } else {
+            useTimeFormatWithoutLocation = true; // Big Digger Non Coal, Big Digger Coal, Small Coal
+          }
+        }
+
+        if (useTimeFormatWithoutLocation) {
+          let waktuStr = (j.waktu && j.waktu !== '-' && j.waktu.trim() !== '') ? j.waktu.trim() : '';
+          if (!waktuStr && j.waktu_rencana && j.waktu_rencana !== '-') waktuStr = j.waktu_rencana.trim();
+          if (!waktuStr && j.jamStart && j.jamEnd) waktuStr = `${j.jamStart} s/d ${j.jamEnd}`;
+          if (!waktuStr || waktuStr === '-') waktuStr = '12:00 s/d 13:00';
+          parts.push(waktuStr);
+        } else {
+          if (lokasi && lokasi !== '-') parts.push(lokasi);
+        }
+
+        if (cleanArmada) parts.push(cleanArmada);
+
+        const targetD = j.tanggal || rawDate;
+        if (cat === 'digger' || cat === 'small') {
+          if (hasAirCleanerSchedule(noUnit, targetD)) {
+            parts.push('+ AC');
+          }
+        } else if (isAcCategory) {
+          if (hasGreasingSchedule(noUnit, targetD)) {
+            parts.push('+ GRS');
+          }
+        }
+
+        return parts.join(' ');
       };
 
       let aoa = [];
@@ -40551,7 +41166,7 @@ Keterangan : ${keterangan}`;
 
       } else if (activeCat === 'small') {
         categorySheetName = 'SCH_SMALL_TRACK';
-        aoa.push(['SCHEDULLE DAILY GREASING UNIT SMALL TRACK']);
+        aoa.push(['SCHEDULLE DAILY SMALL TRACK']);
         aoa.push([formattedHeaderDate]);
 
         const clusters = ['SELATAN', 'TENGAH', 'UTARA'];
@@ -40574,19 +41189,23 @@ Keterangan : ${keterangan}`;
         const allGroups = [
           {
             title: 'BIG DIGGER NON COAL',
-            filter: j => isBigDiggerUnit(j) && !isCoalUnit(j)
+            filter: j => isBigDiggerUnit(j) && !isCoalUnit(j),
+            type: 'big_digger_non_coal'
           },
           {
             title: 'BIG DIGGER COAL',
-            filter: j => isBigDiggerUnit(j) && isCoalUnit(j)
+            filter: j => isBigDiggerUnit(j) && isCoalUnit(j),
+            type: 'big_digger_coal'
           },
           {
             title: 'SMALL TRACK COAL',
-            filter: j => !isBigDiggerUnit(j) && isCoalUnit(j)
+            filter: j => !isBigDiggerUnit(j) && isCoalUnit(j),
+            type: 'small_coal'
           },
           {
             title: 'SMALL TRACK NON COAL',
-            filter: j => !isBigDiggerUnit(j) && !isCoalUnit(j)
+            filter: j => !isBigDiggerUnit(j) && !isCoalUnit(j),
+            type: 'small_non_coal'
           }
         ];
 
@@ -40596,7 +41215,7 @@ Keterangan : ${keterangan}`;
           const grpJobs = jobs.filter(grp.filter);
           if (typeof sortSchedJobsList === 'function') sortSchedJobsList(grpJobs, sortConfig);
           grpJobs.forEach(j => {
-            aoa.push([buildUnitLine(j, activeCat)]);
+            aoa.push([buildUnitLine(j, activeCat, grp.type)]);
           });
         });
 
@@ -40620,45 +41239,149 @@ Keterangan : ${keterangan}`;
           });
         });
 
-      } else if (activeCat === 'coal') {
-        categorySheetName = 'SCH_WASHING_COAL';
-        aoa.push(['SCHEDULLE DAILY WASHING COAL']);
+      } else if (activeCat === 'coal' || activeCat === 'rom') {
+        const isRom = (activeCat === 'rom');
+        categorySheetName = isRom ? 'SCH_WASHING_ROM' : 'SCH_WASHING_COAL';
+        aoa.push([isRom ? 'SCHEDULLE DAILY WASHING ROM' : 'SCHEDULLE DAILY WASHING COAL']);
         aoa.push([formattedHeaderDate]);
 
-        const clusters = ['SELATAN', 'TENGAH', 'UTARA'];
-        clusters.forEach((clName, idx) => {
-          if (idx > 0) aoa.push(['']);
-          aoa.push([`KGU ${clName}`]);
-          const cJobs = jobs.filter(j => getJobParentCluster(j) === clName);
-          if (typeof sortSchedJobsList === 'function') sortSchedJobsList(cJobs, sortConfig);
-          cJobs.forEach(j => {
-            aoa.push([buildUnitLine(j, activeCat)]);
+        // Helper normalisasi format waktu Washing: e.g. "06:25 s/d 06:44" -> "06.25 - 06.44"
+        const normalizeWashingTimeSlot = (timeStr, roundNum = 1) => {
+          if (!timeStr || timeStr === '-' || timeStr.trim() === '') {
+            return roundNum === 1 ? '08.00 - 09.00' : '13.00 - 14.00';
+          }
+          let clean = timeStr.replace(/s\/d|s\.d|\bto\b/gi, '-').replace(/:/g, '.').replace(/\s*-\s*/g, ' - ').trim();
+          clean = clean.replace(/^\(|\)$/g, '').trim();
+          return clean;
+        };
+
+        // Helper label armada WT per cluster: e.g. "(WT 2636 & WT 2644)"
+        const getClusterWtLabel = (clName, cJobs) => {
+          let armadaSet = new Set();
+          (cJobs || []).forEach(j => {
+            const a = (j.armada && j.armada !== '-') ? j.armada : (j.wtUnit && j.wtUnit !== '-' ? j.wtUnit : '');
+            if (a && a !== '-' && !a.startsWith('--')) {
+              const clean = a.replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
+              if (clean) armadaSet.add(clean);
+            }
           });
+
+          if (armadaSet.size === 0 && state.clusterWtAssigned) {
+            const rawAssigned = state.clusterWtAssigned[clName] || state.clusterWtAssigned[clName.toLowerCase()] || state.clusterWtAssigned[`KGU ${clName}`] || '';
+            if (rawAssigned) {
+              rawAssigned.split(/[,&]/).forEach(a => {
+                const clean = a.trim().toUpperCase();
+                if (clean) armadaSet.add(clean);
+              });
+            }
+          }
+
+          if (armadaSet.size === 0 && Array.isArray(state.masterArmada)) {
+            state.masterArmada.forEach(a => {
+              const jns = (a.jenis || a.tipe || '').toUpperCase();
+              const no = (a.nomor || a.unit || '').toUpperCase();
+              const cls = (a.cluster || '').toUpperCase();
+              if ((jns.includes('WT') || no.startsWith('WT')) && cls.includes(clName)) {
+                if (no) armadaSet.add(no);
+              }
+            });
+          }
+
+          const armadas = Array.from(armadaSet);
+          if (armadas.length > 0) {
+            const formattedArmadas = armadas.map(a => {
+              const match = a.match(/^([A-Z]+)\s*(\d+)$/i);
+              return match ? `${match[1].toUpperCase()} ${match[2]}` : a;
+            });
+            return ` (${formattedArmadas.join(' & ')})`;
+          }
+          return '';
+        };
+
+        const clusters = isRom ? ['ROM'] : ['SELATAN', 'TENGAH', 'UTARA'];
+
+        clusters.forEach((clName, idx) => {
+          const cJobs = isRom ? jobs : jobs.filter(j => getJobParentCluster(j) === clName);
+          if (cJobs.length === 0) return;
+
+          aoa.push(['']);
+          const wtLabel = getClusterWtLabel(clName, cJobs);
+          const pitHeader = isRom ? `PIT ROM AREA${wtLabel}` : `PIT KGU ${clName}${wtLabel}`;
+          aoa.push([pitHeader]);
+          aoa.push([isRom ? 'UNIT ROM' : 'UNIT COAL']);
+
+          // Kumpulkan unit unik di cluster ini beserta waktu Washing 1 dan Washing 2
+          const unitMap = new Map();
+          cJobs.forEach(j => {
+            const noUnit = String(j.noLambung || j.unit || '').trim().toUpperCase();
+            if (!noUnit || noUnit === '-') return;
+
+            const round = (typeof getJobWashingRound === 'function')
+              ? getJobWashingRound(j)
+              : (parseInt(j.washingRound || j.washing_round, 10) || (String(j.id || '').includes('-W2-') ? 2 : 1));
+
+            if (!unitMap.has(noUnit)) {
+              unitMap.set(noUnit, { noUnit, w1: '', w2: '' });
+            }
+            const entry = unitMap.get(noUnit);
+            const wStr = (j.waktu && j.waktu !== '-' && j.waktu.trim() !== '') ? j.waktu.trim() : '';
+            if (round === 2) {
+              entry.w2 = wStr;
+            } else {
+              entry.w1 = wStr;
+            }
+          });
+
+          // Kelompokkan unit berdasarkan pasangan waktu (Round 1 & Round 2)
+          const timeGroups = new Map();
+          unitMap.forEach((entry, noUnit) => {
+            const w1Clean = normalizeWashingTimeSlot(entry.w1, 1);
+            const w2Clean = normalizeWashingTimeSlot(entry.w2, 2);
+
+            let timeHeader = '';
+            if (entry.w1 && entry.w2) {
+              timeHeader = `(${w1Clean}) & (${w2Clean})`;
+            } else if (entry.w1) {
+              timeHeader = `(${w1Clean})`;
+            } else if (entry.w2) {
+              timeHeader = `(${w2Clean})`;
+            } else {
+              timeHeader = `(08.00 - 09.00) & (13.00 - 14.00)`;
+            }
+
+            if (!timeGroups.has(timeHeader)) {
+              timeGroups.set(timeHeader, []);
+            }
+            timeGroups.get(timeHeader).push(noUnit);
+          });
+
+          timeGroups.forEach((units, timeHdr) => {
+            aoa.push([timeHdr]);
+            units.forEach(u => {
+              aoa.push([u]);
+            });
+            aoa.push(['']);
+          });
+          // Hapus baris kosong ekstra di akhir cluster jika ada
+          if (aoa.length > 0 && aoa[aoa.length - 1][0] === '') {
+            aoa.pop();
+          }
         });
 
-        aoa.push(['']);
-        aoa.push(['NOTE ']);
-        aoa.push(['MEKANISME PENCUCIAN UNIT']);
-        aoa.push(['06.25 - 06.44 (Utamakan 2000, 1250, 800)']);
-        aoa.push(['08.00 - 09.00 (Sisa unit coal yg belum di cuci saat HSCS)']);
-        aoa.push(['11.55 - 12.10 (pencucian opportunity)']);
-        aoa.push(['12.55 - 14.00 (pencucian kedua)jb']);
-        aoa.push(['16.00 - 16.12 (Spare waktu jika ada yg belum dicuci pada pencucian kedua) ']);
-        aoa.push(['18.25 - 18.44 (Utamakan 2000, 1250, 800) ']);
-        aoa.push(['20.00 - 21.00 (Sisa unit coal yg belum di cuci saat HSCS) ']);
-        aoa.push(['01.00 - 02.00 (pencucian kedua)']);
-        aoa.push(['pencucian schedule unit non coal bisa di action kapan pun']);
-
-      } else if (activeCat === 'rom') {
-        categorySheetName = 'SCH_WASHING_ROM';
-        aoa.push(['SCHEDULLE DAILY WASHING ROM']);
-        aoa.push([formattedHeaderDate]);
-        aoa.push(['ROM ']);
-
-        if (typeof sortSchedJobsList === 'function') sortSchedJobsList(jobs, sortConfig);
-        jobs.forEach(j => {
-          aoa.push([buildUnitLine(j, activeCat)]);
-        });
+        if (!isRom) {
+          aoa.push(['']);
+          aoa.push(['NOTE ']);
+          aoa.push(['MEKANISME PENCUCIAN UNIT']);
+          aoa.push(['06.25 - 06.44 (Utamakan 2000, 1250, 800)']);
+          aoa.push(['08.00 - 09.00 (Sisa unit coal yg belum di cuci saat HSCS)']);
+          aoa.push(['11.55 - 12.10 (pencucian opportunity)']);
+          aoa.push(['12.55 - 14.00 (pencucian kedua)jb']);
+          aoa.push(['16.00 - 16.12 (Spare waktu jika ada yg belum dicuci pada pencucian kedua) ']);
+          aoa.push(['18.25 - 18.44 (Utamakan 2000, 1250, 800) ']);
+          aoa.push(['20.00 - 21.00 (Sisa unit coal yg belum di cuci saat HSCS) ']);
+          aoa.push(['01.00 - 02.00 (pencucian kedua)']);
+          aoa.push(['pencucian schedule unit non coal bisa di action kapan pun']);
+        }
 
       } else if (activeCat === 'non_coal' || activeCat === 'noncoal') {
         categorySheetName = 'SCH_WASHING_NON_COAL';
@@ -41028,7 +41751,7 @@ Keterangan : ${keterangan}`;
           jenisJob = 'Job Request';
         } else {
           const cat = String(j.cat || '').toLowerCase();
-          if (cat === 'small') jenisJob = 'Greasing (Small Digger)';
+          if (cat === 'small') jenisJob = 'Small Track';
           else if (cat === 'digger') jenisJob = 'Greasing (Big Digger)';
           else if (cat === 'topup') jenisJob = 'Top Up Oil';
           else if (cat === 'aircleaner' || cat === 'air_cleaner') jenisJob = 'Air Cleaner';
