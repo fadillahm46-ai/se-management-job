@@ -13394,10 +13394,12 @@
 
         const cloudJobIds = new Set(cloudJobs.map(j => String(j.id)));
 
-        // Hapus job lokal pada tanggal ini yang sudah tidak ada di cloud
-        if (window.globalDataCache && window.globalDataCache.jobs) {
+        // Hapus job lokal pada tanggal ini yang sudah tidak ada di cloud (HANYA jika cloudJobs berhasil ditarik)
+        if (window.globalDataCache && window.globalDataCache.jobs && cloudJobs.length > 0) {
           for (const [jId, jObj] of Array.from(window.globalDataCache.jobs.entries())) {
             if (String(jId).startsWith('UNS-') || window.globalDataCache.orderRequests?.has(jId)) continue;
+            if (window._bgJobQueue && window._bgJobQueue[jId]) continue; // Jangan hapus jika sedang upload background
+            if (typeof _jobSyncQueue !== 'undefined' && _jobSyncQueue.has(jId)) continue; // Jangan hapus jika ada di sync queue
             if (jObj?.tanggal === dateStr) {
               if (!cloudJobIds.has(jId)) {
                 window.globalDataCache.jobs.delete(jId);
@@ -15952,7 +15954,9 @@
         state.jobHistory.forEach(h => {
           const st = String(h.status_final || '').toUpperCase();
           if (['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN'].includes(st)) {
-            const dates = [h.tanggal_eksekusi, h.tanggal_rencana, h.tanggal, h.created_at]
+            // Gunakan hanya tanggal operasional tambang (tanggal_eksekusi / tanggal_rencana / tanggal)
+            // JANGAN gunakan created_at karena itu timestamp sistem cloud bukan tanggal pelaksanaan!
+            const dates = [h.tanggal_eksekusi, h.tanggal_rencana, h.tanggal]
               .filter(Boolean)
               .map(x => String(x).trim().split('T')[0]);
             const u = String(h.no_lambung || '').trim().toUpperCase();
@@ -16104,13 +16108,9 @@
             isUnitAlreadyAchieved ||
             (typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(j))
           ) {
-            // ATURAN PENGGUNA: Job yang sudah selesai/terkunci otomatis keluar dari antrean jobs_lt / jobs_wt
-            j._shouldRemoveFromActiveQueue = true;
-            if (state.supabaseClient && cleanJobId) {
-              state.supabaseClient.from('jobs_lt').delete().eq('id', cleanJobId).then(() => { }).catch(() => { });
-              state.supabaseClient.from('jobs_wt').delete().eq('id', cleanJobId).then(() => { }).catch(() => { });
-            }
-            return; // LEWATI MUTLAK! DILARANG KERAS DIUBAH JADI PENDING / DI-UPSERT ULANG KE JOBS / DITUTUP NON-ACH
+            // PENGAMAN MUTLAK: Job yang sudah selesai/terkunci cukup dilewati.
+            // DILARANG KERAS memanggil delete() di sini agar tidak menghapus jadwal aktif dari database Supabase!
+            return;
           }
 
           // Pengaman Mutlak: Jadwal hari esok / masa depan TIDAK BOLEH dievaluasi atau dialihkan
@@ -18662,20 +18662,22 @@
       container.innerHTML = '';
       const formattedDateText = formatIndonesianDateWithDay(selectedDate);
 
-      // Banner Bantuan Tanggal 1 Awal Bulan (Tombol Cepat Salin Jadwal Kemarin)
-      if (isAdmin && isTanggalSatu && (activeCat === 'small' || activeCat === 'digger') && jobs.length === 0) {
+      // Banner Bantuan Jadwal Kosong (Tombol Cepat Salin Jadwal Tanggal Sebelumnya)
+      if (isAdmin && (activeCat === 'small' || activeCat === 'digger' || activeCat === 'aircleaner') && jobs.length === 0) {
+        const catLabels = { 'digger': 'Big Digger', 'small': 'Greasing Small Track', 'aircleaner': 'Clean Air Cleaner' };
+        const label = catLabels[activeCat] || 'Unit';
         const resetBanner = document.createElement('div');
         resetBanner.className = 'mb-3.5 p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/90 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-950 shadow-2xs';
         resetBanner.innerHTML = `
           <div class="flex items-center space-x-3">
             <span class="text-2xl">📋</span>
             <div>
-              <span class="text-xs font-black block">Awal Bulan (${formattedDateText}): Jadwal Masih Kosong (0 Job)</span>
-              <span class="text-[11px] text-amber-800 leading-tight block">Kategori ${activeCat === 'digger' ? 'Big Digger' : 'Greasing Small Track'} baru saja direset bulanan. Anda dapat langsung menggunakan jadwal tanggal kemarin tanpa input ulang.</span>
+              <span class="text-xs font-black block">${formattedDateText}: Jadwal ${label} Belum Tersedia / Kosong (0 Unit)</span>
+              <span class="text-[11px] text-amber-800 leading-tight block">Anda dapat langsung menyalin unit dari jadwal tanggal sebelumnya untuk Shift 1 &amp; 2 dalam 1 klik tanpa input ulang.</span>
             </div>
           </div>
           <button type="button" onclick="promptApplyYesterdaySchedule('${activeCat}', 'ALL', 'LT')" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs shadow-2xs transition cursor-pointer flex items-center justify-center space-x-1.5 whitespace-nowrap">
-            <span>📋 Gunakan SCH Tgl Kemarin (Shift 1 & 2)</span>
+            <span>📋 Gunakan SCH Tgl Sebelumnya (Shift 1 & 2)</span>
           </button>
         `;
         container.appendChild(resetBanner);
@@ -35993,6 +35995,8 @@ Keterangan : ${keterangan}`;
           const cloudLtIds = new Set(cloudLtJobs.map(j => String(j.id)));
           for (const [jId, jObj] of Array.from(window.globalDataCache.jobs.entries())) {
             if (String(jId).startsWith('UNS-') || window.globalDataCache.orderRequests.has(jId)) continue;
+            if (window._bgJobQueue && window._bgJobQueue[jId]) continue; // Jangan hapus jika sedang upload background
+            if (typeof _jobSyncQueue !== 'undefined' && _jobSyncQueue.has(jId)) continue; // Jangan hapus jika ada di sync queue
             const jDate = jObj?.tanggal || '';
             const isLtJob = !String(jId).includes('WT') && (
               ['small', 'digger', 'aircleaner', 'topup'].includes(jObj?.cat) ||
@@ -36021,6 +36025,8 @@ Keterangan : ${keterangan}`;
           const cloudWtIds = new Set(cloudWtJobs.map(j => String(j.id)));
           for (const [jId, jObj] of Array.from(window.globalDataCache.jobs.entries())) {
             if (String(jId).startsWith('UNS-') || window.globalDataCache.orderRequests.has(jId)) continue;
+            if (window._bgJobQueue && window._bgJobQueue[jId]) continue; // Jangan hapus jika sedang upload background
+            if (typeof _jobSyncQueue !== 'undefined' && _jobSyncQueue.has(jId)) continue; // Jangan hapus jika ada di sync queue
             const jDate = jObj?.tanggal || '';
             const isWtJob = String(jId).includes('WT') ||
               ['coal', 'rom', 'non_coal', 'noncoal'].includes(jObj?.cat) ||
