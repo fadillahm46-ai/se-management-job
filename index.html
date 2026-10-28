@@ -10176,10 +10176,10 @@
   <!-- ======================================================================== -->
   <div id="modal-photo-preview"
     class="fixed inset-0 z-[70] bg-black/90 backdrop-blur-md flex flex-col items-center justify-between hidden select-none transition-all duration-200 p-3 sm:p-4"
-    onclick="if(event.target === this) closePhotoPreview()">
+    onclick="handlePhotoBackdropClick(event)">
 
     <!-- Top Floating Toolbar -->
-    <div
+    <div id="photo-preview-toolbar" onclick="event.stopPropagation()"
       class="w-full max-w-2xl flex items-center justify-between z-10 px-3 py-1.5 bg-slate-900/85 backdrop-blur-md rounded-2xl border border-white/10 shadow-lg text-white">
       <div class="flex items-center space-x-2.5 min-w-0 pr-2">
         <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
@@ -12416,7 +12416,44 @@
       zoomPhoto(delta);
     }
 
+    function isPointOutsidePhotoFrame(clientX, clientY) {
+      const img = document.getElementById('photo-preview-img');
+      if (!img) return false;
+      const rect = img.getBoundingClientRect();
+      if (!rect || rect.width <= 0 || rect.height <= 0) return false;
+      return (
+        clientX < rect.left ||
+        clientX > rect.right ||
+        clientY < rect.top ||
+        clientY > rect.bottom
+      );
+    }
+
+    function handlePhotoBackdropClick(e) {
+      if (!e) return;
+      // Jangan tutup jika baru saja melakukan drag/pan atau swipe/pinch
+      if (photoViewerState._justDraggedOrSwiped) {
+        photoViewerState._justDraggedOrSwiped = false;
+        return;
+      }
+      // Jangan tutup jika yang diklik adalah toolbar atas, tombol navigasi kiri/kanan, atau dots bawah
+      if (e.target && typeof e.target.closest === 'function') {
+        if (e.target.closest('#photo-preview-toolbar, #photo-prev-btn, #photo-next-btn, #photo-preview-dots')) {
+          return;
+        }
+      }
+      if (typeof e.clientX === 'number' && typeof e.clientY === 'number') {
+        if (isPointOutsidePhotoFrame(e.clientX, e.clientY)) {
+          closePhotoPreview();
+        }
+      }
+    }
+    window.handlePhotoBackdropClick = handlePhotoBackdropClick;
+
     function handlePhotoMouseDown(e) {
+      photoViewerState._justDraggedOrSwiped = false;
+      const downX = e.clientX;
+      const downY = e.clientY;
       if (photoViewerState.zoom <= 1) return;
       photoViewerState.isDragging = true;
       photoViewerState.startX = e.clientX - photoViewerState.panX;
@@ -12424,6 +12461,9 @@
 
       const onMouseMove = (ev) => {
         if (!photoViewerState.isDragging) return;
+        if (Math.hypot(ev.clientX - downX, ev.clientY - downY) > 8) {
+          photoViewerState._justDraggedOrSwiped = true;
+        }
         photoViewerState.panX = ev.clientX - photoViewerState.startX;
         photoViewerState.panY = ev.clientY - photoViewerState.startY;
         applyPhotoTransform();
@@ -12529,6 +12569,7 @@
     function handlePhotoTouchEnd(e) {
       if (touchState.isPinching) {
         touchState.isPinching = false;
+        photoViewerState._justDraggedOrSwiped = true;
         if (photoViewerState.zoom < 1) {
           resetPhotoZoom();
         }
@@ -12537,6 +12578,13 @@
 
       if (e && e.touches && e.touches.length === 0) {
         const changedTouch = e.changedTouches ? e.changedTouches[0] : null;
+        const moveDist = changedTouch
+          ? Math.hypot(changedTouch.clientX - touchState.singleStartX, changedTouch.clientY - touchState.singleStartY)
+          : 0;
+
+        if (moveDist > 12) {
+          photoViewerState._justDraggedOrSwiped = true;
+        }
 
         // Navigasi Swipe 1 Jari jika foto tidak sedang di-zoom (zoom <= 1)
         if (photoViewerState.zoom <= 1 && changedTouch && photoViewerState.photos && photoViewerState.photos.length > 1) {
@@ -12552,10 +12600,21 @@
           }
         }
 
-        // Double-Tap untuk toggle zoom cepat di HP
+        // Ketuk 1 kali di luar frame foto pada layar sentuh -> langsung keluar dari tinjau foto
+        if (changedTouch && moveDist <= 12) {
+          const hitControl = (e.target && typeof e.target.closest === 'function')
+            ? e.target.closest('#photo-preview-toolbar, #photo-prev-btn, #photo-next-btn, #photo-preview-dots')
+            : null;
+          if (!hitControl && isPointOutsidePhotoFrame(changedTouch.clientX, changedTouch.clientY)) {
+            touchState.isPanning = false;
+            closePhotoPreview();
+            return;
+          }
+        }
+
+        // Double-Tap di dalam frame foto untuk toggle zoom cepat di HP
         const now = Date.now();
         if (now - touchState.lastTapTime < 300 && changedTouch) {
-          const moveDist = Math.hypot(changedTouch.clientX - touchState.singleStartX, changedTouch.clientY - touchState.singleStartY);
           if (moveDist < 20) {
             if (photoViewerState.zoom > 1) {
               resetPhotoZoom();
