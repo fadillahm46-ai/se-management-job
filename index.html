@@ -684,6 +684,163 @@
       width: 0 !important;
       height: 0 !important;
     }
+
+    /* ========================================================================== */
+    /* FLUID & ZOOM-SAFE DASHBOARD LAYOUT (ANTI TERPOTONG SAAT ZOOM IN / OUT)     */
+    /* ========================================================================== */
+    #view-dashboard,
+    #view-dashboard * {
+      box-sizing: border-box;
+    }
+
+    #view-dashboard .grid>* {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    #view-dashboard [id^="dash-cat-"][id$="-val"] {
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-left: 0.35rem;
+    }
+
+    #view-dashboard .flex.items-baseline {
+      flex-wrap: wrap;
+      row-gap: 0.2rem;
+    }
+
+    .kpi-summary-card {
+      container-type: inline-size;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .kpi-summary-inner {
+      display: grid;
+      grid-template-columns: minmax(100px, 38%) minmax(0, 62%);
+      gap: clamp(0.5rem, 2.2cqw, 0.875rem);
+      align-items: center;
+      width: 100%;
+    }
+
+    .kpi-donut-box {
+      width: clamp(96px, 31cqw, 144px) !important;
+      height: clamp(96px, 31cqw, 144px) !important;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .kpi-donut-pct {
+      font-size: clamp(1.1rem, 4.6cqw, 1.65rem) !important;
+      line-height: 1.05 !important;
+    }
+
+    .kpi-donut-sub {
+      font-size: clamp(8px, 2.1cqw, 10px) !important;
+      line-height: 1.1 !important;
+    }
+
+    .kpi-donut-legend {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem 0.5rem;
+      padding-top: 0.45rem;
+      width: 100%;
+    }
+
+    .kpi-donut-legend>div {
+      white-space: nowrap;
+      font-size: clamp(9.5px, 2.4cqw, 11.5px) !important;
+      line-height: 1.2 !important;
+    }
+
+    .kpi-summary-table-box {
+      width: 100%;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .kpi-summary-table-box .kpi-tbl-head {
+      padding: clamp(6px, 1.8cqw, 9px) clamp(8px, 2.2cqw, 12px) !important;
+    }
+
+    .kpi-summary-table-box .kpi-tbl-head h5 {
+      font-size: clamp(9.5px, 2.4cqw, 11.5px) !important;
+      line-height: 1.2 !important;
+    }
+
+    .kpi-summary-table-box table td {
+      padding: clamp(6px, 1.8cqw, 10px) clamp(7px, 2cqw, 11px) !important;
+      vertical-align: middle;
+    }
+
+    .kpi-summary-table-box .kpi-tbl-label {
+      font-size: clamp(9.5px, 2.4cqw, 11.5px) !important;
+      line-height: 1.15 !important;
+      word-break: break-word;
+    }
+
+    .kpi-summary-table-box .kpi-tbl-val-lg {
+      font-size: clamp(13px, 3.8cqw, 19px) !important;
+      line-height: 1.15 !important;
+      white-space: nowrap !important;
+    }
+
+    .kpi-summary-table-box .kpi-tbl-val-dur {
+      font-size: clamp(10.5px, 2.9cqw, 13.5px) !important;
+      line-height: 1.2 !important;
+      white-space: nowrap !important;
+    }
+
+    .kpi-summary-table-box .kpi-tbl-foot {
+      padding: clamp(6px, 1.8cqw, 9px) clamp(7px, 2cqw, 11px) !important;
+      gap: 0.35rem;
+    }
+
+    .kpi-summary-table-box .kpi-tbl-foot-label {
+      font-size: clamp(9px, 2.3cqw, 11px) !important;
+      line-height: 1.15 !important;
+      white-space: nowrap;
+    }
+
+    .kpi-summary-table-box .kpi-tbl-foot-val {
+      font-size: clamp(10.5px, 3cqw, 14px) !important;
+      line-height: 1.15 !important;
+      white-space: nowrap !important;
+    }
+
+    /* Jika kartu menyempit karena Zoom In besar (< 315px), tumpuk vertikal secara otomatis */
+    @container (max-width: 315px) {
+      .kpi-summary-inner {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+
+      .kpi-donut-box {
+        width: 128px !important;
+        height: 128px !important;
+      }
+
+      .kpi-donut-pct {
+        font-size: 1.4rem !important;
+      }
+
+      .kpi-summary-table-box .kpi-tbl-label,
+      .kpi-summary-table-box .kpi-tbl-foot-label {
+        font-size: 11px !important;
+      }
+
+      .kpi-summary-table-box .kpi-tbl-val-lg {
+        font-size: 16px !important;
+      }
+
+      .kpi-summary-table-box .kpi-tbl-val-dur,
+      .kpi-summary-table-box .kpi-tbl-foot-val {
+        font-size: 12.5px !important;
+      }
+    }
   </style>
 </head>
 
@@ -1230,7 +1387,21 @@
           </div>
         </div>
 
-        <!-- SECTION 4: LAINNYA (Pemisah Baru ke-2: Kontak Pro & Flow meter) -->
+        <!-- SECTION 4: KENDALA (Khusus Admin - Dipindah ke atas LAINNYA) -->
+        <div id="sidebar-sec-kendala" class="space-y-1">
+          <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">KENDALA</span>
+          <button onclick="navigateTab('pica')" id="nav-group-pica"
+            class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
+            <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+              </path>
+            </svg>
+            <span>Log PICA Kendala</span>
+          </button>
+        </div>
+
+        <!-- SECTION 5: LAINNYA (Kontak Pro, Flow meter, Ceklist Washing) -->
         <div id="sidebar-sec-lainnya" class="space-y-1">
           <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">LAINNYA</span>
 
@@ -1328,20 +1499,6 @@
               </svg>
             </a>
           </div>
-        </div>
-
-        <!-- SECTION 5: KENDALA (Khusus Admin) -->
-        <div id="sidebar-sec-kendala" class="space-y-1">
-          <span class="px-3 text-[9.5px] font-black text-slate-400 uppercase tracking-wider block">KENDALA</span>
-          <button onclick="navigateTab('pica')" id="nav-group-pica"
-            class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-            <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-              </path>
-            </svg>
-            <span>Log PICA Kendala</span>
-          </button>
         </div>
 
         <!-- SECTION 6: MASTER (Khusus Admin) -->
@@ -2079,77 +2236,75 @@
 
                 <!-- Kartu 1: EVENT JOB LT/WT (Diagram di Kiri + Tabel CATEGORY | EVENT di Kanan - Tema Merah KPI) -->
                 <div
-                  class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 select-none hover:shadow-md transition flex flex-col justify-between">
+                  class="kpi-summary-card bg-white rounded-2xl border border-slate-200/80 shadow-xs p-3.5 sm:p-4 select-none hover:shadow-md transition flex flex-col justify-between">
                   <div>
-                    <div class="pb-2.5 border-b border-slate-100 flex items-center justify-between mb-3.5">
+                    <div class="pb-2 border-b border-slate-100 flex flex-wrap items-center justify-between gap-1 mb-3">
                       <h4
-                        class="text-xs sm:text-sm font-black text-[#991B1B] uppercase tracking-wide flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-[#991B1B]"></span>
-                        <span>EVENT JOB LT/WT</span>
+                        class="text-xs sm:text-[13px] font-black text-[#991B1B] uppercase tracking-wide flex items-center gap-1.5 min-w-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-[#991B1B] shrink-0"></span>
+                        <span class="truncate">EVENT JOB LT/WT</span>
                       </h4>
-                      <span id="kpi-event-header-total" class="text-xs font-bold text-slate-400">Total Event: 0</span>
+                      <span id="kpi-event-header-total"
+                        class="text-[11px] font-bold text-slate-400 whitespace-nowrap">Total Event: 0</span>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                    <div class="kpi-summary-inner">
                       <!-- Sisi Kiri: Doughnut Chart Container dengan Angka di Tengah -->
-                      <div class="flex flex-col items-center justify-center">
-                        <div class="relative w-44 h-44 sm:w-48 sm:h-48 flex items-center justify-center my-1">
+                      <div class="flex flex-col items-center justify-center min-w-0">
+                        <div class="kpi-donut-box relative flex items-center justify-center my-0.5">
                           <canvas id="chart-kpi-event-job" class="w-full h-full"></canvas>
                           <div
-                            class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none text-center">
+                            class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none text-center px-1">
                             <span id="kpi-event-center-pct"
-                              class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight font-mono">0%</span>
+                              class="kpi-donut-pct font-black text-slate-900 tracking-tight font-mono">0%</span>
                             <span
-                              class="text-[10px] sm:text-[11px] font-black text-slate-500 uppercase tracking-wider mt-1">SCHEDULE</span>
+                              class="kpi-donut-sub font-black text-slate-500 uppercase tracking-wider mt-0.5">SCHEDULE</span>
                           </div>
                         </div>
 
                         <!-- Legend Horizontal Sesuai Spesifikasi -->
-                        <div class="flex items-center justify-center space-x-4 pt-2 text-xs">
-                          <div class="flex items-center space-x-1.5">
-                            <span class="w-3 h-3 rounded-full bg-[#991B1B] shadow-2xs"></span>
-                            <span id="kpi-event-legend-sch"
-                              class="font-black text-slate-900 text-xs sm:text-[13px]">Schedule (0%)</span>
+                        <div class="kpi-donut-legend text-xs">
+                          <div class="flex items-center space-x-1">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#991B1B] shadow-2xs shrink-0"></span>
+                            <span id="kpi-event-legend-sch" class="font-black text-slate-900">Schedule (0%)</span>
                           </div>
-                          <div class="flex items-center space-x-1.5">
-                            <span class="w-3 h-3 rounded-full bg-[#EA580C] shadow-2xs"></span>
-                            <span id="kpi-event-legend-unsch"
-                              class="font-black text-slate-900 text-xs sm:text-[13px]">Unschedule (0%)</span>
+                          <div class="flex items-center space-x-1">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#EA580C] shadow-2xs shrink-0"></span>
+                            <span id="kpi-event-legend-unsch" class="font-black text-slate-900">Unschedule (0%)</span>
                           </div>
                         </div>
                       </div>
 
-                      <!-- Sisi Kanan: Tabel CATEGORY | EVENT (Warna Merah KPI & Angka +70% Lebih Besar) -->
+                      <!-- Sisi Kanan: Tabel CATEGORY | EVENT -->
                       <div
-                        class="bg-white rounded-xl border border-red-200/90 overflow-hidden shadow-2xs flex flex-col justify-between">
+                        class="kpi-summary-table-box bg-white rounded-xl border border-red-200/90 shadow-2xs flex flex-col justify-between">
                         <div>
                           <div
-                            class="bg-gradient-to-r from-[#991B1B] to-[#DC2626] px-3.5 py-2.5 border-b border-red-300">
-                            <h5 class="text-xs sm:text-sm font-black text-white uppercase tracking-wider">CATEGORY |
-                              EVENT</h5>
+                            class="kpi-tbl-head bg-gradient-to-r from-[#991B1B] to-[#DC2626] border-b border-red-300">
+                            <h5 class="font-black text-white uppercase tracking-wider">CATEGORY | EVENT</h5>
                           </div>
                           <table class="w-full text-xs">
                             <tbody class="divide-y divide-slate-100 font-semibold">
                               <tr class="hover:bg-red-50/40 transition">
-                                <td class="py-3 px-3.5 text-slate-800 text-xs sm:text-sm font-bold">SCHEDULE</td>
+                                <td class="kpi-tbl-label text-slate-800 font-bold">SCHEDULE</td>
                                 <td id="kpi-event-table-sch"
-                                  class="py-3 px-3.5 text-right font-black font-mono text-[#991B1B] text-2xl sm:text-[28px] leading-tight">
+                                  class="kpi-tbl-val-lg text-right font-black font-mono text-[#991B1B]">
                                   0</td>
                               </tr>
                               <tr class="hover:bg-red-50/40 transition">
-                                <td class="py-3 px-3.5 text-slate-800 text-xs sm:text-sm font-bold">UNSCHEDULE</td>
+                                <td class="kpi-tbl-label text-slate-800 font-bold">UNSCHEDULE</td>
                                 <td id="kpi-event-table-unsch"
-                                  class="py-3 px-3.5 text-right font-black font-mono text-[#EA580C] text-2xl sm:text-[28px] leading-tight">
+                                  class="kpi-tbl-val-lg text-right font-black font-mono text-[#EA580C]">
                                   0</td>
                               </tr>
                             </tbody>
                           </table>
                         </div>
                         <div
-                          class="px-3.5 py-2.5 bg-red-50/40 border-t border-red-100 flex items-center justify-between text-xs text-slate-700 font-bold">
-                          <span class="text-xs sm:text-sm font-extrabold text-slate-700">TOTAL EVENT</span>
+                          class="kpi-tbl-foot bg-red-50/40 border-t border-red-100 flex items-center justify-between text-xs text-slate-700 font-bold">
+                          <span class="kpi-tbl-foot-label font-extrabold text-slate-700">TOTAL EVENT</span>
                           <span id="kpi-event-table-total"
-                            class="font-mono text-slate-900 font-black text-lg sm:text-2xl">0 Event</span>
+                            class="kpi-tbl-foot-val font-mono text-slate-900 font-black">0 Event</span>
                         </div>
                       </div>
                     </div>
@@ -2158,79 +2313,76 @@
 
                 <!-- Kartu 2: DURATION JOB (HRS) (Diagram di Kiri + Tabel CATEGORY | DURATION di Kanan - Tema Merah KPI) -->
                 <div
-                  class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 select-none hover:shadow-md transition flex flex-col justify-between">
+                  class="kpi-summary-card bg-white rounded-2xl border border-slate-200/80 shadow-xs p-3.5 sm:p-4 select-none hover:shadow-md transition flex flex-col justify-between">
                   <div>
-                    <div class="pb-2.5 border-b border-slate-100 flex items-center justify-between mb-3.5">
+                    <div class="pb-2 border-b border-slate-100 flex flex-wrap items-center justify-between gap-1 mb-3">
                       <h4
-                        class="text-xs sm:text-sm font-black text-[#991B1B] uppercase tracking-wide flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-[#991B1B]"></span>
-                        <span>DURATION JOB (HRS)</span>
+                        class="text-xs sm:text-[13px] font-black text-[#991B1B] uppercase tracking-wide flex items-center gap-1.5 min-w-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-[#991B1B] shrink-0"></span>
+                        <span class="truncate">DURATION JOB (HRS)</span>
                       </h4>
-                      <span id="kpi-dur-header-total" class="text-xs font-black font-mono text-slate-400">Total: 0
+                      <span id="kpi-dur-header-total"
+                        class="text-[11px] font-black font-mono text-slate-400 whitespace-nowrap">Total: 0
                         Jam</span>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                    <div class="kpi-summary-inner">
                       <!-- Sisi Kiri: Doughnut Chart Container dengan Angka di Tengah -->
-                      <div class="flex flex-col items-center justify-center">
-                        <div class="relative w-44 h-44 sm:w-48 sm:h-48 flex items-center justify-center my-1">
+                      <div class="flex flex-col items-center justify-center min-w-0">
+                        <div class="kpi-donut-box relative flex items-center justify-center my-0.5">
                           <canvas id="chart-kpi-duration-job" class="w-full h-full"></canvas>
                           <div
-                            class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none text-center">
+                            class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none text-center px-1">
                             <span id="kpi-dur-center-pct"
-                              class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight font-mono">0%</span>
+                              class="kpi-donut-pct font-black text-slate-900 tracking-tight font-mono">0%</span>
                             <span
-                              class="text-[10px] sm:text-[11px] font-black text-slate-500 uppercase tracking-wider mt-1">SCHEDULE</span>
+                              class="kpi-donut-sub font-black text-slate-500 uppercase tracking-wider mt-0.5">SCHEDULE</span>
                           </div>
                         </div>
 
                         <!-- Legend Horizontal Sesuai Spesifikasi -->
-                        <div class="flex items-center justify-center space-x-4 pt-2 text-xs">
-                          <div class="flex items-center space-x-1.5">
-                            <span class="w-3 h-3 rounded-full bg-[#991B1B] shadow-2xs"></span>
-                            <span id="kpi-dur-legend-sch"
-                              class="font-black text-slate-900 text-xs sm:text-[13px]">Schedule (0%)</span>
+                        <div class="kpi-donut-legend text-xs">
+                          <div class="flex items-center space-x-1">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#991B1B] shadow-2xs shrink-0"></span>
+                            <span id="kpi-dur-legend-sch" class="font-black text-slate-900">Schedule (0%)</span>
                           </div>
-                          <div class="flex items-center space-x-1.5">
-                            <span class="w-3 h-3 rounded-full bg-[#EA580C] shadow-2xs"></span>
-                            <span id="kpi-dur-legend-unsch"
-                              class="font-black text-slate-900 text-xs sm:text-[13px]">Unschedule (0%)</span>
+                          <div class="flex items-center space-x-1">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#EA580C] shadow-2xs shrink-0"></span>
+                            <span id="kpi-dur-legend-unsch" class="font-black text-slate-900">Unschedule (0%)</span>
                           </div>
                         </div>
                       </div>
 
-                      <!-- Sisi Kanan: Tabel CATEGORY | DURATION (HRS) (Warna Merah KPI & Angka +70% Lebih Besar) -->
+                      <!-- Sisi Kanan: Tabel CATEGORY | DURATION (HRS) -->
                       <div
-                        class="bg-white rounded-xl border border-red-200/90 overflow-hidden shadow-2xs flex flex-col justify-between">
+                        class="kpi-summary-table-box bg-white rounded-xl border border-red-200/90 shadow-2xs flex flex-col justify-between">
                         <div>
                           <div
-                            class="bg-gradient-to-r from-[#991B1B] to-[#DC2626] px-3.5 py-2.5 border-b border-red-300">
-                            <h5 class="text-xs sm:text-sm font-black text-white uppercase tracking-wider">CATEGORY |
-                              DURATION
-                              (HRS)</h5>
+                            class="kpi-tbl-head bg-gradient-to-r from-[#991B1B] to-[#DC2626] border-b border-red-300">
+                            <h5 class="font-black text-white uppercase tracking-wider">CATEGORY | DURATION (HRS)</h5>
                           </div>
                           <table class="w-full text-xs">
                             <tbody class="divide-y divide-slate-100 font-semibold">
                               <tr class="hover:bg-red-50/40 transition">
-                                <td class="py-3 px-3.5 text-slate-800 text-xs sm:text-sm font-bold">SCHEDULE</td>
+                                <td class="kpi-tbl-label text-slate-800 font-bold">SCHEDULE</td>
                                 <td id="kpi-dur-table-sch"
-                                  class="py-3 px-3.5 text-right font-black font-mono text-[#991B1B] text-2xl sm:text-[28px] leading-tight">
+                                  class="kpi-tbl-val-lg text-right font-black font-mono text-[#991B1B]">
                                   0 Jam</td>
                               </tr>
                               <tr class="hover:bg-red-50/40 transition">
-                                <td class="py-3 px-3.5 text-slate-800 text-xs sm:text-sm font-bold">UNSCHEDULE</td>
+                                <td class="kpi-tbl-label text-slate-800 font-bold">UNSCHEDULE</td>
                                 <td id="kpi-dur-table-unsch"
-                                  class="py-3 px-3.5 text-right font-black font-mono text-[#EA580C] text-2xl sm:text-[28px] leading-tight">
+                                  class="kpi-tbl-val-lg text-right font-black font-mono text-[#EA580C]">
                                   0 Jam</td>
                               </tr>
                             </tbody>
                           </table>
                         </div>
                         <div
-                          class="px-3.5 py-2.5 bg-red-50/40 border-t border-red-100 flex items-center justify-between text-xs text-slate-700 font-bold">
-                          <span class="text-xs sm:text-sm font-extrabold text-slate-700">TOTAL DURASI</span>
-                          <span id="kpi-dur-table-total"
-                            class="font-mono text-slate-900 font-black text-lg sm:text-2xl">0 Jam</span>
+                          class="kpi-tbl-foot bg-red-50/40 border-t border-red-100 flex items-center justify-between text-xs text-slate-700 font-bold">
+                          <span class="kpi-tbl-foot-label font-extrabold text-slate-700">TOTAL DURASI</span>
+                          <span id="kpi-dur-table-total" class="kpi-tbl-foot-val font-mono text-slate-900 font-black">0
+                            Jam</span>
                         </div>
                       </div>
                     </div>
@@ -2239,91 +2391,90 @@
 
                 <!-- Kartu 3: DURASI UNSCHEDULE LT/WT (Diagram di Kiri + Tabel JOB | DURASI di Kanan - Tema Merah KPI) -->
                 <div
-                  class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 select-none hover:shadow-md transition flex flex-col justify-between">
+                  class="kpi-summary-card bg-white rounded-2xl border border-slate-200/80 shadow-xs p-3.5 sm:p-4 select-none hover:shadow-md transition flex flex-col justify-between">
                   <div>
-                    <div class="pb-2.5 border-b border-slate-100 flex items-center justify-between mb-3.5">
+                    <div class="pb-2 border-b border-slate-100 flex flex-wrap items-center justify-between gap-1 mb-3">
                       <h4
-                        class="text-xs sm:text-sm font-black text-[#991B1B] uppercase tracking-wide flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-[#DC2626]"></span>
-                        <span>DURASI UNSCHEDULE LT/WT</span>
+                        class="text-xs sm:text-[13px] font-black text-[#991B1B] uppercase tracking-wide flex items-center gap-1.5 min-w-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-[#DC2626] shrink-0"></span>
+                        <span class="truncate">DURASI UNSCHEDULE LT/WT</span>
                       </h4>
-                      <span id="kpi-unsch-dur-header-total" class="text-xs font-bold text-slate-400">Total: 0 Jam 0
+                      <span id="kpi-unsch-dur-header-total"
+                        class="text-[11px] font-bold text-slate-400 whitespace-nowrap">Total: 0 Jam 0
                         Menit</span>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                    <div class="kpi-summary-inner">
                       <!-- Sisi Kiri: Doughnut Chart Container dengan Angka di Tengah -->
-                      <div class="flex flex-col items-center justify-center">
-                        <div class="relative w-44 h-44 sm:w-48 sm:h-48 flex items-center justify-center my-1">
+                      <div class="flex flex-col items-center justify-center min-w-0">
+                        <div class="kpi-donut-box relative flex items-center justify-center my-0.5">
                           <canvas id="chart-kpi-unschedule-duration" class="w-full h-full"></canvas>
                           <div
-                            class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none text-center">
+                            class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none text-center px-1">
                             <span id="kpi-unsch-dur-center-pct"
-                              class="text-2xl sm:text-3xl font-black text-[#EA580C] tracking-tight font-mono">0%</span>
+                              class="kpi-donut-pct font-black text-[#EA580C] tracking-tight font-mono">0%</span>
                             <span id="kpi-unsch-dur-center-label"
-                              class="text-[10px] sm:text-[11px] font-black text-slate-500 uppercase tracking-wider mt-1">TOP
+                              class="kpi-donut-sub font-black text-slate-500 uppercase tracking-wider mt-0.5">TOP
                               UP</span>
                           </div>
                         </div>
 
                         <!-- Legend Horizontal Sesuai Spesifikasi (3 Kategori Lapangan: Breakdown, Service, Washing Request) -->
-                        <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 pt-2 text-xs">
-                          <div class="flex items-center space-x-1.5">
+                        <div class="kpi-donut-legend text-xs">
+                          <div class="flex items-center space-x-1">
                             <span class="w-2.5 h-2.5 rounded-full bg-[#DC2626] shadow-2xs shrink-0"></span>
-                            <span id="kpi-unsch-dur-legend-breakdown"
-                              class="font-bold text-slate-800 text-[11px]">Breakdown (0%)</span>
-                          </div>
-                          <div class="flex items-center space-x-1.5">
-                            <span class="w-2.5 h-2.5 rounded-full bg-[#0284C7] shadow-2xs shrink-0"></span>
-                            <span id="kpi-unsch-dur-legend-service" class="font-bold text-slate-800 text-[11px]">Service
+                            <span id="kpi-unsch-dur-legend-breakdown" class="font-bold text-slate-800">Breakdown
                               (0%)</span>
                           </div>
-                          <div class="flex items-center space-x-1.5">
+                          <div class="flex items-center space-x-1">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#0284C7] shadow-2xs shrink-0"></span>
+                            <span id="kpi-unsch-dur-legend-service" class="font-bold text-slate-800">Service
+                              (0%)</span>
+                          </div>
+                          <div class="flex items-center space-x-1">
                             <span class="w-2.5 h-2.5 rounded-full bg-[#06B6D4] shadow-2xs shrink-0"></span>
-                            <span id="kpi-unsch-dur-legend-washing" class="font-bold text-slate-800 text-[11px]">Washing
+                            <span id="kpi-unsch-dur-legend-washing" class="font-bold text-slate-800">Washing
                               Request (0%)</span>
                           </div>
                         </div>
                       </div>
 
-                      <!-- Sisi Kanan: Tabel JOB | DURASI (Warna Merah KPI & Angka +70% Lebih Besar) -->
+                      <!-- Sisi Kanan: Tabel JOB | DURASI -->
                       <div
-                        class="bg-white rounded-xl border border-red-200/90 overflow-hidden shadow-2xs flex flex-col justify-between">
+                        class="kpi-summary-table-box bg-white rounded-xl border border-red-200/90 shadow-2xs flex flex-col justify-between">
                         <div>
                           <div
-                            class="bg-gradient-to-r from-[#991B1B] to-[#DC2626] px-3.5 py-2.5 border-b border-red-300">
-                            <h5 class="text-xs sm:text-sm font-black text-white uppercase tracking-wider">JOB | DURASI
-                            </h5>
+                            class="kpi-tbl-head bg-gradient-to-r from-[#991B1B] to-[#DC2626] border-b border-red-300">
+                            <h5 class="font-black text-white uppercase tracking-wider">JOB | DURASI</h5>
                           </div>
                           <table class="w-full text-xs">
                             <tbody class="divide-y divide-slate-100 font-semibold">
                               <tr class="hover:bg-red-50/40 transition">
-                                <td class="py-2.5 px-3 text-slate-800 text-xs sm:text-[13px] font-bold">BREAKDOWN</td>
+                                <td class="kpi-tbl-label text-slate-800 font-bold">BREAKDOWN</td>
                                 <td id="kpi-unsch-dur-table-breakdown"
-                                  class="py-2.5 px-3 text-right font-black font-mono text-[#DC2626] text-lg sm:text-xl md:text-[22px] leading-tight whitespace-nowrap">
+                                  class="kpi-tbl-val-dur text-right font-black font-mono text-[#DC2626]">
                                   0 Jam 0 Menit</td>
                               </tr>
                               <tr class="hover:bg-red-50/40 transition">
-                                <td class="py-2.5 px-3 text-slate-800 text-xs sm:text-[13px] font-bold">SERVICE</td>
+                                <td class="kpi-tbl-label text-slate-800 font-bold">SERVICE</td>
                                 <td id="kpi-unsch-dur-table-service"
-                                  class="py-2.5 px-3 text-right font-black font-mono text-[#0284C7] text-lg sm:text-xl md:text-[22px] leading-tight whitespace-nowrap">
+                                  class="kpi-tbl-val-dur text-right font-black font-mono text-[#0284C7]">
                                   0 Jam 0 Menit</td>
                               </tr>
                               <tr class="hover:bg-red-50/40 transition">
-                                <td class="py-2.5 px-3 text-slate-800 text-xs sm:text-[13px] font-bold">WASHING REQUEST
-                                </td>
+                                <td class="kpi-tbl-label text-slate-800 font-bold">WASHING REQUEST</td>
                                 <td id="kpi-unsch-dur-table-washing"
-                                  class="py-2.5 px-3 text-right font-black font-mono text-[#06B6D4] text-lg sm:text-xl md:text-[22px] leading-tight whitespace-nowrap">
+                                  class="kpi-tbl-val-dur text-right font-black font-mono text-[#06B6D4]">
                                   0 Jam 0 Menit</td>
                               </tr>
                             </tbody>
                           </table>
                         </div>
                         <div
-                          class="px-3.5 py-2.5 bg-red-50/40 border-t border-red-100 flex items-center justify-between text-xs text-slate-700 font-bold">
-                          <span class="text-xs sm:text-sm font-extrabold text-slate-700">TOTAL DURASI</span>
+                          class="kpi-tbl-foot bg-red-50/40 border-t border-red-100 flex items-center justify-between text-xs text-slate-700 font-bold">
+                          <span class="kpi-tbl-foot-label font-extrabold text-slate-700">TOTAL DURASI</span>
                           <span id="kpi-unsch-dur-table-total"
-                            class="font-mono text-slate-900 font-black text-base sm:text-xl whitespace-nowrap">0 Jam
+                            class="kpi-tbl-foot-val font-mono text-slate-900 font-black">0 Jam
                             0 Menit</span>
                         </div>
                       </div>
@@ -3665,11 +3816,8 @@
               <!-- Tombol Submit Penyelesaian Job -->
               <div class="pt-2 flex items-center justify-end">
                 <button type="submit" id="btn-direct-submit"
-                  class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold uppercase tracking-wider transition cursor-pointer shadow-md active:scale-98 flex items-center justify-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span>SUBMIT SELESAI (MASUK RIWAYAT)</span>
+                  class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-brand-200 hover:bg-brand-300 text-brand-800 font-extrabold uppercase tracking-wider transition cursor-pointer shadow-xs active:scale-98 flex items-center justify-center">
+                  <span>SUBMIT</span>
                 </button>
               </div>
             </form>
@@ -3681,7 +3829,7 @@
         <!-- ================================================================== -->
         <div id="tab-pica" class="tab-pane hidden space-y-3">
           <div
-            class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+            class="hidden md:flex bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex-wrap items-center justify-between gap-3">
             <div>
               <h3 class="text-sm font-extrabold text-slate-900 tracking-tight">Log PICA Kendala (Read-Only)</h3>
               <p class="text-xs text-slate-500">Daftar semua job schedule Lubetruck & Water Truck yang mengalami kendala
@@ -3873,7 +4021,7 @@
                       </div>
                     </th>
                     <th onclick="sortPicaBy('typeJob')"
-                      class="py-2.5 px-2 w-[12%] md:w-[5.5%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      class="py-2.5 px-2 w-[16%] md:w-[5.5%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
                       title="Urutkan berdasarkan Type Job (Klik 3x untuk reset)">
                       <div class="flex items-center justify-start space-x-1">
                         <span>TYPE JOB</span>
@@ -3891,7 +4039,7 @@
                       </div>
                     </th>
                     <th onclick="sortPicaBy('unit')"
-                      class="py-2.5 px-2 w-[20%] md:w-[10.5%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      class="py-2.5 px-2 w-[22%] md:w-[10.5%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
                       title="Urutkan berdasarkan No Lambung & Tipe Unit (Klik 3x untuk reset)">
                       <div class="flex items-center justify-start space-x-1">
                         <span class="md:hidden">NO UNIT</span>
@@ -3901,7 +4049,7 @@
                       </div>
                     </th>
                     <th onclick="sortPicaBy('cluster')"
-                      class="py-2.5 px-2 w-[24%] md:w-[12%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      class="hidden md:table-cell py-2.5 px-2 md:w-[12%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
                       title="Urutkan berdasarkan Cluster & Lokasi Pit (Klik 3x untuk reset)">
                       <div class="flex items-center justify-start space-x-1">
                         <span>CLUSTER &amp; LOKASI</span>
@@ -3910,7 +4058,7 @@
                       </div>
                     </th>
                     <th onclick="sortPicaBy('armada')"
-                      class="py-2.5 px-2 w-[12%] md:w-[5.5%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      class="py-2.5 px-2 w-[18%] md:w-[5.5%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
                       title="Urutkan berdasarkan Armada (Klik 3x untuk reset)">
                       <div class="flex items-center justify-start space-x-1">
                         <span>ARMADA</span>
@@ -3928,16 +4076,17 @@
                       </div>
                     </th>
                     <th onclick="sortPicaBy('keterangan')"
-                      class="hidden md:table-cell py-2.5 px-2.5 md:w-[17.5%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      class="py-2.5 px-2 md:px-2.5 w-[44%] md:w-[17.5%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
                       title="Urutkan berdasarkan Keterangan Kendala PICA (Klik 3x untuk reset)">
                       <div class="flex items-center justify-start space-x-1">
-                        <span>KETERANGAN PICA (PENYEBAB)</span>
+                        <span class="md:hidden">KETERANGAN</span>
+                        <span class="hidden md:inline">KETERANGAN PICA (PENYEBAB)</span>
                         <span id="pica-sort-icon-keterangan"
                           class="inline-block ml-0.5 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition">⇅</span>
                       </div>
                     </th>
                     <th onclick="sortPicaBy('status')"
-                      class="py-2.5 px-1 md:px-2 w-[14%] md:w-[5.5%] text-center align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      class="hidden md:table-cell py-2.5 px-1 md:px-2 md:w-[5.5%] text-center align-middle cursor-pointer group hover:bg-slate-100 transition"
                       title="Urutkan berdasarkan Status Pekerjaan (Klik 3x untuk reset)">
                       <div class="flex items-center justify-center space-x-1">
                         <span>STATUS</span>
@@ -3946,7 +4095,7 @@
                       </div>
                     </th>
                     <th
-                      class="py-2.5 px-1 md:px-2 w-[18%] md:w-[8%] text-center align-middle font-extrabold select-none">
+                      class="hidden md:table-cell py-2.5 px-1 md:px-2 md:w-[8%] text-center align-middle font-extrabold select-none">
                       <span>AKSI</span>
                     </th>
                   </tr>
@@ -5332,18 +5481,18 @@
               </div>
             </div>
 
-            <!-- 2. Riwayat Pekerjaan Selesai (Persegi) -->
-            <div onclick="navigateTab('completed')"
+            <!-- 2. Job Request (Persegi - Dipindah ke dalam Lainnya untuk Mode HP Admin) -->
+            <div onclick="navigateTab('job-requests')"
               class="bg-white hover:bg-slate-50 border border-slate-200/80 active:scale-[0.98] transition rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer space-y-3">
               <div
-                class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100/80 shrink-0">
+                class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100/80 shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
               </div>
               <div>
-                <h4 class="text-xs font-black text-slate-900 leading-tight">Riwayat Selesai</h4>
+                <h4 class="text-xs font-black text-slate-900 leading-tight">Job Request</h4>
               </div>
             </div>
 
@@ -5920,7 +6069,8 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
-        <span class="text-[10px] font-medium mt-1 tracking-tight transition-colors">Riwayat</span>
+        <span id="mob-nav-comp-label"
+          class="text-[10px] font-medium mt-1 tracking-tight transition-colors">Riwayat</span>
         <span class="mob-dot w-1 h-1 rounded-full bg-emerald-600 mt-0.5 opacity-0 transition-opacity"></span>
       </button>
 
@@ -5996,7 +6146,20 @@
           <span class="font-extrabold text-slate-900 text-xs">Profil Pengguna</span>
         </button>
 
-        <!-- 2. Order Lapangan -->
+        <!-- 2. Job Request -->
+        <button type="button" onclick="selectMoreMenuTab('job-requests')"
+          class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-slate-50 hover:bg-amber-50/70 border border-slate-200/70 hover:border-amber-300 transition active:scale-95 cursor-pointer text-center group shadow-2xs">
+          <div
+            class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mb-2 group-hover:scale-105 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <span class="font-extrabold text-slate-900 text-xs">Job Request</span>
+        </button>
+
+        <!-- 3. Order Lapangan -->
         <button type="button" onclick="selectMoreMenuTab('orders')"
           class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-slate-50 hover:bg-emerald-50/70 border border-slate-200/70 hover:border-emerald-300 transition active:scale-95 cursor-pointer text-center group shadow-2xs">
           <div
@@ -10638,15 +10801,29 @@
       const isSchWt = !isExplicitUnsch && isWt;
       const isSchLt = !isExplicitUnsch && !isWt;
 
+      const rowCat = String(row.cat || (isWt ? 'coal' : 'small')).toLowerCase().trim();
+      const isDailyRowCat = ['digger', 'aircleaner', 'air_cleaner', 'topup', 'topup_oil', 'non_coal', 'noncoal'].includes(rowCat);
+      const todayMapStr = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : '';
+      const rowDateStr = String(row.tanggal || '').trim().split('T')[0];
+      const isTodayDailyRow = !isExplicitUnsch && isDailyRowCat && todayMapStr && rowDateStr === todayMapStr;
+      const rawStatus = String(row.status || (isExplicitUnsch ? 'unscheduled' : 'scheduled')).toLowerCase().trim();
+      const normStatus = (isTodayDailyRow && rawStatus === 'pending') ? 'scheduled' : (row.status || (isExplicitUnsch ? 'unscheduled' : 'scheduled'));
+      const normIsPending = (isExplicitUnsch || isTodayDailyRow) ? false : Boolean(row.is_pending);
+      let normWaktu = row.waktu_rencana || row.waktu || '07:00 s/d 07:15';
+      if (isTodayDailyRow && normWaktu === '17:45 s/d 04:45') {
+        const isBigRowUnit = (rowCat === 'digger' || /^E\d/i.test(String(row.no_lambung || '')));
+        normWaktu = isBigRowUnit ? '12:00 s/d 13:00' : '08:00 s/d 09:00';
+      }
+
       return {
         id: targetId,
         cat: row.cat || (isWt ? 'coal' : 'small'),
         tanggal: row.tanggal || '',
         tanggalRealisasi: row.tanggal || '',
-        shift: parseInt(row.shift, 10) || 1,
+        shift: isTodayDailyRow ? 1 : (parseInt(row.shift, 10) || 1),
         washingRound: typeof getJobWashingRound === 'function' ? getJobWashingRound(row) : (parseInt(row.washing_round, 10) || (targetId.includes('-W2-') ? 2 : 1)),
         cluster: row.cluster || 'Selatan',
-        waktu: row.waktu_rencana || row.waktu || '07:00 s/d 07:15',
+        waktu: normWaktu,
         typeUnit: row.type_unit || 'Unit',
         noLambung: row.no_lambung || '',
         lokasi: row.lokasi || '',
@@ -10668,10 +10845,10 @@
         adaOperator: row.ada_operator || 'Ya',
         unitTurun: row.unit_turun || 'Ya',
         unitSwing: row.unit_swing || 'Tidak',
-        status: row.status || (isExplicitUnsch ? 'unscheduled' : 'scheduled'),
+        status: normStatus,
         keterangan: row.keterangan || '',
         deskripsi: row.keterangan || '',
-        isPending: isExplicitUnsch ? false : Boolean(row.is_pending),
+        isPending: normIsPending,
         isLocked: ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'parkir', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(String(row.status || '').toLowerCase().trim()) || Boolean(row.is_locked),
         unitCondition: row.unit_condition || '',
         serviceNotes: (row.service_notes && !row.service_notes.startsWith('PHOTOS:') && !row.service_notes.startsWith('PHOTOS_ATTACHED')) ? row.service_notes : '',
@@ -10811,9 +10988,14 @@
       const newUnschLt = [];
       const newUnschWt = [];
 
-      for (const job of window.globalDataCache.jobs.values()) {
+      for (const job of Array.from(window.globalDataCache.jobs.values())) {
+        if (!job) continue;
         const targetId = String(job.id || '');
         const isExplicitUnsch = (targetId.startsWith('UNS') || targetId.includes('-REQ-') || job.cat === 'unscheduled' || job.job_type === 'unsch_lt' || job.job_type === 'unsch_wt' || job.serviceType === 'Job Request');
+        if (!isExplicitUnsch && typeof isJobAlreadyClosedInHistory === 'function' && isJobAlreadyClosedInHistory(job, state.jobHistory)) {
+          window.globalDataCache.jobs.delete(targetId);
+          continue;
+        }
         const isWt = (targetId.includes('WT') || job.serviceType === 'watertruck' || job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat));
 
         const isUnschWt = isExplicitUnsch && isWt;
@@ -11976,18 +12158,28 @@
 
       const registerJob = (j, isFromHistory = false) => {
         if (!j) return;
-        const jId = String(j.id || j.job_id || '');
+        const jId = String(j.id || j.job_id || j.noId || j.no_id || '');
         const jNo = String(j.noLambung || j.no_lambung || '').trim().toUpperCase();
         const jDate = j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || j.tanggal_rencana || '';
         const jShift = String(j.shift || j.shift_rencana || 1);
         const jCat = String(j.cat || '').trim().toLowerCase();
-        const uKey = (jNo && jDate) ? `${jNo}_${jDate}_${jShift}_${jCat}` : jId;
+        const rawUpperId = jId.toUpperCase();
+        const isUnsch = (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(j)) ||
+          (typeof getJobTypeCode === 'function' && getJobTypeCode(j) === 'REQ') ||
+          rawUpperId.startsWith('UNS') || rawUpperId.startsWith('LT-REQ') || rawUpperId.startsWith('WT-REQ') ||
+          rawUpperId.includes('-REQ-') || rawUpperId.includes('-DIR-') ||
+          jCat === 'unscheduled' || jCat === 'request' || jCat === 'job_request';
 
-        const ex = (jId && existingJobMap.get(jId)) || (uKey && existingJobMap.get(uKey));
+        const baseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(jId) : jId.replace(/-\d{4}$/, '');
+        const uKey = isUnsch
+          ? (baseId || ((jNo && jDate) ? `${jNo}_${jDate}_${jShift}_${jCat}_${j.jamStart || j.jam_start || ''}` : jId))
+          : ((jNo && jDate) ? `${jNo}_${jDate}_${jShift}_${jCat}` : jId);
+
+        const ex = (jId && existingJobMap.get(jId)) || (baseId && existingJobMap.get(baseId)) || (uKey && existingJobMap.get(uKey));
         if (ex) {
           if (isFromHistory) {
             const sf = String(j.status_final || j.status || '').toLowerCase().trim();
-            if (['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel'].includes(sf)) {
+            if (['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'washing', 'washing request', 'wash', 'non_ach', 'non-ach', 'cancel'].includes(sf)) {
               ex.status = sf;
               ex.status_final = j.status_final || sf.toUpperCase();
             }
@@ -11997,12 +12189,13 @@
               ex.armada_unit = arm;
             }
             if (j.durasi && !ex.durasi) ex.durasi = j.durasi;
+            if ((j.jam_start || j.jamStart) && (!ex.jamStart || ex.jamStart === '-')) ex.jamStart = j.jam_start || j.jamStart;
+            if ((j.jam_end || j.jamEnd) && (!ex.jamEnd || ex.jamEnd === '-')) ex.jamEnd = j.jam_end || j.jamEnd;
+            if (j.keterangan && (!ex.keterangan || ex.keterangan === '-')) ex.keterangan = j.keterangan;
             if (j.tanggal_eksekusi) ex.tanggalRealisasi = j.tanggal_eksekusi;
           }
           return;
         }
-
-        const isUnsch = jId.startsWith('UNS') || jCat === 'unscheduled';
         const cleanArmada = (typeof resolveJobArmada === 'function') ? resolveJobArmada(j) : ((j.armada_unit || j.armada || j.ltUnit || j.wtUnit || '').trim().toUpperCase());
 
         const cleanJob = {
@@ -12071,8 +12264,45 @@
     }
     window.getUnifiedDashboardJobs = getUnifiedDashboardJobs;
 
+    // Auto-resize seluruh grafik Dashboard saat browser di-zoom in / zoom out atau ukuran jendela berubah
+    if (!window._dashZoomResizeBound) {
+      window._dashZoomResizeBound = true;
+      let _dashResizeTimer = null;
+      window.addEventListener('resize', () => {
+        if (_dashResizeTimer) clearTimeout(_dashResizeTimer);
+        _dashResizeTimer = setTimeout(() => {
+          if (state.activeTab && state.activeTab !== 'dashboard') return;
+          const chartInstances = [
+            typeof achievementTrendChartInstance !== 'undefined' ? achievementTrendChartInstance : null,
+            typeof armadaDonutChartInstance !== 'undefined' ? armadaDonutChartInstance : null,
+            typeof healthGaugeChartInstance !== 'undefined' ? healthGaugeChartInstance : null,
+            typeof categoryDonutChartInstance !== 'undefined' ? categoryDonutChartInstance : null,
+            typeof kpiEventJobChartInstance !== 'undefined' ? kpiEventJobChartInstance : null,
+            typeof kpiDurationJobChartInstance !== 'undefined' ? kpiDurationJobChartInstance : null,
+            typeof kpiUnscheduledDurationChartInstance !== 'undefined' ? kpiUnscheduledDurationChartInstance : null,
+            typeof kpiAchScheduleBarChartInstance !== 'undefined' ? kpiAchScheduleBarChartInstance : null,
+            typeof kpiOpportunityChartInstance !== 'undefined' ? kpiOpportunityChartInstance : null
+          ];
+          chartInstances.forEach(inst => {
+            if (inst && typeof inst.resize === 'function') {
+              try { inst.resize(); } catch (e) { }
+            }
+          });
+        }, 120);
+      });
+    }
+
     function initKpiSchedulePicaCharts() {
       if (typeof Chart === 'undefined') return;
+
+      // Pastikan data Riwayat Selesai (job_history_lt & job_history_wt) sudah ditarik dari Supabase
+      if (state.supabaseClient && !window._hasLoadedJobHistory && !state._jobHistoryLoading && typeof loadJobHistoryFromSupabase === 'function') {
+        state._jobHistoryLoading = Date.now();
+        loadJobHistoryFromSupabase(true).finally(() => {
+          state._jobHistoryLoading = null;
+          initKpiSchedulePicaCharts();
+        });
+      }
 
       // 0. Ambil status filter aktif untuk kalkulasi dinamis SCH & UNSCH
       const startDate = document.getElementById('dash-filter-start')?.value || '2026-10-04';
@@ -12127,9 +12357,12 @@
       // ─────────────────────────────────────────────────────────────────
       const isJobCompleted = (j) => {
         if (!j) return false;
+        const s = String(j.status || '').toLowerCase().trim();
+        const sf = String(j.status_final || '').toUpperCase().trim();
+        if (['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'washing', 'washing request', 'wash'].includes(s)) return true;
+        if (['ACHIEVED', 'ACH', 'DONE', 'SERVICE', 'BREAKDOWN', 'BD', 'WASHING REQUEST', 'WASHING', 'WASH'].includes(sf)) return true;
         if (typeof window.isAchLikeStatus === 'function') return window.isAchLikeStatus(j);
-        const s = String(j.status_final || j.status || '').toLowerCase().trim();
-        return ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown'].includes(s);
+        return false;
       };
 
       const completedSchJobs = filteredSch.filter(isJobCompleted);
@@ -12278,23 +12511,43 @@
         const ctxUnschDur = canvasUnschDur.getContext('2d');
         if (kpiUnscheduledDurationChartInstance) kpiUnscheduledDurationChartInstance.destroy();
 
-        const unschAchJobs = filteredUnsch.filter(j => j.status === 'ach' || j.status === 'done');
-        const isJobBreakdown = (j) => {
-          const cond = String(j.kondisi || j.unitCondition || j.status || j.status_final || '').toLowerCase();
+        // Ambil dari data Type Job Request (REQ / Unschedule) di Riwayat Selesai yang berstatus SERVICE, BREAKDOWN (BD), atau WASHING REQUEST (WASHING)
+        const unschAchJobs = filteredUnsch.filter(j => {
+          const s = String(j.status || '').toLowerCase().trim();
+          const sf = String(j.status_final || '').toUpperCase().trim();
+          if (['non_ach', 'non-ach', 'cancel', 'cancelled', 'pending', 'scheduled', 'open', 'queue'].includes(s)) return false;
+          if (['NON_ACH', 'NON-ACH', 'CANCEL', 'CANCELLED', 'PENDING'].includes(sf)) return false;
+          return ['service', 'bd', 'breakdown', 'washing', 'washing request', 'wash', 'ach', 'achieved', 'done'].includes(s) ||
+            ['SERVICE', 'BREAKDOWN', 'BD', 'WASHING REQUEST', 'WASHING', 'WASH', 'ACHIEVED', 'ACH', 'DONE'].includes(sf);
+        });
+
+        const getUnschCategory = (j) => {
+          const s = String(j.status || '').toLowerCase().trim();
+          const sf = String(j.status_final || '').toUpperCase().trim();
+          const kond = String(j.kondisi || j.unitCondition || '').toLowerCase().trim();
           const desc = String(j.deskripsi || j.keterangan || '').toLowerCase();
-          return cond.includes('breakdown') || cond === 'bd' || desc.includes('breakdown') || desc.includes('bd');
+          const isWt = (j.targetType === 'WT' || j.serviceType === 'watertruck' || j.job_type === 'water' || j.job_type === 'unsch_wt' || String(j.id || '').toUpperCase().startsWith('WT'));
+
+          // 1. Cek status eksplisit dari Riwayat Selesai (SERVICE, BREAKDOWN/BD, WASHING REQUEST/WASHING)
+          if (sf === 'WASHING REQUEST' || sf === 'WASHING' || sf === 'WASH' || ['washing', 'washing request', 'wash'].includes(s) || kond === 'washing' || kond === 'washing request') {
+            return 'WASHING';
+          }
+          if (sf === 'BREAKDOWN' || sf === 'BD' || ['bd', 'breakdown'].includes(s) || kond === 'breakdown' || kond === 'bd') {
+            return 'BREAKDOWN';
+          }
+          if (sf === 'SERVICE' || s === 'service' || kond === 'service') {
+            return 'SERVICE';
+          }
+
+          // 2. Fallback untuk job request lama yang status_final-nya 'DONE' / 'ACHIEVED'
+          if (isWt || desc.includes('washing') || desc.includes('cuci')) return 'WASHING';
+          if (desc.includes('breakdown') || desc.includes('[bd]')) return 'BREAKDOWN';
+          return 'SERVICE';
         };
 
-        const isJobWashing = (j) => {
-          const isWt = (j.targetType === 'WT' || j.serviceType === 'watertruck' || ['coal', 'rom', 'non_coal', 'washing'].includes(j.cat) || String(j.id || '').includes('WT'));
-          const cond = String(j.kondisi || j.unitCondition || j.status || j.status_final || '').toLowerCase();
-          const desc = String(j.deskripsi || j.keterangan || '').toLowerCase();
-          return isWt && (cond.includes('wash') || desc.includes('wash') || cond.includes('cuci') || desc.includes('cuci') || ['coal', 'rom', 'non_coal'].includes(j.cat));
-        };
-
-        const isJobService = (j) => {
-          return !isJobBreakdown(j) && !isJobWashing(j);
-        };
+        const isJobBreakdown = (j) => getUnschCategory(j) === 'BREAKDOWN';
+        const isJobWashing = (j) => getUnschCategory(j) === 'WASHING';
+        const isJobService = (j) => getUnschCategory(j) === 'SERVICE';
 
         const minsBreakdown = unschAchJobs.filter(isJobBreakdown).reduce((sum, j) => sum + calcJobDurationMins(j), 0);
         const minsService = unschAchJobs.filter(isJobService).reduce((sum, j) => sum + calcJobDurationMins(j), 0);
@@ -13438,31 +13691,32 @@
         if (btnInputWt) btnInputWt.classList.remove('hidden');
         if (btnDashJumpJadwal) btnDashJumpJadwal.classList.remove('hidden');
 
-        // Mobile Nav Admin: Beranda, LT, WT, Job Request, More
-        // Reset CSS order untuk role Admin
-        if (mobDashboard) mobDashboard.style.order = '';
-        if (mobLt) mobLt.style.order = '';
-        if (mobWt) mobWt.style.order = '';
+        // Mobile Nav Admin: Beranda (1), Lubetruck (2), Water Truck (3), Riwayat Selesai (4), Lainnya (5)
+        if (mobDashboard) mobDashboard.style.order = '1';
+        if (mobLt) mobLt.style.order = '2';
+        if (mobWt) mobWt.style.order = '3';
+        if (mobMpComp) mobMpComp.style.order = '4';
+        if (mobAdminMore) mobAdminMore.style.order = '5';
         if (mobJobReq) mobJobReq.style.order = '';
-        if (mobAdminMore) mobAdminMore.style.order = '';
         if (mobAirCleaner) mobAirCleaner.style.order = '';
         if (mobOrder) mobOrder.style.order = '';
         if (mobProfile) mobProfile.style.order = '';
         if (mobMpSched) mobMpSched.style.order = '';
         if (mobMpUnsched) mobMpUnsched.style.order = '';
-        if (mobMpComp) mobMpComp.style.order = '';
         if (mobMpMore) mobMpMore.style.order = '';
+        const mobCompLblAdmin = document.getElementById('mob-nav-comp-label');
+        if (mobCompLblAdmin) mobCompLblAdmin.textContent = 'Riwayat';
         if (mobDashboard) mobDashboard.classList.remove('hidden');
         if (mobLt) mobLt.classList.remove('hidden');
-        if (mobWt) mobWt.classList.remove('hidden');
-        if (mobJobReq) mobJobReq.classList.remove('hidden');
+        if (mobWt) mobLt && mobWt.classList.remove('hidden');
+        if (mobMpComp) mobMpComp.classList.remove('hidden');
         if (mobAdminMore) mobAdminMore.classList.remove('hidden');
+        if (mobJobReq) mobJobReq.classList.add('hidden');
         if (mobAirCleaner) mobAirCleaner.classList.add('hidden');
         if (mobOrder) mobOrder.classList.add('hidden');
         if (mobProfile) mobProfile.classList.add('hidden');
         if (mobMpSched) mobMpSched.classList.add('hidden');
         if (mobMpUnsched) mobMpUnsched.classList.add('hidden');
-        if (mobMpComp) mobMpComp.classList.add('hidden');
         if (mobMpMore) mobMpMore.classList.add('hidden');
 
         if (adminDash) adminDash.classList.remove('hidden');
@@ -13644,11 +13898,15 @@
           if (moreMpAir) moreMpAir.classList.add('hidden');
         }
 
+        [mobDashboard, mobLt, mobWt, mobJobReq, mobAdminMore, mobAirCleaner, mobOrder, mobProfile, mobMpSched, mobMpUnsched, mobMpComp, mobMpMore].forEach(el => { if (el) el.style.order = ''; });
+        const mobCompLblMp = document.getElementById('mob-nav-comp-label');
+        if (mobCompLblMp) mobCompLblMp.textContent = 'Riwayat';
         if (mobDashboard) mobDashboard.classList.remove('hidden');
         if (mobLt) mobLt.classList.add('hidden');
         if (mobWt) mobWt.classList.add('hidden');
         if (mobJobReq) mobJobReq.classList.add('hidden');
         if (mobAdminMore) mobAdminMore.classList.add('hidden');
+        if (mobAirCleaner) mobAirCleaner.classList.add('hidden');
         if (mobOrder) mobOrder.classList.add('hidden');
         if (mobProfile) mobProfile.classList.add('hidden');
         if (mobMpSched) mobMpSched.classList.remove('hidden');
@@ -13864,7 +14122,9 @@
         });
 
         window.globalDataCache?.loadedDates?.add(dateStr);
+        if (typeof alignJobsWithMasterUnits === 'function') alignJobsWithMasterUnits();
         syncGlobalCacheToState();
+        if (typeof alignJobsWithMasterUnits === 'function') alignJobsWithMasterUnits();
         if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
         if (state.activeTab === 'lt-schedule') renderLtScheduleTable();
         else if (state.activeTab === 'wt-schedule') renderWtScheduleTable();
@@ -13951,6 +14211,7 @@
       // Saring berdasarkan kata kunci pencarian
       if (searchVal) {
         jobs = jobs.filter(j =>
+          (typeof matchesJobNoIdSearch === 'function' && matchesJobNoIdSearch(j, searchVal)) ||
           (j.noLambung && j.noLambung.toLowerCase().includes(searchVal)) ||
           (j.lokasi && j.lokasi.toLowerCase().includes(searchVal)) ||
           (j.deskripsi && j.deskripsi.toLowerCase().includes(searchVal)) ||
@@ -15199,8 +15460,13 @@
           activeColorClass = 'text-emerald-700';
         }
       } else if (tabKey === 'job-requests') {
-        targetBtnId = 'mob-nav-jobreq';
-        activeColorClass = 'text-amber-600';
+        if (state.currentUser?.role === 'admin' || state.currentUser?.role === 'basecontrol' || state.currentUser?.role === 'track') {
+          targetBtnId = 'mob-nav-admin-more';
+          activeColorClass = 'text-amber-600';
+        } else {
+          targetBtnId = 'mob-nav-jobreq';
+          activeColorClass = 'text-amber-600';
+        }
       } else if (tabKey === 'lt-unschedule' || tabKey === 'wt-unschedule') {
         targetBtnId = 'mob-nav-mp-unsched';
         activeColorClass = 'text-amber-600';
@@ -15759,9 +16025,13 @@
         unit_turun: job.unitTurun || 'Ya',
         unit_swing: job.unitSwing || 'Tidak',
         status_final: statusFinal,
-        keterangan: reason || job.keterangan || '',
+        keterangan: (typeof formatTopUpAchKeterangan === 'function')
+          ? formatTopUpAchKeterangan({ ...job, status_final: statusFinal }, reason || job.keterangan || '')
+          : (reason || job.keterangan || ''),
         non_ach_category: job.nonAchCategory || job.non_ach_category || 'Operasional',
-        non_ach_reason: reason || job.alasanNonAch || job.non_ach_reason || '',
+        non_ach_reason: (statusFinal === 'NON_ACH' || statusFinal === 'PENDING' || statusFinal === 'CANCEL')
+          ? (reason || job.alasanNonAch || job.non_ach_reason || '')
+          : (job.alasanNonAch || ''),
         fotos: Array.isArray(job.fotos) ? [...job.fotos] : [],
         created_at: new Date().toISOString()
       };
@@ -16376,12 +16646,12 @@
       }
       if (!state.lubetruckState || !Array.isArray(state.lubetruckState.jobs)) return 0;
 
-      // PENGAMAN MUTLAK ANTI-FALSE-POSITIVE:
-      // Evaluator DILARANG KERAS menutup job jika riwayat Supabase belum dimuat ke memori!
-      if (state.supabaseClient && (!Array.isArray(state.jobHistory) || state.jobHistory.length === 0)) {
+      // PENGAMAN MUTLAK ANTI-FALSE-POSITIVE & ANTI-ZOMBIE:
+      // Evaluator DILARANG KERAS mengevaluasi/meng-upsert status pending jika riwayat Supabase sesi ini belum dimuat ke memori!
+      if (state.supabaseClient && (!window._hasLoadedJobHistory || !Array.isArray(state.jobHistory))) {
         if (typeof loadJobHistoryFromSupabase === 'function' && !state._jobHistoryLoading) {
           state._jobHistoryLoading = Date.now();
-          loadJobHistoryFromSupabase(true);
+          loadJobHistoryFromSupabase(true).finally(() => { state._jobHistoryLoading = null; });
         }
         return 0;
       }
@@ -16566,10 +16836,13 @@
             isFinishedStatus ||
             isHistoryDone ||
             isUnitAlreadyAchieved ||
+            (typeof isJobAlreadyClosedInHistory === 'function' && isJobAlreadyClosedInHistory(j, state.jobHistory)) ||
             (typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(j))
           ) {
-            // PENGAMAN MUTLAK: Job yang sudah selesai/terkunci cukup dilewati.
-            // DILARANG KERAS memanggil delete() di sini agar tidak menghapus jadwal aktif dari database Supabase!
+            // Jika job sudah tercatat selesai di job_history (dengan suffix -HHMM), bersihkan jadwal tanpa -HHMM dari antrean aktif memori!
+            if (isHistoryDone || isUnitAlreadyAchieved || (typeof isJobAlreadyClosedInHistory === 'function' && isJobAlreadyClosedInHistory(j, state.jobHistory))) {
+              j._shouldRemoveFromActiveQueue = true;
+            }
             return;
           }
 
@@ -16584,17 +16857,25 @@
           const isToday = (jDate === todayStr);
 
           // Sanitasi Otomatis Jadwal Hari Ini: Batalkan false-positive status 'pending' pada jadwal hari ini yang sedang berjalan
-          // (khususnya Big Digger atau job hari ini yang salah teralihkan statusnya menjadi pending saat Shift 2)
-          if (isToday && !isFinishedStatus && !isHistoryDone && !hasPhotos && (j.status === 'pending' || j.isPending)) {
-            const isAutoPendingNote = String(j.keterangan || '').includes('Pending Shift 1') || String(j.keterangan || '').includes('Dialihkan ke Shift 2');
-            if (rule === 'BIG_DIGGER' || isAutoPendingNote) {
+          // (Seluruh kategori Sistem Harian: Big Digger, Air Cleaner, Top Up Oil, Washing Non-Coal tidak boleh berstatus pending di Hari H)
+          const isDailyCatRule = (typeof isDailyRollingCategory === 'function' && isDailyRollingCategory(j.cat, j)) ||
+            ['BIG_DIGGER', 'AIR_CLEANER_COAL', 'AIR_CLEANER_COAL_BIG_DIGGER', 'AIR_CLEANER_COAL_SMALL_TRACK', 'AIR_CLEANER_NON_COAL', 'TOP_UP_OIL', 'WASHING_NON_COAL'].includes(rule);
+          if (isToday && !isFinishedStatus && !isHistoryDone && !hasPhotos && (j.status === 'pending' || j.isPending || (isDailyCatRule && j.waktu === '17:45 s/d 04:45'))) {
+            const ketStr = String(j.keterangan || '');
+            const isAutoPendingNote = ketStr.includes('Pending Shift 1') || ketStr.includes('Pending Shift 2') || ketStr.includes('Dialihkan ke Shift 2');
+            if (isDailyCatRule || isAutoPendingNote) {
               j.status = 'scheduled';
               j.isPending = false;
-              if (rule === 'BIG_DIGGER') {
+              if (isDailyCatRule) {
                 j.shift = 1;
+                if (j.waktu === '17:45 s/d 04:45') {
+                  const isBigUnit = (typeof isBigDiggerUnit === 'function') ? isBigDiggerUnit(j) : (j.cat === 'digger' || /^E\d/i.test(String(j.noLambung || '')));
+                  j.waktu = isBigUnit ? '12:00 s/d 13:00' : '08:00 s/d 09:00';
+                }
               }
               if (isAutoPendingNote) {
                 j.keterangan = '';
+                j.jamEnd = '';
               }
               hasChanges = true;
               if (state.supabaseClient && typeof syncJobToSupabase === 'function') {
@@ -16915,13 +17196,34 @@
       job.typeUnit = getUnitTypeFromMaster(noLambung, job.typeUnit || 'Unit');
 
       if (!isLocked) {
+        const prevCluster = job.cluster;
         const effectiveCluster = clusterInp || ((typeof deriveClusterFromLocation === 'function') ? deriveClusterFromLocation(lokasi, job.cluster) : job.cluster);
+        const prevParent = (typeof getParentCluster === 'function') ? getParentCluster(prevCluster) : String(prevCluster || '').trim();
+        const nextParent = (typeof getParentCluster === 'function') ? getParentCluster(effectiveCluster) : String(effectiveCluster || '').trim();
+        const isClusterMoved = Boolean(prevParent && nextParent && prevParent.toLowerCase() !== nextParent.toLowerCase());
+        if (isClusterMoved) {
+          job.armada = '-';
+          job.ltUnit = '-';
+          job.wtUnit = '-';
+          job.armadaUnit = '-';
+          job.armada_unit = '-';
+          job.opt = '-';
+          job.opt_name = '-';
+          job.mp1 = '-';
+          job.mp2 = '-';
+        }
         job.cluster = effectiveCluster;
         job.lokasi = lokasi || job.lokasi;
+        if (window.globalDataCache && window.globalDataCache.jobs && job.id) {
+          window.globalDataCache.jobs.set(String(job.id), job);
+        }
+        if (state.supabaseClient && typeof syncJobToSupabase === 'function') {
+          syncJobToSupabase(job);
+        }
 
         // Sinkronkan ke Data Master Populasi Unit & SELURUH jadwal unit ini (Shift 1, Shift 2, dll)
         if (typeof propagateUnitLocationAndCluster === 'function' && noLambung) {
-          propagateUnitLocationAndCluster(noLambung, effectiveCluster, lokasi, true);
+          propagateUnitLocationAndCluster(noLambung, effectiveCluster, lokasi, true, isClusterMoved);
         } else if (typeof syncMasterUnitLocation === 'function' && noLambung) {
           syncMasterUnitLocation(noLambung, effectiveCluster, lokasi);
         }
@@ -17263,7 +17565,7 @@
     function isUnitReqJob(j) {
       if (!j) return false;
       const rawId = String(j.id || j.job_id || j.noId || j.no_id || '').toUpperCase();
-      if (rawId.startsWith('LT-REQ') || rawId.startsWith('WT-REQ') || rawId.startsWith('REQ') || rawId.startsWith('UNS') || rawId.includes('-REQ-')) {
+      if (rawId.startsWith('LT-REQ') || rawId.startsWith('WT-REQ') || rawId.startsWith('REQ') || rawId.startsWith('UNS') || rawId.includes('-REQ-') || rawId.includes('-DIR-')) {
         return true;
       }
       const cat = String(j.cat || '').toLowerCase().trim();
@@ -17352,9 +17654,14 @@
 
         // 3. Untuk Job ACH / ACHIEVED / DONE / SERVICE:
         // ATURAN PENGGUNA: Jika job ACH tapi ada keterangan kendala (crowded, hujan, dll) -> masuk PICA.
-        // Jika cuma "Nihil / Lancar sesuai SOP", "selesai", "aman", atau kosong -> TIDAK MASUK PICA!
+        // Khusus Top Up Oil yang sudah ACHIEVED dan Aman semua (atau catatan pemeriksaan oli): TIDAK MASUK PICA!
         const isAchievedStatus = ['ach', 'achieved', 'done', 'service'].includes(st) || !st;
         if (isAchievedStatus) {
+          const isTopUpJob = (typeof isTopUpJobRecord === 'function') ? isTopUpJobRecord(j) : (String(j.cat || '').toLowerCase().includes('topup') || String(j.id || '').toUpperCase().startsWith('LT-TUO-'));
+          if (isTopUpJob && (st === 'ach' || st === 'achieved' || st === 'done' || !st)) {
+            return false;
+          }
+
           // Fungsi pembersih teks default normal/aman
           const isSafeOrNormalText = (txt) => {
             if (!txt) return true;
@@ -17363,6 +17670,7 @@
             if (t === 'selesai' || t === 'done' || t === 'ok' || t === 'sesuai sop' || t === 'aman sudah') return true;
             if (t.includes('nihil / lancar') || t.includes('lancar sesuai sop') || t.includes('selesai sesuai sop')) return true;
             if (t === 'tidak ada kendala' || t === 'aman lancar' || t === 'lancar aman' || t === 'lancar') return true;
+            if ((t.includes('oli engine') || t.includes('oli hydraulic') || t.includes('air coolant')) && !/:\s*tidak\b/i.test(t)) return true;
             return false;
           };
 
@@ -17401,18 +17709,24 @@
 
       // PICA HANYA DARI JOB SCHEDULE (Lubetruck & Water Truck Schedule)
       // Unit Request (unscheduledLtJobs / unscheduledWtJobs) DIKECUALIKAN TOTAL
+      // PENTING: Job di tabel jobs_lt/jobs_wt (tanpa -HHMM) yang SUDAH CLOSE di job_history (dengan -HHMM)
+      // WAJIB DIKECUALIKAN dari pool jadwal aktif agar tidak terbaca sebagai PENDING di Log PICA!
+      const isNotClosedInHistory = j => !(typeof isJobAlreadyClosedInHistory === 'function' && isJobAlreadyClosedInHistory(j, state.jobHistory));
       let pool = [
-        ...(state.lubetruckState?.jobs || []).filter(isPicaEligible),
-        ...(state.watertruckState?.jobs || []).filter(isPicaEligible)
+        ...(state.lubetruckState?.jobs || []).filter(j => isNotClosedInHistory(j) && isPicaEligible(j)),
+        ...(state.watertruckState?.jobs || []).filter(j => isNotClosedInHistory(j) && isPicaEligible(j))
       ];
 
       if (Array.isArray(state.jobHistory) && state.jobHistory.length > 0) {
         const existingIds = new Set(pool.map(j => String(j.id || '')));
+        const existingBaseIds = new Set(pool.map(j => typeof stripHistoryTimeSuffix === 'function' ? stripHistoryTimeSuffix(j.id) : String(j.id || '')));
         state.jobHistory.forEach(h => {
           // Filter ketat: Unit request tidak masuk ke Log PICA
           if (isUnitReqJob(h) || !isScheduleJob(h)) return;
-          const targetHid = String(h.job_id || h.id || '');
-          if (isPicaEligible(h) && targetHid && !existingIds.has(targetHid)) {
+          const targetHid = String(h.id || h.job_id || '');
+          const baseHid = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(targetHid) : targetHid;
+          if (isPicaEligible(h) && targetHid && !existingIds.has(targetHid) && !existingBaseIds.has(baseHid)) {
+            existingBaseIds.add(baseHid);
             const rawStatus = h.status_final || h.status || 'ACH';
             pool.push({
               id: targetHid,
@@ -17453,6 +17767,8 @@
           const jId = String(p.job_id || p.id || '');
           // Filter ketat: Jangan masukkan record jika berasal dari unit request
           if (isUnitReqJob(p) || isUnitReqJob({ id: jId }) || (!isScheduleJob(p) && !isScheduleJob({ id: jId, cat: p.cat }))) return;
+          // Jangan ambil pica_records tanpa -HHMM jika job tersebut sudah close di job_history (dengan -HHMM)
+          if (typeof isJobAlreadyClosedInHistory === 'function' && isJobAlreadyClosedInHistory({ id: jId, noLambung: p.no_lambung, cat: p.cat, tanggal: p.tanggal, shift: p.shift }, state.jobHistory)) return;
           if (jId && !existingIds.has(jId)) {
             const candidate = {
               status: p.status_final || p.status || 'ACH',
@@ -17516,6 +17832,7 @@
         const normStart = startDate ? normalizeDateStr(startDate) : '';
         const normEnd = endDate ? normalizeDateStr(endDate) : '';
         pool = pool.filter(j => {
+          if (searchVal && typeof matchesJobNoIdSearch === 'function' && matchesJobNoIdSearch(j, searchVal)) return true;
           const jobDate = normalizeDateStr(j.tanggal || j.tanggalRealisasi || '');
           if (!jobDate) return true;
           if (normStart && normEnd) return jobDate >= normStart && jobDate <= normEnd;
@@ -17537,9 +17854,12 @@
 
       // 5. Filter Search
       if (searchVal) {
+        const normQ = (typeof normalizeJobSearchQuery === 'function') ? normalizeJobSearchQuery(searchVal) : searchVal;
         pool = pool.filter(j => {
-          const text = `${j.noLambung || ''} ${j.typeUnit || ''} ${j.lokasi || ''} ${j.cluster || ''} ${j.keterangan || ''} ${j.alasanNonAch || ''} ${j.opt || ''} ${j.mp1 || ''} ${j.mp2 || ''}`.toLowerCase();
-          return text.includes(searchVal);
+          if (typeof matchesJobNoIdSearch === 'function' && matchesJobNoIdSearch(j, searchVal)) return true;
+          const noIdStr = (typeof getJobNoId === 'function') ? getJobNoId(j) : (j.noId || j.id || '');
+          const text = `${noIdStr} ${j.id || ''} ${j.noId || ''} ${j.noLambung || ''} ${j.typeUnit || ''} ${j.lokasi || ''} ${j.cluster || ''} ${j.keterangan || ''} ${j.alasanNonAch || ''} ${j.opt || ''} ${j.mp1 || ''} ${j.mp2 || ''}`.toLowerCase();
+          return text.includes(searchVal) || (normQ && text.includes(normQ));
         });
       }
 
@@ -17620,6 +17940,14 @@
       const tbody = document.getElementById('pica-logs-tbody');
       const badge = document.getElementById('pica-count-badge');
       if (!tbody) return;
+
+      if (state.supabaseClient && !window._hasLoadedJobHistory && !state._jobHistoryLoading && typeof loadJobHistoryFromSupabase === 'function') {
+        state._jobHistoryLoading = Date.now();
+        loadJobHistoryFromSupabase(true).finally(() => {
+          state._jobHistoryLoading = null;
+          renderPicaTable();
+        });
+      }
 
       if (typeof updatePicaSortHeaderIcons === 'function') {
         updatePicaSortHeaderIcons();
@@ -17804,8 +18132,8 @@
             <span class="hidden md:block text-[10px] font-semibold text-slate-500 uppercase tracking-tight mt-0.5 text-left">${unitType}</span>
           </td>
 
-          <!-- KOLOM 4: CLUSTER & LOKASI (RATA KIRI TENGAH) -->
-          <td class="py-2.5 px-2 text-left align-middle break-words">
+          <!-- KOLOM 4: CLUSTER & LOKASI (RATA KIRI TENGAH - HANYA DESKTOP) -->
+          <td class="hidden md:table-cell py-2.5 px-2 text-left align-middle break-words">
             <span class="font-bold text-slate-800 text-[10px] block leading-tight text-left">${(typeof formatClusterLabel === 'function') ? formatClusterLabel(job.cluster) : (job.cluster || '-')}</span>
             <span class="text-[10px] text-slate-500 font-semibold uppercase mt-0.5 block leading-tight text-left">${job.lokasi || '-'}</span>
           </td>
@@ -17817,7 +18145,7 @@
             </span>
           </td>
 
-          <!-- KOLOM 6: PERSONIL (RATA KIRI TENGAH) -->
+          <!-- KOLOM 6: PERSONIL (RATA KIRI TENGAH - HANYA DESKTOP) -->
           <td class="hidden md:table-cell py-2.5 px-2.5 text-left align-middle break-words text-[10px]">
             <div class="leading-tight space-y-0.5 text-left">
               <div class="truncate text-left" title="Operator (OPT): ${optDisplay}">
@@ -17831,20 +18159,20 @@
             </div>
           </td>
 
-          <!-- KOLOM 7: KETERANGAN PICA (PENYEBAB) -->
-          <td class="hidden md:table-cell py-2.5 px-2.5 text-left align-middle break-words">
+          <!-- KOLOM 7: KETERANGAN PICA (PENYEBAB - TAMPIL DI HP & DESKTOP) -->
+          <td class="py-2.5 px-2 md:px-2.5 text-left align-middle break-words">
             <span class="text-rose-700 font-medium text-[10px] leading-relaxed block">${job.keterangan || job.alasanNonAch || 'Kendala operasional di pit tambang'}</span>
           </td>
 
-          <!-- KOLOM 8: STATUS (RATA TENGAH - DIAMBIL DARI DATA ASLI) -->
-          <td class="py-2.5 px-1 md:px-2 text-center align-middle">
+          <!-- KOLOM 8: STATUS (RATA TENGAH - HANYA DESKTOP) -->
+          <td class="hidden md:table-cell py-2.5 px-1 md:px-2 text-center align-middle">
             <div class="flex items-center justify-center">
               ${getPicaStatusBadgeHtml(job)}
             </div>
           </td>
 
-          <!-- KOLOM 9: AKSI (ACTION / DETAIL) -->
-          <td class="py-2.5 px-1 md:px-2 text-center align-middle">
+          <!-- KOLOM 9: AKSI (ACTION / DETAIL - HANYA DESKTOP) -->
+          <td class="hidden md:table-cell py-2.5 px-1 md:px-2 text-center align-middle">
             ${renderPicaActionCell(job)}
           </td>
         `;
@@ -19619,8 +19947,11 @@
           const bPending = (b.status === 'pending' || b.isPending) ? 1 : 0;
           if (bPending !== aPending) return bPending - aPending;
 
-          const isAc = (a.cat === 'aircleaner' || a.cat === 'air_cleaner' || b.cat === 'aircleaner' || b.cat === 'air_cleaner');
-          if (isAc && typeof getAirCleanerUnitModelRank === 'function') {
+          const catA = String(a.cat || '').toLowerCase().trim();
+          const catB = String(b.cat || '').toLowerCase().trim();
+          const isModelRankedCat = ['aircleaner', 'air_cleaner', 'small', 'digger'].includes(catA) ||
+            ['aircleaner', 'air_cleaner', 'small', 'digger'].includes(catB);
+          if (isModelRankedCat && typeof getAirCleanerUnitModelRank === 'function') {
             const rankA = getAirCleanerUnitModelRank(a);
             const rankB = getAirCleanerUnitModelRank(b);
             if (rankA !== rankB) return rankA - rankB;
@@ -19939,6 +20270,7 @@
       // Terapkan filter pencarian Realtime (Admin, Washingman & Basecontrol)
       if (searchVal) {
         jobs = jobs.filter(j =>
+          (typeof matchesJobNoIdSearch === 'function' && matchesJobNoIdSearch(j, searchVal)) ||
           (j.noLambung && j.noLambung.toLowerCase().includes(searchVal)) ||
           (j.lokasi && j.lokasi.toLowerCase().includes(searchVal)) ||
           (j.typeUnit && j.typeUnit.toLowerCase().includes(searchVal)) ||
@@ -20552,6 +20884,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       // Terapkan filter pencarian Realtime (Admin, Washingman & Basecontrol)
       if (searchVal) {
         jobs = jobs.filter(j =>
+          (typeof matchesJobNoIdSearch === 'function' && matchesJobNoIdSearch(j, searchVal)) ||
           (j.noLambung && j.noLambung.toLowerCase().includes(searchVal)) ||
           (j.lokasi && j.lokasi.toLowerCase().includes(searchVal)) ||
           (j.typeUnit && j.typeUnit.toLowerCase().includes(searchVal)) ||
@@ -20989,6 +21322,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       if (searchVal) {
         jobs = jobs.filter(j =>
+          (typeof matchesJobNoIdSearch === 'function' && matchesJobNoIdSearch(j, searchVal)) ||
           (j.noLambung && j.noLambung.toLowerCase().includes(searchVal)) ||
           (j.lokasi && j.lokasi.toLowerCase().includes(searchVal)) ||
           (j.deskripsi && j.deskripsi.toLowerCase().includes(searchVal)) ||
@@ -21152,6 +21486,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       if (searchVal) {
         jobs = jobs.filter(j =>
+          (typeof matchesJobNoIdSearch === 'function' && matchesJobNoIdSearch(j, searchVal)) ||
           (j.noLambung && j.noLambung.toLowerCase().includes(searchVal)) ||
           (j.lokasi && j.lokasi.toLowerCase().includes(searchVal)) ||
           (j.deskripsi && j.deskripsi.toLowerCase().includes(searchVal)) ||
@@ -24111,8 +24446,12 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
     function processNonAchByRoles(job, kategori, alasan) {
       if (!job) return { isClosed: false, message: '' };
       const rule = (typeof getJobCategoryRule === 'function') ? getJobCategoryRule(job) : 'GENERAL';
-      const shiftNum = Number(job.shift || 1);
+      const activeShiftInfo = (typeof getCurrentShiftAndWeekInfo === 'function') ? getCurrentShiftAndWeekInfo() : null;
+      const isDailyCat = (typeof isDailyRollingCategory === 'function') ? isDailyRollingCategory(job.cat, job) : false;
+      const shiftNum = (isDailyCat && activeShiftInfo) ? Number(activeShiftInfo.shiftNumber) : Number(job.shift || 1);
       const actionDate = getEffectiveTodayString();
+      const jobDate = String(job.tanggal || actionDate).trim().split('T')[0];
+      const isJobToday = (jobDate === actionDate);
       job.tanggalRealisasi = actionDate;
       job.jamEnd = new Date().toTimeString().slice(0, 5);
       job.actionTimestamp = Date.now();
@@ -24135,9 +24474,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           break;
         }
 
-        case 'GREASING_SMALL':
-        case 'AIR_CLEANER_COAL': {
-          // Aturan 2: Maksimal 1 hari
+        case 'GREASING_SMALL': {
+          // Aturan 2a: Greasing Small Track (Sistem Shift 1 & Shift 2 terpisah)
           if (shiftNum === 1) {
             // S1 Non ACH -> PENDING ke Shift 2
             job.shift = 2;
@@ -24158,29 +24496,44 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           break;
         }
 
-        case 'BIG_DIGGER': {
-          // Aturan 3: Siklus 3 hari, batas rollover H+1
-          const carry = Number(job.carryCount || 0);
-          if (shiftNum === 1) {
-            // S1 Non ACH -> PENDING ke Shift 2
-            job.shift = 2;
-            job.status = 'pending';
-            job.isPending = true;
-            job.pendingFromShift = 1;
-            job.waktu = '17:45 s/d 04:45';
-            job.keterangan = `Pending Shift 1: ${kategori} (${alasan}) -> Dialihkan ke Shift 2`;
-            msg = `Big Digger ${job.noLambung} dialihkan ke PENDING Shift 2`;
+        case 'AIR_CLEANER_COAL':
+        case 'AIR_CLEANER_COAL_BIG_DIGGER':
+        case 'AIR_CLEANER_COAL_SMALL_TRACK': {
+          // Aturan 2b: Air Cleaner Coal (Sistem Harian: selama Hari H Shift 1 tetap scheduled tanpa badge PENDING)
+          if (shiftNum === 1 && isJobToday) {
+            job.shift = 1;
+            job.status = 'scheduled';
+            job.isPending = false;
+            job.keterangan = `Kendala Shift 1: ${kategori} (${alasan}) -> Dilanjutkan Shift 2`;
+            msg = `Kendala Shift 1 unit ${job.noLambung} dicatat, jadwal dilanjutkan ke Shift 2`;
           } else {
-            // S2 Non ACH
-            if (carry === 0) {
-              // Hari H S2 -> Status PENDING di Shift 2 tetap pada tanggal aslinya
-              job.status = 'pending';
-              job.isPending = true;
+            job.status = 'non_ach';
+            job.isPending = false;
+            job.keterangan = `Non ACH Shift 2: ${kategori} (${alasan}) - Batas 1 hari berakhir`;
+            isClosed = true;
+            msg = `Unit ${job.noLambung} mencapai batas harian Shift 2 -> Non ACH`;
+          }
+          break;
+        }
+
+        case 'BIG_DIGGER': {
+          // Aturan 3: Big Digger (Sistem Harian: selama Hari H tetap scheduled, evaluasi pending hanya jika hari sudah lewat / S2 berakhir)
+          const carry = Number(job.carryCount || 0);
+          if (shiftNum === 1 && isJobToday) {
+            job.shift = 1;
+            job.status = 'scheduled';
+            job.isPending = false;
+            job.keterangan = `Kendala Shift 1: ${kategori} (${alasan}) -> Dilanjutkan Shift 2`;
+            msg = `Kendala Shift 1 Big Digger ${job.noLambung} dicatat, jadwal dilanjutkan ke Shift 2`;
+          } else {
+            if (carry === 0 && isJobToday) {
+              job.shift = 1;
+              job.status = 'scheduled';
+              job.isPending = false;
               job.carryCount = 1;
-              job.keterangan = `Pending Big Digger Shift 2: ${kategori} (${alasan})`;
-              msg = `Big Digger ${job.noLambung} berstatus PENDING di Shift 2`;
+              job.keterangan = `Kendala Shift 2: ${kategori} (${alasan})`;
+              msg = `Kendala Shift 2 Big Digger ${job.noLambung} dicatat`;
             } else {
-              // Sudah H+1 S2 -> Tutup Buku Non ACH
               job.status = 'non_ach';
               job.isPending = false;
               job.keterangan = `Non ACH: Melewati batas maksimal H+1 Big Digger (Asal: ${job.originalDate || job.tanggal}) - ${kategori} (${alasan})`;
@@ -24194,27 +24547,29 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         case 'AIR_CLEANER_NON_COAL':
         case 'TOP_UP_OIL':
         case 'WASHING_NON_COAL': {
-          // Aturan 4: Rolling harian akumulatif sepanjang minggu berjalan (Minggu s/d Sabtu)
-          if (shiftNum === 1) {
-            // S1 Non ACH -> PENDING ke Shift 2
-            job.shift = 2;
-            job.status = 'pending';
-            job.isPending = true;
-            job.pendingFromShift = 1;
-            job.waktu = '17:45 s/d 04:45';
-            job.keterangan = `Pending Shift 1: ${kategori} (${alasan}) -> Dialihkan ke Shift 2`;
-            msg = `Unit ${job.noLambung} dialihkan ke PENDING Shift 2`;
+          // Aturan 4: Sistem Harian / Mingguan (Selama Hari H tetap scheduled tanpa mengubah waktu/status menjadi pending)
+          if (shiftNum === 1 && isJobToday) {
+            job.shift = 1;
+            job.status = 'scheduled';
+            job.isPending = false;
+            job.keterangan = `Kendala Shift 1: ${kategori} (${alasan}) -> Dilanjutkan Shift 2`;
+            msg = `Kendala Shift 1 unit ${job.noLambung} dicatat, jadwal dilanjutkan ke Shift 2`;
           } else {
-            // S2 Non ACH: Tetap di tanggal aslinya sebagai pending selama belum Sabtu malam
             const dObj = parseDateString(job.tanggal || actionDate);
             const isSaturday = (dObj.getDay() === 6);
 
             if (!isSaturday) {
-              job.status = 'pending';
-              job.isPending = true;
+              if (isJobToday) {
+                job.shift = 1;
+                job.status = 'scheduled';
+                job.isPending = false;
+              } else {
+                job.status = 'pending';
+                job.isPending = true;
+              }
               job.carryCount = (Number(job.carryCount || 0)) + 1;
-              job.keterangan = `Pending Shift 2: ${kategori} (${alasan})`;
-              msg = `Unit ${job.noLambung} berstatus PENDING di Shift 2`;
+              job.keterangan = `Kendala Shift 2: ${kategori} (${alasan})`;
+              msg = isJobToday ? `Kendala Shift 2 unit ${job.noLambung} dicatat` : `Unit ${job.noLambung} berstatus PENDING`;
             } else {
               // Sabtu malam -> Tutup Buku Non ACH
               job.status = 'non_ach';
@@ -24346,7 +24701,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         }
       }
 
-      const isPending = (s === 'pending' || job.isPending);
+      const todayForPending = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : '';
+      const isDailyForPending = (typeof isDailyRollingCategory === 'function') ? isDailyRollingCategory(job.cat, job) : false;
+      const isTodayDailyActive = isDailyForPending && todayForPending && String(job.tanggal || '').trim().split('T')[0] === todayForPending;
+      const isPending = !isTodayDailyActive && (s === 'pending' || job.isPending);
 
       let pendingBadgeHtml = '';
       if (isPending) {
@@ -25274,8 +25632,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       if (!j) return false;
       const s = String(j.status || '').toLowerCase().trim();
       const sf = String(j.status_final || '').toUpperCase().trim();
-      return ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'parkir'].includes(s) ||
-        ['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR'].includes(sf);
+      return ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'washing', 'washing request', 'wash', 'parkir'].includes(s) ||
+        ['ACHIEVED', 'ACH', 'DONE', 'SERVICE', 'BREAKDOWN', 'BD', 'WASHING REQUEST', 'WASHING', 'WASH', 'PARKIR'].includes(sf);
     }
     window.isAchLikeStatus = isAchLikeStatus;
 
@@ -25536,7 +25894,8 @@ Keterangan : ${keterangan}`;
             const cleanSn = (row.service_notes && !row.service_notes.startsWith('PHOTOS:') && !row.service_notes.startsWith('PHOTOS_ATTACHED')) ? row.service_notes : '';
             const ketEl = document.getElementById('detail-modal-keterangan');
             if (ketEl && (row.keterangan || cleanSn || row.non_ach_reason)) {
-              ketEl.textContent = row.keterangan || row.non_ach_reason || cleanSn || '-';
+              const rawRowKet = row.keterangan || row.non_ach_reason || cleanSn || '-';
+              ketEl.textContent = (typeof formatTopUpAchKeterangan === 'function') ? formatTopUpAchKeterangan(row, rawRowKet) : rawRowKet;
             }
 
             // Jika foto berhasil dimuat dari database dan modal masih terbuka, render langsung fotonya ke modal
@@ -25946,7 +26305,9 @@ Keterangan : ${keterangan}`;
       // 11. Keterangan / Kendala
       const ketEl = document.getElementById('detail-modal-keterangan');
       if (ketEl) {
-        ketEl.textContent = formatKendalaText(job.alasanNonAch || job.keterangan || job.kendala || 'Nihil / Tidak ada kendala');
+        const rawJobKet = job.alasanNonAch || job.keterangan || job.kendala || 'Nihil / Tidak ada kendala';
+        const formattedKet = (typeof formatTopUpAchKeterangan === 'function') ? formatTopUpAchKeterangan(job, rawJobKet) : rawJobKet;
+        ketEl.textContent = formatKendalaText(formattedKet);
       }
 
 
@@ -26023,7 +26384,7 @@ Keterangan : ${keterangan}`;
     }
     window.handleAdminEditLokasiInput = handleAdminEditLokasiInput;
 
-    async function propagateUnitLocationAndCluster(noLambung, newCluster, newLokasi, updateSupabase = true) {
+    async function propagateUnitLocationAndCluster(noLambung, newCluster, newLokasi, updateSupabase = true, forceClearArmada = false) {
       if (!noLambung) return 0;
       const cleanLambung = String(noLambung).trim().toUpperCase();
       if (!cleanLambung) return 0;
@@ -26037,9 +26398,18 @@ Keterangan : ${keterangan}`;
         targetCluster = deriveClusterFromLocation(targetLokasi, '');
       }
 
+      const normClusterKey = (c) => {
+        if (!c) return '';
+        const base = (typeof getParentCluster === 'function') ? getParentCluster(c) : String(c).replace(/^KGU\s+/i, '').trim();
+        return String(base || '').trim().toLowerCase();
+      };
+
       // 1. Perbarui Data Master Populasi Unit di local state
       if (!Array.isArray(state.masterUnits)) state.masterUnits = [];
       const unitIdx = state.masterUnits.findIndex(u => (u.lambung || u.no_lambung || '').trim().toUpperCase() === cleanLambung);
+      const oldMasterCluster = (unitIdx !== -1 && state.masterUnits[unitIdx]) ? (state.masterUnits[unitIdx].cluster || '') : '';
+      const isMasterClusterChanged = Boolean(targetCluster && oldMasterCluster && normClusterKey(oldMasterCluster) !== normClusterKey(targetCluster));
+
       if (unitIdx !== -1) {
         if (targetCluster) state.masterUnits[unitIdx].cluster = targetCluster;
         if (targetLokasi) state.masterUnits[unitIdx].lokasi = targetLokasi;
@@ -26058,9 +26428,25 @@ Keterangan : ${keterangan}`;
         });
       }
       safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+      safeStorage.setItem('SE_MASTER_UNITS_TS', String(Date.now()));
 
-      // 2. Propagasi serentak ke SEMUA job aktif di memori (Shift 1, Shift 2, Washing 1 & 2, LT, WT, Unscheduled)
+      // 2. Propagasi serentak ke SEMUA job aktif di memori (globalDataCache, Shift 1, Shift 2, Washing 1 & 2, LT, WT, Unscheduled)
       let updatedJobCount = 0;
+      let anyArmadaCleared = Boolean(forceClearArmada || isMasterClusterChanged);
+      const affectedJobsMap = new Map();
+
+      const clearJobArmadaAndCrew = (j) => {
+        j.armada = '-';
+        j.ltUnit = '-';
+        j.wtUnit = '-';
+        j.armadaUnit = '-';
+        j.armada_unit = '-';
+        j.opt = '-';
+        j.opt_name = '-';
+        j.mp1 = '-';
+        j.mp2 = '-';
+      };
+
       const updateList = (list) => {
         if (!Array.isArray(list)) return;
         list.forEach(j => {
@@ -26069,44 +26455,113 @@ Keterangan : ${keterangan}`;
           if (jLambung === cleanLambung) {
             // Jangan ubah kluster & lokasi jika job sudah ach, non-ach, atau sudah dikerjakan
             if (typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(j)) return;
+
+            const oldJobCluster = j.cluster || '';
+            const isJobClusterChanged = Boolean(targetCluster && oldJobCluster && normClusterKey(oldJobCluster) !== normClusterKey(targetCluster));
+
+            // Cek juga apakah armada yang terpasang pada job berasal dari cluster lama yang berbeda dengan targetCluster
+            const currentArmada = (typeof getJobArmadaName === 'function') ? getJobArmadaName(j) : (j.armada || j.ltUnit || j.wtUnit || '-');
+            const armCluster = (currentArmada && currentArmada !== '-' && typeof getArmadaRegisteredCluster === 'function')
+              ? getArmadaRegisteredCluster(currentArmada)
+              : '';
+            const isCrossClusterArmada = Boolean(
+              targetCluster &&
+              armCluster &&
+              armCluster !== 'Workshop' &&
+              normClusterKey(armCluster) !== normClusterKey(targetCluster)
+            );
+
+            // ATURAN PENGGUNA: Jika cluster unit berpindah, kosongkan otomatis armada & personilnya!
+            if (forceClearArmada || isMasterClusterChanged || isJobClusterChanged || (updateSupabase && isCrossClusterArmada)) {
+              clearJobArmadaAndCrew(j);
+              anyArmadaCleared = true;
+            }
+
             if (targetCluster) j.cluster = targetCluster;
             if (targetLokasi) j.lokasi = targetLokasi;
+            if (j.id) affectedJobsMap.set(String(j.id), j);
             updatedJobCount++;
           }
         });
       };
 
+      if (window.globalDataCache && window.globalDataCache.jobs) {
+        updateList(Array.from(window.globalDataCache.jobs.values()));
+      }
       updateList(state.lubetruckState?.jobs);
       updateList(state.watertruckState?.jobs);
       updateList(state.unscheduledLtJobs);
       updateList(state.unscheduledWtJobs);
 
+      if (window.globalDataCache && window.globalDataCache.jobs) {
+        for (const [jid, jObj] of affectedJobsMap.entries()) {
+          window.globalDataCache.jobs.set(jid, jObj);
+        }
+      }
+
       // Simpan perubahan ke penyimpanan lokal browser
+      if (typeof safeSaveTrimmedJobsToStorage === 'function') {
+        safeSaveTrimmedJobsToStorage();
+      }
       if (typeof saveDatabaseSync === 'function') {
         saveDatabaseSync();
       }
 
-      // 3. Sinkronkan ke Supabase Cloud (tabel master_units & tabel jobs secara massal untuk unit tersebut)
+      // 3. Sinkronkan ke Supabase Cloud (tabel master_units & tabel fisik jobs_lt / jobs_wt untuk unit tersebut)
       if (updateSupabase && state.supabaseClient) {
         try {
-          const updateData = { updated_at: new Date().toISOString() };
-          if (targetCluster) updateData.cluster = targetCluster;
-          if (targetLokasi) updateData.lokasi = targetLokasi;
+          const nowIso = new Date().toISOString();
+          const unitUpdateData = { updated_at: nowIso };
+          if (targetCluster) unitUpdateData.cluster = targetCluster;
+          if (targetLokasi) unitUpdateData.lokasi = targetLokasi;
 
-          // Perbarui tabel master_units di cloud
-          await state.supabaseClient
-            .from('master_units')
-            .update(updateData)
-            .ilike('no_lambung', cleanLambung);
+          const jobUpdateData = { updated_at: nowIso };
+          if (targetCluster) jobUpdateData.cluster = targetCluster;
+          if (targetLokasi) jobUpdateData.lokasi = targetLokasi;
+          if (anyArmadaCleared) {
+            jobUpdateData.armada_unit = '-';
+            jobUpdateData.opt_name = '-';
+            jobUpdateData.mp1 = '-';
+            jobUpdateData.mp2 = '-';
+          }
 
-          // Perbarui seluruh jadwal unit ini di tabel jobs (HANYA job yang BELUM selesai / dikerjakan)
-          await state.supabaseClient
-            .from('jobs')
-            .update(updateData)
-            .ilike('no_lambung', cleanLambung)
-            .in('status', ['scheduled', 'plan', 'pending']);
+          await Promise.allSettled([
+            // Perbarui tabel master_units di cloud
+            state.supabaseClient
+              .from('master_units')
+              .update(unitUpdateData)
+              .ilike('no_lambung', cleanLambung),
+            // Perbarui seluruh jadwal aktif unit ini di tabel fisik jobs_lt & jobs_wt (HANYA job yang BELUM selesai)
+            state.supabaseClient
+              .from('jobs_lt')
+              .update(jobUpdateData)
+              .ilike('no_lambung', cleanLambung)
+              .in('status', ['scheduled', 'plan', 'pending']),
+            state.supabaseClient
+              .from('jobs_wt')
+              .update(jobUpdateData)
+              .ilike('no_lambung', cleanLambung)
+              .in('status', ['scheduled', 'plan', 'pending']),
+            state.supabaseClient
+              .from('unscheduled_jobs_lt')
+              .update(unitUpdateData)
+              .ilike('no_lambung', cleanLambung)
+              .in('status', ['Pending', 'scheduled', 'pending', '-']),
+            state.supabaseClient
+              .from('unscheduled_jobs_wt')
+              .update(unitUpdateData)
+              .ilike('no_lambung', cleanLambung)
+              .in('status', ['Pending', 'scheduled', 'pending', '-'])
+          ]);
 
-          console.log(`[propagateUnitLocationAndCluster OK] Unit ${cleanLambung} -> Cluster: ${targetCluster}, Lokasi: ${targetLokasi} (${updatedJobCount} job aktif disinkronkan, job selesai tetap terkunci)`);
+          // Pancarkan sinyal realtime untuk setiap job aktif yang berubah agar HP/Komputer lain langsung sinkron
+          for (const [jid, jObj] of affectedJobsMap.entries()) {
+            if (typeof emitJobBroadcastSignal === 'function') {
+              emitJobBroadcastSignal(jid, 'UPDATE', 'jobs', jObj);
+            }
+          }
+
+          console.log(`[propagateUnitLocationAndCluster OK] Unit ${cleanLambung} -> Cluster: ${targetCluster}, Lokasi: ${targetLokasi}, ArmadaCleared: ${anyArmadaCleared} (${updatedJobCount} job aktif disinkronkan)`);
         } catch (err) {
           console.warn('[propagateUnitLocationAndCluster Supabase Error]', err);
         }
@@ -26120,7 +26575,8 @@ Keterangan : ${keterangan}`;
             source: 'unit_location_sync',
             lambung: cleanLambung,
             cluster: targetCluster,
-            lokasi: targetLokasi
+            lokasi: targetLokasi,
+            clearArmada: anyArmadaCleared
           });
         }
         if (typeof notifyDataChanged === 'function') {
@@ -26160,6 +26616,12 @@ Keterangan : ${keterangan}`;
         }
       });
 
+      const normClusterKey = (c) => {
+        if (!c) return '';
+        const base = (typeof getParentCluster === 'function') ? getParentCluster(c) : String(c).replace(/^KGU\s+/i, '').trim();
+        return String(base || '').trim().toLowerCase();
+      };
+
       let alignedCount = 0;
       const alignList = (list) => {
         if (!Array.isArray(list)) return;
@@ -26173,7 +26635,19 @@ Keterangan : ${keterangan}`;
           if (m) {
             let changed = false;
             if (m.cluster && j.cluster !== m.cluster) {
+              const isClusterMoved = Boolean(j.cluster && normClusterKey(j.cluster) !== normClusterKey(m.cluster));
               j.cluster = m.cluster;
+              if (isClusterMoved) {
+                j.armada = '-';
+                j.ltUnit = '-';
+                j.wtUnit = '-';
+                j.armadaUnit = '-';
+                j.armada_unit = '-';
+                j.opt = '-';
+                j.opt_name = '-';
+                j.mp1 = '-';
+                j.mp2 = '-';
+              }
               changed = true;
             }
             if (m.lokasi && j.lokasi !== m.lokasi) {
@@ -26189,6 +26663,9 @@ Keterangan : ${keterangan}`;
         });
       };
 
+      if (window.globalDataCache && window.globalDataCache.jobs) {
+        alignList(Array.from(window.globalDataCache.jobs.values()));
+      }
       alignList(state.lubetruckState?.jobs);
       alignList(state.watertruckState?.jobs);
       alignList(state.unscheduledLtJobs);
@@ -26196,6 +26673,7 @@ Keterangan : ${keterangan}`;
 
       if (alignedCount > 0) {
         console.log(`[alignJobsWithMasterUnits] ${alignedCount} job otomatis diselaraskan dengan Data Master.`);
+        if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
         if (typeof saveDatabaseSync === 'function') saveDatabaseSync();
       }
       return alignedCount;
@@ -26246,6 +26724,7 @@ Keterangan : ${keterangan}`;
           return;
         }
 
+        const oldCluster = job.cluster || '';
         let newCluster = clusterSel ? clusterSel.value : job.cluster;
         const newLokasi = lokasiInp ? lokasiInp.value.trim().toUpperCase() : job.lokasi;
         const newWaktu = waktuInp && waktuInp.value ? waktuInp.value.trim() : (job.waktu || '-');
@@ -26258,11 +26737,35 @@ Keterangan : ${keterangan}`;
           else if (newLokasi.includes('SELATAN') || newLokasi.includes('BALANAI')) newCluster = 'Selatan';
         }
 
+        const oldParent = (typeof getParentCluster === 'function') ? getParentCluster(oldCluster) : String(oldCluster || '').replace(/^KGU\s+/i, '').trim();
+        const newParent = (typeof getParentCluster === 'function') ? getParentCluster(newCluster) : String(newCluster || '').replace(/^KGU\s+/i, '').trim();
+        const isClusterChanged = Boolean(oldParent && newParent && oldParent.toLowerCase() !== newParent.toLowerCase());
+
         // 2. Terapkan pembaruan lokal secara instan (Optimistic UI) pada job saat ini
         job.cluster = newCluster;
         job.lokasi = newLokasi;
         job.waktu = newWaktu;
         job.waktu_rencana = newWaktu;
+        if (isClusterChanged) {
+          job.armada = '-';
+          job.ltUnit = '-';
+          job.wtUnit = '-';
+          job.armadaUnit = '-';
+          job.armada_unit = '-';
+          job.opt = '-';
+          job.opt_name = '-';
+          job.mp1 = '-';
+          job.mp2 = '-';
+          const armModalEl = document.getElementById('detail-modal-armada');
+          const optModalEl = document.getElementById('detail-modal-opt');
+          const mpModalEl = document.getElementById('detail-modal-mp');
+          if (armModalEl) armModalEl.textContent = '-';
+          if (optModalEl) optModalEl.textContent = '-';
+          if (mpModalEl) mpModalEl.textContent = '-';
+        }
+        if (window.globalDataCache && window.globalDataCache.jobs && job.id) {
+          window.globalDataCache.jobs.set(String(job.id), job);
+        }
 
         // Perbarui teks "Waktu Sebelumnya" di dalam modal langsung
         if (waktuSchEl) {
@@ -26279,19 +26782,28 @@ Keterangan : ${keterangan}`;
           }, 4000);
         }
 
-        // 3. Sinkronkan waktu penugasan khusus job ini ke tabel jobs di Supabase
+        // 3. Sinkronkan waktu & lokasi penugasan khusus job ini ke tabel fisik jobs_lt / jobs_wt di Supabase
         if (state.supabaseClient) {
           try {
+            const isWtJob = String(job.id || '').startsWith('WT') || job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat);
+            const targetTable = isWtJob ? 'jobs_wt' : 'jobs_lt';
+            const jobRowUpdate = {
+              cluster: newCluster,
+              lokasi: newLokasi,
+              waktu_rencana: newWaktu,
+              updated_at: new Date().toISOString()
+            };
+            if (isClusterChanged) {
+              jobRowUpdate.armada_unit = '-';
+              jobRowUpdate.opt_name = '-';
+              jobRowUpdate.mp1 = '-';
+              jobRowUpdate.mp2 = '-';
+            }
             await state.supabaseClient
-              .from('jobs')
-              .update({
-                cluster: newCluster,
-                lokasi: newLokasi,
-                waktu_rencana: newWaktu,
-                updated_at: new Date().toISOString()
-              })
+              .from(targetTable)
+              .update(jobRowUpdate)
               .eq('id', job.id);
-            console.log(`[Supabase Job Update OK] Job ${job.id} waktu: ${newWaktu}`);
+            console.log(`[Supabase Job Update OK] Table ${targetTable} Job ${job.id} waktu: ${newWaktu}, cluster: ${newCluster}`);
           } catch (err) {
             console.warn('[Supabase saveMpLocationUpdate error]', err);
           }
@@ -26300,7 +26812,7 @@ Keterangan : ${keterangan}`;
         // 4. Sinkronkan serentak ke Data Master Populasi Unit & SELURUH penugasan job unit ini (Shift 1, Shift 2, dll)
         if (job.noLambung) {
           try {
-            await propagateUnitLocationAndCluster(job.noLambung, newCluster, newLokasi, true);
+            await propagateUnitLocationAndCluster(job.noLambung, newCluster, newLokasi, true, isClusterChanged);
           } catch (mErr) {
             console.warn('[propagateUnitLocationAndCluster error]', mErr);
           }
@@ -28753,26 +29265,101 @@ Keterangan : ${keterangan}`;
      * Baris 2: -NO_LAMBUNG-HHMM (contoh: -E52002AMM-1215)
      * Berlaku untuk semua role/akses di mode desktop.
      */
+    function handleJobNoIdCopy(e, fullId) {
+      try {
+        if (!e || !e.clipboardData) return;
+        const cleanText = String(fullId || '').replace(/[\r\n\s]+/g, '').trim();
+        if (cleanText) {
+          e.preventDefault();
+          e.clipboardData.setData('text/plain', cleanText);
+        }
+      } catch (err) { }
+    }
+    window.handleJobNoIdCopy = handleJobNoIdCopy;
+
+    function normalizeJobSearchQuery(rawVal) {
+      if (!rawVal) return '';
+      let s = String(rawVal).trim();
+      // Bersihkan spasi/newline di sekitar tanda '-' pada format No ID (contoh: "LT-CAC-27102026-1 \n -D85151" -> "LT-CAC-27102026-1-D85151")
+      s = s.replace(/[\r\n]+/g, '').replace(/\s*-\s*/g, '-').replace(/^#/, '').trim();
+      return s.toLowerCase();
+    }
+    window.normalizeJobSearchQuery = normalizeJobSearchQuery;
+
+    function matchesJobNoIdSearch(j, searchVal) {
+      if (!j || !searchVal) return false;
+      const cleanQ = normalizeJobSearchQuery(searchVal);
+      if (!cleanQ) return false;
+      const genNoId = (typeof getJobNoId === 'function') ? String(getJobNoId(j) || '').toLowerCase() : '';
+      const rawId = String(j.id || '').toLowerCase();
+      const altNoId = String(j.noId || j.no_id || j.job_id || '').toLowerCase();
+      return (genNoId && genNoId.includes(cleanQ)) ||
+        (rawId && rawId.includes(cleanQ)) ||
+        (altNoId && altNoId.includes(cleanQ));
+    }
+    window.matchesJobNoIdSearch = matchesJobNoIdSearch;
+
+    if (typeof document !== 'undefined' && !window._noIdCopyPasteHooked) {
+      window._noIdCopyPasteHooked = true;
+      document.addEventListener('copy', (e) => {
+        try {
+          const sel = window.getSelection ? window.getSelection() : null;
+          if (!sel || sel.isCollapsed) return;
+          const anchorEl = sel.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement) : null;
+          const noIdWrap = anchorEl && anchorEl.closest ? anchorEl.closest('.job-noid-copy') : null;
+          if (noIdWrap && noIdWrap.dataset && noIdWrap.dataset.noid) {
+            e.preventDefault();
+            e.clipboardData.setData('text/plain', noIdWrap.dataset.noid);
+            return;
+          }
+          const rawSel = sel.toString();
+          if (rawSel && /^(?:#?(?:LT|WT)-[A-Z0-9-]+)\s*[\r\n]+\s*-[A-Z0-9-]+$/i.test(rawSel.trim())) {
+            const merged = rawSel.trim().replace(/[\r\n\s]+/g, '');
+            e.preventDefault();
+            e.clipboardData.setData('text/plain', merged);
+          }
+        } catch (err) { }
+      });
+      document.addEventListener('paste', (e) => {
+        try {
+          const target = e.target;
+          if (!target || target.tagName !== 'INPUT') return;
+          const pasted = (e.clipboardData || window.clipboardData)?.getData('text');
+          if (pasted && /((?:LT|WT)-[A-Z0-9-]+)\s*[\r\n\s]+\s*(-[A-Z0-9-]+)/i.test(pasted)) {
+            e.preventDefault();
+            const cleaned = pasted.replace(/[\r\n]+/g, '').replace(/\s*-\s*/g, '-').trim();
+            target.value = cleaned;
+            target.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        } catch (err) { }
+      });
+    }
+
     function formatJobNoIdDesktopHtml(rawId) {
       if (!rawId || rawId === '-') return '-';
-      const str = String(rawId).trim();
+      const str = String(rawId).replace(/[\r\n\s]+/g, '').trim();
+
+      const buildTwoLineInlineWrap = (p1, p2) => {
+        const chWidth = Math.max(10, p1.length);
+        return `<span class="job-noid-copy inline-block leading-tight select-all" style="max-width:${chWidth}ch;" data-noid="${str}" oncopy="handleJobNoIdCopy(event, '${str}')"><span class="whitespace-nowrap">${p1}</span><wbr><span class="whitespace-nowrap text-slate-700">${p2}</span></span>`;
+      };
 
       // Pola 1: Format Reguler LT/WT: ((?:LT|WT)-[A-Z0-9]+-\d{8}-\d)(-[A-Za-z0-9_.-]+)
       const mReg = str.match(/^((?:LT|WT)-[A-Z0-9]+-\d{8}-\d)(-[A-Za-z0-9_.-]+)$/i);
       if (mReg) {
-        return `<span class="block whitespace-nowrap leading-tight">${mReg[1]}</span><span class="block whitespace-nowrap leading-tight text-slate-700">${mReg[2]}</span>`;
+        return buildTwoLineInlineWrap(mReg[1], mReg[2]);
       }
 
       // Pola 2: Format Request LT/WT: ((?:LT|WT)-\d{8}-REQ-\d)(-[A-Za-z0-9_.-]+)
       const mReq = str.match(/^((?:LT|WT)-\d{8}-REQ-\d)(-[A-Za-z0-9_.-]+)$/i);
       if (mReq) {
-        return `<span class="block whitespace-nowrap leading-tight">${mReq[1]}</span><span class="block whitespace-nowrap leading-tight text-slate-700">${mReq[2]}</span>`;
+        return buildTwoLineInlineWrap(mReq[1], mReq[2]);
       }
 
       // Pola 3: Fallback untuk kode ID umum berpola (PREFIX-TYPE-DATE-SHIFT)-(SISANYA)
       const mGen = str.match(/^([A-Za-z0-9]+-[A-Za-z0-9]+-\d{8}-\d)(-[A-Za-z0-9_.-]+)$/i);
       if (mGen) {
-        return `<span class="block whitespace-nowrap leading-tight">${mGen[1]}</span><span class="block whitespace-nowrap leading-tight text-slate-700">${mGen[2]}</span>`;
+        return buildTwoLineInlineWrap(mGen[1], mGen[2]);
       }
 
       // Fallback pembagian segmen tanda hubung jika string panjang
@@ -28782,11 +29369,11 @@ Keterangan : ${keterangan}`;
           const midIdx = Math.ceil(parts.length / 2);
           const p1 = parts.slice(0, midIdx).join('-');
           const p2 = '-' + parts.slice(midIdx).join('-');
-          return `<span class="block whitespace-nowrap leading-tight">${p1}</span><span class="block whitespace-nowrap leading-tight text-slate-700">${p2}</span>`;
+          return buildTwoLineInlineWrap(p1, p2);
         }
       }
 
-      return `<span class="block whitespace-nowrap leading-tight">${str}</span>`;
+      return `<span class="job-noid-copy inline-block whitespace-nowrap leading-tight select-all" data-noid="${str}" oncopy="handleJobNoIdCopy(event, '${str}')">${str}</span>`;
     }
     window.formatJobNoIdDesktopHtml = formatJobNoIdDesktopHtml;
 
@@ -29109,7 +29696,8 @@ Keterangan : ${keterangan}`;
             if (isHAch && !isExAch) {
               ex.status = String(h.status_final || 'achieved').toLowerCase();
               ex.status_final = h.status_final;
-              ex.keterangan = h.keterangan || 'Nihil / Lancar sesuai SOP';
+              const rawHKet = h.keterangan || 'Nihil / Lancar sesuai SOP';
+              ex.keterangan = (typeof formatTopUpAchKeterangan === 'function') ? formatTopUpAchKeterangan(h, rawHKet) : rawHKet;
               ex.alasanNonAch = '';
               ex.id = h.job_id || h.id;
               ex.noId = h.no_id || (typeof getJobNoId === 'function' ? getJobNoId(h) : hid);
@@ -29176,8 +29764,8 @@ Keterangan : ${keterangan}`;
               unitSwing: h.unit_swing || (h.snapshot_data ? (h.snapshot_data.unitSwing || h.snapshot_data.unit_swing) : 'Tidak'),
               status: String(h.status_final || '').toLowerCase(),
               status_final: h.status_final,
-              keterangan: h.keterangan,
-              alasanNonAch: h.non_ach_reason,
+              keterangan: (typeof formatTopUpAchKeterangan === 'function') ? formatTopUpAchKeterangan(h, h.keterangan) : h.keterangan,
+              alasanNonAch: (String(h.status_final || '').toUpperCase() === 'ACHIEVED') ? '' : h.non_ach_reason,
               fotos: (Array.isArray(h.fotos) && h.fotos.length > 0) ? h.fotos : (JSON.parse(safeStorage.getItem('SE_JOB_FOTOS_' + h.job_id) || '[]'))
             };
             allCompleted.push(newJob);
@@ -29277,8 +29865,10 @@ Keterangan : ${keterangan}`;
       }
 
       if (searchVal) {
+        const normQ = (typeof normalizeJobSearchQuery === 'function') ? normalizeJobSearchQuery(searchVal) : searchVal;
         filtered = filtered.filter(j =>
-          (typeof getJobNoId === 'function' && getJobNoId(j).toLowerCase().includes(searchVal)) ||
+          (typeof matchesJobNoIdSearch === 'function' && matchesJobNoIdSearch(j, searchVal)) ||
+          (typeof getJobNoId === 'function' && getJobNoId(j).toLowerCase().includes(normQ)) ||
           (typeof getJobSchLabel === 'function' && getJobSchLabel(j).toLowerCase().includes(searchVal)) ||
           (typeof getJobTypeCode === 'function' && getJobTypeCode(j).toLowerCase().includes(searchVal)) ||
           (j.noLambung && j.noLambung.toLowerCase().includes(searchVal)) ||
@@ -32006,6 +32596,36 @@ Keterangan : ${keterangan}`;
       return selVal || descVal || '';
     }
 
+    const DEFAULT_TOPUP_AMAN_TEXT = [
+      'OLI ENGINE : Aman',
+      'OLI TRANSMISI/SWING : Aman',
+      'OLI HYDRAULIC : Aman',
+      'AIR COOLANT : Aman'
+    ].join('\n');
+
+    function isTopUpJobRecord(jobOrRow) {
+      if (!jobOrRow) return false;
+      const cat = String(jobOrRow.cat || '').toLowerCase().trim();
+      if (cat === 'topup' || cat === 'top up oil' || cat === 'topup_oil') return true;
+      const rawId = String(jobOrRow.id || jobOrRow.noId || jobOrRow.no_id || jobOrRow.job_id || '').toUpperCase().trim();
+      return rawId.startsWith('LT-TUO-');
+    }
+
+    function formatTopUpAchKeterangan(jobOrRow, rawKet) {
+      const txt = String(rawKet || '').trim();
+      if (!isTopUpJobRecord(jobOrRow)) return txt;
+      const st = String(jobOrRow.status_final || jobOrRow.status || '').toLowerCase().trim();
+      const isAch = (st === 'ach' || st === 'achieved' || st === 'done' || !st);
+      if (!isAch) return txt;
+      const lower = txt.toLowerCase();
+      if (!txt || txt === '-' || lower === 'nihil / lancar sesuai sop' || lower === 'nihil / tidak ada kendala' || lower === 'selesai sesuai sop' || lower === 'aman') {
+        return DEFAULT_TOPUP_AMAN_TEXT;
+      }
+      return txt;
+    }
+    window.isTopUpJobRecord = isTopUpJobRecord;
+    window.formatTopUpAchKeterangan = formatTopUpAchKeterangan;
+
     function buildTopUpKeteranganText() {
       const lines = topUpComponentKeys.map(comp => {
         const status = window._topUpState?.[comp.key]?.status || 'Aman';
@@ -32588,6 +33208,7 @@ Keterangan : ${keterangan}`;
       }
 
       const isSchTopUp = !isJobRequest && (job.cat === 'topup' || job.cat === 'top up oil' || job.cat === 'topup_oil');
+      let topUpBuiltKeterangan = '';
 
       // Validasi Khusus SCH Top Up Oil: Pastikan 4 komponen (Oli Engine, Transmisi/Swing, Hydraulic, Coolant) terisi
       if (isSchTopUp && unitCondition === 'normal') {
@@ -32616,6 +33237,7 @@ Keterangan : ${keterangan}`;
             }
           }
         }
+        topUpBuiltKeterangan = buildTopUpKeteranganText();
       }
 
       // LAYER 2 GUARD: CEK DOUBLE-ACTION / OVERWRITE SEBELUM PROSES SIMPAN KE CLOUD
@@ -32670,7 +33292,9 @@ Keterangan : ${keterangan}`;
         const execShift = parseInt(document.getElementById('ach-execution-shift')?.value || job.shift || 1, 10);
         job.shift = execShift;
         job.executedShift = execShift;
-        const ket = (document.getElementById('ach-keterangan')?.value || '').trim() || (isJobRequest ? 'Selesai sesuai SOP' : 'Nihil / Lancar sesuai SOP');
+        const ket = (isSchTopUp && unitCondition === 'normal')
+          ? (topUpBuiltKeterangan || buildTopUpKeteranganText())
+          : ((document.getElementById('ach-keterangan')?.value || '').trim() || (isJobRequest ? 'Selesai sesuai SOP' : 'Nihil / Lancar sesuai SOP'));
 
         if (isJobRequest) {
           if (!jamStart || !jamEnd) {
@@ -36504,7 +37128,7 @@ Keterangan : ${keterangan}`;
       }
 
       // Master Data TTL Cache (24 Jam) dengan versioning build
-      const MASTER_UNITS_CACHE_VER = 'v3_coal_master';
+      const MASTER_UNITS_CACHE_VER = 'v4_cluster_sync';
       const savedUnitsTs = Number(safeStorage.getItem('SE_MASTER_UNITS_TS') || 0);
       const isUnitsCacheFresh = (Date.now() - savedUnitsTs) < MASTER_DATA_TTL_MS && safeStorage.getItem('SE_MASTER_UNITS_VER') === MASTER_UNITS_CACHE_VER;
       if (!force && isUnitsCacheFresh && state._unitsLoadedFromSupabase && Array.isArray(state.masterUnits) && state.masterUnits.length > 0) {
@@ -36950,6 +37574,21 @@ Keterangan : ${keterangan}`;
         const targetId = String(job.id);
         const s = String(job.status || '').toLowerCase().trim();
         const isActioned = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'parkir', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) || (job.status_final !== undefined && job.status_final !== null && String(job.status_final).trim() !== '') || Boolean(job.isLocked);
+
+        // GUARD ANTI-ZOMBIE: Jika job tanpa -HHMM ini sebenarnya sudah selesai di job_history (dengan -HHMM),
+        // DILARANG KERAS meng-upsert kembali ke jobs_lt/jobs_wt! Hapus dari antrean & tabel aktif.
+        if (!isActioned && typeof isJobAlreadyClosedInHistory === 'function' && isJobAlreadyClosedInHistory(job, state.jobHistory)) {
+          if (typeof _jobSyncQueue !== 'undefined' && _jobSyncQueue.has(targetId)) {
+            _jobSyncQueue.delete(targetId);
+          }
+          try {
+            await Promise.allSettled([
+              state.supabaseClient.from('jobs_lt').delete().eq('id', targetId),
+              state.supabaseClient.from('jobs_wt').delete().eq('id', targetId)
+            ]);
+          } catch (e) { }
+          return;
+        }
 
         // ATURAN PENGGUNA: Jika job sudah di-action (ACH, SERVICE, BD, NON-ACH),
         // job HARUS berada di job_history dan DILARANG disimpan/di-upsert ke tabel jobs agar tabel jobs tidak menumpuk!
@@ -37482,19 +38121,34 @@ Keterangan : ${keterangan}`;
         if (row.no_lambung || row.noLambung) existingJob.noLambung = row.no_lambung || row.noLambung;
 
         if (!isExecutionLocked) {
-          const optVal = row.opt_name || row.opt;
-          if (optVal && optVal !== '-') existingJob.opt = optVal;
-          const mp1Val = row.mp1;
-          if (mp1Val && mp1Val !== '-') existingJob.mp1 = mp1Val;
-          const mp2Val = row.mp2;
-          if (mp2Val && mp2Val !== '-') existingJob.mp2 = mp2Val;
+          if (row.opt_name !== undefined || row.opt !== undefined) {
+            const optVal = String(row.opt_name ?? row.opt ?? '-').trim() || '-';
+            existingJob.opt = optVal;
+            existingJob.opt_name = optVal;
+          }
+          if (row.mp1 !== undefined) {
+            existingJob.mp1 = String(row.mp1 ?? '-').trim() || '-';
+          }
+          if (row.mp2 !== undefined) {
+            existingJob.mp2 = String(row.mp2 ?? '-').trim() || '-';
+          }
 
-          const armadaVal = row.armada_unit || row.armada || row.ltUnit || row.wtUnit;
-          if (armadaVal && armadaVal !== '-') {
-            existingJob.armada = armadaVal;
-            existingJob.ltUnit = armadaVal;
-            if (existingJob.targetType === 'WT' || targetId.startsWith('WTJ') || targetId.startsWith('WT-SCH')) {
-              existingJob.wtUnit = armadaVal;
+          if (row.armada_unit !== undefined || row.armada !== undefined || row.ltUnit !== undefined || row.wtUnit !== undefined) {
+            const rawArmada = String(row.armada_unit ?? row.armada ?? row.ltUnit ?? row.wtUnit ?? '').trim();
+            if (!rawArmada || rawArmada === '-') {
+              existingJob.armada = '-';
+              existingJob.ltUnit = '-';
+              existingJob.wtUnit = '-';
+              existingJob.armadaUnit = '-';
+              existingJob.armada_unit = '-';
+            } else {
+              existingJob.armada = rawArmada;
+              existingJob.armadaUnit = rawArmada;
+              existingJob.armada_unit = rawArmada;
+              existingJob.ltUnit = rawArmada;
+              if (existingJob.targetType === 'WT' || targetId.startsWith('WTJ') || targetId.startsWith('WT-SCH') || targetId.startsWith('WT-')) {
+                existingJob.wtUnit = rawArmada;
+              }
             }
           }
         }
@@ -37643,6 +38297,7 @@ Keterangan : ${keterangan}`;
         statusAktif: (row.status_aktif !== false && row.status !== 'Breakdown')
       };
 
+      const prevCluster = (idx !== -1 && state.masterUnits[idx]) ? (state.masterUnits[idx].cluster || '') : '';
       if (idx !== -1) {
         state.masterUnits[idx] = formatted;
       } else {
@@ -37650,6 +38305,15 @@ Keterangan : ${keterangan}`;
       }
 
       safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+      safeStorage.setItem('SE_MASTER_UNITS_TS', String(Date.now()));
+      if (typeof propagateUnitLocationAndCluster === 'function' && formatted.lambung) {
+        const oldP = (typeof getParentCluster === 'function') ? getParentCluster(prevCluster) : String(prevCluster).trim();
+        const newP = (typeof getParentCluster === 'function') ? getParentCluster(formatted.cluster) : String(formatted.cluster).trim();
+        const movedCluster = Boolean(oldP && newP && oldP.toLowerCase() !== newP.toLowerCase());
+        propagateUnitLocationAndCluster(formatted.lambung, formatted.cluster, formatted.lokasi, false, movedCluster);
+      } else if (typeof alignJobsWithMasterUnits === 'function') {
+        alignJobsWithMasterUnits();
+      }
       debouncedRefreshUI();
     }
 
@@ -38113,7 +38777,7 @@ Keterangan : ${keterangan}`;
               jObj?.job_type === 'sch_lt'
             );
             if (isLtJob) {
-              if (force || (jDate >= startDate && jDate <= endDate) || !jDate || jObj.isPending) {
+              if (force || (jDate <= endDate) || !jDate || jObj.isPending) {
                 if (!cloudLtIds.has(jId)) {
                   // Job ini telah dihapus di tabel jobs_lt cloud
                   window.globalDataCache.jobs.delete(jId);
@@ -38150,7 +38814,7 @@ Keterangan : ${keterangan}`;
               jObj?.targetType === 'WT' ||
               jObj?.job_type === 'sch_wt';
             if (isWtJob) {
-              if (force || (jDate >= startDate && jDate <= endDate) || !jDate || jObj.isPending) {
+              if (force || (jDate <= endDate) || !jDate || jObj.isPending) {
                 if (!cloudWtIds.has(jId)) {
                   // Job ini telah dihapus di tabel jobs_wt cloud
                   window.globalDataCache.jobs.delete(jId);
@@ -38182,12 +38846,17 @@ Keterangan : ${keterangan}`;
           curD.setDate(curD.getDate() + 1);
         }
 
+        if (typeof reconcileActiveJobsAgainstHistory === 'function') {
+          await reconcileActiveJobsAgainstHistory(true);
+        }
         state._initialJobsReconciled = true;
         safeSaveTrimmedJobsToStorage();
         console.log(`[Supabase Jobs Sync OK] Cloud LT: ${cloudLtJobs.length}, Cloud WT: ${cloudWtJobs.length}. Total RAM: ${window.globalDataCache.jobs.size} jobs.`);
 
         safeStorage.setItem('SE_JOBS_LAST_SYNC_TS', currentIso);
+        if (typeof alignJobsWithMasterUnits === 'function') alignJobsWithMasterUnits();
         syncGlobalCacheToState();
+        if (typeof alignJobsWithMasterUnits === 'function') alignJobsWithMasterUnits();
         if (typeof healCrossCategoryScheduleCollisions === 'function') healCrossCategoryScheduleCollisions();
         refreshActiveTable();
         debouncedRefreshUI();
@@ -38484,7 +39153,11 @@ Keterangan : ${keterangan}`;
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_operators' }, handleRealtimeOperatorChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_units' }, handleRealtimeUnitChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_roster' }, handleRealtimeRosterChange)
-        // Listener Postgres Changes Realtime untuk Mutasi Hapus Langsung dari Database Supabase
+        // Listener Postgres Changes Realtime (Zero-Refetch 0 KB Extra Egress) untuk UPDATE/INSERT/DELETE langsung dari jobs_lt & jobs_wt
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'jobs_lt' }, (payload) => handleRealtimeJobChange(payload))
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'jobs_lt' }, (payload) => handleRealtimeJobChange(payload))
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'jobs_wt' }, (payload) => handleRealtimeJobChange(payload))
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'jobs_wt' }, (payload) => handleRealtimeJobChange(payload))
         .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'jobs_lt' }, (payload) => {
           const delId = String(payload.old?.id || '');
           if (delId) {
@@ -38752,6 +39425,7 @@ Keterangan : ${keterangan}`;
           // JANGAN download ribuan riwayat selesai (job_history), pica_records, atau roster saat boot!
           // Semua data tersebut kini dimuat secara On-Demand (Lazy-Load) saat tab terkait diklik.
           const bootTasks = [
+            (typeof loadJobHistoryFromSupabase === 'function' ? loadJobHistoryFromSupabase(false) : Promise.resolve()),
             (typeof loadJobsFromSupabase === 'function' ? loadJobsFromSupabase() : Promise.resolve()),
             ...masterLoadTasks
           ];
@@ -39736,12 +40410,12 @@ Keterangan : ${keterangan}`;
       }
 
       const submitBtn = document.getElementById('btn-direct-submit');
-      const origBtnHtml = submitBtn ? submitBtn.innerHTML : 'SUBMIT SELESAI';
+      const origBtnHtml = submitBtn ? submitBtn.innerHTML : '<span>SUBMIT</span>';
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.innerHTML = `
           <span class="inline-flex items-center justify-center space-x-2">
-            <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin h-4 w-4 text-brand-800" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -41524,7 +42198,114 @@ Keterangan : ${keterangan}`;
     }
     window.pushAllJobHistoryToSupabase = pushAllJobHistoryToSupabase;
 
-    // 3. TARIK RIWAYAT SELESAI DARI TABEL job_history SUPABASE (On-Demand & Throttled)
+    function stripHistoryTimeSuffix(rawId) {
+      return String(rawId || '').trim().replace(/-\d{4}$/, '');
+    }
+    window.stripHistoryTimeSuffix = stripHistoryTimeSuffix;
+
+    function isJobAlreadyClosedInHistory(job, historyList = state.jobHistory) {
+      if (!job || !Array.isArray(historyList) || historyList.length === 0) return false;
+      const rawId = String(job.id || job.job_id || job.noId || job.no_id || '').trim();
+      const baseId = stripHistoryTimeSuffix(rawId);
+      const jUnit = String(job.noLambung || job.no_lambung || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const jCat = String(job.cat || '').toLowerCase().trim();
+      const jDate = String(job.tanggal || job.tanggal_rencana || job.tanggalRealisasi || '').trim().split('T')[0];
+      const isPc300OrWashCoal = (typeof isExca300Unit === 'function' && isExca300Unit(job)) || jCat === 'coal' || jCat === 'rom';
+      const jShift = String(job.shift || job.shift_rencana || 1);
+      const jRound = String(job.washingRound || job.washing_round || 1);
+
+      return historyList.some(h => {
+        if (!h) return false;
+        const hId = String(h.id || h.job_id || '').trim();
+        const hBaseId = stripHistoryTimeSuffix(hId);
+        if (baseId && hBaseId && (hId === rawId || hBaseId === baseId || hId.startsWith(baseId + '-'))) {
+          return true;
+        }
+        if (jUnit && jDate) {
+          const hUnit = String(h.no_lambung || h.noLambung || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+          if (hUnit === jUnit) {
+            const hCat = String(h.cat || '').toLowerCase().trim();
+            const catMatch = (!jCat || !hCat) ? true : (jCat === hCat || ((jCat === 'small' || jCat === 'digger') && (hCat === 'small' || hCat === 'digger')));
+            if (catMatch) {
+              const hRen = String(h.tanggal_rencana || h.tanggal || '').trim().split('T')[0];
+              const hEks = String(h.tanggal_eksekusi || '').trim().split('T')[0];
+              if (hRen === jDate || hEks === jDate) {
+                if (isPc300OrWashCoal) {
+                  const hShift = String(h.shift_rencana || h.shift || 1);
+                  const hRound = String(h.washing_round || h.washingRound || (hId.includes('-W2-') ? 2 : 1));
+                  if (jCat === 'coal' || jCat === 'rom') {
+                    return hShift === jShift && hRound === jRound;
+                  }
+                  return hShift === jShift;
+                }
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      });
+    }
+    window.isJobAlreadyClosedInHistory = isJobAlreadyClosedInHistory;
+
+    async function reconcileActiveJobsAgainstHistory(deleteFromCloud = false) {
+      if (!Array.isArray(state.jobHistory) || state.jobHistory.length === 0) return 0;
+      const zombieIdsToDelete = new Set();
+
+      if (window.globalDataCache && window.globalDataCache.jobs instanceof Map) {
+        for (const [jId, jObj] of Array.from(window.globalDataCache.jobs.entries())) {
+          if (!jObj || String(jId).startsWith('UNS-') || window.globalDataCache.orderRequests?.has(jId)) continue;
+          if (isJobAlreadyClosedInHistory(jObj, state.jobHistory)) {
+            window.globalDataCache.jobs.delete(jId);
+            zombieIdsToDelete.add(String(jId));
+          }
+        }
+      }
+
+      if (state.lubetruckState && Array.isArray(state.lubetruckState.jobs)) {
+        state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => {
+          if (j && isJobAlreadyClosedInHistory(j, state.jobHistory)) {
+            if (j.id) zombieIdsToDelete.add(String(j.id));
+            return false;
+          }
+          return true;
+        });
+      }
+
+      if (state.watertruckState && Array.isArray(state.watertruckState.jobs)) {
+        state.watertruckState.jobs = state.watertruckState.jobs.filter(j => {
+          if (j && isJobAlreadyClosedInHistory(j, state.jobHistory)) {
+            if (j.id) zombieIdsToDelete.add(String(j.id));
+            return false;
+          }
+          return true;
+        });
+      }
+
+      if (zombieIdsToDelete.size > 0) {
+        if (typeof _jobSyncQueue !== 'undefined') {
+          zombieIdsToDelete.forEach(id => _jobSyncQueue.delete(id));
+        }
+        if (typeof safeSaveTrimmedJobsToStorage === 'function') {
+          safeSaveTrimmedJobsToStorage();
+        }
+        if (deleteFromCloud && state.supabaseClient) {
+          const idsArr = Array.from(zombieIdsToDelete);
+          const ltIds = idsArr.filter(id => !id.startsWith('WT-'));
+          const wtIds = idsArr.filter(id => id.startsWith('WT-'));
+          try {
+            const delTasks = [];
+            if (ltIds.length > 0) delTasks.push(state.supabaseClient.from('jobs_lt').delete().in('id', ltIds));
+            if (wtIds.length > 0) delTasks.push(state.supabaseClient.from('jobs_wt').delete().in('id', wtIds));
+            if (delTasks.length > 0) await Promise.allSettled(delTasks);
+          } catch (e) { }
+        }
+      }
+      return zombieIdsToDelete.size;
+    }
+    window.reconcileActiveJobsAgainstHistory = reconcileActiveJobsAgainstHistory;
+
+    // 3. TARIK RIWAYAT SELESAI DARI TABEL job_history_lt & job_history_wt SUPABASE (Hot-Window & Throttled)
     let _lastJobHistoryFetchTs = 0;
     async function loadJobHistoryFromSupabase(force = false) {
       if (!state.supabaseClient) return;
@@ -41537,42 +42318,42 @@ Keterangan : ${keterangan}`;
 
       try {
         _lastJobHistoryFetchTs = now;
-        // [Audit Ultra-Low Egress] HANYA tarik kolom teks ringkasan untuk tabel riwayat!
-        // DILARANG KERAS menarik kolom 'fotos' dan 'snapshot_data' saat me-load daftar riwayat massal.
+        // [Audit Ultra-Low Egress] HANYA tarik kolom teks ringkasan dari job_history_lt & job_history_wt (Hot-Window 14 hari)
         const HISTORY_LIST_COLS = 'id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,status_final,keterangan,non_ach_category,non_ach_reason,created_at';
-        let { data, error } = await state.supabaseClient.from('job_history').select(HISTORY_LIST_COLS).order('created_at', { ascending: false }).limit(200);
+        const dStart = new Date(getEffectiveTodayString());
+        dStart.setDate(dStart.getDate() - 14);
+        const startWindowStr = dStart.toISOString().split('T')[0];
 
-        // Fallback Mandiri: Jika View job_history tidak ada di Supabase, tarik spesifik kolom teks dari tabel fisik job_history_lt & job_history_wt
-        if (error || !Array.isArray(data) || data.length === 0) {
-          try {
-            const [resLt, resWt] = await Promise.all([
-              state.supabaseClient.from('job_history_lt').select(HISTORY_LIST_COLS).order('created_at', { ascending: false }).limit(200),
-              state.supabaseClient.from('job_history_wt').select(HISTORY_LIST_COLS).order('created_at', { ascending: false }).limit(200)
-            ]);
-            const listLt = (!resLt.error && Array.isArray(resLt.data)) ? resLt.data : [];
-            const listWt = (!resWt.error && Array.isArray(resWt.data)) ? resWt.data : [];
-            if (listLt.length > 0 || listWt.length > 0) {
-              data = [...listLt, ...listWt].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 300);
-              error = null;
-            }
-          } catch (splitErr) {
-            console.warn('[Fallback Split History Fetch Error]', splitErr);
-          }
-        }
+        const [resLt, resWt] = await Promise.all([
+          state.supabaseClient.from('job_history_lt').select(HISTORY_LIST_COLS).gte('tanggal_rencana', startWindowStr).order('created_at', { ascending: false }).limit(350),
+          state.supabaseClient.from('job_history_wt').select(HISTORY_LIST_COLS).gte('tanggal_rencana', startWindowStr).order('created_at', { ascending: false }).limit(350)
+        ]);
+        const listLt = (!resLt.error && Array.isArray(resLt.data)) ? resLt.data : [];
+        const listWt = (!resWt.error && Array.isArray(resWt.data)) ? resWt.data : [];
+        const data = [...listLt, ...listWt].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 500);
 
-        if (!error && Array.isArray(data)) {
+        if (Array.isArray(data)) {
           data.forEach(item => {
             if (item) {
               item.job_id = item.id;
               item.no_id = item.id;
               item.noId = item.id;
+              item.base_job_id = stripHistoryTimeSuffix(item.id);
             }
           });
           state.jobHistory = data;
           window._hasLoadedJobHistory = true;
-          safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
-          console.log('[Supabase History Sync OK] Total ' + state.jobHistory.length + ' riwayat selesai termuat dari Supabase.');
+          try {
+            safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory.slice(0, 300)));
+          } catch (e) { }
+          await reconcileActiveJobsAgainstHistory(true);
+          console.log('[Supabase History Sync OK] Total ' + state.jobHistory.length + ' riwayat selesai termuat & direkonsiliasi dari Supabase.');
           if (typeof renderHistoryTable === 'function') renderHistoryTable();
+          if (state.activeTab === 'pica' && typeof renderPicaTable === 'function') renderPicaTable();
+          if (state.activeTab === 'dashboard') {
+            if (typeof refreshDashboardData === 'function') refreshDashboardData();
+            else if (typeof initKpiSchedulePicaCharts === 'function') initKpiSchedulePicaCharts();
+          }
         }
       } catch (e) {
         console.warn('[loadJobHistoryFromSupabase Error]', e);
@@ -41680,9 +42461,15 @@ Keterangan : ${keterangan}`;
 
         if (!isFieldOp && typeof syncSupabaseMasterData === 'function') {
           syncTasks.unshift(syncSupabaseMasterData(true));
+        } else {
+          if (typeof loadUnitsFromSupabase === 'function') syncTasks.unshift(loadUnitsFromSupabase(true, false));
+          if (typeof loadArmadaFromSupabase === 'function') syncTasks.unshift(loadArmadaFromSupabase(true));
         }
 
         const results = await Promise.allSettled(syncTasks);
+        if (typeof alignJobsWithMasterUnits === 'function') {
+          alignJobsWithMasterUnits();
+        }
 
         // Catatan Anti-Zombie: JANGAN otomatis push cache lokal saat sinkronisasi tarik cloud.
         // Sinkronisasi tombol ini murni menarik (PULL) kondisi terkini dari database Supabase ke web.
@@ -42594,7 +43381,11 @@ Keterangan : ${keterangan}`;
           if (idx > 0) aoa.push(['']);
           aoa.push([`KGU ${clName}`]);
           const cJobs = jobs.filter(j => getJobParentCluster(j) === clName);
-          if (typeof sortSchedJobsList === 'function') sortSchedJobsList(cJobs, sortConfig);
+          if (typeof sortAirCleanerJobsList === 'function') {
+            sortAirCleanerJobsList(cJobs);
+          } else if (typeof sortSchedJobsList === 'function') {
+            sortSchedJobsList(cJobs, sortConfig);
+          }
           cJobs.forEach(j => {
             aoa.push([buildUnitLine(j, activeCat)]);
           });
@@ -42614,7 +43405,11 @@ Keterangan : ${keterangan}`;
           if (idx > 0) aoa.push(['']);
           aoa.push([`KGU ${clName}`]);
           const cJobs = jobs.filter(j => getJobParentCluster(j) === clName);
-          if (typeof sortSchedJobsList === 'function') sortSchedJobsList(cJobs, sortConfig);
+          if (typeof sortAirCleanerJobsList === 'function') {
+            sortAirCleanerJobsList(cJobs);
+          } else if (typeof sortSchedJobsList === 'function') {
+            sortSchedJobsList(cJobs, sortConfig);
+          }
           cJobs.forEach(j => {
             aoa.push([buildUnitLine(j, activeCat)]);
           });
