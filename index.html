@@ -987,25 +987,43 @@
       background-color: #1e293b !important;
     }
 
-    /* Tipografi Mode Gelap */
+    /* Tipografi Mode Gelap: Semua Teks Hitam/Gelap Otomatis Menjadi Putih Bersih (#ffffff) */
+    html.dark-mode .text-black,
+    html.dark-mode .text-slate-950,
     html.dark-mode .text-slate-900,
     html.dark-mode .text-slate-800,
-    html.dark-mode .text-gray-900,
-    html.dark-mode .text-gray-800 {
-      color: #f1f5f9 !important;
-    }
-
     html.dark-mode .text-slate-700,
-    html.dark-mode .text-slate-600,
+    html.dark-mode .text-gray-950,
+    html.dark-mode .text-gray-900,
+    html.dark-mode .text-gray-800,
     html.dark-mode .text-gray-700,
-    html.dark-mode .text-gray-600 {
-      color: #cbd5e1 !important;
+    html.dark-mode #lt-schedule-table-container td span[class*="text-slate-950"],
+    html.dark-mode #wt-schedule-table-container td span[class*="text-slate-950"],
+    html.dark-mode #lt-schedule-table-container button[onclick*="openJobDetailModal"],
+    html.dark-mode #wt-schedule-table-container button[onclick*="openJobDetailModal"],
+    html.dark-mode table td .text-slate-950,
+    html.dark-mode table td .text-slate-900,
+    html.dark-mode table td .text-slate-800,
+    html.dark-mode table td .text-slate-700,
+    html.dark-mode table th {
+      color: #ffffff !important;
     }
 
+    html.dark-mode #lt-schedule-table-container button[onclick*="openJobDetailModal"]:hover,
+    html.dark-mode #wt-schedule-table-container button[onclick*="openJobDetailModal"]:hover {
+      color: #6ee7b7 !important;
+    }
+
+    html.dark-mode .text-slate-600,
     html.dark-mode .text-slate-500,
-    html.dark-mode .text-slate-400,
+    html.dark-mode .text-gray-600,
     html.dark-mode .text-gray-500 {
-      color: #94a3b8 !important;
+      color: #e2e8f0 !important;
+    }
+
+    html.dark-mode .text-slate-400,
+    html.dark-mode .text-gray-400 {
+      color: #cbd5e1 !important;
     }
 
     /* Border & Garis Pemisah */
@@ -1156,10 +1174,31 @@
       border-color: rgba(245, 158, 11, 0.3) !important;
     }
 
+    html.dark-mode .text-amber-950,
     html.dark-mode .text-amber-900,
     html.dark-mode .text-amber-800,
-    html.dark-mode .text-amber-700 {
+    html.dark-mode .text-amber-700,
+    html.dark-mode .text-orange-800 {
       color: #fcd34d !important;
+    }
+
+    html.dark-mode .text-blue-950,
+    html.dark-mode .text-cyan-950,
+    html.dark-mode .text-indigo-800,
+    html.dark-mode .text-indigo-700,
+    html.dark-mode .text-sky-800 {
+      color: #7dd3fc !important;
+    }
+
+    html.dark-mode .text-teal-900,
+    html.dark-mode .text-teal-800,
+    html.dark-mode .text-teal-700 {
+      color: #5eead4 !important;
+    }
+
+    html.dark-mode .text-purple-800,
+    html.dark-mode .text-purple-700 {
+      color: #d8b4fe !important;
     }
 
     html.dark-mode .bg-rose-50,
@@ -13048,7 +13087,7 @@
             const { ctx, data } = chart;
             ctx.save();
             ctx.font = 'bold 15px Inter, sans-serif';
-            ctx.fillStyle = '#1E3A8A';
+            ctx.fillStyle = document.documentElement.classList.contains('dark-mode') ? '#ffffff' : '#1E3A8A';
             ctx.textAlign = 'center';
             chart.getDatasetMeta(0).data.forEach((bar, index) => {
               const val = data.datasets[0].data[index];
@@ -15207,6 +15246,9 @@
       const metaTheme = document.querySelector('meta[name="theme-color"]');
       if (metaTheme) {
         metaTheme.setAttribute('content', isDark ? '#0f172a' : '#059669');
+      }
+      if (typeof Chart !== 'undefined' && Chart.defaults) {
+        Chart.defaults.color = isDark ? '#ffffff' : '#475569';
       }
     }
     window.applyAppTheme = applyAppTheme;
