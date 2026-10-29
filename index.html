@@ -2278,6 +2278,21 @@
                       <div
                         class="relative w-full flex-1 min-h-[260px] sm:min-h-[285px] md:min-h-[315px] mt-1 flex items-end">
                         <canvas id="chart-achievement-trend" class="w-full h-full"></canvas>
+                        <div id="chart-achievement-empty-state"
+                          class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                          <div
+                            class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mb-2 shadow-2xs">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                              </path>
+                            </svg>
+                          </div>
+                          <span class="text-xs font-bold text-slate-700 block">Tidak Ada Unit Terdaftar di Jadwal
+                            (SCH)</span>
+                          <span class="text-[11px] text-slate-400 max-w-sm mt-0.5 block">Tidak ditemukan pekerjaan unit
+                            untuk kategori ini pada rentang tanggal dan filter yang dipilih.</span>
+                        </div>
                       </div>
                     </div>
 
@@ -2344,7 +2359,7 @@
                         <span id="dash-cat-rom-val"
                           class="text-[11px] font-black text-slate-900 group-hover:text-emerald-800 font-mono">0 Job
                           (0%)</span>
-                                            </div>
+                      </div>
 
                       <!-- Kategori Tambahan: Washing Non-Coal -->
                       <div onclick="filterDashboardCategory('non_coal')" id="dash-cat-card-non_coal"
@@ -2354,8 +2369,8 @@
                           <span
                             class="text-[10px] font-bold text-slate-800 group-hover:text-emerald-900 block flex items-center gap-1">
                             <span>Washing Non-Coal</span>
-                            <span
-                              class="text-[9px] text-emerald-600 opacity-0 group-hover:opacity-100 transition"> </span>
+                            <span class="text-[9px] text-emerald-600 opacity-0 group-hover:opacity-100 transition">
+                            </span>
                           </span>
                           <span class="text-[9px] text-slate-400">Unit non-coal & support</span>
                         </div>
@@ -5635,9 +5650,9 @@
 
             <!-- BARIS 4 DI HP / ELEMEN 4 DI DESKTOP: TOMBOL AKSI UNDUH & HAPUS MASAL (KHUSUS ADMIN/BASECONTROL) -->
             <div class="order-4 md:order-4 md:ml-auto flex items-center justify-end gap-1.5 sm:gap-2">
-              <button type="button" onclick="downloadExcelData('RIWAYAT')"
+              <button type="button" id="btn-download-riwayat" onclick="downloadExcelData('RIWAYAT')"
                 title="Unduh riwayat pekerjaan dalam format Excel (.xlsx)"
-                class="btn-export-excel px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer">
+                class="btn-export-excel btn-export-riwayat px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
@@ -6303,6 +6318,18 @@
                   </span>
                 </button>
               </div>
+              <!-- Tombol Unduh Clean Air Cleaner (Admin, Tim Track, BSC) -->
+              <button type="button" id="btn-download-aircleaner" onclick="downloadExcelData('AIRCLEANER')"
+                class="hidden px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center space-x-1.5 transition shadow-2xs cursor-pointer"
+                title="Unduh data Clean Air Cleaner dalam format Excel (.xlsx)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                  </path>
+                </svg>
+                <span>Unduh</span>
+              </button>
+
               <button type="button" id="btn-reset-aircleaner" onclick="resetAirCleanerWeeklyCycle()"
                 class="hidden px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer"
                 title="Reset Siklus Mingguan (Khusus Admin)">
@@ -14043,11 +14070,33 @@
 
     function renderAppForUser(user) {
       // KONTROL AKSES EXCEL: Hanya Admin dan Base Control yang boleh melihat & mengunduh Excel
-      const canExportExcel = (user.role === 'admin' || user.role === 'basecontrol' || user.role === 'base_control');
-      document.querySelectorAll('.btn-export-excel').forEach(el => {
-        if (canExportExcel) el.classList.remove('hidden');
+      // KONTROL AKSES EXCEL:
+      const userRole = String(user.role || '').toLowerCase();
+      const isBaseControl = ['basecontrol', 'base_control', 'bsc'].includes(userRole);
+      const isTrack = ['track', 'tim_track'].includes(userRole);
+      const isAdmin = (userRole === 'admin');
+
+      // Tombol export jadwal & log umum (LT, WT, JobReq, PICA): Admin & Base Control
+      const canExportGeneralExcel = (isAdmin || isBaseControl);
+      document.querySelectorAll('.btn-export-excel:not(.btn-export-riwayat)').forEach(el => {
+        if (canExportGeneralExcel) el.classList.remove('hidden');
         else el.classList.add('hidden');
       });
+
+      // Tombol export Riwayat Selesai: Admin, Base Control, dan Tim Track
+      const canExportRiwayat = (isAdmin || isBaseControl || isTrack);
+      document.querySelectorAll('.btn-export-riwayat').forEach(el => {
+        if (canExportRiwayat) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      });
+
+      // Tombol export Clean Air Cleaner: Admin, Tim Track, dan Base Control
+      const canExportAirCleaner = (isAdmin || isBaseControl || isTrack);
+      const btnDownloadAc = document.getElementById('btn-download-aircleaner');
+      if (btnDownloadAc) {
+        if (canExportAirCleaner) btnDownloadAc.classList.remove('hidden');
+        else btnDownloadAc.classList.add('hidden');
+      }
 
       // KONTROL AKSES FITUR EDIT / HAPUS MASAL (SCHEDULE & RIWAYAT): HANYA ADA DI AKSES ADMIN
       const isAdminRole = (user.role === 'admin');
@@ -23491,21 +23540,22 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       let typeLabels = Object.keys(unitTypesMap).filter(t => unitTypesMap[t].total > 0);
 
       // JIKA TIDAK ADA UNIT TERDAFTAR DI SCH: Jangan render bar dummy palsu!
+      const emptyStateEl = document.getElementById('chart-achievement-empty-state');
+
+      // JIKA TIDAK ADA UNIT TERDAFTAR DI SCH: Munculkan empty state elegan, jangan render bar dummy palsu!
       if (typeLabels.length === 0) {
         if (achievementTrendChartInstance) {
           achievementTrendChartInstance.destroy();
           achievementTrendChartInstance = null;
         }
-        trendCtx.clearRect(0, 0, trendCanvas.width, trendCanvas.height);
-        trendCtx.save();
-        trendCtx.textAlign = 'center';
-        trendCtx.textBaseline = 'middle';
-        trendCtx.fillStyle = '#94A3B8';
-        trendCtx.font = 'bold 12px Inter, system-ui, sans-serif';
-        trendCtx.fillText('Tidak ada unit yang terdaftar dalam jadwal (SCH) untuk kategori ini', trendCanvas.width / 2, trendCanvas.height / 2);
-        trendCtx.restore();
+        trendCanvas.classList.add('hidden');
+        if (emptyStateEl) emptyStateEl.classList.remove('hidden');
         return;
       }
+
+      // Jika ada unit: Munculkan canvas dan sembunyikan empty state
+      if (emptyStateEl) emptyStateEl.classList.add('hidden');
+      trendCanvas.classList.remove('hidden');
 
       // Urutkan tipe unit berdasarkan nama agar rapi dan stabil
       typeLabels.sort();
@@ -26493,7 +26543,9 @@ Keterangan : ${keterangan}`;
     // Helper On-Demand Fetch: Mengambil kolom berat (deskripsi panjang, log, dan FOTO) HANYA saat modal detail dibuka (Aturan Egress)
     async function fetchJobDetailPayload(jobId) {
       if (!state.supabaseClient || !jobId) return;
-      const detailCols = 'id, keterangan, service_notes, bd_notes, non_ach_reason, fotos';
+      // Pisahkan kolom sesuai skema tabel fisik agar tidak memicu HTTP 400 Bad Request
+      const histCols = 'id, keterangan, non_ach_reason, fotos';
+      const activeCols = 'id, keterangan, service_notes, bd_notes, non_ach_reason';
       try {
         const isWt = String(jobId).startsWith('WT');
         const targetHistTable = isWt ? 'job_history_wt' : 'job_history_lt';
@@ -26501,7 +26553,7 @@ Keterangan : ${keterangan}`;
 
         // 1. Cek di tabel job_history_lt / job_history_wt (Data Riwayat Selesai)
         let row = null;
-        let resHist = await state.supabaseClient.from(targetHistTable).select(detailCols).eq('id', jobId).maybeSingle();
+        let resHist = await state.supabaseClient.from(targetHistTable).select(histCols).eq('id', jobId).maybeSingle();
         if (resHist && resHist.data) {
           row = resHist.data;
         }
@@ -26509,7 +26561,7 @@ Keterangan : ${keterangan}`;
         // 1B. Fallback jika ID di riwayat membawa jam (-HHMM) atau sebaliknya
         if (!row) {
           const cleanBaseId = String(jobId).replace(/-\d{4}$/, '');
-          resHist = await state.supabaseClient.from(targetHistTable).select(detailCols).or(`id.eq.${cleanBaseId},id.ilike.${cleanBaseId}-%`).limit(1).maybeSingle();
+          resHist = await state.supabaseClient.from(targetHistTable).select(histCols).or(`id.eq.${cleanBaseId},id.ilike.${cleanBaseId}-%`).limit(1).maybeSingle();
           if (resHist && resHist.data) {
             row = resHist.data;
           }
@@ -26517,16 +26569,16 @@ Keterangan : ${keterangan}`;
 
         // 2. Cek di tabel jobs aktif jika belum ditemukan
         if (!row) {
-          const resAct = await state.supabaseClient.from(targetActiveTable).select(detailCols).eq('id', jobId).maybeSingle();
+          const resAct = await state.supabaseClient.from(targetActiveTable).select(activeCols).eq('id', jobId).maybeSingle();
           if (resAct && resAct.data) row = resAct.data;
         }
 
         // 3. Fallback tabel legacy jobs / job_history
         if (!row) {
-          const resLegacyHist = await state.supabaseClient.from('job_history').select(detailCols).eq('id', jobId).maybeSingle();
+          const resLegacyHist = await state.supabaseClient.from('job_history').select(histCols).eq('id', jobId).maybeSingle();
           if (resLegacyHist && resLegacyHist.data) row = resLegacyHist.data;
           else {
-            const resLegacyAct = await state.supabaseClient.from('jobs').select(detailCols).eq('id', jobId).maybeSingle();
+            const resLegacyAct = await state.supabaseClient.from('jobs').select(activeCols).eq('id', jobId).maybeSingle();
             if (resLegacyAct && resLegacyAct.data) row = resLegacyAct.data;
           }
         }
@@ -44314,7 +44366,8 @@ Keterangan : ${keterangan}`;
      */
     async function buildScheduleExportData(sourceType) {
       const role = state.currentUser?.role;
-      if (role !== 'admin' && role !== 'basecontrol' && role !== 'base_control') {
+      const curRole = String(role || '').toLowerCase();
+      if (!['admin', 'basecontrol', 'base_control', 'bsc', 'track', 'tim_track'].includes(curRole)) {
         showToast('Akses ditolak: Fitur ini hanya tersedia untuk Admin Operasional dan Base Control.', 'error');
         return null;
       }
@@ -44930,10 +44983,35 @@ Keterangan : ${keterangan}`;
      * Format kolom tabel:
      * No, Tgl Waktu, Shift, Type Unit, No Unit, Cluster dan Lokasi, Pelaksanaan (Tgl dan Waktu Aktual), Durasi, Status, Temuan/Kendala, Armada, OPT, MP 1, MP 2
      */
+    function exportExcelSimpleTable(headers, rows, fileNamePrefix, sheetName = 'DATA') {
+      const aoa = [headers, ...rows];
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      const colWidths = headers.map((h, i) => {
+        let max = h.length;
+        rows.forEach(r => {
+          const val = String(r[i] || '');
+          if (val.length > max) max = val.length;
+        });
+        return { wch: Math.min(Math.max(max + 4, 12), 45) };
+      });
+      ws['!cols'] = colWidths;
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31));
+
+      const todayStr = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+      const fullFileName = `${fileNamePrefix}_${todayStr}.xlsx`;
+      XLSX.writeFile(wb, fullFileName);
+      if (typeof showToast === 'function') {
+        showToast(`Berhasil mengunduh ${fullFileName}!`, 'success');
+      }
+    }
+    window.exportExcelSimpleTable = exportExcelSimpleTable;
     async function downloadExcelData(sourceType) {
       // Keamanan Akses: Hanya Admin dan Base Control yang diizinkan mengunduh
       const role = state.currentUser?.role;
-      if (role !== 'admin' && role !== 'basecontrol' && role !== 'base_control') {
+      const curRole = String(role || '').toLowerCase();
+      if (!['admin', 'basecontrol', 'base_control', 'bsc', 'track', 'tim_track'].includes(curRole)) {
         showToast('Akses ditolak: Fitur unduh Excel hanya tersedia untuk Admin Operasional dan Base Control.', 'error');
         return;
       }
@@ -45065,6 +45143,105 @@ Keterangan : ${keterangan}`;
       } else if (sourceType === 'PICA') {
         fileNamePrefix = 'Data_Log_PICA_Kendala';
         jobs = (typeof getFilteredPicaJobs === 'function') ? getFilteredPicaJobs() : [];
+      } else if (sourceType === 'AIRCLEANER') {
+        fileNamePrefix = 'Data_Clean_Air_Cleaner';
+        const currentTab = state.airCleanerCategoryTab || 'non_coal';
+        const selectedType = (document.getElementById('filter-aircleaner-type')?.value || 'ALL');
+        const searchVal = (document.getElementById('search-aircleaner-input')?.value || '').toLowerCase().trim();
+
+        if (currentTab === 'replace') {
+          fileNamePrefix = 'Data_Replace_Air_Cleaner';
+          const replacements = Array.isArray(state.airCleanerReplacements) ? state.airCleanerReplacements : [];
+          let filtered = replacements.filter(r => {
+            if (searchVal) {
+              const text = `${r.noLambung || ''} ${r.typeUnit || ''} ${r.lokasi || ''} ${r.optPic || ''}`.toLowerCase();
+              if (!text.includes(searchVal)) return false;
+            }
+            if (selectedType !== 'ALL') {
+              const rType = r.typeUnit || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(r.noLambung, '') : '');
+              if (rType !== selectedType) return false;
+            }
+            return true;
+          });
+
+          if (filtered.length === 0) {
+            alert('Tidak ada data riwayat replace yang sesuai untuk diunduh.');
+            return;
+          }
+
+          // Yang terdata hanya unit dan tanggal saja
+          const headers = ['No', 'No Unit', 'Type Unit', 'Tanggal'];
+          const rows = filtered.map((r, idx) => {
+            const noUnit = r.noLambung || '-';
+            const typeUnit = r.typeUnit || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(noUnit, '-') : '-');
+            const tgl = r.tanggal || r.tanggalReplace || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : '-');
+            return [idx + 1, noUnit, typeUnit, tgl];
+          });
+
+          return exportExcelSimpleTable(headers, rows, fileNamePrefix, 'REPLACE_AIR_CLEANER');
+        } else {
+          // Tab 'non_coal' atau 'coal'
+          const isTabCoal = (currentTab === 'coal');
+          fileNamePrefix = isTabCoal ? 'Data_Clean_Air_Cleaner_COAL' : 'Data_Clean_Air_Cleaner_NON_COAL';
+
+          let rawList = state.airCleanerMonitor || [];
+          const allowedBaseList = rawList.filter(m => {
+            const mType = (m.type || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(m.noLambung, 'Unit') : '')).trim();
+            return !isExcludedAirCleanerType(mType) && (isAllowedAirCleanerType(mType) || (Array.isArray(m.cleans) && m.cleans.length > 0));
+          });
+
+          let list = allowedBaseList.filter(m => {
+            const isCoal = isAirCleanerUnitCoal(m.noLambung, m.type);
+            return isTabCoal ? isCoal : !isCoal;
+          });
+
+          if (selectedType !== 'ALL') {
+            const selKey = normalizeAirCleanerTypeKey(selectedType);
+            list = list.filter(m => {
+              const mType = (m.type || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(m.noLambung, 'Unit') : '')).trim();
+              return (mType === selectedType) || (normalizeAirCleanerTypeKey(mType) === selKey);
+            });
+          }
+
+          if (searchVal) {
+            list = list.filter(m =>
+              (m.noLambung && m.noLambung.toLowerCase().includes(searchVal)) ||
+              (m.type && m.type.toLowerCase().includes(searchVal))
+            );
+          }
+
+          if (list.length === 0) {
+            alert('Tidak ada data Clean Air Cleaner yang sesuai filter untuk diunduh.');
+            return;
+          }
+
+          // Yang terdata hanya unit dan tanggal saja
+          const headers = ['No', 'No Unit', 'Type Unit', 'Tanggal'];
+          const rows = [];
+          let rowNo = 1;
+
+          list.forEach(item => {
+            const noUnit = item.noLambung || '-';
+            const typeUnit = item.type || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(noUnit, '-') : '-');
+            const cleans = Array.isArray(item.cleans) ? item.cleans : [];
+
+            if (cleans.length > 0) {
+              cleans.forEach(c => {
+                let cleanDate = '-';
+                if (typeof c === 'object' && c !== null) {
+                  cleanDate = c.date || c.tanggal || '-';
+                } else if (typeof c === 'string') {
+                  cleanDate = c.replace(/\s*\(?PS\s*\d*\)?/gi, '').replace(/\s*\(?SERVICE\)?/gi, '').trim() || '-';
+                }
+                rows.push([rowNo++, noUnit, typeUnit, cleanDate]);
+              });
+            } else {
+              rows.push([rowNo++, noUnit, typeUnit, '-']);
+            }
+          });
+
+          return exportExcelSimpleTable(headers, rows, fileNamePrefix, 'CLEAN_AIR_CLEANER');
+        }
       } else if (sourceType === 'RIWAYAT') {
         fileNamePrefix = 'Data_Riwayat_Selesai';
         const compStartDateInput = document.getElementById('comp-filter-start-date');
@@ -45080,9 +45257,11 @@ Keterangan : ${keterangan}`;
         const isAdmin = (state.currentUser?.role === 'admin');
         const isWt = (state.currentUser?.role === 'mp_wt' || state.currentUser?.role === 'washingman' || String(state.currentUser?.jabatan || '').toLowerCase().includes('wash'));
 
-        const isBaseControl = (state.currentUser?.role === 'basecontrol');
+        const isBaseControl = ['basecontrol', 'base_control', 'bsc'].includes(String(state.currentUser?.role || '').toLowerCase());
+        const isTrack = ['track', 'tim_track'].includes(String(state.currentUser?.role || '').toLowerCase());
         let all = [];
-        if (isAdmin || isBaseControl) {
+        if (isAdmin || isBaseControl || isTrack) {
+          // Admin, Base Control, & Tim Track: Mengunduh data riwayat lengkap seluruh kategori
           // Admin & Base Control: Mengunduh data lengkap seluruh kategori
           all = [
             ...(state.lubetruckState?.jobs || []),
@@ -45129,6 +45308,28 @@ Keterangan : ${keterangan}`;
       if (jobs.length === 0) {
         alert('Tidak ada data yang sesuai filter untuk diunduh.');
         return;
+      }
+
+      // Khusus Riwayat Selesai:
+      // Akses Track dan BSC selalu mengunduh format ringkas (HANYA UNIT DAN TANGGAL)
+      // Akses Admin diberikan pilihan dialog apakah ingin format ringkas (Unit & Tanggal) atau format laporan lengkap (20 kolom)
+      if (sourceType === 'RIWAYAT') {
+        const isTrackOrBsc = (isTrack || isBaseControl);
+        let useCompact = isTrackOrBsc;
+        if (isAdmin) {
+          useCompact = confirm("Apakah Anda ingin mengunduh format ringkas (Unit dan Tanggal saja)?\n\n- Klik 'OK' untuk format Unit & Tanggal\n- Klik 'Batal' untuk format laporan lengkap (20 Kolom)");
+        }
+
+        if (useCompact) {
+          const headers = ['No', 'No Unit', 'Type Unit', 'Tanggal'];
+          const rows = jobs.map((j, idx) => {
+            const noUnit = j.noLambung || j.unit || '-';
+            const typeUnit = j.typeUnit || j.tipeUnit || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(noUnit, '-') : '-');
+            const tgl = j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || '-';
+            return [idx + 1, noUnit, typeUnit, tgl];
+          });
+          return exportExcelSimpleTable(headers, rows, 'Data_Riwayat_Unit_Tanggal', 'RIWAYAT_SELESAI');
+        }
       }
 
       // Format kolom tabel Excel yang dipisah sesuai permintaan pengguna (Khusus Riwayat Selesai, Job Request, PICA):

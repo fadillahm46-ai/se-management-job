@@ -1,10 +1,10 @@
 /**
  * Service Worker: SE MANAGEMENT JOB - Mine Operations
- * Versi Cache: se-mine-ops-v28
+ * Versi Cache: se-mine-ops-v32
  * Fitur: Offline Caching, Network-First untuk Halaman Utama (Navigation), Stale-While-Revalidate untuk aset statis
  */
 
-const CACHE_NAME = 'se-mine-ops-v28';
+const CACHE_NAME = 'se-mine-ops-v32';
 
 // Daftar aset statis utama yang dicache saat instalasi
 const PRECACHE_ASSETS = [
@@ -27,7 +27,7 @@ self.addEventListener('install', (event) => {
         )
       );
     }).then(() => {
-      console.log('[SW] Service Worker v1.0.8 berhasil diinstal.');
+      console.log('[SW] Service Worker v1.0.9 berhasil diinstal.');
       return self.skipWaiting();
     })
   );
@@ -46,7 +46,7 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => {
-      console.log('[SW] Service Worker v1.0.8 aktif dan mengontrol halaman.');
+      console.log('[SW] Service Worker v1.0.9 aktif dan mengontrol halaman.');
       return self.clients.claim();
     })
   );
@@ -84,9 +84,14 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
+          // Jangan cache jika respons adalah redirect untuk mencegah 'Cache.put() encountered a network error'
+          if (networkResponse && networkResponse.status === 200 && !networkResponse.redirected) {
             const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache).catch((err) => {
+                console.warn('[SW] Gagal simpan cache navigasi:', err);
+              });
+            });
           }
           return networkResponse;
         })
@@ -104,8 +109,10 @@ self.addEventListener('fetch', (event) => {
       if (cachedResponse) {
         // Ambil update dari network di background untuk request selanjutnya (Stale-While-Revalidate)
         fetch(request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, networkResponse.clone()));
+          if (networkResponse && networkResponse.status === 200 && !networkResponse.redirected) {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, networkResponse.clone()).catch(() => { });
+            });
           }
         }).catch(() => { });
         return cachedResponse;
@@ -113,13 +120,13 @@ self.addEventListener('fetch', (event) => {
 
       // Jika belum ada di cache, ambil dari network dan simpan ke cache
       return fetch(request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'opaque') {
+        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'opaque' || networkResponse.redirected) {
           return networkResponse;
         }
 
         const responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
-          cache.put(request, responseToCache);
+          cache.put(request, responseToCache).catch(() => { });
         });
 
         return networkResponse;
