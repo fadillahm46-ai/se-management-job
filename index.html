@@ -2344,9 +2344,27 @@
                         <span id="dash-cat-rom-val"
                           class="text-[11px] font-black text-slate-900 group-hover:text-emerald-800 font-mono">0 Job
                           (0%)</span>
+                                            </div>
+
+                      <!-- Kategori Tambahan: Washing Non-Coal -->
+                      <div onclick="filterDashboardCategory('non_coal')" id="dash-cat-card-non_coal"
+                        class="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50/60 border border-slate-200/60 hover:border-emerald-300 flex items-center justify-between cursor-pointer transition active:scale-[0.99] group shadow-2xs"
+                        title="Klik untuk memfilter grafik ke Washing Non-Coal">
+                        <div>
+                          <span
+                            class="text-[10px] font-bold text-slate-800 group-hover:text-emerald-900 block flex items-center gap-1">
+                            <span>Washing Non-Coal</span>
+                            <span
+                              class="text-[9px] text-emerald-600 opacity-0 group-hover:opacity-100 transition"> </span>
+                          </span>
+                          <span class="text-[9px] text-slate-400">Unit non-coal & support</span>
+                        </div>
+                        <span id="dash-cat-noncoal-val"
+                          class="text-[11px] font-black text-slate-900 group-hover:text-emerald-800 font-mono">0 Job
+                          (0%)</span>
                       </div>
 
-                      <!-- Kategori 4: Clean Air Cleaner -->
+                      <!-- Kategori 4: Clean Air Cleaner --><!-- Kategori 4: Clean Air Cleaner -->
                       <div onclick="filterDashboardCategory('aircleaner')" id="dash-cat-card-aircleaner"
                         class="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50/60 border border-slate-200/60 hover:border-emerald-300 flex items-center justify-between cursor-pointer transition active:scale-[0.99] group shadow-2xs"
                         title="Klik untuk memfilter grafik ke Clean Air Cleaner">
@@ -4445,10 +4463,10 @@
                       </div>
                     </th>
                     <th onclick="sortPicaBy('typeJob')"
-                      class="py-2.5 px-2 w-[16%] md:w-[5.5%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
+                      class="py-2.5 px-1.5 w-[16%] md:w-[6%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition whitespace-nowrap"
                       title="Urutkan berdasarkan Type Job (Klik 3x untuk reset)">
-                      <div class="flex items-center justify-start space-x-1">
-                        <span>TYPE JOB</span>
+                      <div class="flex items-center justify-start space-x-1 whitespace-nowrap">
+                        <span class="whitespace-nowrap">TYPE JOB</span>
                         <span id="pica-sort-icon-typeJob"
                           class="inline-block ml-0.5 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition">⇅</span>
                       </div>
@@ -6311,12 +6329,20 @@
                   class="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-700 font-mono">0
                   Unit</span>
               </button>
+              <button type="button" id="btn-ac-sub-replace" onclick="setAirCleanerCategoryTab('replace')"
+                class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer flex items-center gap-2 outline-none focus:outline-none">
+                <span>Replace</span>
+                <span id="badge-ac-count-replace"
+                  class="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-700 font-mono">0
+                  Log</span>
+              </button>
             </div>
             <div id="ac-tab-rule-desc" class="hidden"></div>
           </div>
 
-          <!-- Table Container -->
-          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+          <!-- Table Container Siklus Air Cleaner -->
+          <div id="ac-cycle-table-container"
+            class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs border-collapse">
                 <thead id="ac-table-thead"
@@ -6345,8 +6371,38 @@
             </div>
           </div>
 
+          <!-- Table Container Riwayat Replace Air Cleaner -->
+          <div id="ac-replace-table-container"
+            class="hidden bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full table-fixed text-left text-xs border-collapse">
+                <thead id="ac-replace-table-thead"
+                  class="bg-gradient-to-r from-teal-700 to-emerald-800 text-white uppercase text-[10.5px] md:text-[11px] tracking-wider font-extrabold transition-colors duration-300">
+                  <tr>
+                    <th class="py-2.5 px-3 w-[15%] text-left align-middle border-r border-white/10 whitespace-nowrap">NO
+                      ID</th>
+                    <th class="py-2.5 px-2.5 w-[11%] text-left align-middle border-r border-white/10 whitespace-nowrap">
+                      WAKTU INPUT</th>
+                    <th class="py-2.5 px-3 w-[16%] text-left align-middle border-r border-white/10">NO &amp; TYPE UNIT
+                    </th>
+                    <th class="py-2.5 px-3 w-[15%] text-left align-middle border-r border-white/10">TEKNISI / PIC
+                      (TRACK)</th>
+                    <th class="py-2.5 px-3 w-[24%] text-left align-middle border-r border-white/10">KETERANGAN ALASAN
+                    </th>
+                    <th class="py-2.5 px-2 text-center align-middle border-r border-white/10 whitespace-nowrap w-[9%]">
+                      EVIDEN FOTO</th>
+                    <th class="py-2.5 px-2.5 text-center align-middle w-[10%]">STATUS</th>
+                  </tr>
+                </thead>
+                <tbody id="ac-replace-tbody" class="divide-y divide-slate-100 text-slate-800 font-medium">
+                  <!-- Populated via renderAirCleanerReplacementsTable() -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <!-- Legenda Indikator Warna Centang Monitoring Air Cleaner -->
-          <div
+          <div id="ac-cycle-legend"
             class="flex flex-wrap items-center justify-between gap-2.5 px-3 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-[11px] text-slate-600">
             <span class="font-bold text-slate-700 flex items-center gap-1.5">
               <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11232,10 +11288,10 @@
       const isTodayDailyRow = !isExplicitUnsch && isDailyRowCat && todayMapStr && rowDateStr === todayMapStr;
       const rawStatus = String(row.status || (isExplicitUnsch ? 'unscheduled' : 'scheduled')).toLowerCase().trim();
       const normStatus = (isTodayDailyRow && rawStatus === 'pending') ? 'scheduled' : (row.status || (isExplicitUnsch ? 'unscheduled' : 'scheduled'));
-      const normIsPending = (isExplicitUnsch || isTodayDailyRow) ? false : Boolean(row.is_pending);
+      const normIsPending = (isExplicitUnsch || isTodayDailyRow) ? false : Boolean(row.is_pending !== undefined ? row.is_pending : row.isPending);
       let normWaktu = row.waktu_rencana || row.waktu || '07:00 s/d 07:15';
       if (isTodayDailyRow && normWaktu === '17:45 s/d 04:45') {
-        const isBigRowUnit = (rowCat === 'digger' || /^E\d/i.test(String(row.no_lambung || '')));
+        const isBigRowUnit = (rowCat === 'digger' || /^E\d/i.test(String(row.no_lambung || row.noLambung || '')));
         normWaktu = isBigRowUnit ? '12:00 s/d 13:00' : '08:00 s/d 09:00';
       }
 
@@ -11248,18 +11304,19 @@
         washingRound: typeof getJobWashingRound === 'function' ? getJobWashingRound(row) : (parseInt(row.washing_round, 10) || (targetId.includes('-W2-') ? 2 : 1)),
         cluster: row.cluster || 'Selatan',
         waktu: normWaktu,
-        typeUnit: row.type_unit || 'Unit',
-        noLambung: row.no_lambung || '',
+        // Dukung baris snake_case (Supabase) maupun objek camelCase (memori/broadcast) agar No Lambung tidak pernah hilang
+        typeUnit: row.type_unit || row.typeUnit || 'Unit',
+        noLambung: row.no_lambung || row.noLambung || row.lambung || '',
         lokasi: row.lokasi || '',
-        ltUnit: (isWt || isUnschWt) ? '-' : (row.armada_unit || '-'),
-        wtUnit: (isWt || isUnschWt) ? (row.armada_unit || '-') : '-',
-        armada: row.armada_unit || '-',
+        ltUnit: (isWt || isUnschWt) ? '-' : (row.armada_unit || row.armadaUnit || row.ltUnit || row.armada || '-'),
+        wtUnit: (isWt || isUnschWt) ? (row.armada_unit || row.armadaUnit || row.wtUnit || row.armada || '-') : '-',
+        armada: row.armada_unit || row.armadaUnit || row.armada || '-',
         targetType: (isWt || isUnschWt) ? 'WT' : 'LT',
-        opt: (row.opt_name && row.opt_name !== '-') ? row.opt_name : '-',
+        opt: ((row.opt_name || row.opt) && (row.opt_name || row.opt) !== '-') ? (row.opt_name || row.opt) : '-',
         mp1: (row.mp1 && row.mp1 !== '-') ? row.mp1 : '-',
         mp2: (row.mp2 && row.mp2 !== '-') ? row.mp2 : '-',
-        jamStart: row.jam_start || '',
-        jamEnd: row.jam_end || '',
+        jamStart: row.jam_start || row.jamStart || '',
+        jamEnd: row.jam_end || row.jamEnd || '',
         durasi: (row.durasi !== null && row.durasi !== undefined) ? parseFloat(row.durasi) : null,
         hmStop: row.hm_stop || row.hm_start || null,
         hmReady: row.hm_ready || row.hm_end || null,
@@ -11273,18 +11330,18 @@
         keterangan: row.keterangan || '',
         deskripsi: row.keterangan || '',
         isPending: normIsPending,
-        isLocked: ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'parkir', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(String(row.status || '').toLowerCase().trim()) || Boolean(row.is_locked),
-        unitCondition: row.unit_condition || '',
+        isLocked: ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'parkir', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(String(row.status || '').toLowerCase().trim()) || Boolean(row.is_locked || row.isLocked),
+        unitCondition: row.unit_condition || row.unitCondition || '',
         serviceNotes: (row.service_notes && !row.service_notes.startsWith('PHOTOS:') && !row.service_notes.startsWith('PHOTOS_ATTACHED')) ? row.service_notes : '',
-        bdNotes: row.bd_notes || '',
-        parkirNotes: row.parkir_notes || '',
-        serviceType: row.service_type || (isUnschWt ? 'watertruck' : 'lubetruck'),
-        namaPemesan: row.pemesan || '',
-        pemesan: row.pemesan || '',
+        bdNotes: row.bd_notes || row.bdNotes || '',
+        parkirNotes: row.parkir_notes || row.parkirNotes || '',
+        serviceType: row.service_type || row.serviceType || (isUnschWt ? 'watertruck' : 'lubetruck'),
+        namaPemesan: row.pemesan || row.namaPemesan || '',
+        pemesan: row.pemesan || row.namaPemesan || '',
         kondisi: row.kondisi || '',
         pattern: row.pattern || 'AUTO',
-        carryCount: row.carry_count || 0,
-        originalDate: row.original_date || '',
+        carryCount: row.carry_count || row.carryCount || 0,
+        originalDate: row.original_date || row.originalDate || '',
         fotos: (() => {
           if (Array.isArray(row.fotos) && row.fotos.length > 0) return row.fotos;
           if (row.service_notes && row.service_notes.startsWith('PHOTOS:')) {
@@ -15963,9 +16020,16 @@
             loadPicaFromSupabase();
           }
         } else if (tabKey === 'air-cleaner-monitor') {
-          renderAirCleanerMonitorTable();
+          if (state.airCleanerCategoryTab === 'replace') {
+            renderAirCleanerReplacementsTable();
+          } else {
+            renderAirCleanerMonitorTable();
+          }
           if ((!Array.isArray(state.airCleanerMonitor) || state.airCleanerMonitor.length === 0) && typeof loadAirCleanerFromSupabase === 'function') {
             loadAirCleanerFromSupabase(false);
+          }
+          if (typeof loadAirCleanerReplacementsFromSupabase === 'function') {
+            loadAirCleanerReplacementsFromSupabase(false);
           }
         } else if (tabKey === 'orders') {
           if (typeof populateOrderUnitsDatalist === 'function') populateOrderUnitsDatalist();
@@ -17729,7 +17793,22 @@
       toggleModal('modal-admin-edit', true);
     }
 
-    function saveAdminJobEdit() {
+    function extractLambungFromId(jobId) {
+      if (!jobId || typeof jobId !== 'string') return '';
+      const s = String(jobId).trim();
+      const m1 = s.match(/^[A-Z]{2}-[A-Z0-9]+-\d{8}-\d-([A-Z0-9]+?)(?:-\d{2,4})?$/i);
+      if (m1 && m1[1]) return m1[1].toUpperCase();
+      const m2 = s.match(/(?:REQ-\d+-|-(?:1|2)-)([A-Z0-9]+?)(?:-\d{2,4})?$/i);
+      if (m2 && m2[1]) return m2[1].toUpperCase();
+      const m3 = s.match(/WT-SCH-\d{8}-([A-Z0-9]+?)-S\d/i);
+      if (m3 && m3[1]) return m3[1].toUpperCase();
+      const m4 = s.match(/-([A-Z0-9]{2,10})(?:-\d{2,4})?$/i);
+      if (m4 && m4[1] && !['SCH', 'REQ', 'COAL', 'ROM'].includes(m4[1].toUpperCase())) return m4[1].toUpperCase();
+      return '';
+    }
+    window.extractLambungFromId = extractLambungFromId;
+
+    async function saveAdminJobEdit() {
       const id = document.getElementById('edit-job-id')?.value;
       const waktu = document.getElementById('edit-waktu')?.value?.trim();
       const noLambung = document.getElementById('edit-no-lambung')?.value?.trim().toUpperCase();
@@ -17756,6 +17835,7 @@
         job.shift = detectedShift;
       }
       job.noLambung = noLambung;
+      job.no_lambung = noLambung;
       job.keterangan = keterangan !== undefined ? keterangan : job.keterangan;
       job.typeUnit = getUnitTypeFromMaster(noLambung, job.typeUnit || 'Unit');
 
@@ -17785,11 +17865,14 @@
           syncJobToSupabase(job);
         }
 
-        // Sinkronkan ke Data Master Populasi Unit & SELURUH jadwal unit ini (Shift 1, Shift 2, dll)
+        // Sinkronkan serentak ke Data Master Populasi Unit & SELURUH jadwal unit ini (Shift 1, Shift 2, dll)
         if (typeof propagateUnitLocationAndCluster === 'function' && noLambung) {
-          propagateUnitLocationAndCluster(noLambung, effectiveCluster, lokasi, true, isClusterMoved);
+          await propagateUnitLocationAndCluster(noLambung, effectiveCluster, lokasi, true, isClusterMoved);
         } else if (typeof syncMasterUnitLocation === 'function' && noLambung) {
-          syncMasterUnitLocation(noLambung, effectiveCluster, lokasi);
+          await syncMasterUnitLocation(noLambung, effectiveCluster, lokasi);
+        }
+        if (typeof renderMasterUnitsTable === 'function') {
+          renderMasterUnitsTable();
         }
       } else {
         console.log(`[saveAdminJobEdit] Job ${id} terkunci (ACH/NON-ACH/Selesai). Kluster & Lokasi tetap dipertahankan.`);
@@ -18677,7 +18760,7 @@
           </td>
 
           <!-- KOLOM 1: TYPE JOB (RATA KIRI TENGAH) -->
-          <td class="py-2.5 px-2 text-left align-middle break-words">
+          <td class="py-2.5 px-1.5 text-left align-middle whitespace-nowrap">
             <span class="md:hidden flex items-center justify-start cursor-pointer" onclick="openJobDetailModal('${job.id}')" title="Klik untuk lihat detail">${(typeof getJobSchBadgeHtml === 'function') ? getJobSchBadgeHtml(job) : (job.cat || 'JOB')}</span>
             <span class="hidden md:inline font-bold text-slate-800 text-[10px] leading-tight text-left">${(typeof getJobSchPlainHtml === 'function') ? getJobSchPlainHtml(job) : (job.cat || 'JOB')}</span>
           </td>
@@ -23127,6 +23210,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       const diggerJobs = schJobs.filter(j => j.cat === 'digger');
       const greasingJobs = [...smallJobs, ...diggerJobs];
       const coalJobs = schJobs.filter(j => j.cat === 'coal');
+      const nonCoalJobs = schJobs.filter(j => j.cat === 'non_coal' || j.cat === 'noncoal');
       const romJobs = schJobs.filter(j => j.cat === 'rom');
       const aircleanerJobs = schJobs.filter(j => j.cat === 'aircleaner');
       const topupJobs = schJobs.filter(j => j.cat === 'topup');
@@ -23140,6 +23224,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       const catGreasingEl = document.getElementById('dash-cat-greasing-val');
       const catCoalEl = document.getElementById('dash-cat-coal-val');
+      const catNoncoalEl = document.getElementById('dash-cat-noncoal-val');
       const catRomEl = document.getElementById('dash-cat-rom-val');
       const catAircleanerEl = document.getElementById('dash-cat-aircleaner-val');
       const catTopupEl = document.getElementById('dash-cat-topup-val');
@@ -23270,7 +23355,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
     function filterDashboardCategory(catKey) {
       state.dashboardSelectedCategory = catKey;
 
-      const cards = ['greasing', 'coal', 'rom', 'aircleaner', 'topup', 'unscheduled'];
+      const cards = ['greasing', 'coal', 'non_coal', 'rom', 'aircleaner', 'topup', 'unscheduled'];
       cards.forEach(k => {
         const el = document.getElementById(`dash-cat-card-${k}`);
         if (el) {
@@ -23297,6 +23382,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         'ALL': 'Monitoring Ketercapaian Per Tipe Unit (All Kategori)',
         'greasing': 'Monitoring Ketercapaian — Small Track & Big Digger',
         'coal': 'Monitoring Ketercapaian — Washing Coal',
+        'non_coal': 'Monitoring Ketercapaian — Washing Non-Coal',
         'rom': 'Monitoring Ketercapaian — Washing ROM Area',
         'aircleaner': 'Monitoring Ketercapaian — Clean Air Cleaner',
         'topup': 'Monitoring Ketercapaian — Top Up Oil',
@@ -23306,7 +23392,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       if (subEl) {
         subEl.textContent = catKey === 'ALL'
           ? 'Tingkat keberhasilan penugasan aktual per tipe unit alat berat terhadap target KPI 95%'
-          : `Menampilkan persentase ACH per tipe unit khusus kategori ${catNames[catKey].replace('Monitoring Ketercapaian — ', '')}`;
+          : `Menampilkan persentase ACH per tipe unit khusus kategori ${(catNames[catKey] || '').replace(/Monitoring Ketercapaian [—-]\s*/, '')}`;
       }
 
       renderDashboardAchievementChart(catKey);
@@ -23329,16 +23415,6 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       const clusterFilter = clusterSelect?.value || 'ALL';
       const shiftFilter = shiftSelect?.value || 'ALL';
 
-      const filterJobItem = (job) => {
-        const jobDate = job.tanggal || '2026-09-27';
-        if (jobDate < startDate || jobDate > endDate) return false;
-        if (shiftFilter !== 'ALL' && String(job.shift) !== String(shiftFilter)) return false;
-        if (clusterFilter !== 'ALL') {
-          if (!isClusterMatchFilter(job.cluster, clusterFilter)) return false;
-        }
-        return true;
-      };
-
       const { schJobs, unschJobs } = getUnifiedDashboardJobs(startDate, endDate, clusterFilter, shiftFilter);
 
       let targetJobs = [];
@@ -23346,6 +23422,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         targetJobs = schJobs.filter(j => j.cat === 'small' || j.cat === 'digger');
       } else if (selectedCat === 'coal') {
         targetJobs = schJobs.filter(j => j.cat === 'coal');
+      } else if (selectedCat === 'non_coal' || selectedCat === 'noncoal') {
+        targetJobs = schJobs.filter(j => j.cat === 'non_coal' || j.cat === 'noncoal');
       } else if (selectedCat === 'rom') {
         targetJobs = schJobs.filter(j => j.cat === 'rom');
       } else if (selectedCat === 'aircleaner') {
@@ -23359,6 +23437,14 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         targetJobs = schJobs;
       }
 
+      // Filter pengaman: abaikan jika ada residu lokal orphan unit yang tidak terdaftar di SCH
+      targetJobs = targetJobs.filter(j => {
+        if (!j || !j.noLambung) return false;
+        // Jika EB56003AMM dengan cluster ROM di topup, abaikan
+        if (j.noLambung === 'EB56003AMM' && j.cat === 'topup' && j.cluster === 'ROM' && j.status === 'scheduled') return false;
+        return true;
+      });
+
       // Hitung persentase ACH untuk kategori yang dipilih
       const totalCat = targetJobs.length;
       const achCat = targetJobs.filter(j => window.isAchLikeStatus(j)).length;
@@ -23366,10 +23452,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       const bigAchEl = document.getElementById('dash-big-ach-rate');
       const kpiBadgeEl = document.getElementById('dash-kpi-status-badge');
-      if (bigAchEl) bigAchEl.textContent = `${catRateNum.toFixed(1)}%`;
+      if (bigAchEl) bigAchEl.textContent = totalCat > 0 ? `${catRateNum.toFixed(1)}%` : '0.0%';
       if (kpiBadgeEl) {
         if (totalCat === 0) {
-          kpiBadgeEl.textContent = 'Tidak Ada Unit';
+          kpiBadgeEl.textContent = 'Tidak Ada Unit Terdaftar';
           kpiBadgeEl.className = 'text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200';
         } else if (catRateNum >= 95) {
           kpiBadgeEl.textContent = 'KPI Tercapai (≥95%)';
@@ -23383,7 +23469,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         }
       }
 
-      // Hitung persentase ACH per Tipe Unit untuk grafik (Tipe model spesifik dari Data Master)
+      // Hitung persentase ACH per Tipe Unit untuk grafik (Hanya dari unit yang benar-benar ada di SCH)
       const unitTypesMap = {};
       targetJobs.forEach(j => {
         let t = getUnitTypeFromMaster(j.noLambung, j.typeUnit || 'Unit');
@@ -23401,10 +23487,28 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         if (window.isAchLikeStatus(j)) unitTypesMap[t].ach++;
       });
 
-      let typeLabels = Object.keys(unitTypesMap);
+      // Filter KETAT: Hanya tampilkan tipe unit yang terdaftar di SCH (total > 0)
+      let typeLabels = Object.keys(unitTypesMap).filter(t => unitTypesMap[t].total > 0);
+
+      // JIKA TIDAK ADA UNIT TERDAFTAR DI SCH: Jangan render bar dummy palsu!
       if (typeLabels.length === 0) {
-        typeLabels = ['PPA_PC 2000-8', 'PPA_D85ESS-2', 'PPA_PC300SE-8M0', 'PPA_PC210-10M0', 'PPA_D245S'];
+        if (achievementTrendChartInstance) {
+          achievementTrendChartInstance.destroy();
+          achievementTrendChartInstance = null;
+        }
+        trendCtx.clearRect(0, 0, trendCanvas.width, trendCanvas.height);
+        trendCtx.save();
+        trendCtx.textAlign = 'center';
+        trendCtx.textBaseline = 'middle';
+        trendCtx.fillStyle = '#94A3B8';
+        trendCtx.font = 'bold 12px Inter, system-ui, sans-serif';
+        trendCtx.fillText('Tidak ada unit yang terdaftar dalam jadwal (SCH) untuk kategori ini', trendCanvas.width / 2, trendCanvas.height / 2);
+        trendCtx.restore();
+        return;
       }
+
+      // Urutkan tipe unit berdasarkan nama agar rapi dan stabil
+      typeLabels.sort();
 
       const typeAchRates = typeLabels.map(t => {
         const data = unitTypesMap[t];
@@ -23451,7 +23555,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             legend: { display: false },
             tooltip: {
               callbacks: {
-                label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}%`
+                label: (ctx) => ${ctx.dataset.label}: %
               }
             }
           },
@@ -24998,6 +25102,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       toggleModal('modal-action-decision', false);
       const job = findJobById(state.currentActionJobId);
       if (!job) return;
+      if (!job.noLambung) {
+        job.noLambung = job.no_lambung || job.lambung || (typeof extractLambungFromId === 'function' ? extractLambungFromId(state.currentActionJobId) : '');
+        job.no_lambung = job.noLambung;
+      }
       const label = document.getElementById('nonach-form-unit-label');
       if (label) {
         label.textContent = `Unit: ${job.noLambung || '-'}`;
@@ -26920,19 +27028,21 @@ Keterangan : ${keterangan}`;
     }
 
     function deriveClusterFromLocation(lokasiStr, fallbackCluster = '') {
-      if (!lokasiStr) return fallbackCluster || 'Selatan';
+      // Hanya kembalikan cluster jika lokasi mengandung kata kunci wilayah yang eksplisit.
+      // Jika tidak ada, kembalikan fallbackCluster apa adanya (bisa kosong) agar pilihan Cluster manual user TIDAK ter-reset ke 'Selatan'.
+      if (!lokasiStr) return fallbackCluster || '';
       const loc = String(lokasiStr).trim().toLowerCase();
       if (loc.includes('tengah')) return 'Tengah';
       if (loc.includes('utara')) return 'Utara';
       if (loc.includes('selatan') || loc.includes('balanai')) return 'Selatan';
-      if (loc.includes('rom')) return 'ROM';
+      if (/\brom\b/.test(loc)) return 'ROM';
       if (loc.includes('sim e') || loc.includes('rajawali')) return 'Tengah';
       if (loc.includes('workshop')) return 'Selatan';
       if (loc.includes('hrm')) {
         if (loc.includes('utara')) return 'Utara';
         return 'Selatan';
       }
-      return fallbackCluster || 'Selatan';
+      return fallbackCluster || '';
     }
     window.deriveClusterFromLocation = deriveClusterFromLocation;
 
@@ -26958,7 +27068,8 @@ Keterangan : ${keterangan}`;
     }
     window.handleAdminEditLokasiInput = handleAdminEditLokasiInput;
 
-    async function propagateUnitLocationAndCluster(noLambung, newCluster, newLokasi, updateSupabase = true, forceClearArmada = false) {
+    // excludeJobId (opsional): job yang sedang di-Action. Cluster/lokasinya ikut diperbarui, tetapi armada & personil pilihan user TIDAK dikosongkan.
+    async function propagateUnitLocationAndCluster(noLambung, newCluster, newLokasi, updateSupabase = true, forceClearArmada = false, excludeJobId = null) {
       if (!noLambung) return 0;
       const cleanLambung = String(noLambung).trim().toUpperCase();
       if (!cleanLambung) return 0;
@@ -26978,23 +27089,30 @@ Keterangan : ${keterangan}`;
         return String(base || '').trim().toLowerCase();
       };
 
-      // 1. Perbarui Data Master Populasi Unit di local state
+      // 1. Perbarui Data Master Populasi Unit di local state & localStorage secara aktual
       if (!Array.isArray(state.masterUnits)) state.masterUnits = [];
       const unitIdx = state.masterUnits.findIndex(u => (u.lambung || u.no_lambung || '').trim().toUpperCase() === cleanLambung);
       const oldMasterCluster = (unitIdx !== -1 && state.masterUnits[unitIdx]) ? (state.masterUnits[unitIdx].cluster || '') : '';
       const isMasterClusterChanged = Boolean(targetCluster && oldMasterCluster && normClusterKey(oldMasterCluster) !== normClusterKey(targetCluster));
+      const detectedType = (typeof getUnitTypeFromMaster === 'function') ? getUnitTypeFromMaster(cleanLambung, 'Unit') : 'Unit';
 
       if (unitIdx !== -1) {
         if (targetCluster) state.masterUnits[unitIdx].cluster = targetCluster;
         if (targetLokasi) state.masterUnits[unitIdx].lokasi = targetLokasi;
+        state.masterUnits[unitIdx].lambung = cleanLambung;
+        state.masterUnits[unitIdx].no_lambung = cleanLambung;
+        if (!state.masterUnits[unitIdx].type || state.masterUnits[unitIdx].type === 'Unit') {
+          state.masterUnits[unitIdx].type = detectedType;
+          state.masterUnits[unitIdx].type_model = detectedType;
+        }
       } else {
-        // Jika belum ada di master populasi, daftarkan otomatis agar data tetap sinkron
+        // Jika belum ada di master populasi, daftarkan otomatis agar data master selalu update secara aktual
         state.masterUnits.push({
           id: 'UNIT-' + cleanLambung,
           lambung: cleanLambung,
           no_lambung: cleanLambung,
-          type: typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(cleanLambung, 'Unit') : 'Unit',
-          type_model: typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(cleanLambung, 'Unit') : 'Unit',
+          type: detectedType,
+          type_model: detectedType,
           kategori: 'coal',
           cluster: targetCluster || 'Selatan',
           lokasi: targetLokasi || 'Pit Area',
@@ -27003,6 +27121,7 @@ Keterangan : ${keterangan}`;
       }
       safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
       safeStorage.setItem('SE_MASTER_UNITS_TS', String(Date.now()));
+      safeStorage.setItem('SE_MASTER_UNITS_VER', 'v4_cluster_sync');
 
       // 2. Propagasi serentak ke SEMUA job aktif di memori (globalDataCache, Shift 1, Shift 2, Washing 1 & 2, LT, WT, Unscheduled)
       let updatedJobCount = 0;
@@ -27010,6 +27129,7 @@ Keterangan : ${keterangan}`;
       const affectedJobsMap = new Map();
 
       const clearJobArmadaAndCrew = (j) => {
+        // ATURAN PENGGUNA: HANYA armada dan personil saja yang dikosongkan! Unit (noLambung & typeUnit) TETAP UTUH!
         j.armada = '-';
         j.ltUnit = '-';
         j.wtUnit = '-';
@@ -27019,14 +27139,23 @@ Keterangan : ${keterangan}`;
         j.opt_name = '-';
         j.mp1 = '-';
         j.mp2 = '-';
+        j.noLambung = cleanLambung;
+        j.no_lambung = cleanLambung;
       };
 
       const updateList = (list) => {
         if (!Array.isArray(list)) return;
         list.forEach(j => {
           if (!j) return;
-          const jLambung = (j.noLambung || j.lambung || '').trim().toUpperCase();
+          const jLambung = (j.noLambung || j.lambung || j.no_lambung || (typeof extractLambungFromId === 'function' ? extractLambungFromId(j.id) : '') || '').trim().toUpperCase();
           if (jLambung === cleanLambung) {
+            // JAMINAN KEUTUHAN UNIT: No Lambung & Type Unit tidak pernah boleh kosong
+            j.noLambung = cleanLambung;
+            j.no_lambung = cleanLambung;
+            if (!j.typeUnit || j.typeUnit === 'Unit') {
+              j.typeUnit = detectedType;
+            }
+
             // Jangan ubah kluster & lokasi jika job sudah ach, non-ach, atau sudah dikerjakan
             if (typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(j)) return;
 
@@ -27045,8 +27174,9 @@ Keterangan : ${keterangan}`;
               normClusterKey(armCluster) !== normClusterKey(targetCluster)
             );
 
-            // ATURAN PENGGUNA: Jika cluster unit berpindah, kosongkan otomatis armada & personilnya!
-            if (forceClearArmada || isMasterClusterChanged || isJobClusterChanged || (updateSupabase && isCrossClusterArmada)) {
+            // ATURAN PENGGUNA: Jika cluster unit berpindah, HANYA armada & personil yang dikosongkan otomatis! Unit tetap utuh.
+            const isExcludedJob = Boolean(excludeJobId && String(j.id) === String(excludeJobId));
+            if (!isExcludedJob && (forceClearArmada || isMasterClusterChanged || isJobClusterChanged || (updateSupabase && isCrossClusterArmada))) {
               clearJobArmadaAndCrew(j);
               anyArmadaCleared = true;
             }
@@ -27099,23 +27229,47 @@ Keterangan : ${keterangan}`;
             jobUpdateData.mp2 = '-';
           }
 
+          // Sinkronisasi master_units: UPSERT atomic agar data master selalu update secara aktual di Cloud Supabase
+          const syncMasterUnitRow = async () => {
+            const mu = (state.masterUnits || []).find(u => (u.lambung || u.no_lambung || '').trim().toUpperCase() === cleanLambung);
+            const fullPayload = {
+              no_lambung: cleanLambung,
+              type_model: (mu && (mu.type || mu.type_model)) || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(cleanLambung, 'Unit') : 'Unit'),
+              kategori: (mu && mu.kategori) || 'coal',
+              cluster: targetCluster || (mu && mu.cluster) || 'Selatan',
+              lokasi: targetLokasi || (mu && mu.lokasi) || 'Pit Area',
+              status: (mu && mu.statusAktif === false) ? 'Breakdown' : 'Operasi',
+              status_aktif: !(mu && mu.statusAktif === false),
+              updated_at: nowIso
+            };
+            const { data: upRows, error: upErr } = await state.supabaseClient
+              .from('master_units')
+              .upsert(fullPayload, { onConflict: 'no_lambung' })
+              .select('id, no_lambung');
+            if (upErr) {
+              console.warn('[propagateUnitLocationAndCluster master_units upsert error]', upErr.message || upErr);
+            } else if (mu && Array.isArray(upRows) && upRows[0]?.id) {
+              mu.id = upRows[0].id;
+              safeStorage.setItem('SE_MASTER_UNITS', JSON.stringify(state.masterUnits));
+            }
+          };
+
           await Promise.allSettled([
             // Perbarui tabel master_units di cloud
-            state.supabaseClient
-              .from('master_units')
-              .update(unitUpdateData)
-              .ilike('no_lambung', cleanLambung),
+            syncMasterUnitRow(),
             // Perbarui seluruh jadwal aktif unit ini di tabel fisik jobs_lt & jobs_wt (HANYA job yang BELUM selesai)
             state.supabaseClient
               .from('jobs_lt')
               .update(jobUpdateData)
               .ilike('no_lambung', cleanLambung)
-              .in('status', ['scheduled', 'plan', 'pending']),
+              .in('status', ['scheduled', 'plan', 'pending'])
+              .neq('id', excludeJobId ? String(excludeJobId) : '__NO_EXCLUDE__'),
             state.supabaseClient
               .from('jobs_wt')
               .update(jobUpdateData)
               .ilike('no_lambung', cleanLambung)
-              .in('status', ['scheduled', 'plan', 'pending']),
+              .in('status', ['scheduled', 'plan', 'pending'])
+              .neq('id', excludeJobId ? String(excludeJobId) : '__NO_EXCLUDE__'),
             state.supabaseClient
               .from('unscheduled_jobs_lt')
               .update(unitUpdateData)
@@ -27131,7 +27285,22 @@ Keterangan : ${keterangan}`;
           // Pancarkan sinyal realtime untuk setiap job aktif yang berubah agar HP/Komputer lain langsung sinkron
           for (const [jid, jObj] of affectedJobsMap.entries()) {
             if (typeof emitJobBroadcastSignal === 'function') {
-              emitJobBroadcastSignal(jid, 'UPDATE', 'jobs', jObj);
+              // Kirim payload format snake_case lengkap agar No Lambung & Type Unit tidak hilang di perangkat penerima
+              const isWtSig = (jObj.targetType === 'WT' || String(jid).startsWith('WT') || ['coal', 'rom', 'non_coal'].includes(jObj.cat));
+              emitJobBroadcastSignal(jid, 'UPDATE', 'jobs', Object.assign({}, jObj, {
+                id: jid,
+                no_lambung: jObj.noLambung || cleanLambung,
+                type_unit: jObj.typeUnit || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(cleanLambung, 'Unit') : 'Unit'),
+                cluster: jObj.cluster,
+                lokasi: jObj.lokasi,
+                waktu_rencana: jObj.waktu || jObj.waktu_rencana,
+                armada_unit: isWtSig ? (jObj.wtUnit || jObj.armada || '-') : (jObj.ltUnit || jObj.armada || '-'),
+                opt_name: jObj.opt || '-',
+                jam_start: jObj.jamStart || '',
+                jam_end: jObj.jamEnd || '',
+                is_pending: Boolean(jObj.isPending),
+                service_type: jObj.serviceType || undefined
+              }));
             }
           }
 
@@ -27162,8 +27331,11 @@ Keterangan : ${keterangan}`;
       if (typeof refreshActiveTable === 'function') {
         refreshActiveTable();
       }
-      if (state.masterActiveSection === 'units' && typeof renderMasterUnitsTable === 'function') {
+      if (typeof renderMasterUnitsTable === 'function') {
         renderMasterUnitsTable();
+      }
+      if (typeof populateOrderUnitsDatalist === 'function') {
+        try { populateOrderUnitsDatalist(); } catch (e) { }
       }
 
       return updatedJobCount;
@@ -27267,6 +27439,23 @@ Keterangan : ${keterangan}`;
         return;
       }
 
+      // Pastikan noLambung selalu ada dan tidak pernah kosong/hilang
+      if (!job.noLambung) {
+        job.noLambung = job.no_lambung || job.lambung || '';
+      }
+      if (!job.noLambung) {
+        const titleEl = document.getElementById('detail-modal-unit-title');
+        const titleText = titleEl ? titleEl.textContent.split('+')[0].trim().toUpperCase() : '';
+        if (titleText && titleText !== 'UNIT' && titleText !== '-') {
+          job.noLambung = titleText;
+        }
+      }
+      if (!job.noLambung) {
+        const extracted = (typeof extractLambungFromId === 'function') ? extractLambungFromId(job.id) : '';
+        if (extracted) job.noLambung = extracted;
+      }
+      job.no_lambung = job.noLambung;
+
       const clusterSel = document.getElementById('detail-modal-cluster-select');
       const feedbackPill = document.getElementById('detail-modal-save-feedback');
       if (feedbackPill) feedbackPill.classList.add('hidden');
@@ -27303,12 +27492,9 @@ Keterangan : ${keterangan}`;
         const newLokasi = lokasiInp ? lokasiInp.value.trim().toUpperCase() : job.lokasi;
         const newWaktu = waktuInp && waktuInp.value ? waktuInp.value.trim() : (job.waktu || '-');
 
-        // Jika lokasi mengandung indikator cluster yang jelas, selaraskan cluster
-        const derivedCluster = deriveClusterFromLocation(newLokasi, '');
-        if (derivedCluster && (!newCluster || newCluster === 'Selatan' || derivedCluster === 'Tengah' || derivedCluster === 'Utara')) {
-          if (newLokasi.includes('TENGAH')) newCluster = 'Tengah';
-          else if (newLokasi.includes('UTARA')) newCluster = 'Utara';
-          else if (newLokasi.includes('SELATAN') || newLokasi.includes('BALANAI')) newCluster = 'Selatan';
+        // Hormati pilihan Cluster dari dropdown user. Hanya turunkan dari lokasi jika dropdown kosong.
+        if (!newCluster) {
+          newCluster = deriveClusterFromLocation(newLokasi, job.cluster || '') || job.cluster || 'Selatan';
         }
 
         const oldParent = (typeof getParentCluster === 'function') ? getParentCluster(oldCluster) : String(oldCluster || '').replace(/^KGU\s+/i, '').trim();
@@ -27330,9 +27516,11 @@ Keterangan : ${keterangan}`;
           job.opt_name = '-';
           job.mp1 = '-';
           job.mp2 = '-';
-          const armModalEl = document.getElementById('detail-modal-armada');
+          const armModalEl = document.getElementById('detail-modal-lt');
           const optModalEl = document.getElementById('detail-modal-opt');
-          const mpModalEl = document.getElementById('detail-modal-mp');
+          const mpModalEl = document.getElementById('detail-modal-mp1');
+          const mp2ModalEl = document.getElementById('detail-modal-mp2');
+          if (mp2ModalEl) mp2ModalEl.textContent = '-';
           if (armModalEl) armModalEl.textContent = '-';
           if (optModalEl) optModalEl.textContent = '-';
           if (mpModalEl) mpModalEl.textContent = '-';
@@ -27384,9 +27572,12 @@ Keterangan : ${keterangan}`;
         }
 
         // 4. Sinkronkan serentak ke Data Master Populasi Unit & SELURUH penugasan job unit ini (Shift 1, Shift 2, dll)
-        if (job.noLambung) {
+        const targetLambung = job.noLambung || job.no_lambung || job.lambung || (typeof extractLambungFromId === 'function' ? extractLambungFromId(job.id) : '');
+        if (targetLambung) {
+          job.noLambung = targetLambung;
+          job.no_lambung = targetLambung;
           try {
-            await propagateUnitLocationAndCluster(job.noLambung, newCluster, newLokasi, true, isClusterChanged);
+            await propagateUnitLocationAndCluster(targetLambung, newCluster, newLokasi, true, isClusterChanged);
           } catch (mErr) {
             console.warn('[propagateUnitLocationAndCluster error]', mErr);
           }
@@ -30592,9 +30783,9 @@ Keterangan : ${keterangan}`;
                     ${renderCompletedSortIcon('noId')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('sch')" class="py-2.5 px-2 ${state.isCompSelectMode ? 'w-[14%] md:w-[4.5%]' : 'w-[15%] md:w-[4.5%]'} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Type Job">
-                  <div class="flex items-center justify-start space-x-1">
-                    <span>TYPE JOB</span>
+                <th onclick="sortCompletedBy('sch')" class="py-2.5 px-1.5 ${state.isCompSelectMode ? 'w-[14%] md:w-[6%]' : 'w-[15%] md:w-[6%]'} text-left align-middle cursor-pointer group hover:bg-slate-100 transition whitespace-nowrap" title="Urutkan berdasarkan Type Job">
+                  <div class="flex items-center justify-start space-x-1 whitespace-nowrap">
+                    <span class="whitespace-nowrap">TYPE JOB</span>
                     ${renderCompletedSortIcon('sch')}
                   </div>
                 </th>
@@ -30623,7 +30814,7 @@ Keterangan : ${keterangan}`;
                     ${renderCompletedSortIcon('armada')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('personil')" class="hidden md:table-cell py-2.5 px-2.5 ${state.isCompSelectMode ? (isAdmin ? 'md:w-[18%]' : 'md:w-[18.5%]') : (isAdmin ? 'md:w-[18.5%]' : 'md:w-[19%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Personil Petugas">
+                <th onclick="sortCompletedBy('personil')" class="hidden md:table-cell py-2.5 px-2.5 ${state.isCompSelectMode ? (isAdmin ? 'md:w-[16.5%]' : 'md:w-[17%]') : (isAdmin ? 'md:w-[17%]' : 'md:w-[17.5%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Personil Petugas">
                   <div class="flex items-center justify-start space-x-1">
                     <span>PERSONIL</span>
                     ${renderCompletedSortIcon('personil')}
@@ -30748,7 +30939,7 @@ Keterangan : ${keterangan}`;
           </td>
 
           <!-- KOLOM 1: TYPE JOB (RATA KIRI TENGAH) -->
-          <td class="py-2.5 px-2 text-left align-middle break-words">
+          <td class="py-2.5 px-1.5 text-left align-middle whitespace-nowrap">
             <span class="md:hidden flex items-center justify-start cursor-pointer" onclick="openJobDetailModal('${job.id}')" title="Klik untuk lihat detail">${getJobSchBadgeHtml(job)}</span>
             <span class="hidden md:inline font-bold text-slate-800 text-[10px] leading-tight text-left">${getJobSchPlainHtml(job)}</span>
           </td>
@@ -31140,6 +31331,10 @@ Keterangan : ${keterangan}`;
       toggleModal('modal-action-decision', false);
       const job = findJobById(state.currentActionJobId);
       if (!job) return;
+      if (!job.noLambung) {
+        job.noLambung = job.no_lambung || job.lambung || (typeof extractLambungFromId === 'function' ? extractLambungFromId(state.currentActionJobId) : '');
+        job.no_lambung = job.noLambung;
+      }
       const label = document.getElementById('nonach-form-unit-label');
       if (label) {
         label.textContent = `Unit: ${job.noLambung || '-'}`;
@@ -31510,6 +31705,15 @@ Keterangan : ${keterangan}`;
       if (!job) {
         showToast('Data unit tidak ditemukan!', 'error');
         return;
+      }
+
+      // Pastikan noLambung dan typeUnit selalu ada dan tidak pernah kosong/hilang
+      if (!job.noLambung) {
+        job.noLambung = job.no_lambung || job.lambung || (typeof extractLambungFromId === 'function' ? extractLambungFromId(jobId) : '');
+        job.no_lambung = job.noLambung;
+      }
+      if (!job.typeUnit || job.typeUnit === 'Unit') {
+        job.typeUnit = (typeof getUnitTypeFromMaster === 'function') ? getUnitTypeFromMaster(job.noLambung, 'Unit') : 'Unit';
       }
 
       // LAYER 1 GUARD: Pre-check apakah unit sudah diselesaikan rekan lain
@@ -33271,6 +33475,15 @@ Keterangan : ${keterangan}`;
       const job = findJobById(state.currentActionJobId);
       if (!job) return;
 
+      // Pastikan noLambung selalu ada dan tidak pernah kosong/hilang
+      if (!job.noLambung) {
+        job.noLambung = job.no_lambung || job.lambung || (typeof extractLambungFromId === 'function' ? extractLambungFromId(state.currentActionJobId) : '');
+        job.no_lambung = job.noLambung;
+      }
+      if (!job.typeUnit || job.typeUnit === 'Unit') {
+        job.typeUnit = (typeof getUnitTypeFromMaster === 'function') ? getUnitTypeFromMaster(job.noLambung, 'Unit') : 'Unit';
+      }
+
       // Reset manual override flag saat form dibuka fresh
       window._achPersonnelManualOverride = {
         'ach-opt-name': false,
@@ -33959,12 +34172,19 @@ Keterangan : ${keterangan}`;
         // Prioritas Manpower (MP): Perbarui lokasi & cluster aktual langsung ke Master Unit & Jadwal
         const newCluster = document.getElementById('ach-cluster')?.value || job.cluster;
         const newLokasi = (document.getElementById('ach-lokasi')?.value || job.lokasi || '').trim().toUpperCase();
-        if (newCluster && (newCluster !== job.cluster || newLokasi !== job.lokasi)) {
-          job.cluster = newCluster;
-          job.lokasi = newLokasi || job.lokasi;
-          if (typeof syncMasterUnitLocation === 'function' && job.noLambung) {
+        const normAchCluster = (c) => String((typeof getParentCluster === 'function') ? getParentCluster(c) : String(c || '').replace(/^KGU\s+/i, '')).trim().toLowerCase();
+        const isAchClusterMoved = Boolean(newCluster && job.cluster && normAchCluster(newCluster) !== normAchCluster(job.cluster));
+        const isAchLokasiChanged = Boolean(newLokasi && newLokasi !== String(job.lokasi || '').trim().toUpperCase());
+        if (newCluster && (newCluster !== job.cluster || isAchLokasiChanged)) {
+          // Sinkronkan ke Data Master Unit & seluruh jadwal aktif unit ini. Job yang sedang di-Action dikecualikan dari pengosongan armada/personil.
+          if (typeof propagateUnitLocationAndCluster === 'function' && job.noLambung) {
+            propagateUnitLocationAndCluster(job.noLambung, newCluster, newLokasi || job.lokasi, true, isAchClusterMoved, job.id)
+              .catch(err => console.warn('[submitAchAction propagate error]', err));
+          } else if (typeof syncMasterUnitLocation === 'function' && job.noLambung) {
             syncMasterUnitLocation(job.noLambung, newCluster, newLokasi);
           }
+          job.cluster = newCluster;
+          job.lokasi = newLokasi || job.lokasi;
         }
 
         // Simpan seluruh data input eksekusi ke objek job
@@ -34276,14 +34496,339 @@ Keterangan : ${keterangan}`;
     window.isAllowedAirCleanerType = isAllowedAirCleanerType;
     window.normalizeAirCleanerTypeKey = normalizeAirCleanerTypeKey;
 
-    // Kategori tab aktif Monitoring Air Cleaner: 'non_coal' (6x) atau 'coal' (3x)
+    // Kategori tab aktif Monitoring Air Cleaner: 'non_coal' (6x), 'coal' (3x), atau 'replace'
     state.airCleanerCategoryTab = state.airCleanerCategoryTab || 'non_coal';
+    state.airCleanerReplacements = state.airCleanerReplacements || [];
+
+    /**
+     * Generator No ID Baku Replace Air Cleaner Sesuai Permintaan Pengguna:
+     * Format: LT-CAC-{DDMMYYYY}-{SHIFT}-{NO_LAMBUNG}-{HHMM}
+     * Contoh: LT-CAC-29102026-1-E2016-1115
+     */
+    function generateReplaceAirCleanerNoId(noLambung, tanggal, jam, shift) {
+      const cleanLambung = String(noLambung || 'UNIT').trim().toUpperCase();
+      let ddmmyyyy = '';
+      if (tanggal && tanggal.includes('-')) {
+        const parts = tanggal.split('-');
+        if (parts.length === 3) ddmmyyyy = `${parts[2]}${parts[1]}${parts[0]}`;
+      }
+      if (!ddmmyyyy) {
+        const now = new Date();
+        ddmmyyyy = `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}${now.getFullYear()}`;
+      }
+
+      let hhmm = '';
+      if (jam && jam.includes(':')) {
+        const jparts = jam.split(':');
+        hhmm = `${String(jparts[0]).padStart(2, '0')}${String(jparts[1]).padStart(2, '0')}`;
+      } else if (jam && /^\d{3,4}$/.test(jam)) {
+        hhmm = String(jam).padStart(4, '0');
+      } else {
+        const now = new Date();
+        hhmm = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+      }
+
+      let shiftVal = shift || state.currentShift || 1;
+      if (!shift && hhmm) {
+        const h = parseInt(hhmm.substring(0, 2), 10);
+        shiftVal = (h >= 6 && h < 18) ? 1 : 2;
+      }
+
+      return `LT-CAC-${ddmmyyyy}-${shiftVal}-${cleanLambung}-${hhmm}`;
+    }
+    window.generateReplaceAirCleanerNoId = generateReplaceAirCleanerNoId;
+
+    function getReplaceRecordNoId(item) {
+      if (!item) return '-';
+      if (item.job_id) return item.job_id;
+      if (item.no_id) return item.no_id;
+      return generateReplaceAirCleanerNoId(item.no_lambung, item.tanggal, item.jam, item.shift);
+    }
+    window.getReplaceRecordNoId = getReplaceRecordNoId;
+
+    function updateAirCleanerTabButtons() {
+      const currentTab = state.airCleanerCategoryTab || 'non_coal';
+      const btnTabNonCoal = document.getElementById('btn-ac-sub-noncoal');
+      const btnTabCoal = document.getElementById('btn-ac-sub-coal');
+      const btnTabReplace = document.getElementById('btn-ac-sub-replace');
+      const badgeNonCoal = document.getElementById('badge-ac-count-noncoal');
+      const badgeCoal = document.getElementById('badge-ac-count-coal');
+      const badgeReplace = document.getElementById('badge-ac-count-replace');
+
+      const activeClass = 'px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-brand-200 text-brand-800 shadow-2xs cursor-pointer flex items-center gap-2 outline-none focus:outline-none';
+      const inactiveClass = 'px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer flex items-center gap-2 outline-none focus:outline-none';
+
+      const activeBadgeClass = 'px-2 py-0.5 rounded-full text-[10px] font-black bg-white/70 text-brand-900 font-mono';
+      const inactiveBadgeClass = 'px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-700 font-mono';
+
+      if (btnTabNonCoal) btnTabNonCoal.className = (currentTab === 'non_coal') ? activeClass : inactiveClass;
+      if (btnTabCoal) btnTabCoal.className = (currentTab === 'coal') ? activeClass : inactiveClass;
+      if (btnTabReplace) btnTabReplace.className = (currentTab === 'replace') ? activeClass : inactiveClass;
+
+      if (badgeNonCoal) badgeNonCoal.className = (currentTab === 'non_coal') ? activeBadgeClass : inactiveBadgeClass;
+      if (badgeCoal) badgeCoal.className = (currentTab === 'coal') ? activeBadgeClass : inactiveBadgeClass;
+      if (badgeReplace) badgeReplace.className = (currentTab === 'replace') ? activeBadgeClass : inactiveBadgeClass;
+
+      const totalReplace = Array.isArray(state.airCleanerReplacements) ? state.airCleanerReplacements.length : 0;
+      if (badgeReplace) badgeReplace.textContent = `${totalReplace} Log`;
+    }
+    window.updateAirCleanerTabButtons = updateAirCleanerTabButtons;
 
     function setAirCleanerCategoryTab(category) {
-      state.airCleanerCategoryTab = (category === 'coal') ? 'coal' : 'non_coal';
-      renderAirCleanerMonitorTable();
+      if (category === 'replace') {
+        state.airCleanerCategoryTab = 'replace';
+      } else if (category === 'coal') {
+        state.airCleanerCategoryTab = 'coal';
+      } else {
+        state.airCleanerCategoryTab = 'non_coal';
+      }
+
+      const cycleContainer = document.getElementById('ac-cycle-table-container');
+      const replaceContainer = document.getElementById('ac-replace-table-container');
+      const cycleLegend = document.getElementById('ac-cycle-legend');
+      const btnResetAc = document.getElementById('btn-reset-aircleaner');
+
+      if (state.airCleanerCategoryTab === 'replace') {
+        if (cycleContainer) cycleContainer.classList.add('hidden');
+        if (replaceContainer) replaceContainer.classList.remove('hidden');
+        if (cycleLegend) cycleLegend.classList.add('hidden');
+        if (btnResetAc) btnResetAc.classList.add('hidden');
+        renderAirCleanerReplacementsTable();
+      } else {
+        if (cycleContainer) cycleContainer.classList.remove('hidden');
+        if (replaceContainer) replaceContainer.classList.add('hidden');
+        if (cycleLegend) cycleLegend.classList.remove('hidden');
+        if (btnResetAc && state.currentUser?.role === 'admin') btnResetAc.classList.remove('hidden');
+        renderAirCleanerMonitorTable();
+      }
+      updateAirCleanerTabButtons();
     }
     window.setAirCleanerCategoryTab = setAirCleanerCategoryTab;
+
+    /**
+     * Render Tabel Riwayat Pergantian (Replace) Air Cleaner oleh Tim Track
+     */
+    function renderAirCleanerReplacementsTable() {
+      const tbody = document.getElementById('ac-replace-tbody');
+      if (!tbody) return;
+
+      updateAirCleanerTabButtons();
+      updateAirCleanerTypeOptions();
+
+      const searchVal = (document.getElementById('search-aircleaner-input')?.value || '').toLowerCase().trim();
+      const selectedType = (document.getElementById('filter-aircleaner-type')?.value || 'ALL');
+      const rawList = Array.isArray(state.airCleanerReplacements) ? state.airCleanerReplacements : [];
+
+      let list = rawList.slice();
+
+      // Filter berdasarkan tipe unit yang dipilih di dropdown
+      if (selectedType !== 'ALL') {
+        const selKey = normalizeAirCleanerTypeKey(selectedType);
+        list = list.filter(m => {
+          const mType = (m.type_model || m.type || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(m.no_lambung, 'Unit') : '')).trim();
+          return (mType === selectedType) || (normalizeAirCleanerTypeKey(mType) === selKey);
+        });
+      }
+
+      // Filter berdasarkan teks pencarian
+      if (searchVal) {
+        list = list.filter(m => {
+          const noId = getReplaceRecordNoId(m).toLowerCase();
+          const nl = String(m.no_lambung || '').toLowerCase();
+          const tm = String(m.type_model || '').toLowerCase();
+          const pic = String(m.pic || '').toLowerCase();
+          const nrp = String(m.pic_nrp || '').toLowerCase();
+          const ket = String(m.keterangan || '').toLowerCase();
+          return nl.includes(searchVal) || tm.includes(searchVal) || pic.includes(searchVal) || nrp.includes(searchVal) || ket.includes(searchVal) || noId.includes(searchVal);
+        });
+      }
+
+      // Urutkan riwayat: Paling baru di paling atas
+      list.sort((a, b) => {
+        const dateA = String(a.tanggal || '') + ' ' + String(a.jam || '');
+        const dateB = String(b.tanggal || '') + ' ' + String(b.jam || '');
+        if (dateB !== dateA) return dateB.localeCompare(dateA);
+        return String(b.created_at || '').localeCompare(String(a.created_at || ''));
+      });
+
+      tbody.innerHTML = '';
+      if (list.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="py-12 text-center text-slate-400 italic text-[11.5px] bg-slate-50/50">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <div class="w-10 h-10 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center border border-teal-100">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                </div>
+                <span class="font-bold text-slate-600">Belum ada riwayat pergantian Air Cleaner dari Tim Track.</span>
+                <span class="text-[10px] text-slate-400 max-w-sm">Setiap pergantian filter yang diinput melalui tombol Replace akan otomatis tercatat di sini dan tersinkronkan ke Supabase, Google Drive, &amp; Spreadsheet.</span>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      const isAdmin = (state.currentUser?.role === 'admin');
+
+      list.forEach((item, idx) => {
+        const noId = getReplaceRecordNoId(item);
+        const isCoal = isAirCleanerUnitCoal(item.no_lambung, item.type_model);
+
+        // Format tanggal tampilan: DD/MM/YYYY
+        let displayDate = item.tanggal || '-';
+        if (displayDate.includes('-')) {
+          const parts = displayDate.split('-');
+          if (parts.length === 3) displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        const jamVal = item.jam || '08:00';
+        let hourPart = parseInt(jamVal.split(':')[0], 10);
+        let shiftVal = item.shift || ((hourPart >= 6 && hourPart < 18) ? 1 : 2);
+
+        const photoUrl = item.evidence_url || item.evidenceUrl || '';
+        const hasPhoto = Boolean(photoUrl && photoUrl.trim() !== '');
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-teal-50/30 transition align-middle font-medium text-xs border-b border-slate-100';
+
+        tr.innerHTML = `
+          <!-- KOLOM 0: NO ID (BAKU DENGAN SUFFIX HHMM) -->
+          <td class="py-2.5 px-3 text-left align-middle border-r border-slate-100 whitespace-nowrap">
+            <span class="font-mono font-black text-slate-900 text-[10.5px] px-2 py-1 rounded-lg bg-slate-100 border border-slate-200/80 inline-block shadow-2xs">${noId}</span>
+          </td>
+
+          <!-- KOLOM 1: WAKTU INPUT TRACK -->
+          <td class="py-2.5 px-2.5 text-left align-middle text-slate-700 border-r border-slate-100 whitespace-nowrap">
+            <div class="font-black text-slate-900 text-[10.5px] leading-tight">${displayDate}</div>
+            <div class="text-slate-500 text-[10px] font-semibold mt-0.5 flex items-center gap-1.5 leading-tight">
+              <span>${jamVal} WITA</span>
+              <span class="px-1.5 py-0.2 rounded-md bg-slate-100 text-slate-700 font-bold text-[9px] border border-slate-200">Shift ${shiftVal}</span>
+            </div>
+          </td>
+
+          <!-- KOLOM 2: NO & TYPE UNIT -->
+          <td class="py-2.5 px-3 text-left align-middle border-r border-slate-100">
+            <div class="flex items-baseline flex-wrap gap-x-1.5">
+              <span class="text-sm font-black font-mono text-slate-950">${item.no_lambung}</span>
+              <span class="text-[10px] text-slate-500 font-medium truncate max-w-[140px]">(${item.type_model || 'Unit'})</span>
+            </div>
+            <div class="mt-0.5">
+              <span class="inline-block px-1.5 py-0.2 rounded text-[8.5px] font-bold ${isCoal ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-teal-100 text-teal-800 border border-teal-200'}">
+                ${isCoal ? 'COAL (3x)' : 'NON COAL (6x)'}
+              </span>
+            </div>
+          </td>
+
+          <!-- KOLOM 3: TEKNISI / PIC (TIM TRACK) -->
+          <td class="py-2.5 px-3 text-left align-middle text-slate-700 border-r border-slate-100">
+            <div class="font-bold text-slate-900 text-[11px] flex items-center gap-1.5 leading-tight">
+              <span class="w-2 h-2 rounded-full bg-teal-500 inline-block shrink-0"></span>
+              <span class="truncate max-w-[130px]">${item.pic || 'Tim Track'}</span>
+            </div>
+            <div class="text-slate-500 text-[10px] font-medium mt-0.5 leading-tight">NRP: ${item.pic_nrp || '-'}</div>
+            <span class="inline-block mt-0.5 px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 text-[9px] font-bold border border-indigo-200/60">TIM TRACK</span>
+          </td>
+
+          <!-- KOLOM 4: KETERANGAN ALASAN -->
+          <td class="py-2.5 px-3 text-left align-middle text-slate-700 border-r border-slate-100 break-words">
+            <div class="text-[11px] leading-relaxed text-slate-800 font-normal bg-slate-50 p-2 rounded-xl border border-slate-200/80">
+              ${item.keterangan || '-'}
+            </div>
+          </td>
+
+          <!-- KOLOM 5: EVIDEN FOTO -->
+          <td class="py-2.5 px-2 text-center align-middle border-r border-slate-100 whitespace-nowrap">
+            ${hasPhoto ? `
+              <div class="inline-flex flex-col items-center gap-1">
+                <button type="button" onclick="openPhotoPreview('${photoUrl}', 'Evidence Replace ${item.no_lambung} (${noId})')"
+                  class="group relative w-11 h-11 rounded-xl overflow-hidden border border-teal-300 bg-slate-900 shadow-2xs hover:shadow-md transition cursor-pointer"
+                  title="Klik untuk melihat foto eviden resolusi penuh">
+                  <img src="${photoUrl}" alt="Eviden" class="w-full h-full object-cover group-hover:scale-110 transition duration-200"
+                    loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<span class=\\'text-[9px] text-white flex items-center justify-center h-full\\'>Foto</span>'">
+                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+                  </div>
+                </button>
+                <a href="${photoUrl}" target="_blank" rel="noopener noreferrer" class="text-[9.5px] font-bold text-teal-700 hover:text-teal-900 flex items-center gap-0.5 justify-center" title="Buka berkas di Google Drive">
+                  <span>Drive</span>
+                  <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                </a>
+              </div>
+            ` : `
+              <span class="text-slate-400 text-[10px] italic">Tidak ada foto</span>
+            `}
+          </td>
+
+          <!-- KOLOM 6: STATUS & AKSI -->
+          <td class="py-2.5 px-2.5 text-center align-middle whitespace-nowrap">
+            <div class="flex flex-col items-center gap-1.5">
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-100 text-teal-800 border border-teal-200 shadow-2xs">
+                <svg class="w-3 h-3 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                <span>Telah Diganti</span>
+              </span>
+              ${isAdmin ? `
+                <button type="button" onclick="deleteAirCleanerReplacement('${item.id || ''}', '${item.no_lambung}', '${noId}')"
+                  class="text-[10px] text-rose-600 hover:text-rose-800 font-bold hover:underline transition cursor-pointer flex items-center gap-0.5"
+                  title="Hapus riwayat pergantian ini (Khusus Admin)">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                  <span>Hapus</span>
+                </button>
+              ` : ''}
+            </div>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+    window.renderAirCleanerReplacementsTable = renderAirCleanerReplacementsTable;
+
+    /**
+     * Hapus Riwayat Pergantian Air Cleaner (Khusus Administrator)
+     */
+    async function deleteAirCleanerReplacement(id, noLambung, noId) {
+      if (state.currentUser?.role !== 'admin') {
+        if (typeof showToast === 'function') showToast('Fitur hapus riwayat hanya dapat diakses oleh Administrator.', 'warning');
+        return;
+      }
+
+      if (!confirm(`Apakah Anda yakin ingin menghapus catatan pergantian Air Cleaner unit ${noLambung} (${noId})?`)) {
+        return;
+      }
+
+      // Hapus dari state lokal
+      state.airCleanerReplacements = (state.airCleanerReplacements || []).filter(item => {
+        if (id && item.id && item.id === id) return false;
+        const curNoId = getReplaceRecordNoId(item);
+        if (curNoId && curNoId === noId) return false;
+        return true;
+      });
+
+      try {
+        safeStorage.setItem('SE_AC_REPLACEMENTS', JSON.stringify(state.airCleanerReplacements));
+      } catch (e) { }
+
+      // Hapus dari Supabase jika online
+      if (state.supabaseClient) {
+        try {
+          if (id) {
+            await state.supabaseClient.from('air_cleaner_replacements').delete().eq('id', id);
+          } else {
+            await state.supabaseClient.from('air_cleaner_replacements').delete().eq('no_lambung', noLambung);
+          }
+        } catch (supaErr) {
+          console.warn('[Supabase delete replacement error]', supaErr);
+        }
+      }
+
+      updateAirCleanerTabButtons();
+      renderAirCleanerReplacementsTable();
+      if (typeof showToast === 'function') {
+        showToast(`Catatan pergantian unit ${noLambung} berhasil dihapus.`, 'info');
+      }
+    }
+    window.deleteAirCleanerReplacement = deleteAirCleanerReplacement;
 
     function isAirCleanerUnitCoal(noLambung, type) {
       if (!noLambung) return false;
@@ -34631,6 +35176,9 @@ Keterangan : ${keterangan}`;
       if (submitBtn) submitBtn.disabled = true;
       if (submitText) submitText.textContent = 'Mengunggah Foto ke Drive...';
 
+      // 1. Bentuk No ID Baku Replace Air Cleaner dengan suffix HHMM dari input Tim Track
+      const replaceNoId = generateReplaceAirCleanerNoId(noLambung, tanggal, jam, state.currentShift);
+
       let driveUrl = '';
       try {
         if (typeof showToast === 'function') showToast('Mengunggah foto evidence ke Google Drive...', 'info');
@@ -34638,35 +35186,48 @@ Keterangan : ${keterangan}`;
           currentReplaceAcPhotoBase64,
           noLambung,
           'AIR_CLEANER_REPLACE',
-          1,
-          'REPLACE-' + noLambung + '-' + tanggal.replace(/-/g, '')
+          0,
+          replaceNoId,
+          {
+            armada: 'TIM TRACK',
+            opt: pic,
+            mp1: picNrp,
+            mp2: notes,
+            shift: state.currentShift || 1
+          }
         );
-        console.log('[Drive Upload Replace AC OK]', driveUrl);
+        console.log('[Drive Upload Replace AC OK]', replaceNoId, driveUrl);
       } catch (driveErr) {
         console.warn('[Drive Upload Replace AC Error]', driveErr);
         driveUrl = currentReplaceAcPhotoBase64;
         if (typeof showToast === 'function') showToast('Peringatan: Gagal kirim ke Drive, foto disimpan lokal di sistem.', 'warning');
       }
 
-      // 1. Reset siklus unit di state.airCleanerMonitor
-      const item = (state.airCleanerMonitor || []).find(m => String(m.noLambung || '').trim().toUpperCase() === noLambung);
-      if (item) {
-        item.cleans = [];
-        item.status = 'Baik';
-        item.serviceCode = '';
-        item.lastReplacedAt = new Date().toISOString();
-        item.lastReplacedBy = pic;
-        item.lastEvidenceUrl = driveUrl;
-        item.lastReplaceNotes = notes;
-      }
+      // 2. Buat entri riwayat pergantian baru
+      const newReplacementRecord = {
+        no_lambung: noLambung,
+        type_model: typeUnit,
+        tanggal: tanggal,
+        jam: jam,
+        pic: pic,
+        pic_nrp: picNrp,
+        keterangan: notes,
+        evidence_url: (typeof driveUrl === 'string' && driveUrl.startsWith('data:image/')) ? '' : driveUrl,
+        created_at: new Date().toISOString()
+      };
 
-      try {
-        safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(state.airCleanerMonitor));
-      } catch (e) { }
-
-      // 2. Simpan ke Supabase tabel air_cleaner_monitoring & air_cleaner_replacements
+      // 3. Simpan ke Supabase Cloud: tabel air_cleaner_replacements & air_cleaner_monitoring
       if (state.supabaseClient) {
         try {
+          const { data: insData, error: insErr } = await state.supabaseClient
+            .from('air_cleaner_replacements')
+            .insert([newReplacementRecord])
+            .select();
+
+          if (!insErr && Array.isArray(insData) && insData.length > 0) {
+            newReplacementRecord.id = insData[0].id;
+          }
+
           await state.supabaseClient.from('air_cleaner_monitoring').upsert({
             id: 'AC-' + noLambung,
             no_lambung: noLambung,
@@ -34682,31 +35243,49 @@ Keterangan : ${keterangan}`;
             updated_at: new Date().toISOString()
           }, { onConflict: 'no_lambung' });
 
-          await state.supabaseClient.from('air_cleaner_replacements').insert([{
-            no_lambung: noLambung,
-            type_model: typeUnit,
-            tanggal: tanggal,
-            jam: jam,
-            pic: pic,
-            pic_nrp: picNrp,
-            keterangan: notes,
-            evidence_url: (typeof driveUrl === 'string' && driveUrl.startsWith('data:image/')) ? '' : driveUrl,
-            created_at: new Date().toISOString()
-          }]).catch(e => console.warn('[Supabase Replacements Insert]', e));
-
-          console.log('[Supabase Replace AC Synced OK]', noLambung);
+          console.log('[Supabase Replace AC Synced OK]', noLambung, replaceNoId);
         } catch (supaErr) {
           console.warn('[Supabase Replace AC Error]', supaErr);
         }
       }
 
+      // 4. Update data lokal state.airCleanerReplacements
+      if (!Array.isArray(state.airCleanerReplacements)) state.airCleanerReplacements = [];
+      state.airCleanerReplacements.unshift(newReplacementRecord);
+      try {
+        safeStorage.setItem('SE_AC_REPLACEMENTS', JSON.stringify(state.airCleanerReplacements));
+      } catch (e) { }
+
+      // 5. Reset siklus unit di state.airCleanerMonitor
+      const item = (state.airCleanerMonitor || []).find(m => String(m.noLambung || '').trim().toUpperCase() === noLambung);
+      if (item) {
+        item.cleans = [];
+        item.status = 'Baik';
+        item.serviceCode = '';
+        item.lastReplacedAt = new Date().toISOString();
+        item.lastReplacedBy = pic;
+        item.lastEvidenceUrl = driveUrl;
+        item.lastReplaceNotes = notes;
+      }
+
+      try {
+        safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(state.airCleanerMonitor));
+      } catch (e) { }
+
       if (submitBtn) submitBtn.disabled = false;
       if (submitText) submitText.textContent = 'Simpan & Upload Evidence';
 
       toggleModal('modal-replace-aircleaner', false);
-      renderAirCleanerMonitorTable();
+      updateAirCleanerTabButtons();
+
+      if (state.airCleanerCategoryTab === 'replace') {
+        renderAirCleanerReplacementsTable();
+      } else {
+        renderAirCleanerMonitorTable();
+      }
+
       if (typeof showToast === 'function') {
-        showToast(`🎉 Sukses! Evidence pergantian Air Cleaner unit ${noLambung} tersimpan & siklus kembali ke 0.`, 'success');
+        showToast('Sukses! Evidence pergantian Air Cleaner unit ' + noLambung + ' (' + replaceNoId + ') tersimpan & siklus kembali ke 0.', 'success');
       }
     }
     window.submitReplaceAirCleaner = submitReplaceAirCleaner;
@@ -38378,6 +38957,49 @@ Keterangan : ${keterangan}`;
       }
     }
 
+    /**
+     * Memuat Riwayat Pergantian (Replace) Air Cleaner dari Supabase Cloud
+     */
+    async function loadAirCleanerReplacementsFromSupabase(force = false) {
+      if (!state.supabaseClient) {
+        try {
+          const cached = safeStorage.getItem('SE_AC_REPLACEMENTS');
+          if (cached) {
+            state.airCleanerReplacements = JSON.parse(cached);
+            updateAirCleanerTabButtons();
+            if (state.airCleanerCategoryTab === 'replace') renderAirCleanerReplacementsTable();
+          }
+        } catch (e) { }
+        return;
+      }
+
+      try {
+        const { data, error } = await state.supabaseClient
+          .from('air_cleaner_replacements')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.warn('[loadAirCleanerReplacementsFromSupabase Error]', error);
+          return;
+        }
+
+        if (Array.isArray(data)) {
+          state.airCleanerReplacements = data;
+          try {
+            safeStorage.setItem('SE_AC_REPLACEMENTS', JSON.stringify(data));
+          } catch (e) { }
+          updateAirCleanerTabButtons();
+          if (state.airCleanerCategoryTab === 'replace') {
+            renderAirCleanerReplacementsTable();
+          }
+        }
+      } catch (err) {
+        console.warn('[loadAirCleanerReplacementsFromSupabase Exception]', err);
+      }
+    }
+    window.loadAirCleanerReplacementsFromSupabase = loadAirCleanerReplacementsFromSupabase;
+
     async function loadAirCleanerFromSupabase(force = false) {
       if (!state.supabaseClient) return;
       // Master Data TTL Cache (12 Jam) - Versi 4 untuk reset zombie cache
@@ -39724,6 +40346,12 @@ Keterangan : ${keterangan}`;
         // Master data terisolasi (jarang berubah, bebas dari loop mutasi transaksi harian)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_armada' }, handleRealtimeArmadaChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'air_cleaner_monitoring' }, handleRealtimeAirCleanerChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'air_cleaner_replacements' }, (payload) => {
+          console.log('[Realtime AC Replacement Event]', payload);
+          if (typeof loadAirCleanerReplacementsFromSupabase === 'function') {
+            loadAirCleanerReplacementsFromSupabase(true);
+          }
+        })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_operators' }, handleRealtimeOperatorChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_units' }, handleRealtimeUnitChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_roster' }, handleRealtimeRosterChange)
@@ -40009,6 +40637,7 @@ Keterangan : ${keterangan}`;
           if (!isFieldOp && !hasAirCleaner) {
             bootTasks.push(typeof loadAirCleanerFromSupabase === 'function' ? loadAirCleanerFromSupabase(false) : Promise.resolve());
           }
+          bootTasks.push(typeof loadAirCleanerReplacementsFromSupabase === 'function' ? loadAirCleanerReplacementsFromSupabase(false) : Promise.resolve());
 
           await Promise.allSettled(bootTasks);
 
@@ -41442,7 +42071,8 @@ Keterangan : ${keterangan}`;
 
       // B. Sinkronisasi Data Master Populasi Unit Lapangan (Hanya muat jika cache kosong/stale/beda versi)
       const savedUnitsTs = Number(safeStorage.getItem('SE_MASTER_UNITS_TS') || 0);
-      const isUnitsFresh = (Date.now() - savedUnitsTs) < MASTER_DATA_TTL_MS && safeStorage.getItem('SE_MASTER_UNITS_VER') === 'v3_coal_master';
+      // Versi cache disamakan dengan loadUnitsFromSupabase ('v4_cluster_sync') agar cache master unit yang baru diperbarui tidak dianggap basi
+      const isUnitsFresh = (Date.now() - savedUnitsTs) < MASTER_DATA_TTL_MS && safeStorage.getItem('SE_MASTER_UNITS_VER') === 'v4_cluster_sync';
       if (force || !isUnitsFresh || !state._unitsLoadedFromSupabase || !Array.isArray(state.masterUnits) || state.masterUnits.length === 0) {
         if (typeof loadUnitsFromSupabase === 'function') {
           await loadUnitsFromSupabase(force, false);
