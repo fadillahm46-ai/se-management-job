@@ -1,10 +1,12 @@
 /**
  * Service Worker: SE MANAGEMENT JOB - Mine Operations
- * Versi Cache: se-mine-ops-v32
+ * Versi Cache: se-mine-ops-v35
+ * Versi Cache: se-mine-ops-v36
  * Fitur: Offline Caching, Network-First untuk Halaman Utama (Navigation), Stale-While-Revalidate untuk aset statis
  */
 
-const CACHE_NAME = 'se-mine-ops-v32';
+const CACHE_NAME = 'se-mine-ops-v35';
+const CACHE_NAME = 'se-mine-ops-v36';
 
 // Daftar aset statis utama yang dicache saat instalasi
 const PRECACHE_ASSETS = [
