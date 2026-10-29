@@ -23555,7 +23555,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             legend: { display: false },
             tooltip: {
               callbacks: {
-                label: (ctx) => ${ctx.dataset.label}: %
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}%`
               }
             }
           },
