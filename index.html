@@ -6509,7 +6509,7 @@
                       class="hidden md:table-cell py-2.5 px-3 md:w-[14%] text-left align-middle border-r border-white/10">
                       TEKNISI / PIC (TRACK)</th>
                     <th class="py-2.5 px-2 md:px-3 w-[37%] md:w-[26%] text-left align-middle border-r border-white/10">
-                      KETERANGAN ALASAN</th>
+                      KETERANGAN</th>
                     <th
                       class="hidden md:table-cell py-2.5 px-2 text-center align-middle border-r border-white/10 whitespace-nowrap md:w-[9%]">
                       EVIDEN FOTO</th>
@@ -9255,19 +9255,22 @@
     </div>
   </div>
 
-  <!-- MODAL DETAIL RIWAYAT REPLACE AIR CLEANER (KLIK NO LAMBUNG) -->
+  <!-- MODAL DETAIL RIWAYAT REPLACE AIR CLEANER (PERSIS REFERENSI DETAIL JOB SCH) -->
   <div id="modal-replace-detail" onclick="if (event.target === this) toggleModal('modal-replace-detail', false)"
     class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-3 sm:p-4 overflow-y-auto">
     <div
-      class="bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 shadow-2xl border border-slate-100 max-h-[92vh] flex flex-col font-sans transition-all">
-      <!-- Header -->
+      class="relative bg-white rounded-3xl max-w-md w-full p-4 sm:p-5 shadow-2xl border border-slate-100 max-h-[92vh] flex flex-col font-sans transition-all">
+
+
+
+      <!-- Modal Header (Bersih & Elegan persis referensi #LT-TU0...) -->
       <div class="flex items-start justify-between pb-3 border-b border-slate-100 shrink-0">
         <div class="min-w-0 pr-2">
-          <span
-            class="text-[10px] font-extrabold uppercase tracking-wider text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">Riwayat
-            Replace Filter</span>
           <h2 id="repdetail-no-id"
-            class="text-xs sm:text-sm font-black font-mono text-slate-800 tracking-tight mt-1 break-all">LT-CAC-...</h2>
+            class="text-xs sm:text-sm font-semibold font-mono text-slate-700 tracking-tight break-all">#LT-CAC-...</h2>
+          <p class="text-xs text-slate-500 font-medium mt-0.5" id="repdetail-subtitle">
+            Replace Air Cleaner • Shift 1
+          </p>
         </div>
         <button type="button" onclick="toggleModal('modal-replace-detail', false)"
           class="text-slate-400 hover:text-slate-600 p-1.5 -mr-1 rounded-full hover:bg-slate-100 transition cursor-pointer"
@@ -9278,109 +9281,74 @@
         </button>
       </div>
 
-      <!-- Body -->
-      <div class="space-y-3 text-xs overflow-y-auto pr-1 py-3 flex-1">
-        <!-- 1. Hero Unit Card -->
-        <div class="p-3 rounded-2xl bg-teal-50/60 border border-teal-100 flex items-center justify-between gap-3">
-          <div>
-            <div class="flex items-baseline gap-1.5 flex-wrap">
-              <span id="repdetail-unit"
-                class="text-base sm:text-lg font-black font-mono text-slate-900 tracking-tight">-</span>
-              <span id="repdetail-type" class="text-xs font-semibold text-slate-500">(Unit)</span>
+      <!-- Modal Body (Scrollable Clean Persis Foto 3) -->
+      <div class="space-y-4 text-xs overflow-y-auto pr-1 py-1 flex-1">
+
+        <!-- 1. Informasi Unit: No Lambung di atas, Type Unit di bawah, Status di kanan -->
+        <div>
+          <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">Informasi
+            Unit</span>
+          <div class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-50/80 border border-slate-100">
+            <div class="min-w-0">
+              <h3 class="text-sm sm:text-base font-bold font-mono text-slate-900 truncate" id="repdetail-unit">
+                UNIT</h3>
+              <p class="text-xs text-slate-600 font-medium truncate mt-0.5" id="repdetail-type">Type Unit</p>
             </div>
-            <div class="mt-1">
-              <span id="repdetail-cat-badge"
-                class="px-2 py-0.5 rounded text-[9.5px] font-bold bg-teal-100 text-teal-800 border border-teal-200">NON
-                COAL (6x)</span>
+            <div class="text-right shrink-0 flex flex-col items-end gap-1">
+              <span id="repdetail-status-badge"
+                class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-600 text-white shadow-2xs whitespace-nowrap">
+                Telah Diganti
+              </span>
             </div>
           </div>
-          <div class="text-right">
-            <span
-              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-teal-100 text-teal-800 border border-teal-200 shadow-2xs">
-              <svg class="w-3 h-3 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
-              </svg>
-              <span>Telah Diganti</span>
+        </div>
+
+        <!-- 2. 2-Column Key-Value List Rata Kiri & Simetris Persis Foto 3 -->
+        <div class="space-y-2.5 pt-2 border-t border-slate-100">
+          <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
+            <span class="text-slate-400 font-medium text-left">Tanggal &amp; Waktu</span>
+            <span class="text-xs font-semibold text-slate-900 text-left" id="repdetail-tanggal-waktu">-</span>
+          </div>
+
+          <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
+            <span class="text-slate-400 font-medium text-left">Penugasan</span>
+            <span class="text-xs font-bold text-slate-900 text-left">
+              TIM TRACK
             </span>
           </div>
-        </div>
-
-        <!-- 2. Waktu Pelaksanaan -->
-        <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span>Waktu Pelaksanaan</span>
+          <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
+            <span class="text-slate-400 font-medium text-left">Teknisi Pelaksana</span>
+            <span class="text-xs font-semibold text-slate-900 text-left" id="repdetail-pic">-</span>
           </div>
-          <div class="flex items-center justify-between">
-            <span id="repdetail-tanggal" class="font-extrabold text-slate-900 text-xs sm:text-sm">-</span>
-            <span id="repdetail-jam-shift"
-              class="text-[11px] font-bold text-slate-700 bg-white px-2 py-0.5 rounded-lg border border-slate-200">-</span>
+          <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
+            <span class="text-slate-400 font-medium text-left">NRP Teknisi</span>
+            <span class="text-xs font-semibold text-slate-900 text-left" id="repdetail-nrp">-</span>
+          </div>
+          <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
+            <span class="text-slate-400 font-medium text-left">Realisasi Jam</span>
+            <span class="font-mono font-medium text-slate-900 text-left" id="repdetail-jam-realisasi">-</span>
           </div>
         </div>
 
-        <!-- 3. Teknisi / PIC Track -->
-        <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-            </svg>
-            <span>Teknisi / PIC (Tim Track)</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <div>
-              <div id="repdetail-pic" class="font-extrabold text-slate-900 text-xs">-</div>
-              <div id="repdetail-nrp" class="text-[10px] text-slate-500 font-medium">NRP: -</div>
-            </div>
-            <span
-              class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[9.5px] font-extrabold border border-indigo-200/60">TIM
-              TRACK</span>
-          </div>
+        <!-- 3. Catatan / Kendala (Persis Foto 3) -->
+        <div class="pt-2 border-t border-slate-100 space-y-1">
+          <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Catatan / Kendala</span>
+          <p class="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 text-slate-700 text-xs leading-relaxed font-normal whitespace-pre-line"
+            id="repdetail-keterangan">
+            Nihil / Tidak ada kendala
+          </p>
         </div>
 
-        <!-- 4. Keterangan / Alasan -->
-        <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-              </path>
-            </svg>
-            <span>Keterangan Alasan</span>
-          </div>
-          <div id="repdetail-keterangan"
-            class="text-xs text-slate-800 font-medium bg-white p-2.5 rounded-xl border border-slate-200 leading-relaxed whitespace-pre-wrap">
-            -
-          </div>
-        </div>
-
-        <!-- 5. Foto Eviden -->
-        <div id="repdetail-photo-section" class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-            <span class="flex items-center gap-1">
-              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
-                </path>
-              </svg>
-              <span>Foto Eviden Pergantian</span>
-            </span>
-            <a id="repdetail-drive-link" href="#" target="_blank" rel="noopener noreferrer"
-              class="hidden text-teal-700 hover:text-teal-900 font-bold text-[10px] flex items-center gap-0.5">
-              <span>Buka di Google Drive</span>
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-              </svg>
-            </a>
+        <!-- 4. Dokumentasi Foto (Eviden) (Persis Foto 3) -->
+        <div id="repdetail-photo-section" class="pt-2 border-t border-slate-100">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Dokumentasi Foto
+              (Eviden)</span>
           </div>
           <div id="repdetail-photo-wrapper"
-            class="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-900 flex items-center justify-center min-h-[140px] cursor-pointer group">
+            class="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 flex items-center justify-center min-h-[160px] max-h-[260px] cursor-pointer group">
             <img id="repdetail-photo-img" src="" alt="Eviden Replace"
-              class="w-full max-h-56 object-cover group-hover:scale-105 transition duration-200">
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-200">
             <div
               class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
               <span class="px-3 py-1.5 rounded-lg bg-black/70 text-white font-bold text-xs flex items-center gap-1.5">
@@ -9392,31 +9360,42 @@
               </span>
             </div>
           </div>
-          <div id="repdetail-no-photo-msg" class="hidden text-slate-400 text-center py-4 italic text-xs">
+          <div id="repdetail-no-photo-msg"
+            class="hidden p-4 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50 text-slate-400 text-xs italic">
             Tidak ada foto eviden dilampirkan
           </div>
         </div>
 
-        <!-- 6. Aksi Admin (Hapus) -->
-        <div id="repdetail-admin-actions" class="hidden pt-1">
-          <button type="button" id="repdetail-delete-btn"
-            class="w-full py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 flex items-center justify-center gap-1.5 transition cursor-pointer text-xs">
-            <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      </div>
+
+      <!-- Modal Footer (Tombol Aksi Elegan Persis Foto 3) -->
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-between shrink-0">
+        <div id="repdetail-admin-actions">
+          <button type="button" id="repdetail-delete-btn" title="Hapus Riwayat Pergantian Filter"
+            class="hidden px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-xs border border-rose-200 transition cursor-pointer flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
               </path>
             </svg>
-            <span>Hapus Riwayat Replace Ini</span>
+            <span>Hapus Riwayat</span>
           </button>
         </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="pt-2.5 border-t border-slate-100 shrink-0">
-        <button type="button" onclick="toggleModal('modal-replace-detail', false)"
-          class="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
-          Tutup
-        </button>
+        <div class="flex items-center gap-2 ml-auto">
+          <button type="button" id="repdetail-copy-btn" onclick="copyReplaceRecordReport()"
+            class="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold text-xs transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+            <svg class="w-3.5 h-3.5 text-amber-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+              </path>
+            </svg>
+            <span>Salin Job</span>
+          </button>
+          <button type="button" onclick="toggleModal('modal-replace-detail', false)"
+            class="px-4 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition cursor-pointer">
+            Tutup
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -35206,7 +35185,7 @@ Keterangan : ${keterangan}`;
         tr.innerHTML = `
           <!-- KOLOM 0: NO ID (BAKU DENGAN SUFFIX HHMM) -->
           <td class="hidden md:table-cell py-2.5 px-3 text-left align-middle border-r border-slate-100 whitespace-nowrap">
-            <span class="font-mono font-black text-slate-900 text-[10.5px] px-2 py-1 rounded-lg bg-slate-100 border border-slate-200/80 inline-block shadow-2xs">${noId}</span>
+            <span class="font-mono font-bold text-slate-800 text-[11px]">${noId}</span>
           </td>
 
           <!-- KOLOM 1: WAKTU PELAKSANAAN TRACK -->
@@ -35246,9 +35225,9 @@ Keterangan : ${keterangan}`;
             <span class="inline-block mt-0.5 px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 text-[9px] font-bold border border-indigo-200/60">TIM TRACK</span>
           </td>
 
-          <!-- KOLOM 4: KETERANGAN ALASAN -->
+          <!-- KOLOM 4: KETERANGAN -->
           <td class="py-2.5 px-2 md:px-3 text-left align-middle text-slate-700 md:border-r border-slate-100 break-words">
-            <div class="text-[10px] md:text-[11px] leading-relaxed text-slate-800 font-normal bg-slate-50 p-1.5 md:p-2 rounded-xl border border-slate-200/80">
+            <div class="text-[11px] leading-relaxed text-slate-800 font-normal">
               ${item.keterangan || '-'}
             </div>
           </td>
@@ -35303,6 +35282,8 @@ Keterangan : ${keterangan}`;
     /**
      * Buka Modal Detail Riwayat Replace Air Cleaner (Saat No Lambung Unit diklik)
      */
+    let currentReplaceRecordDetailItem = null;
+
     function openReplaceRecordDetail(itemOrId) {
       let item = null;
       if (typeof itemOrId === 'object' && itemOrId !== null) {
@@ -35319,6 +35300,7 @@ Keterangan : ${keterangan}`;
         if (typeof showToast === 'function') showToast('Detail riwayat pergantian tidak ditemukan.', 'warning');
         return;
       }
+      currentReplaceRecordDetailItem = item;
 
       const noId = getReplaceRecordNoId(item);
       const isCoal = isAirCleanerUnitCoal(item.no_lambung, item.type_model);
@@ -35336,34 +35318,37 @@ Keterangan : ${keterangan}`;
       const hasPhoto = Boolean(photoUrl && photoUrl.trim() !== '');
 
       const noIdEl = document.getElementById('repdetail-no-id');
-      if (noIdEl) noIdEl.textContent = noId;
+      if (noIdEl) noIdEl.textContent = '#' + noId;
+
+      const subtitleEl = document.getElementById('repdetail-subtitle');
+      if (subtitleEl) subtitleEl.textContent = `Replace Air Cleaner • Shift ${shiftVal}`;
 
       const unitEl = document.getElementById('repdetail-unit');
       if (unitEl) unitEl.textContent = item.no_lambung || 'UNIT';
 
       const typeEl = document.getElementById('repdetail-type');
-      if (typeEl) typeEl.textContent = `(${item.type_model || 'Unit'})`;
+      if (typeEl) typeEl.textContent = item.type_model || 'Unit';
 
-      const catBadge = document.getElementById('repdetail-cat-badge');
-      if (catBadge) {
-        catBadge.textContent = isCoal ? 'COAL (3x)' : 'NON COAL (6x)';
-        catBadge.className = `px-2 py-0.5 rounded text-[9.5px] font-bold ${isCoal ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-teal-100 text-teal-800 border border-teal-200'}`;
+      const tglWaktuEl = document.getElementById('repdetail-tanggal-waktu');
+      if (tglWaktuEl) tglWaktuEl.textContent = `${displayDate} • ${jamVal} WITA`;
+
+      const statusBadge = document.getElementById('repdetail-status-badge');
+      if (statusBadge) {
+        statusBadge.textContent = 'Telah Diganti';
+        statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-600 text-white shadow-2xs whitespace-nowrap';
       }
 
-      const tglEl = document.getElementById('repdetail-tanggal');
-      if (tglEl) tglEl.textContent = displayDate;
-
-      const jamShiftEl = document.getElementById('repdetail-jam-shift');
-      if (jamShiftEl) jamShiftEl.textContent = `${jamVal} WITA • Shift ${shiftVal}`;
-
       const picEl = document.getElementById('repdetail-pic');
-      if (picEl) picEl.textContent = item.pic || 'Tim Track';
+      if (picEl) picEl.textContent = item.pic || 'Tim Track Lapangan';
 
       const nrpEl = document.getElementById('repdetail-nrp');
-      if (nrpEl) nrpEl.textContent = `NRP: ${item.pic_nrp || '-'}`;
+      if (nrpEl) nrpEl.textContent = item.pic_nrp || '-';
+
+      const jamRealEl = document.getElementById('repdetail-jam-realisasi');
+      if (jamRealEl) jamRealEl.textContent = `${jamVal} WITA`;
 
       const ketEl = document.getElementById('repdetail-keterangan');
-      if (ketEl) ketEl.textContent = item.keterangan || '-';
+      if (ketEl) ketEl.textContent = item.keterangan || 'Nihil / Tidak ada keterangan';
 
       const driveLink = document.getElementById('repdetail-drive-link');
       const photoWrapper = document.getElementById('repdetail-photo-wrapper');
@@ -35384,24 +35369,64 @@ Keterangan : ${keterangan}`;
         if (noPhotoMsg) noPhotoMsg.classList.remove('hidden');
       }
 
-      const adminActions = document.getElementById('repdetail-admin-actions');
       const delBtn = document.getElementById('repdetail-delete-btn');
       const isAdmin = (state.currentUser?.role === 'admin');
-      if (adminActions && delBtn) {
+      if (delBtn) {
         if (isAdmin) {
-          adminActions.classList.remove('hidden');
+          delBtn.classList.remove('hidden');
           delBtn.onclick = () => {
             toggleModal('modal-replace-detail', false);
             deleteAirCleanerReplacement(item.id || '', item.no_lambung, noId);
           };
         } else {
-          adminActions.classList.add('hidden');
+          delBtn.classList.add('hidden');
         }
       }
 
       toggleModal('modal-replace-detail', true);
     }
     window.openReplaceRecordDetail = openReplaceRecordDetail;
+
+    function copyReplaceRecordReport() {
+      const item = currentReplaceRecordDetailItem;
+      if (!item) {
+        if (typeof showToast === 'function') showToast('Tidak ada data yang dapat disalin.', 'warning');
+        return;
+      }
+      const noId = getReplaceRecordNoId(item);
+      let displayDate = item.tanggal || '-';
+      if (displayDate.includes('-')) {
+        const parts = displayDate.split('-');
+        if (parts.length === 3) displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      const jamVal = item.jam || '08:00';
+      let hourPart = parseInt(jamVal.split(':')[0], 10);
+      let shiftVal = item.shift || ((hourPart >= 6 && hourPart < 18) ? 1 : 2);
+      const isCoal = isAirCleanerUnitCoal(item.no_lambung, item.type_model);
+      const photoUrl = item.evidence_url || item.evidenceUrl || '';
+
+      const text = [
+        `*RIWAYAT REPLACE AIR CLEANER*`,
+        `No ID: #${noId}`,
+        `Unit: ${item.no_lambung || '-'} (${item.type_model || '-'})`,
+        `Waktu: ${displayDate} • ${jamVal} WITA (Shift ${shiftVal})`,
+        `Penugasan: TIM TRACK`,
+        `Teknisi: ${item.pic || 'Tim Track Lapangan'} (NRP: ${item.pic_nrp || '-'})`,
+        `Keterangan: ${item.keterangan || '-'}`,
+        photoUrl ? `Link Eviden: ${photoUrl}` : ''
+      ].filter(Boolean).join('\n');
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          if (typeof showToast === 'function') showToast('Detail riwayat replace berhasil disalin!', 'success');
+        }).catch(() => {
+          if (typeof fallbackCopyText === 'function') fallbackCopyText(text);
+        });
+      } else {
+        if (typeof fallbackCopyText === 'function') fallbackCopyText(text);
+      }
+    }
+    window.copyReplaceRecordReport = copyReplaceRecordReport;
 
     /**
      * Hapus Riwayat Pergantian Air Cleaner (Khusus Administrator)
@@ -35633,19 +35658,6 @@ Keterangan : ${keterangan}`;
       if (!item) return;
 
       const cleanCount = Array.isArray(item.cleans) ? item.cleans.length : 0;
-      const u = String(item.noLambung || '').trim().toUpperCase();
-      let lastDateDisplay = '';
-      const rawLastDate = item.lastReplacedAt || (lastRepMap.has(u) ? lastRepMap.get(u).dateStr : '') || item.last_cleaned_date || '';
-      if (rawLastDate) {
-        const datePart = String(rawLastDate).split('T')[0];
-        if (datePart.includes('-')) {
-          const dp = datePart.split('-');
-          if (dp.length === 3) lastDateDisplay = `${dp[2]}/${dp[1]}/${dp[0]}`;
-          else lastDateDisplay = datePart;
-        } else {
-          lastDateDisplay = datePart;
-        }
-      }
       if (cleanCount === 0 && item.status === 'Baik') {
         if (typeof showToast === 'function') {
           showToast(`Siklus Air Cleaner unit ${noLambung} sudah berada di siklus 0 (awal).`, 'info');
@@ -36945,6 +36957,22 @@ Keterangan : ${keterangan}`;
         }
 
         const cleanCount = Array.isArray(item.cleans) ? item.cleans.length : 0;
+        const u = String(item.noLambung || '').trim().toUpperCase();
+        let lastDateDisplay = '';
+        const repInfo = (typeof lastRepMap !== 'undefined' && lastRepMap && lastRepMap.has(u)) ? lastRepMap.get(u) : null;
+        const repObj = repInfo ? repInfo.rep : null;
+        const evPhotoUrl = item.lastEvidenceUrl || item.evidence_url || item.evidenceUrl || (repObj ? (repObj.evidence_url || repObj.evidenceUrl) : '') || '';
+        const rawLastDate = item.lastReplacedAt || (repInfo ? repInfo.dateStr : '') || item.last_cleaned_date || '';
+        if (rawLastDate) {
+          const datePart = String(rawLastDate).split('T')[0];
+          if (datePart.includes('-')) {
+            const dp = datePart.split('-');
+            if (dp.length === 3) lastDateDisplay = `${dp[2]}/${dp[1]}/${dp[0]}`;
+            else lastDateDisplay = datePart;
+          } else {
+            lastDateDisplay = datePart;
+          }
+        }
         let statusBadge = '';
 
         if (isTabCoal) {
@@ -37007,10 +37035,10 @@ Keterangan : ${keterangan}`;
           <td class="py-2.5 px-2 md:px-3 text-center ${canReplace ? 'border-r border-slate-100' : ''}">
             <div class="flex flex-col items-center gap-1">
               ${statusBadge}
-              ${(item.lastEvidenceUrl || item.evidence_url || item.evidenceUrl || item.lastReplacedAt || (lastRepMap && lastRepMap.has(u))) ? `
-              <button type="button" ${(item.lastEvidenceUrl || item.evidence_url || item.evidenceUrl) ? `onclick="openPhotoPreview('${item.lastEvidenceUrl || item.evidence_url || item.evidenceUrl}', 'Evidence Replace ${item.noLambung} (${lastDateDisplay || ''})')"` : `onclick="showToast('Unit ${item.noLambung}: Terakhir ganti tanggal ${lastDateDisplay}', 'info')"`}
+              ${(evPhotoUrl || rawLastDate || (typeof lastRepMap !== 'undefined' && lastRepMap && lastRepMap.has(u))) ? `
+              <button type="button" ${evPhotoUrl ? `onclick="openPhotoPreview('${evPhotoUrl}', 'Evidence Replace ${item.noLambung} (${lastDateDisplay || ''})')"` : `onclick="showToast('Unit ${item.noLambung}: Terakhir ganti tanggal ${lastDateDisplay || '-'}', 'info')"`}
                 class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-800 text-[9.5px] md:text-[10px] font-bold border border-teal-200 transition cursor-pointer shadow-2xs whitespace-nowrap"
-                title="Terakhir Ganti: ${lastDateDisplay || '-'}${(item.lastEvidenceUrl || item.evidence_url || item.evidenceUrl) ? ' (Klik untuk lihat foto evidence)' : ''}">
+                title="Terakhir Ganti: ${lastDateDisplay || '-'}${evPhotoUrl ? ' (Klik untuk lihat foto evidence)' : ''}">
                 <svg class="w-3 h-3 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
