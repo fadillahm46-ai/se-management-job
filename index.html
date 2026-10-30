@@ -4224,37 +4224,130 @@
                 </div>
               </div>
 
-              <!-- Baris 7: Operator (Opt) & MP 1 / MP 2 (Otomatis dari Roster saat Armada dipilih) -->
+              <!-- Baris 7: Operator (Opt) & MP 1 / MP 2 (Searchable Dropdown Roster & Manpower) -->
               <div class="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70">
                 <div class="flex items-center justify-between mb-2">
                   <span class="text-xs font-bold text-slate-700">Personil Lapangan</span>
                   <span class="text-[10px] text-slate-400 font-medium">Otomatis terisi dari Roster saat Armada dipilih
-                    (dapat dicari & disesuaikan)</span>
+                    (dapat dicari & disesuaikan via dropdown)</span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label class="block text-slate-700 text-[11px] mb-1 font-bold">Operator (Opt)</label>
-                    <input type="text" id="direct-opt-name" list="direct-opt-datalist" placeholder="Nama Operator"
-                      oninput="clearDirectFieldError('direct-opt-name')" onfocus="populateDirectPersonnelDatalists()"
-                      class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 bg-white font-medium text-slate-900">
+                  <!-- Operator (Opt) -->
+                  <div class="relative" id="container-direct-opt-name">
+                    <label class="block text-slate-700 text-[11px] mb-1 font-bold">Operator (Opt) <span
+                        class="text-rose-500 font-bold">*</span></label>
+                    <div class="relative">
+                      <input type="text" id="search-direct-opt-name" placeholder="-- Pilih / Cari Operator --"
+                        autocomplete="off"
+                        class="w-full px-3 py-2 pr-12 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500 shadow-2xs transition truncate cursor-pointer"
+                        onfocus="openSearchableDropdown('direct-opt-name')"
+                        oninput="filterSearchableDropdown('direct-opt-name', this.value); clearDirectFieldError('direct-opt-name')"
+                        onclick="openSearchableDropdown('direct-opt-name')">
+                      <button type="button" id="clear-direct-opt-name"
+                        onclick="handleClearSearchableClick(event, 'direct-opt-name')"
+                        onmousedown="handleClearSearchableClick(event, 'direct-opt-name')"
+                        ontouchend="handleClearSearchableClick(event, 'direct-opt-name')"
+                        class="hidden absolute right-7 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1.5 cursor-pointer z-30 touch-manipulation"
+                        title="Hapus pilihan">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                      <div class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                          </path>
+                        </svg>
+                      </div>
+                    </div>
+                    <select id="direct-opt-name" class="hidden">
+                      <option value="">-- Pilih Operator --</option>
+                    </select>
                     <p id="err-direct-opt-name" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi
                     </p>
+                    <div id="dropdown-direct-opt-name"
+                      class="hidden absolute left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 divide-y divide-slate-100 text-xs">
+                    </div>
                   </div>
-                  <div>
-                    <label class="block text-slate-700 text-[11px] mb-1 font-bold">MP 1</label>
-                    <input type="text" id="direct-mp1-name" list="direct-mp-datalist" placeholder="Nama MP 1"
-                      oninput="clearDirectFieldError('direct-mp1-name')" onfocus="populateDirectPersonnelDatalists()"
-                      class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 bg-white font-medium text-slate-900">
+
+                  <!-- MP 1 -->
+                  <div class="relative" id="container-direct-mp1-name">
+                    <label class="block text-slate-700 text-[11px] mb-1 font-bold">MP 1 <span
+                        class="text-rose-500 font-bold">*</span></label>
+                    <div class="relative">
+                      <input type="text" id="search-direct-mp1-name" placeholder="-- Pilih / Cari MP 1 --"
+                        autocomplete="off"
+                        class="w-full px-3 py-2 pr-12 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500 shadow-2xs transition truncate cursor-pointer"
+                        onfocus="openSearchableDropdown('direct-mp1-name')"
+                        oninput="filterSearchableDropdown('direct-mp1-name', this.value); clearDirectFieldError('direct-mp1-name')"
+                        onclick="openSearchableDropdown('direct-mp1-name')">
+                      <button type="button" id="clear-direct-mp1-name"
+                        onclick="handleClearSearchableClick(event, 'direct-mp1-name')"
+                        onmousedown="handleClearSearchableClick(event, 'direct-mp1-name')"
+                        ontouchend="handleClearSearchableClick(event, 'direct-mp1-name')"
+                        class="hidden absolute right-7 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1.5 cursor-pointer z-30 touch-manipulation"
+                        title="Hapus pilihan">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                      <div class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                          </path>
+                        </svg>
+                      </div>
+                    </div>
+                    <select id="direct-mp1-name" class="hidden">
+                      <option value="">-- Pilih MP 1 --</option>
+                    </select>
                     <p id="err-direct-mp1-name" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi
                     </p>
+                    <div id="dropdown-direct-mp1-name"
+                      class="hidden absolute left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 divide-y divide-slate-100 text-xs">
+                    </div>
                   </div>
-                  <div>
-                    <label class="block text-slate-700 text-[11px] mb-1 font-bold">MP 2</label>
-                    <input type="text" id="direct-mp2-name" list="direct-mp-datalist" placeholder="Nama MP 2"
-                      oninput="clearDirectFieldError('direct-mp2-name')" onfocus="populateDirectPersonnelDatalists()"
-                      class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 bg-white font-medium text-slate-900">
+
+                  <!-- MP 2 -->
+                  <div class="relative" id="container-direct-mp2-name">
+                    <label class="block text-slate-700 text-[11px] mb-1 font-bold">MP 2 <span
+                        class="text-rose-500 font-bold">*</span></label>
+                    <div class="relative">
+                      <input type="text" id="search-direct-mp2-name" placeholder="-- Pilih / Cari MP 2 --"
+                        autocomplete="off"
+                        class="w-full px-3 py-2 pr-12 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500 shadow-2xs transition truncate cursor-pointer"
+                        onfocus="openSearchableDropdown('direct-mp2-name')"
+                        oninput="filterSearchableDropdown('direct-mp2-name', this.value); clearDirectFieldError('direct-mp2-name')"
+                        onclick="openSearchableDropdown('direct-mp2-name')">
+                      <button type="button" id="clear-direct-mp2-name"
+                        onclick="handleClearSearchableClick(event, 'direct-mp2-name')"
+                        onmousedown="handleClearSearchableClick(event, 'direct-mp2-name')"
+                        ontouchend="handleClearSearchableClick(event, 'direct-mp2-name')"
+                        class="hidden absolute right-7 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1.5 cursor-pointer z-30 touch-manipulation"
+                        title="Hapus pilihan">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                      <div class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                          </path>
+                        </svg>
+                      </div>
+                    </div>
+                    <select id="direct-mp2-name" class="hidden">
+                      <option value="">-- Pilih MP 2 --</option>
+                      <option value="-">- (Tidak Ada)</option>
+                    </select>
                     <p id="err-direct-mp2-name" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi
                     </p>
+                    <div id="dropdown-direct-mp2-name"
+                      class="hidden absolute left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 divide-y divide-slate-100 text-xs">
+                    </div>
                   </div>
                 </div>
               </div>
@@ -32613,7 +32706,7 @@ Keterangan : ${keterangan}`;
     };
 
     function openSearchableDropdown(fieldId) {
-      ['ach-lt-custom', 'ach-opt-name', 'ach-mp1-name', 'ach-mp2-name'].forEach(id => {
+      ['ach-lt-custom', 'ach-opt-name', 'ach-mp1-name', 'ach-mp2-name', 'direct-opt-name', 'direct-mp1-name', 'direct-mp2-name'].forEach(id => {
         if (id !== fieldId) closeSearchableDropdown(id);
       });
       const dropdownEl = document.getElementById(`dropdown-${fieldId}`);
@@ -32903,7 +32996,7 @@ Keterangan : ${keterangan}`;
     // Menutup popup dropdown jika user mengklik area lain
     if (!window._searchableDropdownListenerAttached) {
       document.addEventListener('click', (e) => {
-        ['ach-lt-custom', 'ach-opt-name', 'ach-mp1-name', 'ach-mp2-name'].forEach(fieldId => {
+        ['ach-lt-custom', 'ach-opt-name', 'ach-mp1-name', 'ach-mp2-name', 'direct-opt-name', 'direct-mp1-name', 'direct-mp2-name'].forEach(fieldId => {
           const container = document.getElementById(`container-${fieldId}`);
           if (container && !container.contains(e.target)) {
             const dropdownEl = document.getElementById(`dropdown-${fieldId}`);
@@ -41437,42 +41530,112 @@ Keterangan : ${keterangan}`;
         }
       }
       populateDirectArmadaOptions();
+      populateDirectPersonnelDropdowns();
     }
     window.handleDirectServiceTypeChange = handleDirectServiceTypeChange;
 
-    function populateDirectPersonnelDatalists() {
-      const optDatalist = document.getElementById('direct-opt-datalist');
-      const mpDatalist = document.getElementById('direct-mp-datalist');
-      if (!optDatalist || !mpDatalist) return;
+    function populateDirectPersonnelDropdowns(selectedOpt = '', selectedMp1 = '', selectedMp2 = '') {
+      const svcType = document.querySelector('input[name="direct-tipe-service"]:checked')?.value || 'lubetruck';
+      const isWt = (svcType === 'watertruck');
 
-      const optSet = new Set();
-      const mpSet = new Set();
-
-      // Ambil personil dari Master Roster
-      if (Array.isArray(state.masterRoster)) {
-        state.masterRoster.forEach(r => {
-          if (r.operator && r.operator !== '-' && !isDummyPersonnelName(r.operator)) optSet.add(r.operator.trim());
-          if (r.opt && r.opt !== '-' && !isDummyPersonnelName(r.opt)) optSet.add(r.opt.trim());
-          if (r.mp1 && r.mp1 !== '-' && !isDummyPersonnelName(r.mp1)) mpSet.add(r.mp1.trim());
-          if (r.mp2 && r.mp2 !== '-' && !isDummyPersonnelName(r.mp2)) mpSet.add(r.mp2.trim());
-          if (r.manpower && r.manpower !== '-' && !isDummyPersonnelName(r.manpower)) mpSet.add(r.manpower.trim());
-        });
-      }
-
-      // Ambil personil dari Master Manpower
+      // 1. Kumpulkan seluruh data nama Operator OPT dari Master Roster & Master Manpower
+      const optNames = new Set();
+      (state.masterRoster || []).filter(r => r.jenis === 'OPT' || r.tipe_karyawan === 'OPT').forEach(r => {
+        if (r.nama && r.nama !== '-' && r.nama.trim() !== '') optNames.add(r.nama.trim().toUpperCase());
+      });
       if (Array.isArray(state.masterManpower)) {
         state.masterManpower.forEach(m => {
           const nm = m.nama || m.name;
           const pos = (m.posisi || m.jabatan || m.role || '').toUpperCase();
-          if (nm && nm !== '-' && !isDummyPersonnelName(nm)) {
-            if (pos.includes('OPT') || pos.includes('OPERATOR')) optSet.add(nm.trim());
-            else mpSet.add(nm.trim());
+          if (nm && nm !== '-' && !isDummyPersonnelName(nm) && (pos.includes('OPT') || pos.includes('OPERATOR'))) {
+            optNames.add(nm.trim().toUpperCase());
           }
         });
       }
+      if (selectedOpt && selectedOpt !== '-' && selectedOpt.trim() !== '') {
+        optNames.add(selectedOpt.trim().toUpperCase());
+      }
+      const sortedOpt = Array.from(optNames).sort();
 
-      optDatalist.innerHTML = Array.from(optSet).sort().map(name => `<option value="${escapeHtml(name)}">`).join('');
-      mpDatalist.innerHTML = Array.from(mpSet).sort().map(name => `<option value="${escapeHtml(name)}">`).join('');
+      const optSelect = document.getElementById('direct-opt-name');
+      if (optSelect) {
+        optSelect.innerHTML = '<option value="">-- Pilih Operator (OPT) --</option>';
+        sortedOpt.forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          optSelect.appendChild(opt);
+        });
+        optSelect.value = selectedOpt || '';
+      }
+      if (!window._searchablePersonnelData) window._searchablePersonnelData = {};
+      window._searchablePersonnelData['direct-opt-name'] = [
+        { value: '', label: '-- Pilih Operator (OPT) --' },
+        ...sortedOpt.map(name => ({ value: name, label: name }))
+      ];
+      selectSearchableOption('direct-opt-name', selectedOpt || '');
+
+      // 2. Kumpulkan seluruh data personil MP (Oilman / Washingman) dari Roster & Master Users
+      const mpNames = new Set();
+      const filterJenis = isWt ? 'WM' : 'OM';
+      (state.masterRoster || []).filter(r => r.jenis === filterJenis || r.jenis === 'OM' || r.jenis === 'WM').forEach(r => {
+        if (r.nama && r.nama !== '-' && r.nama.trim() !== '') mpNames.add(r.nama.trim().toUpperCase());
+      });
+      (state.masterUsers || []).filter(u => u.role === 'mp_lt' || u.role === 'mp_wt' || u.role === 'oilman' || u.role === 'washingman').forEach(u => {
+        if (u.nama && u.nama !== '-' && u.nama.trim() !== '') mpNames.add(u.nama.trim().toUpperCase());
+      });
+      if (Array.isArray(state.masterManpower)) {
+        state.masterManpower.forEach(m => {
+          const nm = m.nama || m.name;
+          const pos = (m.posisi || m.jabatan || m.role || '').toUpperCase();
+          if (nm && nm !== '-' && !isDummyPersonnelName(nm) && !pos.includes('OPT') && !pos.includes('OPERATOR')) {
+            mpNames.add(nm.trim().toUpperCase());
+          }
+        });
+      }
+      if (selectedMp1 && selectedMp1 !== '-' && selectedMp1.trim() !== '') mpNames.add(selectedMp1.trim().toUpperCase());
+      if (selectedMp2 && selectedMp2 !== '-' && selectedMp2.trim() !== '') mpNames.add(selectedMp2.trim().toUpperCase());
+      const sortedMp = Array.from(mpNames).sort();
+
+      const mp1Select = document.getElementById('direct-mp1-name');
+      if (mp1Select) {
+        mp1Select.innerHTML = '<option value="">-- Pilih MP 1 --</option>';
+        sortedMp.forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          mp1Select.appendChild(opt);
+        });
+        mp1Select.value = selectedMp1 || '';
+      }
+      window._searchablePersonnelData['direct-mp1-name'] = [
+        { value: '', label: '-- Pilih MP 1 --' },
+        ...sortedMp.map(name => ({ value: name, label: name }))
+      ];
+      selectSearchableOption('direct-mp1-name', selectedMp1 || '');
+
+      const mp2Select = document.getElementById('direct-mp2-name');
+      if (mp2Select) {
+        mp2Select.innerHTML = '<option value="">-- Pilih MP 2 --</option><option value="-">- (Tidak Ada)</option>';
+        sortedMp.forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          mp2Select.appendChild(opt);
+        });
+        mp2Select.value = selectedMp2 || '';
+      }
+      window._searchablePersonnelData['direct-mp2-name'] = [
+        { value: '', label: '-- Pilih MP 2 --' },
+        { value: '-', label: '- (Tidak Ada)' },
+        ...sortedMp.map(name => ({ value: name, label: name }))
+      ];
+      selectSearchableOption('direct-mp2-name', selectedMp2 || '');
+    }
+    window.populateDirectPersonnelDropdowns = populateDirectPersonnelDropdowns;
+
+    function populateDirectPersonnelDatalists() {
+      populateDirectPersonnelDropdowns();
     }
     window.populateDirectPersonnelDatalists = populateDirectPersonnelDatalists;
 
@@ -41483,6 +41646,10 @@ Keterangan : ${keterangan}`;
       if (inputEl) {
         inputEl.classList.remove('border-rose-500', 'bg-rose-50/20');
       }
+      const searchEl = document.getElementById(`search-${fieldId}`);
+      if (searchEl) {
+        searchEl.classList.remove('border-rose-500', 'bg-rose-50/20');
+      }
     }
     window.clearDirectFieldError = clearDirectFieldError;
 
@@ -41492,6 +41659,10 @@ Keterangan : ${keterangan}`;
       const inputEl = document.getElementById(fieldId);
       if (inputEl) {
         inputEl.classList.add('border-rose-500', 'bg-rose-50/20');
+      }
+      const searchEl = document.getElementById(`search-${fieldId}`);
+      if (searchEl) {
+        searchEl.classList.add('border-rose-500', 'bg-rose-50/20');
       }
     }
     window.setDirectFieldError = setDirectFieldError;
@@ -41731,13 +41902,30 @@ Keterangan : ${keterangan}`;
       // Panggil fungsi getPersonnelForArmada yang sinkron dengan master roster
       if (typeof getPersonnelForArmada === 'function') {
         const pers = getPersonnelForArmada(cleanArmada, cluster, shift, tanggal);
-        const optInp = document.getElementById('direct-opt-name');
-        const mp1Inp = document.getElementById('direct-mp1-name');
-        const mp2Inp = document.getElementById('direct-mp2-name');
+        const targetOpt = (pers.opt && pers.opt !== '-') ? pers.opt : '';
+        const targetMp1 = (pers.mp1 && pers.mp1 !== '-') ? pers.mp1 : '';
+        const targetMp2 = (pers.mp2 && pers.mp2 !== '-') ? pers.mp2 : '-';
 
-        if (optInp) optInp.value = (pers.opt && pers.opt !== '-') ? pers.opt : '';
-        if (mp1Inp) mp1Inp.value = (pers.mp1 && pers.mp1 !== '-') ? pers.mp1 : '';
-        if (mp2Inp) mp2Inp.value = (pers.mp2 && pers.mp2 !== '-') ? pers.mp2 : '';
+        populateDirectPersonnelDropdowns(targetOpt, targetMp1, targetMp2);
+
+        // Jika data roster belum sempat terambil lengkap di HP, tarik di background dan update otomatis
+        if (tanggal && typeof ensureRosterForDate === 'function') {
+          ensureRosterForDate(tanggal).then(hasNewRoster => {
+            if (hasNewRoster) {
+              const shiftVal = document.getElementById('direct-shift')?.value;
+              const curShift = shiftVal ? parseInt(shiftVal, 10) : shift;
+              const updatedPers = getPersonnelForArmada(cleanArmada, cluster, curShift, tanggal);
+              const userOpt = (document.getElementById('direct-opt-name')?.value || document.getElementById('search-direct-opt-name')?.value || '').trim();
+              const userMp1 = (document.getElementById('direct-mp1-name')?.value || document.getElementById('search-direct-mp1-name')?.value || '').trim();
+              const userMp2 = (document.getElementById('direct-mp2-name')?.value || document.getElementById('search-direct-mp2-name')?.value || '').trim();
+
+              const freshOpt = (!isDummyPersonnelName(updatedPers.opt) && updatedPers.opt !== '-') ? updatedPers.opt : (userOpt || targetOpt);
+              const freshMp1 = (!isDummyPersonnelName(updatedPers.mp1) && updatedPers.mp1 !== '-') ? updatedPers.mp1 : (userMp1 || targetMp1);
+              const freshMp2 = (!isDummyPersonnelName(updatedPers.mp2) && updatedPers.mp2 !== '-') ? updatedPers.mp2 : (userMp2 || targetMp2);
+              populateDirectPersonnelDropdowns(freshOpt, freshMp1, freshMp2);
+            }
+          });
+        }
       }
     }
     window.handleDirectArmadaChange = handleDirectArmadaChange;
@@ -42069,9 +42257,9 @@ Keterangan : ${keterangan}`;
       if (document.getElementById('direct-status')) document.getElementById('direct-status').value = '';
       if (document.getElementById('search-direct-armada')) document.getElementById('search-direct-armada').value = '';
       if (document.getElementById('direct-armada')) document.getElementById('direct-armada').value = '';
-      if (document.getElementById('direct-opt-name')) document.getElementById('direct-opt-name').value = '';
-      if (document.getElementById('direct-mp1-name')) document.getElementById('direct-mp1-name').value = '';
-      if (document.getElementById('direct-mp2-name')) document.getElementById('direct-mp2-name').value = '';
+      clearSearchableSelect('direct-opt-name');
+      clearSearchableSelect('direct-mp1-name');
+      clearSearchableSelect('direct-mp2-name');
       if (document.getElementById('direct-keterangan')) document.getElementById('direct-keterangan').value = '';
       const clearBtn = document.getElementById('clear-direct-armada');
       if (clearBtn) clearBtn.classList.add('hidden');
