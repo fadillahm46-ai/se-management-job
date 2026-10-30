@@ -36490,7 +36490,7 @@ Keterangan : ${keterangan}`;
         if (!u) return;
         const d = String(rep.tanggal || (rep.created_at ? rep.created_at.slice(0, 10) : '')).trim();
         const j = String(rep.jam || '00:00').trim();
-        const ts = rep.created_at ? new Date(rep.created_at).getTime() : new Date(${d}T${j}:00).getTime();
+        const ts = rep.created_at ? new Date(rep.created_at).getTime() : new Date((d || '') + 'T' + (j || '00:00') + ':00').getTime();
         if (!lastRepMap.has(u) || ts > lastRepMap.get(u).timestamp) {
           lastRepMap.set(u, { dateStr: d, jamStr: j, timestamp: ts, rep: rep });
         }
@@ -36509,7 +36509,7 @@ Keterangan : ${keterangan}`;
             item.cleans = item.cleans.filter(c => {
               const cDateMatch = String(c).match(/(\d{2})\/(\d{2})\/(\d{4})/);
               if (!cDateMatch) return false;
-              const cleanDateIso = ${cDateMatch[3]}--;
+              const cleanDateIso = cDateMatch[3] + '-' + cDateMatch[2] + '-' + cDateMatch[1];
               return cleanDateIso > repInfo.dateStr;
             });
           }
@@ -39630,7 +39630,7 @@ Keterangan : ${keterangan}`;
           if (!rUnit) return;
           const rDate = String(rep.tanggal || (rep.created_at ? rep.created_at.slice(0, 10) : '')).trim();
           const rJam = String(rep.jam || '00:00').trim();
-          const rTs = rep.created_at ? new Date(rep.created_at).getTime() : new Date(${rDate}T${rJam}:00).getTime();
+          const rTs = rep.created_at ? new Date(rep.created_at).getTime() : new Date((rDate || '') + 'T' + (rJam || '00:00') + ':00').getTime();
           if (!lastReplacementMap.has(rUnit) || rTs > lastReplacementMap.get(rUnit).timestamp) {
             lastReplacementMap.set(rUnit, {
               dateStr: rDate,
