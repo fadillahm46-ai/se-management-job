@@ -1,20 +1,22 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>SE MANAGEMENT JOB - Mine Operations</title>
 
   <!-- Progressive Web App (PWA) Meta & Manifest -->
   <link rel="manifest" href="./manifest.json">
   <!-- Favicon / Logo Tab Web Resmi (Sesuai Permintaan Pengguna) -->
-  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+  <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/1kTftX1-eoOfOYWaB8ZhjwyNLxG7-_uDY">
   <link rel="shortcut icon" type="image/png"
-    href="./icons/icon-192.png">
-  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+    href="https://lh3.googleusercontent.com/d/1kTftX1-eoOfOYWaB8ZhjwyNLxG7-_uDY">
+  <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/d/1kTftX1-eoOfOYWaB8ZhjwyNLxG7-_uDY">
 
   <meta name="theme-color" content="#ffffff">
+  <meta name="navigation-bar-color" content="#ffffff">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -6558,8 +6560,8 @@
     </main>
 
     <!-- MOBILE BOTTOM NAVIGATION BAR (PRD Section 1 - Mobile Layout) -->
-    <nav id="mobile-bottom-nav"
-      class="md:hidden fixed bottom-0 left-0 right-0 h-20 pb-3 pt-1 bg-white/95 backdrop-blur-md border-t border-slate-200/90 flex items-center justify-around z-40 px-2 shadow-2xl">
+    <nav id="mobile-bottom-nav" style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));"
+      class="md:hidden fixed bottom-0 left-0 right-0 h-auto min-h-[4.75rem] pt-1 bg-white border-t border-slate-200/90 flex items-center justify-around z-40 px-2 shadow-2xl">
       <!-- Beranda (Semua Role) -->
       <button onclick="navigateTab('dashboard')" id="mob-nav-dashboard"
         class="mob-nav-btn flex flex-col items-center justify-center flex-1 py-1 text-slate-400 transition-all duration-200 active:scale-95"
@@ -33437,7 +33439,9 @@ Keterangan : ${keterangan}`;
       let targetMp2 = (crew.mp2 && crew.mp2 !== '-' && !isDummyPersonnelName(crew.mp2)) ? crew.mp2 : '-';
 
       // Jika job aslinya memang dari shift ini dan memiliki data personil valid, utamakan jika roster kosong
-      if (job && Number(job.shift) === shiftNum) {
+      // (Khusus SCH Top Up Oil jangan gunakan fallback personil dari jadwal H+1)
+      const isTopUpForShift = (typeof isTopUpJobRecord === 'function') ? isTopUpJobRecord(job) : false;
+      if (job && Number(job.shift) === shiftNum && !isTopUpForShift) {
         if (!targetOpt && !isDummyPersonnelName(job.opt)) targetOpt = job.opt;
         if (!targetMp1 && !isDummyPersonnelName(job.mp1)) targetMp1 = job.mp1;
         if ((!targetMp2 || targetMp2 === '-') && !isDummyPersonnelName(job.mp2)) targetMp2 = job.mp2;
@@ -33679,10 +33683,13 @@ Keterangan : ${keterangan}`;
 
     function isTopUpJobRecord(jobOrRow) {
       if (!jobOrRow) return false;
-      const cat = String(jobOrRow.cat || '').toLowerCase().trim();
-      if (cat === 'topup' || cat === 'top up oil' || cat === 'topup_oil') return true;
+      const cat = String(jobOrRow.cat || jobOrRow.category || '').toLowerCase().trim();
+      if (cat === 'topup' || cat === 'top up oil' || cat === 'topup_oil' || cat.includes('top up') || cat.includes('topup')) return true;
       const rawId = String(jobOrRow.id || jobOrRow.noId || jobOrRow.no_id || jobOrRow.job_id || '').toUpperCase().trim();
-      return rawId.startsWith('LT-TUO-');
+      if (rawId.startsWith('LT-TUO-') || rawId.includes('TUO')) return true;
+      const req = String(jobOrRow.requestedJob || jobOrRow.jobType || jobOrRow.pekerjaan || '').toLowerCase();
+      if (req.includes('top up') || req.includes('topup')) return true;
+      return false;
     }
 
     function formatTopUpAchKeterangan(jobOrRow, rawKet) {
@@ -33831,7 +33838,20 @@ Keterangan : ${keterangan}`;
 
       // Prefill Tanggal Pelaksanaan Pekerjaan (Default otomatis mengikuti hari ini / tanggal job)
       const currentTodayStr = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
-      const initialExecDate = (job.tanggalRealisasi || job.tanggal || currentTodayStr);
+      const isTopUpJob = (typeof isTopUpJobRecord === 'function') ? isTopUpJobRecord(job) : false;
+
+      // Khusus SCH Top Up Oil: aturan jadwal sengaja dimajukan 1 hari (H+1) dari hari ini.
+      // Ketika form penyelesaian job dibuka, jika belum direalisasikan,
+      // tanggal pelaksanaan HARUS TETAP mengikuti waktu asli hari ini (currentTodayStr), bukan tanggal jadwal H+1.
+      let initialExecDate;
+      if (job.tanggalRealisasi) {
+        initialExecDate = job.tanggalRealisasi;
+      } else if (isTopUpJob) {
+        initialExecDate = currentTodayStr;
+      } else {
+        initialExecDate = (job.tanggal || currentTodayStr);
+      }
+
       const dateInput = document.getElementById('ach-execution-date');
       const dateBadge = document.getElementById('ach-date-badge-info');
       if (dateInput) {
@@ -33851,14 +33871,30 @@ Keterangan : ${keterangan}`;
       const currentHour = new Date().getHours();
       // Jam 05:00 s/d 16:59 adalah Shift 1, Jam 17:00 s/d 04:59 adalah Shift 2
       const currentLiveShift = (currentHour >= 5 && currentHour < 17) ? 1 : 2;
+
+      // Jika SCH Top Up (atau pekerjaan belum direalisasi), shift default selalu mengikuti jam kerja realtime saat ini
+      let initialExecShift = currentLiveShift;
+      if (job.executedShift) {
+        initialExecShift = parseInt(job.executedShift, 10) || currentLiveShift;
+      } else if (job.tanggalRealisasi && job.shift && !isTopUpJob) {
+        initialExecShift = parseInt(job.shift, 10) || currentLiveShift;
+      } else {
+        initialExecShift = currentLiveShift;
+      }
+
       const shiftSelect = document.getElementById('ach-execution-shift');
       const shiftBadge = document.getElementById('ach-shift-badge-info');
       if (shiftSelect) {
-        shiftSelect.value = String(currentLiveShift);
+        shiftSelect.value = String(initialExecShift);
       }
       if (shiftBadge) {
-        shiftBadge.textContent = `Shift ${currentLiveShift} (Sesuai Jam Kerja)`;
-        shiftBadge.className = 'text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full whitespace-nowrap';
+        if (initialExecShift === currentLiveShift) {
+          shiftBadge.textContent = 'Shift ' + initialExecShift + ' (Sesuai Jam Kerja)';
+          shiftBadge.className = 'text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full whitespace-nowrap';
+        } else {
+          shiftBadge.textContent = 'Shift ' + initialExecShift + ' (Pilihan Manual MP)';
+          shiftBadge.className = 'text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full whitespace-nowrap';
+        }
       }
 
       const startEl = document.getElementById('ach-jam-start');
@@ -33995,7 +34031,7 @@ Keterangan : ${keterangan}`;
         if (cleanExisting && (matchedItem || [...ltCustom.options].some(o => o.value === cleanExisting))) {
           selectSearchableOption('ach-lt-custom', cleanExisting, matchedItem ? matchedItem.label : cleanExisting, false);
           // Sinkronkan personil otomatis mengikuti shift pelaksanaan yang aktif (isSilent = true agar tidak memunculkan toast saat form dibuka)
-          handleAchShiftChange(currentLiveShift, true);
+          handleAchShiftChange(initialExecShift, true);
         } else {
           selectSearchableOption('ach-lt-custom', '', '', false);
           populateAchPersonnelSelects('', '', '', isWashing);
@@ -45166,11 +45202,14 @@ Keterangan : ${keterangan}`;
           const cJobs = jobs.filter(j => getJobParentCluster(j) === clName);
           if (typeof sortSchedJobsList === 'function') sortSchedJobsList(cJobs, sortConfig);
           cJobs.forEach(j => {
-            aoa.push([buildUnitLine(j, activeCat)]);
-            aoa.push(['OLI ENGINE :']);
-            aoa.push(['OLI TRANSMISI/SWING :']);
-            aoa.push(['OLI HYDRAULIC :']);
-            aoa.push(['AIR COOLANT :']);
+            const noUnit = String(j.noLambung || j.unit || '').trim().toUpperCase();
+            const lokasi = String(j.lokasi || '').trim().toUpperCase();
+            const unitLocLine = lokasi ? (noUnit + ' ' + lokasi) : noUnit;
+            aoa.push([unitLocLine]);
+            aoa.push(['- Oli Engine :']);
+            aoa.push(['- Oli Hydraulic :']);
+            aoa.push(['- Oli Tm/Swing :']);
+            aoa.push(['- Coolant :']);
           });
         });
 

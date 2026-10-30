@@ -80,7 +80,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  
+
   // Scheduler Cutoff APIs
   if (req.url === '/api/scheduler/shift-cutoff' && req.method === 'POST') {
     scheduler.evaluateShift1Cutoff().then(result => {
