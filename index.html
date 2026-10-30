@@ -10,9 +10,10 @@
   <!-- Progressive Web App (PWA) Meta & Manifest -->
   <link rel="manifest" href="./manifest.json">
   <!-- Favicon / Logo Tab Web Resmi (Sesuai Permintaan Pengguna) -->
-  <link rel="icon" type="image/png" href="./icon-192.png">
-  <link rel="shortcut icon" type="image/png" href="./icon-192.png">
-  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/1kTftX1-eoOfOYWaB8ZhjwyNLxG7-_uDY">
+  <link rel="shortcut icon" type="image/png"
+    href="https://lh3.googleusercontent.com/d/1kTftX1-eoOfOYWaB8ZhjwyNLxG7-_uDY">
+  <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/d/1kTftX1-eoOfOYWaB8ZhjwyNLxG7-_uDY">
 
   <meta name="theme-color" content="#ffffff">
   <meta name="navigation-bar-color" content="#ffffff">
@@ -33679,15 +33680,19 @@ Keterangan : ${keterangan}`;
     function isTopUpJobRecord(jobOrRow) {
       if (!jobOrRow) return false;
       const cat = String(jobOrRow.cat || jobOrRow.category || '').toLowerCase().trim();
-      if (cat === 'topup' || cat === 'top up oil' || cat === 'topup_oil' || cat === 'tuo' || cat.includes('top up') || cat.includes('topup') || cat.includes('oli')) return true;
+      // Kategori resmi SCH lain atau Washing tidak boleh dianggap Top Up Oil
+      if (['aircleaner', 'air_cleaner', 'small', 'big', 'digger', 'coal', 'rom', 'non_coal', 'noncoal'].includes(cat)) {
+        return false;
+      }
+      if (cat === 'topup' || cat === 'top up oil' || cat === 'topup_oil' || cat === 'tuo' || cat.includes('top up') || cat.includes('topup')) return true;
       const rawId = String(jobOrRow.id || jobOrRow.noId || jobOrRow.no_id || jobOrRow.job_id || '').toUpperCase().trim();
       if (rawId.startsWith('LT-TUO-') || rawId.includes('TUO') || rawId.includes('TOPUP')) return true;
-      const req = String(jobOrRow.requestedJob || jobOrRow.jobType || jobOrRow.pekerjaan || jobOrRow.deskripsi || '').toLowerCase();
-      if (req.includes('top up') || req.includes('topup') || req.includes('oli')) return true;
+      const req = String(jobOrRow.requestedJob || jobOrRow.jobType || jobOrRow.pekerjaan || '').toLowerCase();
+      if (req.includes('top up') || req.includes('topup') || req.includes('top-up')) return true;
       // Cek context UI aktif: jika tab Lubetruck sedang aktif di sub-kategori Top Up Oil
       if (typeof state !== 'undefined' && state.lubetruckState && state.lubetruckState.activeCategory === 'topup') {
         const jType = (jobOrRow.targetType || '').toUpperCase();
-        if (jType !== 'WT' && !['coal', 'rom', 'non_coal', 'noncoal'].includes(cat)) {
+        if (jType !== 'WT' && !['coal', 'rom', 'non_coal', 'noncoal', 'aircleaner', 'air_cleaner', 'small', 'big', 'digger'].includes(cat)) {
           return true;
         }
       }
@@ -34136,6 +34141,8 @@ Keterangan : ${keterangan}`;
 
       const isJobRequest = isJobAnOrderRequest(job);
       const isWashing = (job.cat === 'coal' || job.cat === 'rom' || job.cat === 'non_coal' || (job.id && job.id.startsWith('WTJ')) || job.serviceType === 'watertruck');
+      const isTopUpJob = (typeof isTopUpJobRecord === 'function') ? isTopUpJobRecord(job) : false;
+      const isSchTopUp = !isJobRequest && isTopUpJob;
       const canChooseCondition = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'mp_wt' || state.currentUser?.role === 'oilman' || state.currentUser?.role === 'washingman' || state.currentUser?.role === 'admin' || state.currentUser?.role === 'basecontrol');
       const hasConditionBox = canChooseCondition && !isJobRequest;
       const unitCondition = hasConditionBox ? (document.getElementById('ach-unit-condition')?.value || '') : 'normal';
@@ -34322,7 +34329,6 @@ Keterangan : ${keterangan}`;
         }
       }
 
-      const isSchTopUp = !isJobRequest && isTopUpJob;
       let topUpBuiltKeterangan = '';
 
       // Validasi Khusus SCH Top Up Oil: Pastikan 4 komponen (Oli Engine, Transmisi/Swing, Hydraulic, Coolant) terisi
