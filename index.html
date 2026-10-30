@@ -14,10 +14,10 @@
     href="https://lh3.googleusercontent.com/d/1kTftX1-eoOfOYWaB8ZhjwyNLxG7-_uDY">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 
-  <meta name="theme-color" content="#0891b2">
+  <meta name="theme-color" content="#ffffff">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Job LT WT">
 
   <!-- Sinkronisasi Skala Ukuran Font Permanen (Cegah font mengecil/reset saat reload) -->
@@ -15516,7 +15516,7 @@
       } catch (e) { }
       const metaTheme = document.querySelector('meta[name="theme-color"]');
       if (metaTheme) {
-        metaTheme.setAttribute('content', isDark ? '#0f172a' : '#059669');
+        metaTheme.setAttribute('content', isDark ? '#0f172a' : '#ffffff');
       }
       if (typeof Chart !== 'undefined' && Chart.defaults) {
         Chart.defaults.color = isDark ? '#ffffff' : '#475569';
@@ -44138,7 +44138,7 @@ Keterangan : ${keterangan}`;
         return;
       }
       _isForceSyncInProgress = true;
-      showToast('Mengambil data terbaru dari Cloud Supabase...', 'info');
+      showToast('Update data...', 'info');
       try {
         const userRole = state.currentUser?.role || 'user';
         const isFieldOp = (userRole === 'mp_lt' || userRole === 'mp_wt' || userRole === 'oilman' || userRole === 'washingman' || userRole === 'operator' || userRole === 'user');
@@ -44187,7 +44187,7 @@ Keterangan : ${keterangan}`;
         else if (state.activeTab === 'lt-unschedule' && typeof renderLtUnscheduleTable === 'function') renderLtUnscheduleTable();
         else if (state.activeTab === 'wt-unschedule' && typeof renderWtUnscheduleTable === 'function') renderWtUnscheduleTable();
         else if (state.activeTab === 'job-requests' && typeof renderAdminJobRequests === 'function') renderAdminJobRequests();
-        showToast('Sinkronisasi data berhasil! Kondisi Cloud Supabase & Web telah sinkron.', 'success');
+        showToast('Berhasil', 'success');
       } catch (e) {
         console.error('Error saat force sync dari Supabase:', e);
         showToast('Gagal sinkronisasi data dari Supabase: ' + e.message, 'error');
