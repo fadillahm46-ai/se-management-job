@@ -2,7 +2,6 @@
   "name": "SE MANAGEMENT JOB - Mine Operations",
   "short_name": "Job LT WT",
   "description": "Aplikasi Manajemen Operasional Tambang, Pemeliharaan Armada, Lube Truck, Water Truck dan Monitoring Unit",
-  "id": "./",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -17,20 +16,26 @@
   ],
   "icons": [
     {
-      "src": "./icons/splash-icon-512.png",
+      "src": "https://lh3.googleusercontent.com/d/1kTftX1-eoOfOYWaB8ZhjwyNLxG7-_uDY",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://lh3.googleusercontent.com/d/1kTftX1-eoOfOYWaB8ZhjwyNLxG7-_uDY",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "https://lh3.googleusercontent.com/d/1k35DCuAVhiJx9vbuOTzRupb5bdgoT7QN",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./icons/splash-icon-512.png",
+      "src": "https://lh3.googleusercontent.com/d/1k35DCuAVhiJx9vbuOTzRupb5bdgoT7QN",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "./icons/icon-maskable-192.png",
-      "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
@@ -38,7 +43,13 @@
       "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/splash-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "shortcuts": [
@@ -49,7 +60,7 @@
       "url": "./index.html#dashboard",
       "icons": [
         {
-          "src": "./icons/icon-192.png",
+          "src": "https://lh3.googleusercontent.com/d/1kTftX1-eoOfOYWaB8ZhjwyNLxG7-_uDY",
           "sizes": "192x192"
         }
       ]
@@ -61,7 +72,7 @@
       "url": "./index.html#order",
       "icons": [
         {
-          "src": "./icons/icon-192.png",
+          "src": "https://lh3.googleusercontent.com/d/1kTftX1-eoOfOYWaB8ZhjwyNLxG7-_uDY",
           "sizes": "192x192"
         }
       ]
@@ -73,7 +84,7 @@
       "url": "./index.html#aircleaner",
       "icons": [
         {
-          "src": "./icons/icon-192.png",
+          "src": "https://lh3.googleusercontent.com/d/1kTftX1-eoOfOYWaB8ZhjwyNLxG7-_uDY",
           "sizes": "192x192"
         }
       ]

@@ -33684,11 +33684,18 @@ Keterangan : ${keterangan}`;
     function isTopUpJobRecord(jobOrRow) {
       if (!jobOrRow) return false;
       const cat = String(jobOrRow.cat || jobOrRow.category || '').toLowerCase().trim();
-      if (cat === 'topup' || cat === 'top up oil' || cat === 'topup_oil' || cat.includes('top up') || cat.includes('topup')) return true;
+      if (cat === 'topup' || cat === 'top up oil' || cat === 'topup_oil' || cat === 'tuo' || cat.includes('top up') || cat.includes('topup') || cat.includes('oli')) return true;
       const rawId = String(jobOrRow.id || jobOrRow.noId || jobOrRow.no_id || jobOrRow.job_id || '').toUpperCase().trim();
-      if (rawId.startsWith('LT-TUO-') || rawId.includes('TUO')) return true;
-      const req = String(jobOrRow.requestedJob || jobOrRow.jobType || jobOrRow.pekerjaan || '').toLowerCase();
-      if (req.includes('top up') || req.includes('topup')) return true;
+      if (rawId.startsWith('LT-TUO-') || rawId.includes('TUO') || rawId.includes('TOPUP')) return true;
+      const req = String(jobOrRow.requestedJob || jobOrRow.jobType || jobOrRow.pekerjaan || jobOrRow.deskripsi || '').toLowerCase();
+      if (req.includes('top up') || req.includes('topup') || req.includes('oli')) return true;
+      // Cek context UI aktif: jika tab Lubetruck sedang aktif di sub-kategori Top Up Oil
+      if (typeof state !== 'undefined' && state.lubetruckState && state.lubetruckState.activeCategory === 'topup') {
+        const jType = (jobOrRow.targetType || '').toUpperCase();
+        if (jType !== 'WT' && !['coal', 'rom', 'non_coal', 'noncoal'].includes(cat)) {
+          return true;
+        }
+      }
       return false;
     }
 
@@ -33841,15 +33848,19 @@ Keterangan : ${keterangan}`;
       const isTopUpJob = (typeof isTopUpJobRecord === 'function') ? isTopUpJobRecord(job) : false;
 
       // Khusus SCH Top Up Oil: aturan jadwal sengaja dimajukan 1 hari (H+1) dari hari ini.
-      // Ketika form penyelesaian job dibuka, jika belum direalisasikan,
-      // tanggal pelaksanaan HARUS TETAP mengikuti waktu asli hari ini (currentTodayStr), bukan tanggal jadwal H+1.
+      // Ketika form penyelesaian job dibuka untuk dijalankan (baik oleh Admin maupun MP/Oilman),
+      // tanggal pelaksanaan HARUS SELALU mengikuti waktu asli hari ini (currentTodayStr), bukan tanggal jadwal H+1.
       let initialExecDate;
-      if (job.tanggalRealisasi) {
-        initialExecDate = job.tanggalRealisasi;
+      const isJobActuallyDone = Boolean(job.actionTimestamp || (job.status === 'ach' && job.tanggal_eksekusi));
+      if (isTopUpJob && !isJobActuallyDone) {
+        // SELALU tanggal hari ini jika baru dijalankan / belum selesai!
+        initialExecDate = currentTodayStr;
+      } else if (isJobActuallyDone && (job.tanggal_eksekusi || job.tanggalRealisasi)) {
+        initialExecDate = (job.tanggal_eksekusi || job.tanggalRealisasi);
       } else if (isTopUpJob) {
         initialExecDate = currentTodayStr;
       } else {
-        initialExecDate = (job.tanggal || currentTodayStr);
+        initialExecDate = (job.tanggalRealisasi || job.tanggal || currentTodayStr);
       }
 
       const dateInput = document.getElementById('ach-execution-date');
@@ -33874,7 +33885,10 @@ Keterangan : ${keterangan}`;
 
       // Jika SCH Top Up (atau pekerjaan belum direalisasi), shift default selalu mengikuti jam kerja realtime saat ini
       let initialExecShift = currentLiveShift;
-      if (job.executedShift) {
+      if (isTopUpJob && !isJobActuallyDone) {
+        // SCH Top Up yang baru dijalankan selalu mengikuti jam realtime saat form dibuka
+        initialExecShift = currentLiveShift;
+      } else if (job.executedShift) {
         initialExecShift = parseInt(job.executedShift, 10) || currentLiveShift;
       } else if (job.tanggalRealisasi && job.shift && !isTopUpJob) {
         initialExecShift = parseInt(job.shift, 10) || currentLiveShift;
@@ -34053,7 +34067,7 @@ Keterangan : ${keterangan}`;
         }
       }
 
-      const isSchTopUp = !isJobRequest && (job.cat === 'topup' || job.cat === 'top up oil' || job.cat === 'topup_oil');
+      const isSchTopUp = !isJobRequest && isTopUpJob;
       const topupContainer = document.getElementById('ach-topup-container');
       const ketContainer = document.getElementById('ach-keterangan-container');
 
@@ -34313,7 +34327,7 @@ Keterangan : ${keterangan}`;
         }
       }
 
-      const isSchTopUp = !isJobRequest && (job.cat === 'topup' || job.cat === 'top up oil' || job.cat === 'topup_oil');
+      const isSchTopUp = !isJobRequest && isTopUpJob;
       let topUpBuiltKeterangan = '';
 
       // Validasi Khusus SCH Top Up Oil: Pastikan 4 komponen (Oli Engine, Transmisi/Swing, Hydraulic, Coolant) terisi
