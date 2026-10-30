@@ -6425,11 +6425,7 @@
                 <span>Unduh</span>
               </button>
 
-              <button type="button" id="btn-reset-aircleaner" onclick="resetAirCleanerWeeklyCycle()"
-                class="hidden px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer"
-                title="Reset Siklus Mingguan (Khusus Admin)">
-                Reset Siklus Week
-              </button>
+
             </div>
           </div>
 
@@ -6504,7 +6500,7 @@
                     <th class="py-2.5 px-3 w-[15%] text-left align-middle border-r border-white/10 whitespace-nowrap">NO
                       ID</th>
                     <th class="py-2.5 px-2.5 w-[11%] text-left align-middle border-r border-white/10 whitespace-nowrap">
-                      WAKTU INPUT</th>
+                      WAKTU PELAKSANAAN</th>
                     <th class="py-2.5 px-3 w-[16%] text-left align-middle border-r border-white/10">NO &amp; TYPE UNIT
                     </th>
                     <th class="py-2.5 px-3 w-[15%] text-left align-middle border-r border-white/10">TEKNISI / PIC
@@ -11125,7 +11121,7 @@
     const SUPABASE_USER_COLS = 'id,nrp,nama,password,role,jabatan,status_aktif';
     const SUPABASE_UNIT_COLS = 'id,no_lambung,type_model,kategori,cluster,lokasi,status,status_aktif';
     const SUPABASE_ROSTER_COLS = 'id,nrp,nama,tanggal,shift,jenis,unit,unit_efektif,kode_shift,periode,is_spare';
-    const SUPABASE_AC_COLS = 'id,no_lambung,type_model,cleans,service_code,status,last_cleaned_date,updated_at';
+    const SUPABASE_AC_COLS = 'id,no_lambung,type_model,cleans,service_code,status,last_cleaned_date,evidence_url,last_replaced_at,last_replaced_by,replace_notes,updated_at';
 
     // Safe storage fallback if localStorage is sandboxed in iframe
     const _memoryStorage = {};
@@ -35038,7 +35034,7 @@ Keterangan : ${keterangan}`;
             <span class="font-mono font-black text-slate-900 text-[10.5px] px-2 py-1 rounded-lg bg-slate-100 border border-slate-200/80 inline-block shadow-2xs">${noId}</span>
           </td>
 
-          <!-- KOLOM 1: WAKTU INPUT TRACK -->
+          <!-- KOLOM 1: WAKTU PELAKSANAAN TRACK -->
           <td class="py-2.5 px-2.5 text-left align-middle text-slate-700 border-r border-slate-100 whitespace-nowrap">
             <div class="font-black text-slate-900 text-[10.5px] leading-tight">${displayDate}</div>
             <div class="text-slate-500 text-[10px] font-semibold mt-0.5 flex items-center gap-1.5 leading-tight">
@@ -36471,8 +36467,7 @@ Keterangan : ${keterangan}`;
 
       const btnResetAc = document.getElementById('btn-reset-aircleaner');
       if (btnResetAc) {
-        if (isAdmin) btnResetAc.classList.remove('hidden');
-        else btnResetAc.classList.add('hidden');
+        btnResetAc.classList.add('hidden');
       }
 
       const thAction = document.getElementById('th-aircleaner-action');
@@ -36487,6 +36482,46 @@ Keterangan : ${keterangan}`;
       const selectedType = (document.getElementById('filter-aircleaner-type')?.value || 'ALL');
       const searchVal = (document.getElementById('search-aircleaner-input')?.value || '').toLowerCase().trim();
       let rawList = state.airCleanerMonitor || [];
+
+      // SINKRONISASI OTOMATIS: Unit yang sudah di-replace oleh Tim Track / Admin otomatis ter-reset siklusnya
+      const lastRepMap = new Map();
+      (state.airCleanerReplacements || []).forEach(rep => {
+        const u = String(rep.no_lambung || rep.noLambung || '').trim().toUpperCase();
+        if (!u) return;
+        const d = String(rep.tanggal || (rep.created_at ? rep.created_at.slice(0, 10) : '')).trim();
+        const j = String(rep.jam || '00:00').trim();
+        const ts = rep.created_at ? new Date(rep.created_at).getTime() : new Date(${d}T${j}:00).getTime();
+        if (!lastRepMap.has(u) || ts > lastRepMap.get(u).timestamp) {
+          lastRepMap.set(u, { dateStr: d, jamStr: j, timestamp: ts, rep: rep });
+        }
+      });
+
+      rawList.forEach(item => {
+        const u = String(item.noLambung || '').trim().toUpperCase();
+        if (lastRepMap.has(u)) {
+          const repInfo = lastRepMap.get(u);
+          item.lastEvidenceUrl = repInfo.rep.evidence_url || repInfo.rep.evidenceUrl || item.lastEvidenceUrl || '';
+          item.lastReplacedAt = repInfo.dateStr;
+          item.lastReplacedBy = repInfo.rep.pic || '';
+
+          // Filter cleans: Hanya pertahankan semprotan yang terjadi SETELAH tanggal pergantian
+          if (Array.isArray(item.cleans) && item.cleans.length > 0) {
+            item.cleans = item.cleans.filter(c => {
+              const cDateMatch = String(c).match(/(\d{2})\/(\d{2})\/(\d{4})/);
+              if (!cDateMatch) return false;
+              const cleanDateIso = ${cDateMatch[3]}--;
+              return cleanDateIso > repInfo.dateStr;
+            });
+          }
+
+          // Jika semprotan sebelum pergantian sudah dibersihkan, siklus kembali ke 0 & status Baik
+          if (!Array.isArray(item.cleans) || item.cleans.length === 0) {
+            item.cleans = [];
+            item.status = 'Baik';
+            item.serviceCode = '';
+          }
+        }
+      });
 
       // Filter KHUSUS: HANYA tampilkan tipe unit yang ada di 4 foto spesifikasi pengguna
       const allowedBaseList = rawList.filter(m => {
@@ -39456,7 +39491,13 @@ Keterangan : ${keterangan}`;
         return;
       }
       try {
-        // Pastikan job history termuat terlebih dahulu sebagai Single Source of Truth pekerjaan selesai
+        // Pastikan job history & replacements termuat terlebih dahulu sebagai Single Source of Truth
+        if ((!Array.isArray(state.airCleanerReplacements) || state.airCleanerReplacements.length === 0) && typeof loadAirCleanerReplacementsFromSupabase === 'function') {
+          try {
+            await loadAirCleanerReplacementsFromSupabase(true);
+          } catch (eR) { }
+        }
+
         if ((!Array.isArray(state.jobHistory) || state.jobHistory.length === 0) && typeof loadJobHistoryFromSupabase === 'function') {
           try {
             await loadJobHistoryFromSupabase(true);
@@ -39582,6 +39623,26 @@ Keterangan : ${keterangan}`;
           return String(a.jamStart || '').localeCompare(String(b.jamStart || ''));
         });
 
+        // Map replacement terakhir per unit untuk reset otomatis siklus pekerjaan lama
+        const lastReplacementMap = new Map();
+        (state.airCleanerReplacements || []).forEach(rep => {
+          const rUnit = String(rep.no_lambung || rep.noLambung || '').trim().toUpperCase();
+          if (!rUnit) return;
+          const rDate = String(rep.tanggal || (rep.created_at ? rep.created_at.slice(0, 10) : '')).trim();
+          const rJam = String(rep.jam || '00:00').trim();
+          const rTs = rep.created_at ? new Date(rep.created_at).getTime() : new Date(${rDate}T${rJam}:00).getTime();
+          if (!lastReplacementMap.has(rUnit) || rTs > lastReplacementMap.get(rUnit).timestamp) {
+            lastReplacementMap.set(rUnit, {
+              dateStr: rDate,
+              jamStr: rJam,
+              timestamp: rTs,
+              evidenceUrl: rep.evidence_url || rep.evidenceUrl || '',
+              pic: rep.pic || '',
+              keterangan: rep.keterangan || ''
+            });
+          }
+        });
+
         actualCompletedJobs.forEach(job => {
           if (!job.noLambung) return;
           const uLambung = job.noLambung.toUpperCase().trim();
@@ -39600,11 +39661,15 @@ Keterangan : ${keterangan}`;
 
           const dStr = job.tanggalRealisasi || job.tanggal || '';
           if (dStr) {
-            // Jika ada riwayat pergantian filter baru, abaikan pekerjaan sebelum tanggal pergantian
-            if (monItem.lastReplacedAt) {
+            // Jika unit sudah pernah di-replace, abaikan semua pekerjaan semprotan pada atau sebelum tanggal replace
+            const repInfo = lastReplacementMap.get(uLambung);
+            if (repInfo) {
+              const jobDateStr = dStr.includes('/') ? dStr.split('/').reverse().join('-') : dStr;
+              if (jobDateStr <= repInfo.dateStr) return;
+            } else if (monItem.lastReplacedAt) {
               const repDateStr = String(monItem.lastReplacedAt).slice(0, 10);
               const jobDateStr = dStr.includes('/') ? dStr.split('/').reverse().join('-') : dStr;
-              if (jobDateStr < repDateStr) return;
+              if (jobDateStr <= repDateStr) return;
             }
 
             const parts = dStr.split('-');
