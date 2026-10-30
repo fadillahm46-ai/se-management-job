@@ -23978,13 +23978,21 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         if (sortedArmada.length === 0) {
           progressListEl.innerHTML = '<div class="py-4 text-center text-slate-400 italic text-[11px]">Belum ada job armada yang diselesaikan (ACH). Menunggu realisasi checklist digital tim lapangan.</div>';
         } else {
+          const isExpanded = Boolean(window._isArmadaListExpanded);
+          const limit = 10;
+          const hasMore = sortedArmada.length > limit;
+
           sortedArmada.forEach((item, idx) => {
             const pct = totalJobs > 0 ? Math.round((item.count / totalJobs) * 100) : 0;
             const barColor = palette[idx % palette.length];
             const durFormatted = formatActualDurasi(item.totalMins);
             const rankBg = idx === 0 ? 'bg-amber-100 text-amber-800' : (idx === 1 ? 'bg-slate-200 text-slate-700' : (idx === 2 ? 'bg-amber-50 text-amber-900' : 'bg-slate-100 text-slate-600'));
+
+            const isExtra = idx >= limit;
             const div = document.createElement('div');
-            div.className = 'space-y-1';
+            div.className = `space-y-1 ${isExtra && !isExpanded ? 'hidden' : ''}`;
+            if (isExtra) div.setAttribute('data-armada-extra', 'true');
+
             div.innerHTML = `
             <div class="flex items-center justify-between text-xs font-semibold">
               <span class="font-bold text-slate-800 font-mono flex items-center gap-1.5">
@@ -24003,9 +24011,34 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           `;
             progressListEl.appendChild(div);
           });
+
+          // Tombol panah bawah bantu jika armada lebih dari 10 unit
+          if (hasMore) {
+            const remainingCount = sortedArmada.length - limit;
+            const toggleDiv = document.createElement('div');
+            toggleDiv.className = 'pt-2 flex items-center justify-center';
+            toggleDiv.innerHTML = `
+              <button type="button" onclick="toggleArmadaListExpand()" 
+                class="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer shadow-2xs">
+                <span>${isExpanded ? 'Tampilkan 10 Teratas' : `Lihat ${remainingCount} Armada Lainnya`}</span>
+                <svg class="w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+            `;
+            progressListEl.appendChild(toggleDiv);
+          }
         }
       }
     }
+
+    function toggleArmadaListExpand() {
+      window._isArmadaListExpanded = !window._isArmadaListExpanded;
+      if (typeof renderArmadaJobChart === 'function') {
+        renderArmadaJobChart();
+      }
+    }
+    window.toggleArmadaListExpand = toggleArmadaListExpand;
 
 
     function syncMasterOperatorsWithUsers() {
