@@ -33018,7 +33018,10 @@ Keterangan : ${keterangan}`;
       'ach-mp2-name': false
     };
 
+    window._suppressSearchableOpen = false;
+
     function openSearchableDropdown(fieldId) {
+      if (window._suppressSearchableOpen) return;
       ['ach-lt-custom', 'ach-opt-name', 'ach-mp1-name', 'ach-mp2-name', 'direct-opt-name', 'direct-mp1-name', 'direct-mp2-name'].forEach(id => {
         if (id !== fieldId) closeSearchableDropdown(id);
       });
@@ -33039,6 +33042,16 @@ Keterangan : ${keterangan}`;
       if (dropdownEl) dropdownEl.classList.add('hidden');
     }
     window.closeSearchableDropdown = closeSearchableDropdown;
+
+    function closeAllSearchableDropdowns() {
+      ['ach-lt-custom', 'ach-opt-name', 'ach-mp1-name', 'ach-mp2-name', 'direct-opt-name', 'direct-mp1-name', 'direct-mp2-name'].forEach(id => {
+        closeSearchableDropdown(id);
+      });
+      if (typeof closeDirectArmadaDropdown === 'function') {
+        closeDirectArmadaDropdown();
+      }
+    }
+    window.closeAllSearchableDropdowns = closeAllSearchableDropdowns;
 
     function toggleSearchableDropdown(e, fieldId) {
       if (e) {
@@ -33253,7 +33266,7 @@ Keterangan : ${keterangan}`;
     }
     window.selectSearchableOption = selectSearchableOption;
 
-    function clearSearchableSelect(fieldId) {
+    function clearSearchableSelect(fieldId, openDropdown = false) {
       if (['ach-opt-name', 'ach-mp1-name', 'ach-mp2-name'].includes(fieldId)) {
         if (!window._achPersonnelManualOverride) window._achPersonnelManualOverride = {};
         window._achPersonnelManualOverride[fieldId] = true;
@@ -33276,7 +33289,9 @@ Keterangan : ${keterangan}`;
 
       if (inputEl) {
         inputEl.value = '';
-        inputEl.focus();
+        if (openDropdown) {
+          inputEl.focus();
+        }
       }
 
       if (clearBtn) clearBtn.classList.add('hidden');
@@ -33286,13 +33301,17 @@ Keterangan : ${keterangan}`;
         const job = (typeof findJobById === 'function') ? findJobById(state.currentActionJobId) : null;
         const isWashing = job ? Boolean(job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat)) : false;
         populateAchPersonnelSelects('', '', '', isWashing);
-        clearSearchableSelect('ach-opt-name');
-        clearSearchableSelect('ach-mp1-name');
-        clearSearchableSelect('ach-mp2-name');
+        clearSearchableSelect('ach-opt-name', false);
+        clearSearchableSelect('ach-mp1-name', false);
+        clearSearchableSelect('ach-mp2-name', false);
       }
 
-      // Buka dropdown opsi nama agar user bisa langsung memilih nama pengganti
-      openSearchableDropdown(fieldId);
+      if (openDropdown) {
+        // Buka dropdown opsi nama hanya jika diminta eksplisit (misal user klik tombol X)
+        openSearchableDropdown(fieldId);
+      } else {
+        closeSearchableDropdown(fieldId);
+      }
     }
     window.clearSearchableSelect = clearSearchableSelect;
 
@@ -33302,7 +33321,7 @@ Keterangan : ${keterangan}`;
         if (typeof e.preventDefault === 'function') e.preventDefault();
         if (typeof e.stopPropagation === 'function') e.stopPropagation();
       }
-      clearSearchableSelect(fieldId);
+      clearSearchableSelect(fieldId, true);
     }
     window.handleClearSearchableClick = handleClearSearchableClick;
 
@@ -33323,11 +33342,12 @@ Keterangan : ${keterangan}`;
             const inputEl = document.getElementById(`search-${fieldId}`);
             if (inputEl && nativeSelect) {
               const rawInput = (inputEl.value || '').trim();
-              if (rawInput === '' || rawInput === '- (Tidak Ada)') {
-                // User memang sengaja mengosongkan field, pertahankan kosong secara permanen!
-                if (rawInput === '- (Tidak Ada)' || (fieldId === 'ach-mp2-name' && rawInput === '-')) {
+              if (rawInput === '' || rawInput === '- (Tidak Ada)' || rawInput === '-') {
+                // User memang sengaja memilih Tidak Ada / mengosongkan field
+                if (rawInput === '- (Tidak Ada)' || ((fieldId === 'ach-mp2-name' || fieldId === 'direct-mp2-name') && (rawInput === '-' || rawInput === 'Tidak Ada'))) {
                   nativeSelect.value = '-';
                   inputEl.value = '- (Tidak Ada)';
+                  if (typeof clearDirectFieldError === 'function') clearDirectFieldError(fieldId);
                 } else {
                   nativeSelect.value = '';
                   inputEl.value = '';
@@ -34567,7 +34587,13 @@ Keterangan : ${keterangan}`;
 
         const rawOpt = (optEl?.value || searchOptEl?.value || '').trim();
         const rawMp1 = (mp1El?.value || searchMp1El?.value || '').trim();
-        const rawMp2 = (mp2El?.value || searchMp2El?.value || '').trim();
+        let rawMp2 = (mp2El?.value || searchMp2El?.value || '').trim();
+        if (rawMp2 === '- (Tidak Ada)' || rawMp2 === 'Tidak Ada') {
+          rawMp2 = '-';
+        }
+        if (mp2El && rawMp2 === '-') {
+          mp2El.value = '-';
+        }
 
         if (!rawLt || rawLt === '' || rawLt === '-' || rawLt.startsWith('--')) {
           showToast('Armada wajib dipilih!', 'warning');
@@ -34586,8 +34612,9 @@ Keterangan : ${keterangan}`;
           else if (mp1El) mp1El.focus();
           return;
         }
+        // MP 2: Nilai '-' (- Tidak Ada) adalah AMAN (sah), hanya error jika benar-benar belum dipilih (kosong atau placeholder '--')
         if (!rawMp2 || rawMp2 === '' || rawMp2.startsWith('--')) {
-          showToast('Nama MP 2 wajib dipilih!', 'warning');
+          showToast('Nama MP 2 wajib dipilih (pilih nama personil atau - Tidak Ada)!', 'warning');
           if (searchMp2El) searchMp2El.focus();
           else if (mp2El) mp2El.focus();
           return;
@@ -42285,6 +42312,8 @@ Keterangan : ${keterangan}`;
       selectSearchableOption('direct-mp1-name', selectedMp1 || '');
 
       const mp2Select = document.getElementById('direct-mp2-name');
+      let finalSelectedMp2 = (selectedMp2 || '').trim();
+      if (finalSelectedMp2 === '- (Tidak Ada)' || finalSelectedMp2 === 'Tidak Ada') finalSelectedMp2 = '-';
       if (mp2Select) {
         mp2Select.innerHTML = '<option value="">-- Pilih MP 2 --</option><option value="-">- (Tidak Ada)</option>';
         sortedMp.forEach(name => {
@@ -42293,14 +42322,17 @@ Keterangan : ${keterangan}`;
           opt.textContent = name;
           mp2Select.appendChild(opt);
         });
-        mp2Select.value = selectedMp2 || '';
+        mp2Select.value = finalSelectedMp2;
       }
       window._searchablePersonnelData['direct-mp2-name'] = [
         { value: '', label: '-- Pilih MP 2 --' },
         { value: '-', label: '- (Tidak Ada)' },
         ...sortedMp.map(name => ({ value: name, label: name }))
       ];
-      selectSearchableOption('direct-mp2-name', selectedMp2 || '');
+      selectSearchableOption('direct-mp2-name', finalSelectedMp2);
+      if (finalSelectedMp2 === '-') {
+        if (typeof clearDirectFieldError === 'function') clearDirectFieldError('direct-mp2-name');
+      }
     }
     window.populateDirectPersonnelDropdowns = populateDirectPersonnelDropdowns;
 
@@ -42690,31 +42722,60 @@ Keterangan : ${keterangan}`;
       const jamFinish = (document.getElementById('direct-jam-finish')?.value || '').trim();
       const statusChoice = (document.getElementById('direct-status')?.value || '').trim();
       const armada = (document.getElementById('direct-armada')?.value || '').trim().toUpperCase();
-      const opt = (document.getElementById('direct-opt-name')?.value || '').trim();
-      const mp1 = (document.getElementById('direct-mp1-name')?.value || '').trim();
-      const mp2 = (document.getElementById('direct-mp2-name')?.value || '').trim();
+
+      // Sinkronisasi pembacaan personil dari select & input pencarian
+      const rawOptSelect = (document.getElementById('direct-opt-name')?.value || '').trim();
+      const rawOptSearch = (document.getElementById('search-direct-opt-name')?.value || '').trim();
+      const opt = (rawOptSelect && rawOptSelect !== '-' && !rawOptSelect.startsWith('--'))
+        ? rawOptSelect
+        : (rawOptSearch && !rawOptSearch.startsWith('--') ? rawOptSearch : rawOptSelect);
+
+      const rawMp1Select = (document.getElementById('direct-mp1-name')?.value || '').trim();
+      const rawMp1Search = (document.getElementById('search-direct-mp1-name')?.value || '').trim();
+      const mp1 = (rawMp1Select && rawMp1Select !== '-' && !rawMp1Select.startsWith('--'))
+        ? rawMp1Select
+        : (rawMp1Search && !rawMp1Search.startsWith('--') ? rawMp1Search : rawMp1Select);
+
+      const rawMp2Select = (document.getElementById('direct-mp2-name')?.value || '').trim();
+      const rawMp2Search = (document.getElementById('search-direct-mp2-name')?.value || '').trim();
+      let mp2 = rawMp2Select;
+      if (!mp2 || mp2 === '' || mp2 === '-' || mp2.startsWith('--')) {
+        if (rawMp2Search === '- (Tidak Ada)' || rawMp2Search === '-' || rawMp2Search === 'Tidak Ada' || rawMp2Select === '-') {
+          mp2 = '-';
+        } else if (rawMp2Search && !rawMp2Search.startsWith('--')) {
+          mp2 = rawMp2Search;
+        } else if (rawMp2Select === '-') {
+          mp2 = '-';
+        }
+      }
+      if (mp2 === '- (Tidak Ada)' || mp2 === 'Tidak Ada') {
+        mp2 = '-';
+      }
+      if (document.getElementById('direct-mp2-name')) {
+        document.getElementById('direct-mp2-name').value = mp2;
+      }
+
       const keterangan = (document.getElementById('direct-keterangan')?.value || '').trim();
 
       // Validasi semua kolom wajib isi (keterangan error di bawah masing-masing kolom)
       const tanggalInputVal = (document.getElementById('direct-tanggal')?.value || '').trim();
       const shiftInputVal = (document.getElementById('direct-shift')?.value || '').trim();
       const fieldsToCheck = [
-        { id: 'direct-kode-unit', val: lambung },
-        { id: 'direct-cluster', val: cluster },
-        { id: 'direct-lokasi', val: lokasi },
-        { id: 'direct-deskripsi', val: deskripsi },
-        { id: 'direct-tanggal', val: tanggalInputVal },
-        { id: 'direct-shift', val: shiftInputVal },
-        { id: 'direct-hm-start', val: hmStart },
-        { id: 'direct-hm-finish', val: hmFinish },
-        { id: 'direct-jam-start', val: jamStart },
-        { id: 'direct-jam-finish', val: jamFinish },
-        { id: 'direct-status', val: statusChoice },
-        { id: 'direct-armada', val: armada },
-        { id: 'direct-opt-name', val: opt },
-        { id: 'direct-mp1-name', val: mp1 },
-        { id: 'direct-mp2-name', val: mp2 },
-        { id: 'direct-keterangan', val: keterangan }
+        { id: 'direct-kode-unit', val: lambung, isSearchable: false },
+        { id: 'direct-cluster', val: cluster, isSearchable: false },
+        { id: 'direct-lokasi', val: lokasi, isSearchable: false },
+        { id: 'direct-deskripsi', val: deskripsi, isSearchable: false },
+        { id: 'direct-tanggal', val: tanggalInputVal, isSearchable: false },
+        { id: 'direct-shift', val: shiftInputVal, isSearchable: false },
+        { id: 'direct-hm-start', val: hmStart, isSearchable: false },
+        { id: 'direct-hm-finish', val: hmFinish, isSearchable: false },
+        { id: 'direct-jam-start', val: jamStart, isSearchable: false },
+        { id: 'direct-jam-finish', val: jamFinish, isSearchable: false },
+        { id: 'direct-status', val: statusChoice, isSearchable: false },
+        { id: 'direct-armada', val: armada, isSearchable: true, searchId: 'search-direct-armada' },
+        { id: 'direct-opt-name', val: opt, isSearchable: true, searchId: 'search-direct-opt-name' },
+        { id: 'direct-mp1-name', val: mp1, isSearchable: true, searchId: 'search-direct-mp1-name' },
+        { id: 'direct-mp2-name', val: mp2, isSearchable: true, searchId: 'search-direct-mp2-name', allowDash: true }
       ];
 
       let hasError = false;
@@ -42722,12 +42783,21 @@ Keterangan : ${keterangan}`;
 
       fieldsToCheck.forEach(f => {
         const strVal = String(f.val || '').trim();
-        if (!strVal || strVal === '-' || (f.id === 'direct-status' && strVal === '')) {
+        let isInvalid = false;
+        if (f.id === 'direct-mp2-name' || f.allowDash) {
+          // Khusus MP 2: Nilai '-' (- Tidak Ada) adalah SAH dan AMAN!
+          // Hanya error jika benar-benar belum dipilih (kosong "" atau placeholder "--")
+          isInvalid = (!strVal || strVal === '' || strVal.startsWith('--'));
+        } else {
+          isInvalid = (!strVal || strVal === '-' || strVal.startsWith('--'));
+        }
+
+        if (isInvalid) {
           setDirectFieldError(f.id);
           hasError = true;
           if (!firstErrorEl) {
-            firstErrorEl = (f.id === 'direct-armada')
-              ? document.getElementById('search-direct-armada')
+            firstErrorEl = f.isSearchable
+              ? document.getElementById(f.searchId)
               : document.getElementById(f.id);
           }
         } else {
@@ -42736,7 +42806,18 @@ Keterangan : ${keterangan}`;
       });
 
       if (hasError) {
-        if (firstErrorEl) firstErrorEl.focus();
+        if (typeof closeAllSearchableDropdowns === 'function') {
+          closeAllSearchableDropdowns();
+        }
+        if (typeof showToast === 'function') {
+          showToast('Harap lengkapi semua data wajib pada formulir!', 'error');
+        }
+        if (firstErrorEl) {
+          try { firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) { }
+          window._suppressSearchableOpen = true;
+          try { firstErrorEl.focus(); } catch (e) { }
+          setTimeout(() => { window._suppressSearchableOpen = false; }, 350);
+        }
         return;
       }
 
@@ -42912,6 +42993,9 @@ Keterangan : ${keterangan}`;
     window.handleDirectCompletionSubmit = handleDirectCompletionSubmit;
 
     function resetDirectCompletionForm() {
+      if (typeof closeAllSearchableDropdowns === 'function') {
+        closeAllSearchableDropdowns();
+      }
       if (document.getElementById('direct-kode-unit')) document.getElementById('direct-kode-unit').value = '';
       if (document.getElementById('direct-cluster')) document.getElementById('direct-cluster').value = '';
       if (document.getElementById('direct-lokasi')) document.getElementById('direct-lokasi').value = '';
@@ -42938,9 +43022,9 @@ Keterangan : ${keterangan}`;
       if (document.getElementById('direct-status')) document.getElementById('direct-status').value = '';
       if (document.getElementById('search-direct-armada')) document.getElementById('search-direct-armada').value = '';
       if (document.getElementById('direct-armada')) document.getElementById('direct-armada').value = '';
-      clearSearchableSelect('direct-opt-name');
-      clearSearchableSelect('direct-mp1-name');
-      clearSearchableSelect('direct-mp2-name');
+      clearSearchableSelect('direct-opt-name', false);
+      clearSearchableSelect('direct-mp1-name', false);
+      clearSearchableSelect('direct-mp2-name', false);
       if (document.getElementById('direct-keterangan')) document.getElementById('direct-keterangan').value = '';
       const clearBtn = document.getElementById('clear-direct-armada');
       if (clearBtn) clearBtn.classList.add('hidden');
@@ -42954,6 +43038,13 @@ Keterangan : ${keterangan}`;
       allFields.forEach(fId => {
         if (typeof clearDirectFieldError === 'function') clearDirectFieldError(fId);
       });
+
+      if (typeof closeAllSearchableDropdowns === 'function') {
+        closeAllSearchableDropdowns();
+      }
+      if (document.activeElement && typeof document.activeElement.blur === 'function') {
+        document.activeElement.blur();
+      }
     }
     window.resetDirectCompletionForm = resetDirectCompletionForm;
 
