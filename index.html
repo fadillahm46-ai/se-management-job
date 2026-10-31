@@ -1694,13 +1694,15 @@
               </svg>
               <span>Schedule</span>
             </button>
-            <button onclick="handleMpUnscheduleClick()" id="nav-btn-mp-unschedule"
+
+            <button onclick="navigateTab('orders')" id="nav-btn-mp-order"
               class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer">
-              <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                </path>
               </svg>
-              <span>Job Request</span>
+              <span>Form Order</span>
             </button>
           </div>
 
@@ -4029,7 +4031,7 @@
           <div id="order-subpane-direct"
             class="hidden bg-white p-6 md:p-8 rounded-3xl border border-slate-200/80 shadow-xs w-full max-w-2xl mx-auto">
             <div class="flex items-center justify-between mb-5">
-              <h3 class="text-base font-extrabold text-slate-900">
+              <h3 class="text-base font-extrabold text-slate-900" id="title-direct-completion">
                 Penyelesaian Job Lapangan
               </h3>
               <button type="button" onclick="resetDirectCompletionForm()" title="Reset formulir penyelesaian job"
@@ -4053,14 +4055,14 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-slate-700 mb-1.5">Tipe Layanan / Armada</label>
-                  <div class="flex space-x-4 pt-2">
-                    <label class="flex items-center space-x-2 cursor-pointer">
+                  <div class="flex space-x-4 pt-2" id="wrapper-direct-service-radios">
+                    <label class="flex items-center space-x-2 cursor-pointer" id="label-direct-radio-lt">
                       <input type="radio" name="direct-tipe-service" value="lubetruck" checked
                         onchange="handleDirectServiceTypeChange(this.value)"
                         class="text-emerald-600 focus:ring-emerald-500 cursor-pointer">
                       <span>Lubetruck (LT)</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer">
+                    <label class="flex items-center space-x-2 cursor-pointer" id="label-direct-radio-wt">
                       <input type="radio" name="direct-tipe-service" value="watertruck"
                         onchange="handleDirectServiceTypeChange(this.value)"
                         class="text-cyan-600 focus:ring-cyan-500 cursor-pointer">
@@ -5410,6 +5412,9 @@
                   <option value="ALL">All Role</option>
                   <option value="admin">Administrasi</option>
                   <option value="basecontrol">Base Control</option>
+                  <option value="cmc">CMC</option>
+                  <option value="cmc">CMC</option>
+                  <option value="cmc">CMC</option>
                   <option value="track">Track</option>
                   <option value="user">User</option>
                   <option value="oilman">Oilman</option>
@@ -5968,38 +5973,41 @@
               </div>
             </div>
 
-            <!-- 2. Form Order -->
-            <div onclick="navigateTab('orders')"
+
+
+            <!-- 4. Clean Air Cleaner -->
+            <div onclick="navigateTab('air-cleaner-monitor')"
               class="bg-white hover:bg-slate-50 border border-slate-200/80 active:scale-[0.98] transition rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer space-y-3">
               <div
-                class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100/80 shrink-0">
+                class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center border border-teal-100/80 shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
                   </path>
                 </svg>
               </div>
               <div>
-                <h4 class="text-xs font-black text-slate-900 leading-tight">Form Order</h4>
+                <h4 class="text-xs font-black text-slate-900 leading-tight">Clean Air Cleaner</h4>
               </div>
             </div>
 
-            <!-- 3. Job Request -->
-            <div onclick="navigateTab('job-requests')"
+            <!-- 5. Log PICA Kendala -->
+            <div onclick="navigateTab('pica')"
               class="bg-white hover:bg-slate-50 border border-slate-200/80 active:scale-[0.98] transition rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer space-y-3">
               <div
-                class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100/80 shrink-0">
+                class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center border border-rose-100/80 shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                  </path>
                 </svg>
               </div>
               <div>
-                <h4 class="text-xs font-black text-slate-900 leading-tight">Job Request</h4>
+                <h4 class="text-xs font-black text-slate-900 leading-tight">Log PICA Kendala</h4>
               </div>
             </div>
 
-            <!-- 4. Tombol Keluar (Di dalam grid persegi) -->
+            <!-- 6. Tombol Keluar (Di dalam grid persegi) -->
             <div onclick="openProfileLogoutModal()"
               class="bg-white hover:bg-rose-50 border border-slate-200/80 active:scale-[0.98] transition rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer space-y-3">
               <div
@@ -6187,6 +6195,22 @@
               </div>
               <div>
                 <h4 class="text-xs font-black text-slate-900 leading-tight">Profil Saya</h4>
+              </div>
+            </div>
+
+            <!-- Form Order (Khusus MP: Form Penyelesaian Langsung) -->
+            <div onclick="navigateTab('orders')"
+              class="bg-white hover:bg-slate-50 border border-slate-200/80 active:scale-[0.98] transition rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer space-y-3">
+              <div
+                class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100/80 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                  </path>
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-xs font-black text-slate-900 leading-tight">Form Order</h4>
               </div>
             </div>
 
@@ -8317,6 +8341,8 @@
               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-500 bg-white">
               <option value="admin">Administrasi</option>
               <option value="basecontrol">Base Control</option>
+              <option value="cmc">CMC</option>
+              <option value="cmc">CMC</option>
               <option value="track">Track</option>
               <option value="user">User</option>
               <option value="oilman">Oilman</option>
@@ -8413,6 +8439,7 @@
             <option value="NO_CHANGE">-- Jangan Ubah Role --</option>
             <option value="admin">Administrasi</option>
             <option value="basecontrol">Base Control</option>
+            <option value="cmc">CMC</option>
             <option value="track">Track</option>
             <option value="user">User</option>
             <option value="oilman">Oilman</option>
@@ -12139,6 +12166,8 @@
     // Predefined Mock Users for Verification & Quick Switch
     const MOCK_USERS = [
       { id: 'track-01', nrp: 'track', nama: 'Tim Track Lapangan', password: 'track123', role: 'track', jabatan: 'Tim Track', statusAktif: true },
+      { id: 'bsc-01', nrp: 'bsc', nama: 'Base Control', password: 'bsc123', role: 'basecontrol', jabatan: 'Base Control', statusAktif: true },
+      { id: 'cmc-01', nrp: 'cmc', nama: 'CMC Operasional', password: 'cmc123', role: 'cmc', jabatan: 'CMC', statusAktif: true },
       { id: '1', nrp: 'admin', nama: 'Admin Operasional', password: 'admin123', role: 'admin', jabatan: 'Admin / Planner', statusAktif: true }
     ];
 
@@ -14205,7 +14234,8 @@
             (nrpLower === 'wm2001' && (uNrpLower === 'wm' || uNrpLower === 'wm2001')) ||
             (nrpLower === 'bsc' && (uNrpLower === 'bsc' || uNrpLower === 'bc01' || uNrpLower === 'basecontrol')) ||
             (nrpLower === 'bc01' && (uNrpLower === 'bsc' || uNrpLower === 'bc01' || uNrpLower === 'basecontrol')) ||
-            (nrpLower === 'basecontrol' && (uNrpLower === 'bsc' || uNrpLower === 'bc01' || uNrpLower === 'basecontrol'));
+            (nrpLower === 'basecontrol' && (uNrpLower === 'bsc' || uNrpLower === 'bc01' || uNrpLower === 'basecontrol')) ||
+            (nrpLower === 'cmc' && (uNrpLower === 'cmc' || uNrpLower === 'cmc01'));
 
           if (!matchNrp) return false;
 
@@ -14222,6 +14252,7 @@
             (nrpLower === 'wm2001' && password === 'wm123') ||
             (nrpLower === 'bsc' && password === 'bsc123') ||
             (nrpLower === 'bc01' && password === 'bsc123') ||
+            (nrpLower === 'cmc' && password === 'cmc123') ||
             (password.toLowerCase() === uNrpLower) ||
             (password.toLowerCase() === nrpLower);
 
@@ -14259,6 +14290,8 @@
               user.role = 'oilman';
             } else if (jLower.includes('track')) {
               user.role = 'track';
+            } else if (jLower.includes('cmc')) {
+              user.role = 'cmc';
             }
           }
 
@@ -14320,31 +14353,32 @@
       const userRole = String(user.role || '').toLowerCase();
       const isBaseControl = ['basecontrol', 'base_control', 'bsc'].includes(userRole);
       const isTrack = ['track', 'tim_track'].includes(userRole);
+      const isCmc = (userRole === 'cmc');
       const isAdmin = (userRole === 'admin');
 
       // Tombol export jadwal & log umum (LT, WT, JobReq): Admin & Base Control
-      const canExportGeneralExcel = (isAdmin || isBaseControl);
+      const canExportGeneralExcel = (isAdmin || isBaseControl || isTrack || isCmc);
       document.querySelectorAll('.btn-export-excel:not(.btn-export-riwayat):not(.btn-export-pica)').forEach(el => {
         if (canExportGeneralExcel) el.classList.remove('hidden');
         else el.classList.add('hidden');
       });
 
       // Tombol export Riwayat Selesai: Admin, Base Control, dan Tim Track
-      const canExportRiwayat = (isAdmin || isBaseControl || isTrack);
+      const canExportRiwayat = (isAdmin || isBaseControl || isTrack || isCmc);
       document.querySelectorAll('.btn-export-riwayat').forEach(el => {
         if (canExportRiwayat) el.classList.remove('hidden');
         else el.classList.add('hidden');
       });
 
       // Tombol export Log PICA Kendala: Admin, Base Control, dan Tim Track (Sesuai Permintaan)
-      const canExportPica = (isAdmin || isBaseControl || isTrack);
+      const canExportPica = (isAdmin || isBaseControl || isTrack || isCmc);
       document.querySelectorAll('.btn-export-pica').forEach(el => {
         if (canExportPica) el.classList.remove('hidden');
         else el.classList.add('hidden');
       });
 
       // Tombol export Clean Air Cleaner: Admin, Tim Track, dan Base Control
-      const canExportAirCleaner = (isAdmin || isBaseControl || isTrack);
+      const canExportAirCleaner = (isAdmin || isBaseControl || isTrack || isCmc);
       const btnDownloadAc = document.getElementById('btn-download-aircleaner');
       if (btnDownloadAc) {
         if (canExportAirCleaner) btnDownloadAc.classList.remove('hidden');
@@ -14434,6 +14468,7 @@
       const roleLabels = {
         admin: 'Administrasi',
         basecontrol: 'Base Control',
+        cmc: 'CMC',
         track: 'Track',
         user: 'User',
         oilman: 'Oilman',
@@ -14577,20 +14612,88 @@
         syncAllDateFiltersToToday();
         navigateTab('dashboard');
 
+      } else if (user.role === 'cmc') {
+        // Mode CMC (View Only):
+        // HANYA: Lubetruck, Water Truck, Riwayat Selesai, dan Profil Pengguna
+        // Hapus: Dashboard, Job Request, Form Order, Clean Air Cleaner, dan Log PICA Kendala
+        if (secHome) secHome.classList.add('hidden');
+        if (secPekerjaan) secPekerjaan.classList.remove('hidden');
+        if (navGroupAdmin) navGroupAdmin.classList.remove('hidden');
+        if (navGroupMp) navGroupMp.classList.add('hidden');
+        if (btnNavLt) btnNavLt.classList.remove('hidden');
+        if (btnNavWt) btnNavWt.classList.remove('hidden');
+        if (btnNavJobReq) btnNavJobReq.classList.add('hidden');
+        if (btnNavOrder) btnNavOrder.classList.add('hidden');
+
+        if (secMonitoring) secMonitoring.classList.remove('hidden');
+        if (navGroupAdminMon) navGroupAdminMon.classList.remove('hidden');
+        if (navGroupMpMon) navGroupMpMon.classList.add('hidden');
+        if (btnNavComp) btnNavComp.classList.remove('hidden');
+        if (btnNavAir) btnNavAir.classList.add('hidden');
+        if (navMpAir) navMpAir.classList.add('hidden');
+
+        if (secLainnya) secLainnya.classList.add('hidden');
+        if (secKendala) secKendala.classList.add('hidden');
+        if (secMaster) secMaster.classList.add('hidden');
+        if (secAkun) secAkun.classList.remove('hidden');
+
+        // Buka kotak filter pencarian unit di jadwal
+        if (ltSearchContainer) ltSearchContainer.classList.remove('hidden');
+        if (wtSearchContainer) wtSearchContainer.classList.remove('hidden');
+        if (btnInputLt) btnInputLt.classList.add('hidden');
+        if (btnInputWt) btnInputWt.classList.add('hidden');
+        if (btnDashJumpJadwal) btnDashJumpJadwal.classList.add('hidden');
+
+        if (adminDash) adminDash.classList.add('hidden');
+        if (mpDash) mpDash.classList.add('hidden');
+        if (secKpiSchedulePica) secKpiSchedulePica.classList.add('hidden');
+
+        // Mobile Nav CMC: HANYA 4 Menu:
+        // 1. Lubetruck (1)
+        // 2. Water Truck (2)
+        // 3. Riwayat (3)
+        // 4. Profil (4)
+        if (mobDashboard) mobDashboard.classList.add('hidden');
+        if (mobLt) {
+          mobLt.classList.remove('hidden');
+          mobLt.style.order = '1';
+        }
+        if (mobWt) {
+          mobWt.classList.remove('hidden');
+          mobWt.style.order = '2';
+        }
+        if (mobMpComp) {
+          mobMpComp.classList.remove('hidden');
+          mobMpComp.style.order = '3';
+        }
+        if (mobProfile) {
+          mobProfile.classList.remove('hidden');
+          mobProfile.style.order = '4';
+        }
+        // Sembunyikan tombol lainnya di bottom nav
+        if (mobAdminMore) mobAdminMore.classList.add('hidden');
+        if (mobAirCleaner) mobAirCleaner.classList.add('hidden');
+        if (mobJobReq) mobJobReq.classList.add('hidden');
+        if (mobOrder) mobOrder.classList.add('hidden');
+        if (mobMpSched) mobMpSched.classList.add('hidden');
+        if (mobMpUnsched) mobMpUnsched.classList.add('hidden');
+        if (mobMpMore) mobMpMore.classList.add('hidden');
+
+        syncAllDateFiltersToToday();
+        navigateTab('lt-schedule');
+
       } else if (user.role === 'basecontrol' || user.role === 'track') {
         // Mode Base Control & Tim Track:
-        // Dashboard Pencapaian Foto 1 & 2 + Toolbar filter, Form Order, Job Request, Riwayat Selesai, Air Cleaner, PICA, Profil
-        // Khusus Tim Track: memiliki akses Replace Komponen Air Cleaner dengan evidence
+        // Dashboard Pencapaian Foto 1 & 2, Lubetruck & Water Truck (View Only), Riwayat Selesai, Clean Air Cleaner, Log PICA, Profil
+        // Hapus: Job Request & Form Order (sesuai instruksi pengguna)
         if (secHome) secHome.classList.remove('hidden');
         if (secPekerjaan) secPekerjaan.classList.remove('hidden');
         if (navGroupAdmin) navGroupAdmin.classList.remove('hidden');
         if (navGroupMp) navGroupMp.classList.add('hidden');
-        if (btnNavLt) btnNavLt.classList.add('hidden');
-        if (btnNavWt) btnNavWt.classList.add('hidden');
-        if (btnNavJobReq) btnNavJobReq.classList.remove('hidden');
-        if (textNavJobReq) textNavJobReq.textContent = (user.role === 'track') ? 'Job Request' : 'Job Request BC';
-        if (btnNavOrder) btnNavOrder.classList.remove('hidden');
-        if (textNavOrder) textNavOrder.textContent = 'Form Order';
+        if (btnNavLt) btnNavLt.classList.remove('hidden');
+        if (btnNavWt) btnNavWt.classList.remove('hidden');
+        if (btnNavJobReq) btnNavJobReq.classList.add('hidden'); // HAPUS Job Request
+        if (btnNavOrder) btnNavOrder.classList.add('hidden');   // HAPUS Form Order
 
         if (secMonitoring) secMonitoring.classList.remove('hidden');
         if (navGroupAdminMon) navGroupAdminMon.classList.remove('hidden');
@@ -14604,18 +14707,19 @@
         if (secMaster) secMaster.classList.add('hidden');
         if (secAkun) secAkun.classList.remove('hidden');
 
-        if (ltSearchContainer) ltSearchContainer.classList.add('hidden');
-        if (wtSearchContainer) wtSearchContainer.classList.add('hidden');
+        // Buka kotak filter pencarian unit di jadwal
+        if (ltSearchContainer) ltSearchContainer.classList.remove('hidden');
+        if (wtSearchContainer) wtSearchContainer.classList.remove('hidden');
         if (btnInputLt) btnInputLt.classList.add('hidden');
         if (btnInputWt) btnInputWt.classList.add('hidden');
         if (btnDashJumpJadwal) btnDashJumpJadwal.classList.add('hidden');
 
-        // Dashboard BC: Hanya Foto 1 & 2, sembunyikan section detail kpi & schedule admin di bawahnya
+        // Dashboard BC / Track: Hanya Foto 1 & 2, sembunyikan section detail kpi & schedule admin di bawahnya
         if (adminDash) adminDash.classList.remove('hidden');
         if (mpDash) mpDash.classList.add('hidden');
         if (secKpiSchedulePica) secKpiSchedulePica.classList.add('hidden');
 
-        // Sembunyikan Total Job Armada untuk akses Base Control (sesuai instruksi pengguna)
+        // Sembunyikan Total Job Armada untuk akses Base Control / Track
         const colArmadaBc = document.getElementById('dash-col-armada-job');
         const colMonitoringBc = document.getElementById('dash-col-monitoring-ketercapaian');
         if (colArmadaBc) colArmadaBc.classList.add('hidden');
@@ -14624,32 +14728,36 @@
           colMonitoringBc.classList.add('lg:col-span-3');
         }
 
-        // Mobile Nav Track & Base Control: Tepat 4 Tombol Sesuai Instruksi Pengguna:
+        // Mobile Nav Track & Base Control:
         // 1. Beranda (1)
-        // 2. Monitoring Air Cleaner (2)
-        // 3. Riwayat (3)
-        // 4. Menu Lain / Lainnya (4)
+        // 2. Lubetruck (2)
+        // 3. Water Truck (3)
+        // 4. Riwayat (4)
+        // 5. Lainnya (5) -> Clean Air Cleaner, Log PICA, Profil, Keluar
         if (mobDashboard) {
           mobDashboard.classList.remove('hidden');
           mobDashboard.style.order = '1';
         }
-        if (mobAirCleaner) {
-          mobAirCleaner.classList.remove('hidden');
-          mobAirCleaner.style.order = '2';
+        if (mobLt) {
+          mobLt.classList.remove('hidden');
+          mobLt.style.order = '2';
+        }
+        if (mobWt) {
+          mobWt.classList.remove('hidden');
+          mobWt.style.order = '3';
         }
         if (mobMpComp) {
           mobMpComp.classList.remove('hidden');
-          mobMpComp.style.order = '3';
+          mobMpComp.style.order = '4';
         }
         if (mobAdminMore) {
           mobAdminMore.classList.remove('hidden');
-          mobAdminMore.style.order = '4';
+          mobAdminMore.style.order = '5';
         }
-        // Sembunyikan tombol lainnya (Job Request & Form Order dipindah ke Menu Lainnya)
+        // Sembunyikan tombol lainnya di bottom nav utama
+        if (mobAirCleaner) mobAirCleaner.classList.add('hidden');
         if (mobJobReq) mobJobReq.classList.add('hidden');
         if (mobOrder) mobOrder.classList.add('hidden');
-        if (mobLt) mobLt.classList.add('hidden');
-        if (mobWt) mobWt.classList.add('hidden');
         if (mobProfile) mobProfile.classList.add('hidden');
         if (mobMpSched) mobMpSched.classList.add('hidden');
         if (mobMpUnsched) mobMpUnsched.classList.add('hidden');
@@ -14709,6 +14817,8 @@
         if (secPekerjaan) secPekerjaan.classList.remove('hidden');
         if (navGroupAdmin) navGroupAdmin.classList.add('hidden');
         if (navGroupMp) navGroupMp.classList.remove('hidden');
+        const btnNavMpOrder = document.getElementById('nav-btn-mp-order');
+        if (btnNavMpOrder) btnNavMpOrder.classList.remove('hidden');
         if (secMonitoring) secMonitoring.classList.remove('hidden');
         if (navGroupAdminMon) navGroupAdminMon.classList.add('hidden');
         if (navGroupMpMon) navGroupMpMon.classList.remove('hidden');
@@ -14743,18 +14853,39 @@
         [mobDashboard, mobLt, mobWt, mobJobReq, mobAdminMore, mobAirCleaner, mobOrder, mobProfile, mobMpSched, mobMpUnsched, mobMpComp, mobMpMore].forEach(el => { if (el) el.style.order = ''; });
         const mobCompLblMp = document.getElementById('mob-nav-comp-label');
         if (mobCompLblMp) mobCompLblMp.textContent = 'Riwayat';
-        if (mobDashboard) mobDashboard.classList.remove('hidden');
+        // Mobile Nav Manpower:
+        // 1. Beranda (1)
+        // 2. Schedule (2)
+        // 3. Form Order (3) -> langsung ke Form Penyelesaian Job Lapangan
+        // 4. Riwayat (4)
+        // 5. Lainnya (5)
+        if (mobDashboard) {
+          mobDashboard.classList.remove('hidden');
+          mobDashboard.style.order = '1';
+        }
+        if (mobMpSched) {
+          mobMpSched.classList.remove('hidden');
+          mobMpSched.style.order = '2';
+        }
+        if (mobOrder) {
+          mobOrder.classList.remove('hidden');
+          mobOrder.style.order = '3';
+        }
+        if (mobMpComp) {
+          mobMpComp.classList.remove('hidden');
+          mobMpComp.style.order = '4';
+        }
+        if (mobMpMore) {
+          mobMpMore.classList.remove('hidden');
+          mobMpMore.style.order = '5';
+        }
         if (mobLt) mobLt.classList.add('hidden');
         if (mobWt) mobWt.classList.add('hidden');
         if (mobJobReq) mobJobReq.classList.add('hidden');
         if (mobAdminMore) mobAdminMore.classList.add('hidden');
         if (mobAirCleaner) mobAirCleaner.classList.add('hidden');
-        if (mobOrder) mobOrder.classList.add('hidden');
         if (mobProfile) mobProfile.classList.add('hidden');
-        if (mobMpSched) mobMpSched.classList.remove('hidden');
-        if (mobMpUnsched) mobMpUnsched.classList.remove('hidden');
-        if (mobMpComp) mobMpComp.classList.remove('hidden');
-        if (mobMpMore) mobMpMore.classList.remove('hidden');
+        if (mobMpUnsched) mobMpUnsched.classList.add('hidden');
 
         if (adminDash) adminDash.classList.add('hidden');
         if (mpDash) mpDash.classList.remove('hidden');
@@ -15193,13 +15324,7 @@
     }
 
     function handleMpUnscheduleClick() {
-      const user = state.currentUser;
-      const isWt = (user?.role === 'mp_wt' || user?.role === 'washingman' || String(user?.jabatan || '').toLowerCase().includes('wash') || String(user?.jabatan || '').toLowerCase().includes('cuci'));
-      if (isWt) {
-        navigateTab('wt-unschedule');
-      } else {
-        navigateTab('lt-unschedule');
-      }
+      navigateTab('orders');
     }
 
     function openProfileLogoutModal() {
@@ -15305,6 +15430,7 @@
       const roleLabels = {
         admin: 'Administrasi',
         basecontrol: 'Base Control',
+        cmc: 'CMC',
         track: 'Track',
         user: 'User',
         oilman: 'Oilman',
@@ -16070,6 +16196,8 @@
           targetBtnId = 'nav-btn-mp-schedule';
         } else if (tabKey === 'lt-unschedule' || tabKey === 'wt-unschedule') {
           targetBtnId = 'nav-btn-mp-unschedule';
+        } else if (tabKey === 'orders') {
+          targetBtnId = 'nav-btn-mp-order';
         } else if (tabKey === 'completed') {
           targetBtnId = 'nav-group-completed';
         } else if (tabKey === 'air-cleaner-monitor') {
@@ -16184,13 +16312,21 @@
         if (tabKey !== 'orders' && tabKey !== 'job-requests' && tabKey !== 'completed' && tabKey !== 'profile') {
           tabKey = 'orders';
         }
-      } else if (state.currentUser?.role === 'basecontrol') {
-        if (tabKey === 'lt-schedule' || tabKey === 'wt-schedule' || tabKey === 'lt-unschedule' || tabKey === 'wt-unschedule' || tabKey === 'master-data' || tabKey === 'mp-kontak-pro') {
+      } else if (state.currentUser?.role === 'cmc') {
+        // Akun CMC HANYA diizinkan membuka Lubetruck, Water Truck, Riwayat Selesai, dan Profil
+        if (tabKey !== 'lt-schedule' && tabKey !== 'wt-schedule' && tabKey !== 'completed' && tabKey !== 'profile') {
+          tabKey = 'lt-schedule';
+        }
+      } else if (state.currentUser?.role === 'basecontrol' || state.currentUser?.role === 'track') {
+        // Akun BSC dan Track TIDAK memiliki akses Job Request dan Form Order
+        if (tabKey === 'job-requests' || tabKey === 'orders' || tabKey === 'master-data' || tabKey === 'mp-kontak-pro') {
           tabKey = 'dashboard';
         }
       } else if (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'mp_wt' || state.currentUser?.role === 'oilman' || state.currentUser?.role === 'washingman') {
         if (tabKey === 'master-data') {
           tabKey = 'dashboard';
+        } else if (tabKey === 'job-requests' || tabKey === 'lt-unschedule' || tabKey === 'wt-unschedule') {
+          tabKey = 'orders';
         }
       }
 
@@ -16217,6 +16353,7 @@
         const roleLabels = {
           admin: 'Administrasi',
           basecontrol: 'Base Control',
+          cmc: 'CMC',
           track: 'Track',
           user: 'User',
           oilman: 'Oilman',
@@ -16374,7 +16511,7 @@
         targetBtnId = 'mob-nav-dashboard';
         activeColorClass = 'text-slate-900';
       } else if (tabKey === 'lt-schedule') {
-        if (state.currentUser?.role === 'admin') {
+        if (state.currentUser?.role === 'admin' || state.currentUser?.role === 'basecontrol' || state.currentUser?.role === 'track' || state.currentUser?.role === 'cmc') {
           targetBtnId = 'mob-nav-lt';
           activeColorClass = 'text-[#78350f]';
         } else {
@@ -16382,7 +16519,7 @@
           activeColorClass = 'text-emerald-700';
         }
       } else if (tabKey === 'wt-schedule') {
-        if (state.currentUser?.role === 'admin') {
+        if (state.currentUser?.role === 'admin' || state.currentUser?.role === 'basecontrol' || state.currentUser?.role === 'track' || state.currentUser?.role === 'cmc') {
           targetBtnId = 'mob-nav-wt';
           activeColorClass = 'text-blue-600';
         } else {
@@ -16424,28 +16561,20 @@
           activeColorClass = 'text-emerald-700';
         }
       } else if (tabKey === 'profile' || tabKey === 'orders' || tabKey === 'pica' || tabKey === 'master-data') {
-        if (state.currentUser?.role === 'admin') {
+        const curRole = state.currentUser?.role;
+        const isMpUser = (curRole === 'mp_lt' || curRole === 'mp_wt' || curRole === 'oilman' || curRole === 'washingman');
+        if (tabKey === 'orders') {
+          targetBtnId = 'mob-nav-order';
+          activeColorClass = 'text-emerald-700';
+        } else if (tabKey === 'profile') {
+          targetBtnId = (curRole === 'cmc' || curRole === 'user') ? 'mob-nav-profile' : (isMpUser ? 'mob-nav-mp-more' : 'mob-nav-admin-more');
+          activeColorClass = (curRole === 'cmc' || curRole === 'user') ? 'text-blue-600' : 'text-slate-900';
+        } else if (curRole === 'admin') {
           targetBtnId = 'mob-nav-admin-more';
           activeColorClass = 'text-purple-600';
-        } else if (state.currentUser?.role === 'basecontrol') {
-          if (tabKey === 'orders') {
-            targetBtnId = 'mob-nav-order';
-            activeColorClass = 'text-emerald-700';
-          } else {
-            targetBtnId = 'mob-nav-admin-more';
-            activeColorClass = 'text-purple-600';
-          }
-        } else if (state.currentUser?.role === 'user') {
-          if (tabKey === 'orders') {
-            targetBtnId = 'mob-nav-order';
-            activeColorClass = 'text-emerald-700';
-          } else {
-            targetBtnId = 'mob-nav-profile';
-            activeColorClass = 'text-blue-600';
-          }
         } else {
-          targetBtnId = 'mob-nav-profile';
-          activeColorClass = 'text-blue-600';
+          targetBtnId = isMpUser ? 'mob-nav-mp-more' : 'mob-nav-admin-more';
+          activeColorClass = 'text-slate-900';
         }
       }
 
@@ -16594,7 +16723,7 @@
         return 'Aturan Big Digger (Interval 3 Hari): Jika tidak ter-action / Non-Ach di Shift 1 akan pending ke Shift 2. Jika tgl ini tidak close, otomatis terpending (rollover H+1) ke tgl selanjutnya dan bergabung dengan jadwal baru.';
       }
       if (cat === 'aircleaner' || cat === 'air_cleaner') {
-        return 'Aturan Air Cleaner (Interval 2 Hari / Seminggu Sekali): Jika tidak close, otomatis terpending (carry-over) ke tgl selanjutnya dalam siklus mingguan (Minggu s/d Sabtu) dan bergabung dengan antrean aktif.';
+        return 'Aturan Air Cleaner (Interval 2 Hari untuk Coal & PC3000 / Seminggu Sekali untuk Non-Coal): Jika tidak close, otomatis terpending (carry-over) ke tgl selanjutnya dalam siklus mingguan (Minggu s/d Sabtu) dan bergabung dengan antrean aktif.';
       }
       if (cat === 'topup' || cat === 'topup_oil' || cat === 'top up oil') {
         return 'Aturan Top Up Oil: Jika tidak close, otomatis terpending (carry-over) ke tgl selanjutnya dan bergabung dengan jadwal Top Up Oil baru.';
@@ -16729,11 +16858,11 @@
       const masterType = String(mUnit?.type || mUnit?.type_model || '').trim().toUpperCase();
       const fullType = `${typeUnit} ${masterType}`.toUpperCase();
 
-      if (/(PC\s*2000|PC\s*1250|PC\s*3400|PC\s*850|PC\s*800|CAT\s*395|CAT395|EX\s*1200|EX\s*2000|EX\s*2600|EX\s*3600|BIG\s*DIGGER)/i.test(fullType)) {
+      if (/(PC\s*3000|PC3000|PC\s*2000|PC2000|PC\s*1250|PC1250|PC\s*3400|PC3400|PC\s*850|PC850|PC\s*800|PC800|CAT\s*395|CAT395|EX\s*1200|EX\s*2000|EX\s*2600|EX\s*3600|BIG\s*DIGGER)/i.test(fullType)) {
         return true;
       }
 
-      if (/^E340\d/i.test(cleanNo)) return true;
+      if (/^E30\d+/i.test(cleanNo) || /^E340\d/i.test(cleanNo)) return true;
       if (/^E20\d{2}/i.test(cleanNo) || /^E520\d+/i.test(cleanNo)) return true;
       if (/^E12\d{2}/i.test(cleanNo) || /^E512\d{2,}/i.test(cleanNo)) return true;
       if (/^E85\d{2}/i.test(cleanNo)) return true;
@@ -16795,7 +16924,10 @@
       if (cat === 'small') return 'GREASING_SMALL';
       if (cat === 'digger') return 'BIG_DIGGER';
       if (cat === 'aircleaner' || cat === 'air_cleaner') {
-        const isCoal = isCoalUnit(job);
+        const typeStr = String(job.typeUnit || job.type || job.type_model || '').toUpperCase();
+        const noLambungStr = String(job.noLambung || job.unit || job.no_lambung || '').toUpperCase();
+        const isPc3000 = /PC\s*3000|PC3000/i.test(typeStr) || (typeof findMasterUnitRecord === 'function' && /PC\s*3000|PC3000/i.test(String(findMasterUnitRecord(noLambungStr)?.type || '')));
+        const isCoal = isPc3000 || isCoalUnit(job) || (typeof isAirCleanerUnitCoal === 'function' && isAirCleanerUnitCoal(noLambungStr, typeStr));
         if (isCoal) {
           const isBig = isBigDiggerUnit(job);
           return isBig ? 'AIR_CLEANER_COAL_BIG_DIGGER' : 'AIR_CLEANER_COAL_SMALL_TRACK';
@@ -17417,43 +17549,25 @@
             break;
           }
 
-          case 'AIR_CLEANER_COAL_BIG_DIGGER': {
-            // Sesuai instruksi pengguna:
-            // Big Digger Coal dikerjakan 3x seminggu: MINGGU (0), SELASA (2), KAMIS (4).
-            // Hari SABTU (6) LIBUR unit coal (tidak dijadwalkan).
-            if (dayOfWeek === 6) {
-              shouldInclude = false; // Sabtu Libur
-            } else if (dayOfWeek === 0 || dayOfWeek === 2 || dayOfWeek === 4) {
-              shouldInclude = true;
-            } else {
-              shouldInclude = false;
-            }
-            break;
-          }
-
-          case 'AIR_CLEANER_COAL_SMALL_TRACK': {
-            // Sesuai instruksi pengguna:
-            // Small Track Coal dikerjakan 3x seminggu: SENIN (1), RABU (3), JUMAT (5).
-            // Hari SABTU (6) LIBUR unit coal (tidak dijadwalkan).
-            if (dayOfWeek === 6) {
-              shouldInclude = false; // Sabtu Libur
-            } else if (dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5) {
-              shouldInclude = true;
-            } else {
-              shouldInclude = false;
-            }
-            break;
-          }
-
+          case 'AIR_CLEANER_COAL_BIG_DIGGER':
+          case 'AIR_CLEANER_COAL_SMALL_TRACK':
           case 'AIR_CLEANER_COAL': {
-            // Fallback pendeteksi jika langsung rule AIR_CLEANER_COAL
-            const isBig = (typeof isBigDiggerUnit === 'function') ? isBigDiggerUnit(baseJob) : false;
+            // Sesuai konfirmasi pengguna (Opsi 1):
+            // Unit Coal dan PC3000 (baik Small Track maupun Big Digger):
+            // Menggunakan sistem Interval 2 Hari (3x seminggu).
+            // Misal didaftarkan Senin (1), maka Rabu (3) dan Jumat (5) muncul kembali.
+            // Hari SABTU (6) LIBUR unit coal (tidak dijadwalkan).
             if (dayOfWeek === 6) {
               shouldInclude = false; // Sabtu Libur
-            } else if (isBig) {
-              shouldInclude = (dayOfWeek === 0 || dayOfWeek === 2 || dayOfWeek === 4);
             } else {
-              shouldInclude = (dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5);
+              const isPatternOdd = (baseDayOfWeek === 1 || baseDayOfWeek === 3 || baseDayOfWeek === 5);
+              if (isPatternOdd) {
+                // Pola Senin (1) - Rabu (3) - Jumat (5)
+                shouldInclude = (dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5);
+              } else {
+                // Pola Minggu (0) - Selasa (2) - Kamis (4)
+                shouldInclude = (dayOfWeek === 0 || dayOfWeek === 2 || dayOfWeek === 4);
+              }
             }
             break;
           }
@@ -25756,6 +25870,18 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         }
       }
 
+      const curUserRole = String(state.currentUser?.role || '').toLowerCase();
+      const canExecuteAction = (curUserRole === 'admin' || curUserRole === 'oilman' || curUserRole === 'washingman' || curUserRole === 'mp_lt' || curUserRole === 'mp_wt');
+      if (!canExecuteAction) {
+        // Mode View Only (CMC, Base Control, Tim Track, User)
+        return `
+          <div class="flex items-center justify-center gap-1">
+            <span class="inline-block px-2.5 py-0.5 rounded text-[9.5px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-2xs">Terjadwal</span>
+            ${pendingBadgeHtml}
+          </div>
+        `;
+      }
+
       // Akses Admin & MP: Sediakan tombol ACTION
       return `
         <div class="flex items-center justify-center gap-1">
@@ -32100,6 +32226,13 @@ Keterangan : ${keterangan}`;
     window.checkJobAlreadyActionedGuard = checkJobAlreadyActionedGuard;
 
     async function openActionDecision(jobId) {
+      const curUserRole = String(state.currentUser?.role || '').toLowerCase();
+      const canExecuteAction = (curUserRole === 'admin' || curUserRole === 'oilman' || curUserRole === 'washingman' || curUserRole === 'mp_lt' || curUserRole === 'mp_wt');
+      if (!canExecuteAction) {
+        showToast('Akses ditolak: Akun Anda dalam mode View Only.', 'info');
+        return;
+      }
+
       if (window._bgJobQueue && window._bgJobQueue[jobId]) {
         const bg = window._bgJobQueue[jobId];
         if (bg.status === 'uploading' || bg.status === 'saving') {
@@ -41447,6 +41580,16 @@ Keterangan : ${keterangan}`;
           const statusEl = document.getElementById('header-db-status');
           if (statusEl) statusEl.textContent = 'Online';
 
+          // Auto-sync / upsert akun standar (admin, bsc, track, cmc) ke Supabase jika belum ada
+          try {
+            state.supabaseClient.from('users').upsert([
+              { nrp: 'admin', nama: 'Admin Operasional', role: 'admin', jabatan: 'Admin / Planner', password: 'admin123', status_aktif: true },
+              { nrp: 'bsc', nama: 'Base Control', role: 'basecontrol', jabatan: 'Base Control', password: 'bsc123', status_aktif: true },
+              { nrp: 'track', nama: 'Tim Track Lapangan', role: 'track', jabatan: 'Tim Track', password: 'track123', status_aktif: true },
+              { nrp: 'cmc', nama: 'CMC Operasional', role: 'cmc', jabatan: 'CMC', password: 'cmc123', status_aktif: true }
+            ], { onConflict: 'nrp' }).then(() => { }).catch(() => { });
+          } catch (eSyncDef) { }
+
           // Cek apakah data master sudah ada di cache lokal (Master Data TTL Cache)
           // Cek role pengguna: apakah operator lapangan?
           const userRole = state.currentUser?.role || 'user';
@@ -41897,9 +42040,65 @@ Keterangan : ${keterangan}`;
     function initOrderSubtabView() {
       const switcherWrapper = document.getElementById('order-tab-switcher-wrapper');
       const directTabBtn = document.getElementById('btn-order-tab-direct');
+      const formPane = document.getElementById('order-subpane-form');
+      const directPane = document.getElementById('order-subpane-direct');
+      const titleEl = document.getElementById('title-direct-completion');
+      const lblLt = document.getElementById('label-direct-radio-lt');
+      const lblWt = document.getElementById('label-direct-radio-wt');
 
-      if (switcherWrapper) switcherWrapper.classList.remove('hidden');
-      if (directTabBtn) directTabBtn.classList.remove('hidden');
+      const userRole = String(state.currentUser?.role || '').toLowerCase();
+      const isOilman = (userRole === 'mp_lt' || userRole === 'oilman');
+      const isWashingman = (userRole === 'mp_wt' || userRole === 'washingman');
+      const isManpower = isOilman || isWashingman;
+
+      if (isManpower) {
+        // Mode Oilman / Washingman:
+        // HANYA FORM PENYELESAIAN SAJA TANPA ADA FORM ORDERAN
+        if (switcherWrapper) switcherWrapper.classList.add('hidden');
+        if (formPane) formPane.classList.add('hidden');
+        if (directPane) directPane.classList.remove('hidden');
+        currentOrderSubtab = 'direct';
+
+        if (isOilman) {
+          if (titleEl) titleEl.textContent = 'Form Penyelesaian Job Lubetruck';
+          const rLt = document.querySelector('input[name="direct-tipe-service"][value="lubetruck"]');
+          if (rLt) rLt.checked = true;
+          const rWt = document.querySelector('input[name="direct-tipe-service"][value="watertruck"]');
+          if (rWt) rWt.checked = false;
+          if (lblWt) lblWt.classList.add('hidden');
+          if (lblLt) lblLt.classList.remove('hidden');
+          if (typeof handleDirectServiceTypeChange === 'function') handleDirectServiceTypeChange('lubetruck');
+        } else if (isWashingman) {
+          if (titleEl) titleEl.textContent = 'Form Penyelesaian Job Water Truck';
+          const rWt = document.querySelector('input[name="direct-tipe-service"][value="watertruck"]');
+          if (rWt) rWt.checked = true;
+          const rLt = document.querySelector('input[name="direct-tipe-service"][value="lubetruck"]');
+          if (rLt) rLt.checked = false;
+          if (lblLt) lblLt.classList.add('hidden');
+          if (lblWt) lblWt.classList.remove('hidden');
+          if (typeof handleDirectServiceTypeChange === 'function') handleDirectServiceTypeChange('watertruck');
+        }
+      } else if (userRole === 'user') {
+        if (switcherWrapper) switcherWrapper.classList.add('hidden');
+        if (formPane) formPane.classList.remove('hidden');
+        if (directPane) directPane.classList.add('hidden');
+        currentOrderSubtab = 'form';
+      } else {
+        // Admin: Pilihan Bebas Dua Subtab
+        if (switcherWrapper) switcherWrapper.classList.remove('hidden');
+        if (directTabBtn) directTabBtn.classList.remove('hidden');
+        if (lblLt) lblLt.classList.remove('hidden');
+        if (lblWt) lblWt.classList.remove('hidden');
+        if (titleEl) titleEl.textContent = 'Penyelesaian Job Lapangan';
+
+        if (currentOrderSubtab === 'direct') {
+          if (formPane) formPane.classList.add('hidden');
+          if (directPane) directPane.classList.remove('hidden');
+        } else {
+          if (formPane) formPane.classList.remove('hidden');
+          if (directPane) directPane.classList.add('hidden');
+        }
+      }
 
       // Tanggal default diset ke hari ini jika belum terisi
       const tanggalEl = document.getElementById('direct-tanggal');
@@ -42719,6 +42918,17 @@ Keterangan : ${keterangan}`;
       if (document.getElementById('direct-deskripsi')) document.getElementById('direct-deskripsi').value = '';
       const tanggalEl = document.getElementById('direct-tanggal');
       if (tanggalEl) tanggalEl.value = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+
+      const uRole = String(state.currentUser?.role || '').toLowerCase();
+      if (uRole === 'mp_wt' || uRole === 'washingman') {
+        const rWt = document.querySelector('input[name="direct-tipe-service"][value="watertruck"]');
+        if (rWt) rWt.checked = true;
+        if (typeof handleDirectServiceTypeChange === 'function') handleDirectServiceTypeChange('watertruck');
+      } else if (uRole === 'mp_lt' || uRole === 'oilman') {
+        const rLt = document.querySelector('input[name="direct-tipe-service"][value="lubetruck"]');
+        if (rLt) rLt.checked = true;
+        if (typeof handleDirectServiceTypeChange === 'function') handleDirectServiceTypeChange('lubetruck');
+      }
       const shiftEl = document.getElementById('direct-shift');
       if (shiftEl) shiftEl.value = String(state.currentShift || 1);
       if (document.getElementById('direct-hm-start')) document.getElementById('direct-hm-start').value = '';
@@ -43922,6 +44132,7 @@ Keterangan : ${keterangan}`;
       const roleLabels = {
         admin: 'Administrasi',
         basecontrol: 'Base Control',
+        cmc: 'CMC',
         track: 'Track',
         user: 'User',
         oilman: 'Oilman',
@@ -45182,7 +45393,7 @@ Keterangan : ${keterangan}`;
      */
     function renderFullMoreMenu() {
       const role = state.currentUser?.role;
-      const isTrackOrBc = (role === 'track' || role === 'basecontrol' || role === 'base_control');
+      const isTrackOrBc = (role === 'track' || role === 'basecontrol' || role === 'base_control' || role === 'cmc');
       const isMp = (role === 'mp_lt' || role === 'mp_wt' || role === 'oilman' || role === 'washingman');
       const isOilman = (role === 'mp_lt' || role === 'oilman');
       const isWashingman = (role === 'mp_wt' || role === 'washingman' || state.currentUser?.nrp === 'wm');
@@ -45244,7 +45455,7 @@ Keterangan : ${keterangan}`;
     async function buildScheduleExportData(sourceType) {
       const role = state.currentUser?.role;
       const curRole = String(role || '').toLowerCase();
-      if (!['admin', 'basecontrol', 'base_control', 'bsc', 'track', 'tim_track'].includes(curRole)) {
+      if (!['admin', 'basecontrol', 'base_control', 'bsc', 'track', 'tim_track', 'cmc'].includes(curRole)) {
         showToast('Akses ditolak: Fitur ini hanya tersedia untuk Admin Operasional dan Base Control.', 'error');
         return null;
       }
@@ -45954,6 +46165,7 @@ Keterangan : ${keterangan}`;
       const isAdmin = (userRole === 'admin');
       const isBaseControl = ['basecontrol', 'base_control', 'bsc'].includes(userRole);
       const isTrack = ['track', 'tim_track'].includes(userRole);
+      const isCmc = (userRole === 'cmc');
       const canViewAll = (isAdmin || isBaseControl || isTrack);
       const isWt = (userRole === 'mp_wt' || userRole === 'washingman' || String(state.currentUser?.jabatan || '').toLowerCase().includes('wash'));
 
@@ -46317,8 +46529,8 @@ Keterangan : ${keterangan}`;
       // Keamanan Akses: Hanya Admin dan Base Control yang diizinkan mengunduh
       const role = state.currentUser?.role;
       const curRole = String(role || '').toLowerCase();
-      if (!['admin', 'basecontrol', 'base_control', 'bsc', 'track', 'tim_track'].includes(curRole)) {
-        showToast('Akses ditolak: Fitur unduh Excel hanya tersedia untuk Admin Operasional dan Base Control.', 'error');
+      if (!['admin', 'basecontrol', 'base_control', 'bsc', 'track', 'tim_track', 'cmc'].includes(curRole)) {
+        showToast('Akses ditolak: Fitur unduh Excel hanya tersedia untuk Admin, Base Control, Tim Track, dan CMC.', 'error');
         return;
       }
 
@@ -46983,6 +47195,8 @@ Keterangan : ${keterangan}`;
                 user.role = 'oilman';
               } else if (jLower.includes('track')) {
                 user.role = 'track';
+              } else if (jLower.includes('cmc')) {
+                user.role = 'cmc';
               }
             }
 
