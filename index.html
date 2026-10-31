@@ -4070,19 +4070,34 @@
                     </label>
                   </div>
                 </div>
-                <div class="relative">
+                <div class="relative" id="container-direct-kode-unit">
                   <div class="flex items-center justify-between mb-1.5">
-                    <label class="block text-slate-700">Kode Unit (No Lambung)</label>
-                    <span class="text-[10px] text-slate-400 font-normal">Pilih unit atau ketik manual</span>
+                    <label class="block text-slate-700 font-semibold">Kode Unit (No Lambung) <span class="text-rose-500 font-bold">*</span></label>
+                    <span class="text-[10px] text-slate-400 font-normal">Ketik / paste unit dari daftar</span>
                   </div>
-                  <input type="text" id="direct-kode-unit" list="order-units-datalist"
-                    placeholder="Contoh: E2168 / D8589"
-                    oninput="triggerAutoFillForDirectOrder(this.value); clearDirectFieldError('direct-kode-unit')"
-                    onchange="triggerAutoFillForDirectOrder(this.value); clearDirectFieldError('direct-kode-unit')"
-                    onfocus="populateOrderUnitsDatalist()" autocomplete="off"
-                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 font-mono font-bold uppercase text-slate-900 bg-white">
-                  <p id="err-direct-kode-unit" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi
-                  </p>
+                  <div class="relative">
+                    <input type="text" id="direct-kode-unit"
+                      placeholder="CONTOH: E2168 / D8589"
+                      autocomplete="off"
+                      onfocus="handleDirectKodeUnitFocus()"
+                      oninput="handleDirectKodeUnitInput(this.value)"
+                      onchange="handleDirectKodeUnitChange(this.value)"
+                      onpaste="handleDirectKodeUnitPaste(event)"
+                      onblur="handleDirectKodeUnitBlur()"
+                      onkeydown="handleDirectKodeUnitKeydown(event)"
+                      class="w-full px-3.5 py-2.5 pr-8 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 font-mono font-bold uppercase text-slate-900 bg-white shadow-2xs transition">
+                    <button type="button" id="clear-direct-kode-unit" onclick="clearDirectKodeUnit()"
+                      class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                      title="Hapus unit">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <div id="dropdown-direct-kode-unit"
+                    class="hidden absolute left-0 right-0 z-50 mt-1 max-h-56 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 divide-y divide-slate-100 text-xs">
+                  </div>
+                  <p id="err-direct-kode-unit" data-default-text="Wajib diisi" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi</p>
                 </div>
               </div>
 
@@ -11762,6 +11777,33 @@
     }
     window.safeSaveTrimmedJobsToStorage = safeSaveTrimmedJobsToStorage;
 
+    function registerJobToGlobalCache(job) {
+      if (!job || !job.id) return;
+      job.actionTimestamp = Date.now();
+      if (!window.globalDataCache) {
+        window.globalDataCache = {
+          jobs: new Map(),
+          orderRequests: new Map(),
+          loadedDates: new Set(),
+          lastFetchTime: 0,
+          isFetchingActiveJobs: false,
+          isFetchingArchive: false
+        };
+      }
+      if (window.globalDataCache.jobs) {
+        window.globalDataCache.jobs.set(String(job.id), job);
+      }
+      if (job.tanggal && window.globalDataCache.loadedDates) {
+        window.globalDataCache.loadedDates.add(job.tanggal);
+      }
+      if (!window._bgJobQueue) window._bgJobQueue = {};
+      window._bgJobQueue[String(job.id)] = true;
+      setTimeout(() => {
+        if (window._bgJobQueue) delete window._bgJobQueue[String(job.id)];
+      }, 15000);
+    }
+    window.registerJobToGlobalCache = registerJobToGlobalCache;
+
     function syncGlobalCacheToState() {
       if (!window.globalDataCache || !window.globalDataCache.jobs) return;
       const newLubeJobs = [];
@@ -15070,6 +15112,7 @@
             if (String(jId).startsWith('UNS-') || window.globalDataCache.orderRequests?.has(jId)) continue;
             if (window._bgJobQueue && window._bgJobQueue[jId]) continue; // Jangan hapus jika sedang upload background
             if (typeof _jobSyncQueue !== 'undefined' && _jobSyncQueue.has(jId)) continue; // Jangan hapus jika ada di sync queue
+            if (jObj?.actionTimestamp && (Date.now() - jObj.actionTimestamp < 60000)) continue; // Proteksi 60 detik untuk job lokal baru
             if (jObj?.tanggal === dateStr) {
               if (!cloudJobIds.has(jId)) {
                 window.globalDataCache.jobs.delete(jId);
@@ -29714,6 +29757,9 @@ Keterangan : ${keterangan}`;
           // Filter out existing job with same id to prevent duplicate
           const existingIds = new Set(targetArray.map(j => j.id));
           monthlyJobs.forEach(nj => {
+            if (typeof registerJobToGlobalCache === 'function') {
+              registerJobToGlobalCache(nj);
+            }
             if (existingIds.has(nj.id)) {
               const idx = targetArray.findIndex(item => item.id === nj.id);
               if (idx !== -1) {
@@ -29728,6 +29774,8 @@ Keterangan : ${keterangan}`;
             }
           });
 
+          if (typeof syncGlobalCacheToState === 'function') syncGlobalCacheToState();
+          if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
           saveDatabaseSync();
 
           // Kirim batch sekaligus ke Supabase (1 request atomic) agar tidak gagal/drop di perangkat lain
@@ -29788,11 +29836,17 @@ Keterangan : ${keterangan}`;
       // 2. Single Day Job (Fallback jika toggle dimatikan)
       const catKey = (typeof getScheduleCategoryKey === 'function') ? getScheduleCategoryKey(baseJob.cat, isWt) : (isWt ? 'coal' : 'small');
       baseJob.id = (typeof generateScheduleJobId === 'function') ? generateScheduleJobId(baseJob, baseJob.tanggal, baseJob.shift, baseJob.washingRound) : (isWt ? ('WT-SCH-' + (baseJob.tanggal || '').replace(/-/g, '') + '-' + noLambung + '-' + catKey + '-S' + baseJob.shift) : ('LT-SCH-' + (baseJob.tanggal || '').replace(/-/g, '') + '-' + noLambung + '-' + catKey + '-S' + baseJob.shift));
+      if (typeof registerJobToGlobalCache === 'function') {
+        registerJobToGlobalCache(baseJob);
+      }
       if (isWt) {
         state.watertruckState.jobs.push(baseJob);
       } else {
         state.lubetruckState.jobs.push(baseJob);
       }
+      if (typeof syncGlobalCacheToState === 'function') syncGlobalCacheToState();
+      if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
+
       if (state.supabaseClient && typeof syncJobToSupabase === 'function') {
         syncJobToSupabase(baseJob);
       }
@@ -33049,6 +33103,9 @@ Keterangan : ${keterangan}`;
       });
       if (typeof closeDirectArmadaDropdown === 'function') {
         closeDirectArmadaDropdown();
+      }
+      if (typeof closeDirectKodeUnitDropdown === 'function') {
+        closeDirectKodeUnitDropdown();
       }
     }
     window.closeAllSearchableDropdowns = closeAllSearchableDropdowns;
@@ -40781,15 +40838,10 @@ Keterangan : ${keterangan}`;
       dStart.setDate(dStart.getDate() - 14);
       const startDate = dStart.toISOString().split('T')[0];
 
-      const weekRange = (typeof getMiningWeekRange === 'function') ? getMiningWeekRange(new Date()) : null;
-      let endDate = todayStr;
-      if (weekRange && weekRange.endDate) {
-        endDate = weekRange.endDate;
-      } else {
-        const dEnd = new Date(todayStr);
-        dEnd.setDate(dEnd.getDate() + 7);
-        endDate = dEnd.toISOString().split('T')[0];
-      }
+      // Tarik 14 hari ke depan agar jadwal greasing/washing minggu ini & minggu depan langsung tersedia tanpa jeda/refresh
+      const dEnd = new Date(todayStr);
+      dEnd.setDate(dEnd.getDate() + 14);
+      const endDate = dEnd.toISOString().split('T')[0];
 
       return { startDate, endDate, todayStr };
     }
@@ -40959,6 +41011,7 @@ Keterangan : ${keterangan}`;
             if (String(jId).startsWith('UNS-') || window.globalDataCache.orderRequests.has(jId)) continue;
             if (window._bgJobQueue && window._bgJobQueue[jId]) continue; // Jangan hapus jika sedang upload background
             if (typeof _jobSyncQueue !== 'undefined' && _jobSyncQueue.has(jId)) continue; // Jangan hapus jika ada di sync queue
+            if (jObj?.actionTimestamp && (Date.now() - jObj.actionTimestamp < 60000)) continue; // Proteksi 60 detik untuk job lokal baru
             const jDate = jObj?.tanggal || '';
             const isLtJob = !String(jId).includes('WT') && (
               ['small', 'digger', 'aircleaner', 'topup'].includes(jObj?.cat) ||
@@ -40997,6 +41050,7 @@ Keterangan : ${keterangan}`;
             if (String(jId).startsWith('UNS-') || window.globalDataCache.orderRequests.has(jId)) continue;
             if (window._bgJobQueue && window._bgJobQueue[jId]) continue; // Jangan hapus jika sedang upload background
             if (typeof _jobSyncQueue !== 'undefined' && _jobSyncQueue.has(jId)) continue; // Jangan hapus jika ada di sync queue
+            if (jObj?.actionTimestamp && (Date.now() - jObj.actionTimestamp < 60000)) continue; // Proteksi 60 detik untuk job lokal baru
             const jDate = jObj?.tanggal || '';
             const isWtJob = String(jId).includes('WT') ||
               ['coal', 'rom', 'non_coal', 'noncoal'].includes(jObj?.cat) ||
@@ -42343,7 +42397,11 @@ Keterangan : ${keterangan}`;
 
     function clearDirectFieldError(fieldId) {
       const errEl = document.getElementById(`err-${fieldId}`);
-      if (errEl) errEl.classList.add('hidden');
+      if (errEl) {
+        errEl.classList.add('hidden');
+        if (errEl.dataset.defaultText) errEl.textContent = errEl.dataset.defaultText;
+        else errEl.textContent = 'Wajib diisi';
+      }
       const inputEl = document.getElementById(fieldId);
       if (inputEl) {
         inputEl.classList.remove('border-rose-500', 'bg-rose-50/20');
@@ -42355,9 +42413,14 @@ Keterangan : ${keterangan}`;
     }
     window.clearDirectFieldError = clearDirectFieldError;
 
-    function setDirectFieldError(fieldId) {
+    function setDirectFieldError(fieldId, customMsg = null) {
       const errEl = document.getElementById(`err-${fieldId}`);
-      if (errEl) errEl.classList.remove('hidden');
+      if (errEl) {
+        if (customMsg) errEl.textContent = customMsg;
+        else if (errEl.dataset.defaultText) errEl.textContent = errEl.dataset.defaultText;
+        else errEl.textContent = 'Wajib diisi';
+        errEl.classList.remove('hidden');
+      }
       const inputEl = document.getElementById(fieldId);
       if (inputEl) {
         inputEl.classList.add('border-rose-500', 'bg-rose-50/20');
@@ -42574,6 +42637,13 @@ Keterangan : ${keterangan}`;
     // Listener click outside untuk menutup popup pencarian armada
     if (!window._directArmadaListenerAttached) {
       document.addEventListener('click', (e) => {
+        const unitContainer = document.getElementById('container-direct-kode-unit');
+        if (unitContainer && !unitContainer.contains(e.target)) {
+          if (typeof closeDirectKodeUnitDropdown === 'function') closeDirectKodeUnitDropdown();
+        }
+      });
+
+      document.addEventListener('click', (e) => {
         const container = document.getElementById('container-direct-armada');
         if (container && !container.contains(e.target)) {
           closeDirectArmadaDropdown();
@@ -42708,6 +42778,241 @@ Keterangan : ${keterangan}`;
     }
     window.triggerAutoFillForDirectOrder = triggerAutoFillForDirectOrder;
 
+    function isDirectUnitValid(lambung) {
+      if (!lambung) return false;
+      const clean = String(lambung).trim().toUpperCase();
+      if (!clean) return false;
+      const units = (typeof getAllMasterUnitsComprehensive === 'function')
+        ? getAllMasterUnitsComprehensive()
+        : (state.masterUnits || []);
+      return units.some(u => (u.lambung || '').trim().toUpperCase() === clean);
+    }
+    window.isDirectUnitValid = isDirectUnitValid;
+
+    function closeDirectKodeUnitDropdown() {
+      const drop = document.getElementById('dropdown-direct-kode-unit');
+      if (drop) drop.classList.add('hidden');
+    }
+    window.closeDirectKodeUnitDropdown = closeDirectKodeUnitDropdown;
+
+    function handleDirectKodeUnitFocus() {
+      const inp = document.getElementById('direct-kode-unit');
+      const val = (inp?.value || '').trim();
+      // Saat awal kosongan: TIDAK MEMBUKA DROPDOWN (tetap kosongan)
+      // Memberi kebebasan user untuk langsung paste atau mengetik
+      if (!val) {
+        closeDirectKodeUnitDropdown();
+        return;
+      }
+      renderDirectKodeUnitDropdown(val);
+    }
+    window.handleDirectKodeUnitFocus = handleDirectKodeUnitFocus;
+
+    function handleDirectKodeUnitInput(val) {
+      const cleanVal = String(val || '').trim();
+      const clearBtn = document.getElementById('clear-direct-kode-unit');
+      if (clearBtn) {
+        if (cleanVal) clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+      }
+
+      if (!cleanVal) {
+        closeDirectKodeUnitDropdown();
+        clearDirectFieldError('direct-kode-unit');
+        return;
+      }
+
+      renderDirectKodeUnitDropdown(cleanVal);
+
+      // Cek apakah langsung exact match (misal di-ketik lengkap atau paste)
+      const upper = cleanVal.toUpperCase();
+      const units = (typeof getAllMasterUnitsComprehensive === 'function') ? getAllMasterUnitsComprehensive() : (state.masterUnits || []);
+      const exact = units.find(u => (u.lambung || '').toUpperCase() === upper);
+      if (exact) {
+        triggerAutoFillForDirectOrder(exact.lambung);
+        clearDirectFieldError('direct-kode-unit');
+      }
+    }
+    window.handleDirectKodeUnitInput = handleDirectKodeUnitInput;
+
+    function handleDirectKodeUnitChange(val) {
+      const cleanVal = String(val || '').trim();
+      if (!cleanVal) {
+        clearDirectFieldError('direct-kode-unit');
+        return;
+      }
+      const upper = cleanVal.toUpperCase();
+      const units = (typeof getAllMasterUnitsComprehensive === 'function') ? getAllMasterUnitsComprehensive() : (state.masterUnits || []);
+      const exact = units.find(u => (u.lambung || '').toUpperCase() === upper);
+      if (exact) {
+        triggerAutoFillForDirectOrder(exact.lambung);
+        clearDirectFieldError('direct-kode-unit');
+      } else {
+        // Jika tidak sesuai dengan yang ada di list, tampilkan error
+        setDirectFieldError('direct-kode-unit', `Unit "${cleanVal}" tidak terdaftar di Data Master!`);
+      }
+    }
+    window.handleDirectKodeUnitChange = handleDirectKodeUnitChange;
+
+    function handleDirectKodeUnitPaste(e) {
+      setTimeout(() => {
+        const inp = document.getElementById('direct-kode-unit');
+        if (!inp) return;
+        let pastedVal = (inp.value || '').trim();
+        if (!pastedVal) return;
+
+        // Ekstrak token lambung jika yang di-paste format panjang seperti "D1505 (RMC...)"
+        let token = pastedVal.toUpperCase().split(/[\s(â€¢\-]/)[0].trim();
+        const units = (typeof getAllMasterUnitsComprehensive === 'function') ? getAllMasterUnitsComprehensive() : (state.masterUnits || []);
+
+        let matched = units.find(u => (u.lambung || '').toUpperCase() === pastedVal.toUpperCase()) ||
+                      units.find(u => (u.lambung || '').toUpperCase() === token);
+
+        if (matched) {
+          inp.value = matched.lambung;
+          triggerAutoFillForDirectOrder(matched.lambung);
+          closeDirectKodeUnitDropdown();
+          clearDirectFieldError('direct-kode-unit');
+          const clearBtn = document.getElementById('clear-direct-kode-unit');
+          if (clearBtn) clearBtn.classList.remove('hidden');
+        } else {
+          // Tidak ada di list: beri peringatan error
+          setDirectFieldError('direct-kode-unit', `Unit "${pastedVal}" tidak terdaftar di Data Master!`);
+          renderDirectKodeUnitDropdown(pastedVal);
+        }
+      }, 0);
+    }
+    window.handleDirectKodeUnitPaste = handleDirectKodeUnitPaste;
+
+    function handleDirectKodeUnitBlur() {
+      // Delay sedikit agar onmousedown / click di dropdown sempat dieksekusi
+      setTimeout(() => {
+        closeDirectKodeUnitDropdown();
+        const inp = document.getElementById('direct-kode-unit');
+        const val = (inp?.value || '').trim();
+        if (val) {
+          if (!isDirectUnitValid(val)) {
+            setDirectFieldError('direct-kode-unit', `Unit "${val}" tidak terdaftar di Data Master!`);
+          } else {
+            clearDirectFieldError('direct-kode-unit');
+          }
+        }
+      }, 200);
+    }
+    window.handleDirectKodeUnitBlur = handleDirectKodeUnitBlur;
+
+    function clearDirectKodeUnit() {
+      const inp = document.getElementById('direct-kode-unit');
+      if (inp) {
+        inp.value = '';
+        inp.focus();
+      }
+      const clearBtn = document.getElementById('clear-direct-kode-unit');
+      if (clearBtn) clearBtn.classList.add('hidden');
+      closeDirectKodeUnitDropdown();
+      clearDirectFieldError('direct-kode-unit');
+    }
+    window.clearDirectKodeUnit = clearDirectKodeUnit;
+
+    function renderDirectKodeUnitDropdown(filterText) {
+      const drop = document.getElementById('dropdown-direct-kode-unit');
+      if (!drop) return;
+
+      const q = String(filterText || '').toUpperCase().trim();
+      if (!q) {
+        drop.classList.add('hidden');
+        return;
+      }
+
+      const allUnits = (typeof getAllMasterUnitsComprehensive === 'function')
+        ? getAllMasterUnitsComprehensive()
+        : (state.masterUnits || []);
+
+      // Urutkan & Filter
+      const prefixMatch = [];
+      const containsMatch = [];
+      const otherMatch = [];
+
+      allUnits.forEach(u => {
+        const lb = (u.lambung || '').toUpperCase();
+        const tp = (u.type || '').toUpperCase();
+        const cl = (u.cluster || '').toUpperCase();
+        const loc = (u.lokasi || '').toUpperCase();
+
+        if (lb.startsWith(q)) {
+          prefixMatch.push(u);
+        } else if (lb.includes(q)) {
+          containsMatch.push(u);
+        } else if (tp.includes(q) || cl.includes(q) || loc.includes(q)) {
+          otherMatch.push(u);
+        }
+      });
+
+      const combined = [...prefixMatch, ...containsMatch, ...otherMatch].slice(0, 30);
+
+      if (combined.length === 0) {
+        drop.innerHTML = `
+          <div class="px-4 py-3 text-center text-rose-500 font-semibold bg-rose-50/40">
+            <span>âŒ Unit "${escapeHtml(filterText)}" tidak ditemukan di Data Master</span>
+          </div>`;
+        drop.classList.remove('hidden');
+        return;
+      }
+
+      drop.innerHTML = combined.map(u => {
+        const lb = u.lambung || '';
+        const tp = u.type ? ` (${u.type})` : '';
+        const cl = u.cluster ? ` â€¢ ${typeof formatClusterLabel === 'function' ? formatClusterLabel(u.cluster) : u.cluster}` : '';
+        const loc = (u.lokasi && u.lokasi !== '-') ? ` â€¢ ${u.lokasi}` : '';
+
+        return `
+          <div class="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer transition flex flex-col gap-0.5 border-b border-slate-100 last:border-b-0"
+               onmousedown="selectDirectKodeUnit('${escapeHtml(lb)}')">
+            <div class="flex items-center justify-between">
+              <span class="font-mono font-bold text-slate-800 text-sm text-emerald-700">${escapeHtml(lb)}</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold">${escapeHtml(u.type || 'Unit')}</span>
+            </div>
+            <div class="text-[11px] text-slate-500 font-medium truncate">
+              ${escapeHtml(lb + tp + cl + loc)}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      drop.classList.remove('hidden');
+    }
+    window.renderDirectKodeUnitDropdown = renderDirectKodeUnitDropdown;
+
+    function selectDirectKodeUnit(lambung) {
+      const inp = document.getElementById('direct-kode-unit');
+      if (inp) {
+        inp.value = lambung;
+      }
+      const clearBtn = document.getElementById('clear-direct-kode-unit');
+      if (clearBtn) clearBtn.classList.remove('hidden');
+
+      closeDirectKodeUnitDropdown();
+      clearDirectFieldError('direct-kode-unit');
+      triggerAutoFillForDirectOrder(lambung);
+    }
+    window.selectDirectKodeUnit = selectDirectKodeUnit;
+
+    function handleDirectKodeUnitKeydown(e) {
+      const drop = document.getElementById('dropdown-direct-kode-unit');
+      if (!drop || drop.classList.contains('hidden')) return;
+
+      if (e.key === 'Escape') {
+        closeDirectKodeUnitDropdown();
+      } else if (e.key === 'Enter') {
+        const firstItem = drop.querySelector('[onmousedown]');
+        if (firstItem) {
+          e.preventDefault();
+          firstItem.dispatchEvent(new MouseEvent('mousedown'));
+        }
+      }
+    }
+    window.handleDirectKodeUnitKeydown = handleDirectKodeUnitKeydown;
+
     async function handleDirectCompletionSubmit(event) {
       if (event) event.preventDefault();
 
@@ -42817,6 +43122,20 @@ Keterangan : ${keterangan}`;
           window._suppressSearchableOpen = true;
           try { firstErrorEl.focus(); } catch (e) { }
           setTimeout(() => { window._suppressSearchableOpen = false; }, 350);
+        }
+        return;
+      }
+
+      // VALIDASI STRICT: Jika nomor unit tidak sesuai dengan yang ada di list Data Master, tidak akan bisa submit!
+      if (!isDirectUnitValid(lambung)) {
+        setDirectFieldError('direct-kode-unit', `Unit "${lambung}" tidak terdaftar di Data Master!`);
+        if (typeof showToast === 'function') {
+          showToast(`Unit "${lambung}" tidak terdaftar di Data Master! Harap pilih unit yang sesuai dari daftar.`, 'error');
+        }
+        const unitEl = document.getElementById('direct-kode-unit');
+        if (unitEl) {
+          try { unitEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) { }
+          try { unitEl.focus(); } catch (e) { }
         }
         return;
       }
@@ -42997,6 +43316,9 @@ Keterangan : ${keterangan}`;
         closeAllSearchableDropdowns();
       }
       if (document.getElementById('direct-kode-unit')) document.getElementById('direct-kode-unit').value = '';
+      const clearUnitBtn = document.getElementById('clear-direct-kode-unit');
+      if (clearUnitBtn) clearUnitBtn.classList.add('hidden');
+      if (typeof closeDirectKodeUnitDropdown === 'function') closeDirectKodeUnitDropdown();
       if (document.getElementById('direct-cluster')) document.getElementById('direct-cluster').value = '';
       if (document.getElementById('direct-lokasi')) document.getElementById('direct-lokasi').value = '';
       if (document.getElementById('direct-deskripsi')) document.getElementById('direct-deskripsi').value = '';
@@ -45905,15 +46227,28 @@ Keterangan : ${keterangan}`;
           aoa.push([`KGU ${clName}`]);
           const cJobs = jobs.filter(j => getJobParentCluster(j) === clName);
           if (typeof sortSchedJobsList === 'function') sortSchedJobsList(cJobs, sortConfig);
-          cJobs.forEach(j => {
+          cJobs.forEach((j, jIdx) => {
             const noUnit = String(j.noLambung || j.unit || '').trim().toUpperCase();
             const lokasi = String(j.lokasi || '').trim().toUpperCase();
-            const unitLocLine = lokasi ? (noUnit + ' ' + lokasi) : noUnit;
+
+            let rawArmada = (j.armada && j.armada !== '-') ? j.armada : ((j.wtUnit && j.wtUnit !== '-') ? j.wtUnit : ((j.ltUnit && j.ltUnit !== '-') ? j.ltUnit : ((j.armadaUnit && j.armadaUnit !== '-') ? j.armadaUnit : '')));
+            if (!rawArmada || rawArmada === '-' || rawArmada.startsWith('--')) {
+              rawArmada = (typeof resolveJobArmada === 'function') ? resolveJobArmada(j) : '';
+            }
+            const armada = String(rawArmada || '').replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
+            const cleanArmada = (armada === '-' || armada.startsWith('--')) ? '' : armada;
+
+            const parts = [noUnit];
+            if (lokasi && lokasi !== '-') parts.push(lokasi);
+            if (cleanArmada) parts.push(cleanArmada);
+            const unitLocLine = parts.join(' ');
+
+            if (jIdx > 0) aoa.push(['']);
             aoa.push([unitLocLine]);
-            aoa.push(['- Oli Engine :']);
-            aoa.push(['- Oli Hydraulic :']);
-            aoa.push(['- Oli Tm/Swing :']);
-            aoa.push(['- Coolant :']);
+            aoa.push(['* Oli Engine :']);
+            aoa.push(['* Oli Hydraulic :']);
+            aoa.push(['* Oli Tm/Swing :']);
+            aoa.push(['* Coolant :']);
           });
         });
 
