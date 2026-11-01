@@ -3553,7 +3553,7 @@
                   onchange="state.lubetruckState.hasManualClusterFilter = true; renderLtScheduleTable()"
                   class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center truncate cursor-pointer transition">
                   <option value="ALL">All Cluster</option>
-                  <optgroup label="Cluster Utama">
+                  <optgroup label="Cluster Utama" id="lt-optgroup-cluster-utama">
                     <option value="Selatan">KGU Selatan</option>
                     <option value="Tengah">KGU Tengah</option>
                     <option value="Utara">KGU Utara</option>
@@ -7016,7 +7016,7 @@
       </div>
 
       <!-- Dua Tombol Kapsul (ACH/DONE di Kiri, NON-ACH/CANCEL di Kanan) -->
-      <div class="grid grid-cols-2 gap-3.5 sm:gap-4 w-full px-1">
+      <div id="decision-buttons-grid" class="grid grid-cols-2 gap-3.5 sm:gap-4 w-full px-1">
         <!-- Tombol Kiri: Centang Hijau (ACH / DONE) -->
         <div class="flex flex-col items-center">
           <button type="button" onclick="handleDecisionLeftClick()"
@@ -7033,7 +7033,7 @@
         </div>
 
         <!-- Tombol Kanan: Silang Merah (NON-ACH / CANCEL) -->
-        <div class="flex flex-col items-center">
+        <div id="decision-right-container" class="flex flex-col items-center">
           <button type="button" onclick="handleDecisionRightClick()"
             class="w-full h-12 sm:h-14 rounded-full bg-[#FF8D8D] hover:bg-[#FF7676] active:scale-95 text-white transition-all duration-200 shadow-sm flex items-center justify-center cursor-pointer group"
             title="Kendala / Cancel" aria-label="Pilih Kendala atau Cancel">
@@ -12337,7 +12337,8 @@
       'selatan': 'Selatan',
       'tengah': 'Tengah',
       'utara': 'Utara',
-      'rom': 'ROM'
+      'rom': 'ROM',
+      'rom area': 'ROM'
     };
 
     function getParentCluster(clusterName) {
@@ -20020,6 +20021,37 @@
     }
     window.executeBulkDeletePica = executeBulkDeletePica;
 
+    /**
+     * Khusus SCH Top Up Oil: Tampilkan opsi filter "ROM Area" di dropdown Kluster Lubetruck.
+     * Untuk kategori lain (Small Track, Big Digger, Clean Air Cleaner): sembunyikan/hapus opsi ROM Area.
+     */
+    function updateLtClusterFilterOptions() {
+      const selectEl = document.getElementById('lt-filter-cluster');
+      if (!selectEl) return;
+      const isTopUp = (state.lubetruckState?.activeCategory === 'topup');
+      const existingRomOpt = selectEl.querySelector('option[value="ROM"]');
+
+      if (isTopUp) {
+        if (!existingRomOpt) {
+          const romOpt = document.createElement('option');
+          romOpt.value = 'ROM';
+          romOpt.textContent = 'ROM Area';
+          const utamaGroup = document.getElementById('lt-optgroup-cluster-utama') || selectEl.querySelector('optgroup[label="Cluster Utama"]') || selectEl;
+          utamaGroup.appendChild(romOpt);
+        }
+      } else {
+        if (existingRomOpt) {
+          if (selectEl.value === 'ROM') {
+            selectEl.value = 'ALL';
+            state.lubetruckState.filterCluster = 'ALL';
+            state.lubetruckState.hasManualClusterFilter = false;
+          }
+          existingRomOpt.remove();
+        }
+      }
+    }
+    window.updateLtClusterFilterOptions = updateLtClusterFilterOptions;
+
     function switchLtCategory(cat) {
       if (typeof triggerHaptic === 'function') triggerHaptic(8);
       if (_pendingNavRenderRaf) {
@@ -20028,6 +20060,9 @@
       }
       state.lubetruckState.activeCategory = cat;
       state.lubetruckState.hasManualDateFilter = false;
+      if (typeof updateLtClusterFilterOptions === 'function') {
+        updateLtClusterFilterOptions();
+      }
 
       const isOilman = (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'oilman');
       const today = getEffectiveTodayString();
@@ -21618,6 +21653,10 @@
       const container = document.getElementById('lt-schedule-table-container');
       if (!container) return;
 
+      if (typeof updateLtClusterFilterOptions === 'function') {
+        updateLtClusterFilterOptions();
+      }
+
       // Evaluasi otomatis ter-throttle sebelum me-render tabel jadwal (Cooldown 60s)
       if (typeof autoEvaluatePendingJobsThrottled === 'function') {
         autoEvaluatePendingJobsThrottled();
@@ -21833,7 +21872,9 @@
         `;
         wrapper.appendChild(header);
 
-        const defaultClusters = ['Selatan', 'Tengah', 'Utara'];
+        const defaultClusters = (activeCat === 'topup')
+          ? ['Selatan', 'Tengah', 'Utara', 'ROM']
+          : ['Selatan', 'Tengah', 'Utara'];
         const targetParent = (clusterFilter === 'ALL') ? null : getParentCluster(clusterFilter);
         const clusters = (clusterFilter === 'ALL') ? defaultClusters : [targetParent];
         clusters.forEach(clusterName => {
@@ -21844,9 +21885,10 @@
 
           const clusterBar = document.createElement('div');
           clusterBar.className = 'px-3 py-1.5 bg-emerald-50/70 border-b border-emerald-100/60 flex items-center justify-between text-xs';
+          const clusterDisplayName = clusterName.toUpperCase() === 'ROM' ? 'ROM AREA' : `KGU ${clusterName.toUpperCase()}`;
           clusterBar.innerHTML = `
             <div class="flex items-center space-x-2">
-              <span class="font-extrabold text-emerald-950 text-[11px]">KGU ${clusterName.toUpperCase()}</span>
+              <span class="font-extrabold text-emerald-950 text-[11px]">${clusterDisplayName}</span>
             </div>
             <div class="flex items-center space-x-2">
               <span class="text-[10px] text-emerald-800 font-bold">${clusterJobs.length} Alat Berat</span>
@@ -25726,8 +25768,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
     function openEditClusterLtModal(clusterName) {
       const modal = document.getElementById('modal-edit-cluster-lt');
       if (!modal) return;
+      const isRom = (clusterName || '').toUpperCase() === 'ROM';
+      const clusterDisplay = isRom ? 'ROM Area' : `KGU ${clusterName}`;
       document.getElementById('edit-cluster-lt-name').value = clusterName;
-      document.getElementById('cluster-lt-modal-subtitle').textContent = `KGU ${clusterName}`;
+      document.getElementById('cluster-lt-modal-subtitle').textContent = clusterDisplay;
       document.getElementById('edit-cluster-lt-value').value = (state.clusterLtAssigned && state.clusterLtAssigned[clusterName]) || '';
 
       // Render pilihan cepat unit LT murni dari Master Data
@@ -25798,7 +25842,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         safeStorage.setItem('SE_MASTER_ARMADA', JSON.stringify(state.masterArmada));
         if (typeof notifyDataChanged === 'function') notifyDataChanged();
         toggleModal('modal-edit-cluster-lt', false);
-        showToast(`Daftar armada LT KGU ${cluster} berhasil diperbarui & tersinkron!`, 'success');
+        const isRomCluster = (cluster || '').toUpperCase() === 'ROM';
+        showToast(`Daftar armada LT ${isRomCluster ? 'ROM Area' : 'KGU ' + cluster} berhasil diperbarui & tersinkron!`, 'success');
         if (typeof renderLtScheduleTable === 'function') renderLtScheduleTable();
       }
     }
@@ -28884,7 +28929,9 @@ Keterangan : ${keterangan}`;
       if (washingRoundInp) washingRoundInp.value = washingRound;
 
       if (titleEl) titleEl.textContent = isWt ? 'Tambah Unit ke Jadwal Washing' : 'Tambah Unit ke Jadwal Lubetruck';
-      if (subtitleEl) subtitleEl.textContent = `Shift ${shift}   ${effectiveCluster ? 'KGU ' + effectiveCluster : 'Semua Cluster'}${isWt ? `   Washing Ke ${washingRound}` : ''}`;
+      const isRomCluster = (effectiveCluster || '').toUpperCase() === 'ROM';
+      const effectiveClusterLabel = isRomCluster ? 'ROM Area' : (effectiveCluster ? 'KGU ' + effectiveCluster : 'Semua Cluster');
+      if (subtitleEl) subtitleEl.textContent = `Shift ${shift}   ${effectiveClusterLabel}${isWt ? `   Washing Ke ${washingRound}` : ''}`;
       if (armadaLabelEl) armadaLabelEl.textContent = isWt ? 'No WT Bertugas' : 'No LT Bertugas';
 
       // Otomatis inisialisasi tanggal yang ditentukan dari filter toolbar aktif (minimal hari ini)
@@ -32838,6 +32885,114 @@ Keterangan : ${keterangan}`;
     }
     window.checkJobAlreadyActionedGuard = checkJobAlreadyActionedGuard;
 
+    /**
+     * Menghitung interval siklus pekerjaan (dalam hari) sesuai aturan frekuensi:
+     * - Greasing Big Digger: Interval 3 hari
+     * - Clean Air Cleaner:
+     *   - Coal: Interval 1 hari (harian biasa, tidak ditahan)
+     *   - Dozer 85, PC500, PC3000: Interval 3 hari
+     *   - Small Non-Coal type 200 & 300, Dozer 15, Big Digger PC2000, dll: Interval 7 hari (seminggu)
+     * - Washing Non-Coal: Interval 7 hari (seminggu)
+     * - Jadwal harian lainnya: Interval 1 hari
+     */
+    function getScheduleIntervalDays(job) {
+      if (!job) return 1;
+      const cat = String(job.cat || job.kategori || '').toLowerCase().trim();
+      const unitNo = String(job.noLambung || job.no_lambung || job.unit || '').toUpperCase();
+      const typeStr = String(job.typeUnit || job.type_unit || job.type || '').toUpperCase();
+      const isWt = (job.targetType === 'WT' || ['coal', 'rom', 'non_coal', 'noncoal'].includes(cat) || String(job.id || '').startsWith('WT'));
+
+      // 1. Greasing Big Digger: Interval 3 hari
+      if (!isWt && (cat === 'digger' || cat === 'big_digger' || cat === 'big digger')) {
+        return 3;
+      }
+
+      // 2. Clean Air Cleaner
+      if (cat === 'aircleaner' || cat === 'air_cleaner' || cat === 'air cleaner' || String(job.id || '').includes('-CAC-')) {
+        // "untuk coal air cleaner tidak berlaku"
+        const isCoal = (typeof isAirCleanerUnitCoal === 'function')
+          ? isAirCleanerUnitCoal(unitNo, typeStr)
+          : (/COAL/i.test(typeStr) || /COAL/i.test(String(job.kategori_unit || job.kategori || '')) || String(job.kondisi || '').toLowerCase().includes('coal'));
+
+        if (isCoal) {
+          return 1;
+        }
+
+        const isDozer85 = /D\s*85|D85/i.test(unitNo) || /D\s*85|D85/i.test(typeStr);
+        const isPc500 = /PC\s*500|PC500/i.test(unitNo) || /PC\s*500|PC500/i.test(typeStr);
+        const isPc3000 = /PC\s*3000|PC3000/i.test(unitNo) || /PC\s*3000|PC3000/i.test(typeStr);
+
+        if (isDozer85 || isPc500 || isPc3000) {
+          return 3;
+        }
+
+        // Small Non-Coal type 200, 300, Dozer 15, Big Digger PC2000, dll: Interval seminggu (7 hari)
+        return 7;
+      }
+
+      // 3. Washing Non-Coal: "non coal washing berlakukan seperi interval seminggu"
+      if (isWt && (cat === 'non_coal' || cat === 'noncoal' || cat === 'non coal' || String(job.id || '').includes('WNC'))) {
+        return 7;
+      }
+
+      // Default: Harian (1 hari)
+      return 1;
+    }
+    window.getScheduleIntervalDays = getScheduleIntervalDays;
+
+    /**
+     * Memeriksa apakah jadwal multi-hari sudah mencapai minimal H-1 sebelum pergantian siklus selanjutnya
+     * Jika belum H-1: return false (hanya boleh ACH, opsi Non-ACH disembunyikan/dilarang)
+     * Jika sudah H-1 atau harian: return true (opsi ACH & Non-ACH tersedia)
+     */
+    function isJobEligibleForNonAch(job, targetDate) {
+      if (!job) return true;
+      const intervalDays = (typeof getScheduleIntervalDays === 'function') ? getScheduleIntervalDays(job) : 1;
+      if (intervalDays <= 1) return true;
+
+      const refDate = targetDate || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : new Date().toISOString().slice(0, 10));
+      const startDate = String(job.originalDate || job.original_date || job.tanggal_rencana || job.tanggal || refDate).slice(0, 10);
+
+      const dToday = new Date(refDate + 'T00:00:00');
+      const dStart = new Date(startDate + 'T00:00:00');
+      const diffDays = Math.round((dToday - dStart) / 86400000);
+      const elapsedDays = Math.max(diffDays, Number(job.carryCount || 0));
+
+      if (elapsedDays < 0) return false;
+
+      // Cek apakah ada jadwal masa depan terdaftar untuk unit & kategori yang sama
+      const cat = String(job.cat || job.kategori || '').toLowerCase().trim();
+      const unitNo = String(job.noLambung || job.no_lambung || job.unit || '').toUpperCase();
+      const isWt = (job.targetType === 'WT' || ['coal', 'rom', 'non_coal', 'noncoal'].includes(cat) || String(job.id || '').startsWith('WT'));
+      const jobsList = isWt ? (state.watertruckState?.jobs || []) : (state.lubetruckState?.jobs || []);
+
+      const futureDates = jobsList
+        .filter(j => {
+          const u = String(j.noLambung || j.no_lambung || j.unit || '').toUpperCase();
+          const c = String(j.cat || j.kategori || '').toLowerCase().trim();
+          const d = String(j.tanggal || '').slice(0, 10);
+          return u === unitNo && c === cat && d > refDate;
+        })
+        .map(j => String(j.tanggal || '').slice(0, 10))
+        .sort();
+
+      if (futureDates.length > 0) {
+        const nextDate = futureDates[0];
+        const dNext = new Date(nextDate + 'T00:00:00');
+        const daysUntilNext = Math.round((dNext - dToday) / 86400000);
+        if (daysUntilNext <= 1) {
+          return true;
+        }
+      }
+
+      if (elapsedDays >= (intervalDays - 1)) {
+        return true;
+      }
+
+      return false;
+    }
+    window.isJobEligibleForNonAch = isJobEligibleForNonAch;
+
     async function openActionDecision(jobId) {
       const curUserRole = String(state.currentUser?.role || '').toLowerCase();
       const canExecuteAction = (curUserRole === 'admin' || curUserRole === 'oilman' || curUserRole === 'washingman' || curUserRole === 'mp_lt' || curUserRole === 'mp_wt');
@@ -32885,6 +33040,19 @@ Keterangan : ${keterangan}`;
       if (isJobRequest) {
         // [Aturan Pengguna]: Untuk Job Request langsung muncul pop up pengisian data, bukan pilihan ACH / NON-ACH
         if (typeof closeJobDetailModal === 'function') closeJobDetailModal();
+        if (typeof toggleModal === 'function') toggleModal('modal-action-decision', false);
+        openAchForm();
+        return;
+      }
+
+      // [Aturan Pengguna]: Untuk seluruh jadwal dengan interval lebih dari sehari (Big Digger, Non-Coal Air Cleaner, Washing Non-Coal):
+      // Sebelum mencapai H-1 pergantian jadwal selanjutnya, hilangkan opsi Non-ACH dan langsung muncul pop-up form penyelesaian (ACH).
+      const intervalDays = (typeof getScheduleIntervalDays === 'function') ? getScheduleIntervalDays(job) : 1;
+      const canNonAch = (intervalDays <= 1) || ((typeof isJobEligibleForNonAch === 'function') ? isJobEligibleForNonAch(job) : true);
+
+      if (intervalDays > 1 && !canNonAch) {
+        if (typeof closeJobDetailModal === 'function') closeJobDetailModal();
+        if (typeof toggleModal === 'function') toggleModal('modal-action-decision', false);
         openAchForm();
         return;
       }
@@ -32893,6 +33061,8 @@ Keterangan : ${keterangan}`;
       const subEl = document.getElementById('decision-modal-subtitle');
       const leftLabel = document.getElementById('decision-left-label');
       const rightLabel = document.getElementById('decision-right-label');
+      const rightContainer = document.getElementById('decision-right-container');
+      const buttonsGrid = document.getElementById('decision-buttons-grid');
       const unitType = (typeof getUnitTypeFromMaster === 'function') ? getUnitTypeFromMaster(job.noLambung, job.typeUnit || 'Unit') : (job.typeUnit || 'Unit');
 
       if (titleEl) titleEl.textContent = 'Pilih Hasil Tindakan';
@@ -32900,6 +33070,18 @@ Keterangan : ${keterangan}`;
 
       if (leftLabel) leftLabel.textContent = 'ACH';
       if (rightLabel) rightLabel.textContent = 'NON-ACH';
+
+      // Pengamanan tampilan tombol kanan
+      if (rightContainer) {
+        rightContainer.style.display = canNonAch ? '' : 'none';
+      }
+      if (buttonsGrid) {
+        if (canNonAch) {
+          buttonsGrid.className = 'grid grid-cols-2 gap-3.5 sm:gap-4 w-full px-1';
+        } else {
+          buttonsGrid.className = 'flex justify-center w-full px-1';
+        }
+      }
 
       toggleModal('modal-action-decision', true);
     }
@@ -32911,7 +33093,15 @@ Keterangan : ${keterangan}`;
     }
 
     function handleDecisionRightClick() {
-      const job = findJobById(state.currentActionJobId);
+      const job = (typeof findJobById === 'function') ? findJobById(state.currentActionJobId) : null;
+      if (job) {
+        const intervalDays = (typeof getScheduleIntervalDays === 'function') ? getScheduleIntervalDays(job) : 1;
+        const canNonAch = (intervalDays <= 1) || ((typeof isJobEligibleForNonAch === 'function') ? isJobEligibleForNonAch(job) : true);
+        if (intervalDays > 1 && !canNonAch) {
+          showToast(`Pemberitahuan: Jadwal ini memiliki interval ${intervalDays} hari. Opsi NON-ACH hanya dapat dilakukan pada H-1 sebelum pergantian jadwal.`, 'warning');
+          return;
+        }
+      }
       toggleModal('modal-action-decision', false);
       const isJobRequest = isJobAnOrderRequest(job);
       if (isJobRequest) {
@@ -39230,8 +39420,10 @@ Keterangan : ${keterangan}`;
       const chipsCont = document.getElementById('cluster-armada-chips-container');
       const btnAdd = document.getElementById('btn-cluster-armada-add-new');
 
-      if (titleEl) titleEl.textContent = `Armada Bertugas di KGU ${clusterName}`;
-      if (subEl) subEl.textContent = `KGU ${clusterName} • ${isWt ? 'Water Truck (WT)' : 'Lubetruck (LT)'}`;
+      const isRom = (clusterName || '').toUpperCase() === 'ROM';
+      const clusterDisplay = isRom ? 'ROM Area' : `KGU ${clusterName}`;
+      if (titleEl) titleEl.textContent = `Armada Bertugas di ${clusterDisplay}`;
+      if (subEl) subEl.textContent = `${clusterDisplay} • ${isWt ? 'Water Truck (WT)' : 'Lubetruck (LT)'}`;
 
       if (btnAdd) {
         btnAdd.onclick = () => {
@@ -39255,7 +39447,7 @@ Keterangan : ${keterangan}`;
         });
 
         if (armadas.length === 0) {
-          chipsCont.innerHTML = `<span class="text-xs text-slate-400 italic">Belum ada armada ${isWt ? 'WT' : 'LT'} terdaftar di KGU ${clusterName}.</span>`;
+          chipsCont.innerHTML = `<span class="text-xs text-slate-400 italic">Belum ada armada ${isWt ? 'WT' : 'LT'} terdaftar di ${clusterDisplay}.</span>`;
         } else {
           armadas.forEach(a => {
             const chip = document.createElement('div');
