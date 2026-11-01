@@ -9388,11 +9388,11 @@
               (Eviden)</span>
           </div>
           <div id="repdetail-photo-wrapper"
-            class="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 flex items-center justify-center min-h-[160px] max-h-[260px] cursor-pointer group">
+            class="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 flex items-center justify-center min-h-[160px] max-h-[260px] cursor-pointer group select-none">
             <img id="repdetail-photo-img" src="" alt="Eviden Replace"
-              class="w-full h-full object-cover group-hover:scale-105 transition duration-200">
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-200 pointer-events-none select-none">
             <div
-              class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+              class="pointer-events-none select-none absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150">
               <span class="px-3 py-1.5 rounded-lg bg-black/70 text-white font-bold text-xs flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -17011,6 +17011,206 @@
     window.isJobLockedOrFinished = isJobLockedOrFinished;
 
     /**
+     * Otomatis mendeteksi dan menetapkan armada serta personil (Operator, MP1, MP2)
+     * berdasarkan akun yang sedang login / mengisi form atau settingan penugasan roster.
+     */
+    function autoResolveJobArmadaAndCrew(job, overrideShift = null, overrideDate = null) {
+      if (!job) return { armada: '-', opt: '-', mp1: '-', mp2: '-' };
+
+      const isWt = (typeof isJobWaterTruck === 'function')
+        ? isJobWaterTruck(job)
+        : (job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat) || String(job.id || '').includes('WT') || job.serviceType === 'watertruck');
+
+      const user = state.currentUser;
+      const userRole = String(user?.role || '').toLowerCase();
+      const userJabatan = String(user?.jabatan || '').toLowerCase();
+
+      // 1. Tentukan Tanggal & Shift Eksekusi
+      const todayStr = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().slice(0, 10);
+      const execDate = overrideDate || job.tanggalRealisasi || job.tanggal_eksekusi || document.getElementById('ach-execution-date')?.value || job.tanggal || todayStr;
+
+      const currentOpShift = (typeof getEffectiveShift === 'function') ? getEffectiveShift() : (state.currentShift || 1);
+      const modalShiftVal = document.getElementById('ach-execution-shift')?.value;
+      const execShift = (overrideShift !== null && overrideShift !== undefined && overrideShift !== '')
+        ? Number(overrideShift)
+        : (modalShiftVal ? Number(modalShiftVal) : (job.executedShift || job.shift || currentOpShift));
+
+      // 2. Deteksi Armada
+      let detectedArmada = '';
+
+      // Prioritas A: Dropdown atau form modal jika dipilih oleh user
+      const modalLtEl = document.getElementById('ach-lt-custom');
+      if (modalLtEl && modalLtEl.value) {
+        const val = modalLtEl.value.replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
+        if (val && val !== '-' && !val.startsWith('--')) {
+          detectedArmada = val;
+        }
+      }
+
+      // Prioritas B: Dari job itu sendiri jika sudah terisi dan valid
+      if (!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) {
+        const existingJobArmada = (typeof resolveJobArmada === 'function')
+          ? resolveJobArmada(job)
+          : (job.armada || job.armada_unit || job.armadaUnit || (isWt ? job.wtUnit : job.ltUnit) || '');
+        const cleanJobArmada = String(existingJobArmada || '').replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
+        if (cleanJobArmada && cleanJobArmada !== '-' && !cleanJobArmada.startsWith('--') && !cleanJobArmada.startsWith('SPARE')) {
+          detectedArmada = cleanJobArmada;
+        }
+      }
+
+      // Prioritas C: Dari Roster Penugasan Akun yang Sedang Login
+      if (!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) {
+        if (typeof getCurrentUserAssignedUnitAndCluster === 'function') {
+          const userAssigned = getCurrentUserAssignedUnitAndCluster(isWt);
+          const uUnit = String(userAssigned?.unit || '').replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
+          if (uUnit && uUnit !== '-' && !uUnit.startsWith('--') && !uUnit.startsWith('SPARE')) {
+            detectedArmada = uUnit;
+          }
+        }
+      }
+
+      // Prioritas D: Dari elemen DOM Dashboard MP (#mp-info-unit)
+      if (!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) {
+        const domUnit = document.getElementById('mp-info-unit')?.textContent?.trim().toUpperCase();
+        if (domUnit && domUnit !== '-' && !domUnit.startsWith('--') && !domUnit.startsWith('SPARE')) {
+          detectedArmada = domUnit;
+        }
+      }
+
+      // Prioritas E: Dari properti state.currentUser
+      if (!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) {
+        const propUnit = String(user?.unit || user?.armada || user?.unitEfektif || '').replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
+        if (propUnit && propUnit !== '-' && !propUnit.startsWith('--') && !propUnit.startsWith('SPARE')) {
+          detectedArmada = propUnit;
+        }
+      }
+
+      // Prioritas F: Pencarian fallback ke master roster untuk user login pada tanggal/shift manapun
+      if ((!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) && user && Array.isArray(state.masterRoster)) {
+        const uNrp = String(user.nrp || user.nik || '').trim();
+        const uNama = String(user.nama || '').trim().toLowerCase();
+        const rMatch = state.masterRoster.find(r => {
+          const mNrp = String(r.nrp || r.nik || '').trim();
+          const mNama = String(r.nama || '').trim().toLowerCase();
+          const matchUser = (uNrp && mNrp === uNrp) || (uNama && mNama === uNama);
+          if (!matchUser) return false;
+          const u = String(r.unitEfektif || r.unit || '').trim().toUpperCase();
+          return u && u !== '-' && !u.startsWith('--') && !u.startsWith('SPARE');
+        });
+        if (rMatch) {
+          detectedArmada = String(rMatch.unitEfektif || rMatch.unit).trim().toUpperCase();
+        }
+      }
+
+      // Prioritas G: Jika masih kosong, cari armada default dari cluster job
+      if (!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) {
+        const jCluster = String(job.cluster || (isWt ? 'Tengah' : 'Selatan')).trim();
+        if (Array.isArray(state.masterArmada) && state.masterArmada.length > 0) {
+          const matchArmada = state.masterArmada.find(a => {
+            const aType = String(a.jenis || a.tipe || '').toUpperCase();
+            const aNo = String(a.nomor || a.unit || '').toUpperCase();
+            const isMatchService = isWt
+              ? (aType.includes('WT') || aType.includes('WATER') || aNo.startsWith('WT'))
+              : (aType.includes('LT') || aType.includes('LUBE') || aNo.startsWith('LT'));
+            if (!isMatchService) return false;
+            if (typeof isClusterMatchFilter === 'function') {
+              return isClusterMatchFilter(a.cluster, jCluster);
+            }
+            return String(a.cluster || '').toLowerCase().includes(jCluster.toLowerCase());
+          });
+          if (matchArmada) {
+            detectedArmada = String(matchArmada.nomor || matchArmada.unit || '').trim().toUpperCase();
+          }
+        }
+      }
+
+      // Normalisasi armada akhir
+      detectedArmada = (detectedArmada && detectedArmada !== '-' && !detectedArmada.startsWith('--')) ? detectedArmada : '-';
+
+      // 3. Tentukan Cluster
+      let cluster = job.cluster || '';
+      if (!cluster && detectedArmada !== '-' && typeof getArmadaRegisteredCluster === 'function') {
+        cluster = getArmadaRegisteredCluster(detectedArmada);
+      }
+      if (!cluster) cluster = isWt ? 'Tengah' : 'Selatan';
+
+      // 4. Deteksi Personil (Kru: OPT, MP1, MP2)
+      let crew = { opt: '-', mp1: '-', mp2: '-' };
+      if (detectedArmada !== '-' && typeof getPersonnelForArmada === 'function') {
+        crew = getPersonnelForArmada(detectedArmada, cluster, execShift, execDate);
+      }
+
+      // Ambil personil yang sudah tercatat di job jika valid
+      const existingOpt = (job.opt && job.opt !== '-' && typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(job.opt)) ? job.opt : '';
+      const existingMp1 = (job.mp1 && job.mp1 !== '-' && typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(job.mp1)) ? job.mp1 : '';
+      const existingMp2 = (job.mp2 && job.mp2 !== '-' && typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(job.mp2)) ? job.mp2 : '';
+
+      let finalOpt = existingOpt || ((typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(crew.opt)) ? crew.opt : '-');
+      let finalMp1 = existingMp1 || ((typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(crew.mp1)) ? crew.mp1 : '-');
+      let finalMp2 = existingMp2 || ((typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(crew.mp2)) ? crew.mp2 : '-');
+
+      // Sematkan akun pengisi jika personil di roster masih '-' atau user bertindak sebagai pelaksana
+      if (user && user.nama) {
+        const uName = String(user.nama).trim().toUpperCase();
+        const isOperator = userRole === 'operator' || userJabatan.includes('operator') || userJabatan.includes('driver');
+        const isMp = ['oilman', 'mp_lt', 'washingman', 'mp_wt'].includes(userRole) || userJabatan.includes('oilman') || userJabatan.includes('wash') || userJabatan.includes('mp');
+
+        if (isOperator) {
+          if (finalOpt === '-' || (typeof isDummyPersonnelName === 'function' && isDummyPersonnelName(finalOpt))) {
+            finalOpt = uName;
+          }
+        } else if (isMp) {
+          if (finalMp1 === '-' || (typeof isDummyPersonnelName === 'function' && isDummyPersonnelName(finalMp1))) {
+            finalMp1 = uName;
+          } else if (finalMp1 !== uName && (finalMp2 === '-' || (typeof isDummyPersonnelName === 'function' && isDummyPersonnelName(finalMp2)))) {
+            finalMp2 = uName;
+          }
+        }
+      }
+
+      // 5. Tuliskan kembali ke objek job
+      if (detectedArmada !== '-') {
+        job.armada = detectedArmada;
+        job.armada_unit = detectedArmada;
+        job.armadaUnit = detectedArmada;
+        if (isWt) {
+          job.wtUnit = detectedArmada;
+          if (!job.ltUnit || job.ltUnit === detectedArmada) job.ltUnit = '-';
+        } else {
+          job.ltUnit = detectedArmada;
+          if (!job.wtUnit || job.wtUnit === detectedArmada) job.wtUnit = '-';
+        }
+      }
+
+      if (finalOpt !== '-') {
+        job.opt = finalOpt;
+        job.opt_name = finalOpt;
+      }
+      if (finalMp1 !== '-') {
+        job.mp1 = finalMp1;
+      }
+      if (finalMp2 !== '-') {
+        job.mp2 = finalMp2;
+      }
+
+      job.shift = execShift;
+      job.executedShift = execShift;
+      job.tanggalRealisasi = execDate;
+      job.tanggal_eksekusi = execDate;
+
+      return {
+        armada: detectedArmada,
+        opt: finalOpt,
+        mp1: finalMp1,
+        mp2: finalMp2,
+        shift: execShift,
+        date: execDate,
+        cluster: cluster
+      };
+    }
+    window.autoResolveJobArmadaAndCrew = autoResolveJobArmadaAndCrew;
+
+    /**
      * Mengunci snapshot histori pekerjaan secara permanen (Snapshot Table)
      */
     async function lockJobHistorySnapshot(job, finalStatus, reason = '') {
@@ -17093,10 +17293,31 @@
 
       // Ambil snapshot eksekusi beku jika job sedang diproses di background queue
       const bgSnapshot = (window._bgJobQueue && (window._bgJobQueue[job.id] || window._bgJobQueue[cleanBaseId] || window._bgJobQueue[originalJobId])) || null;
-      const finalArmada = String(bgSnapshot?.executedArmada || job.armada || job.ltUnit || job.wtUnit || job.armada_unit || '-').replace(/\s*\(.*?\)/g, '').trim().toUpperCase() || '-';
-      const finalOpt = (bgSnapshot?.executedOpt || job.opt || job.opt_name || '-').trim();
-      const finalMp1 = (bgSnapshot?.executedMp1 || job.mp1 || '-').trim();
-      const finalMp2 = (bgSnapshot?.executedMp2 || job.mp2 || '-').trim();
+      let finalArmada = String(bgSnapshot?.executedArmada || job.armada || job.ltUnit || job.wtUnit || job.armada_unit || '-').replace(/\s*\(.*?\)/g, '').trim().toUpperCase() || '-';
+      let finalOpt = (bgSnapshot?.executedOpt || job.opt || job.opt_name || '-').trim();
+      let finalMp1 = (bgSnapshot?.executedMp1 || job.mp1 || '-').trim();
+      let finalMp2 = (bgSnapshot?.executedMp2 || job.mp2 || '-').trim();
+
+      // Deteksi otomatis armada dan personil jika saat ini masih kosong / '-' (misal job service, bd, parkir, atau non ach)
+      if (finalArmada === '-' || !finalArmada || finalOpt === '-' || (typeof isDummyPersonnelName === 'function' && isDummyPersonnelName(finalOpt))) {
+        const resolved = (typeof autoResolveJobArmadaAndCrew === 'function')
+          ? autoResolveJobArmadaAndCrew(job, bgSnapshot?.executedShift || job.executedShift || job.shift, job.tanggalRealisasi || job.tanggal)
+          : null;
+        if (resolved) {
+          if ((finalArmada === '-' || !finalArmada) && resolved.armada && resolved.armada !== '-') {
+            finalArmada = resolved.armada;
+          }
+          if ((finalOpt === '-' || (typeof isDummyPersonnelName === 'function' && isDummyPersonnelName(finalOpt))) && resolved.opt && resolved.opt !== '-') {
+            finalOpt = resolved.opt;
+          }
+          if ((finalMp1 === '-' || (typeof isDummyPersonnelName === 'function' && isDummyPersonnelName(finalMp1))) && resolved.mp1 && resolved.mp1 !== '-') {
+            finalMp1 = resolved.mp1;
+          }
+          if ((finalMp2 === '-' || (typeof isDummyPersonnelName === 'function' && isDummyPersonnelName(finalMp2))) && resolved.mp2 && resolved.mp2 !== '-') {
+            finalMp2 = resolved.mp2;
+          }
+        }
+      }
       const finalJamStart = bgSnapshot?.executedJamStart || job.jamStart || job.jam_start || '';
       const finalJamEnd = bgSnapshot?.executedJamEnd || job.jamEnd || job.jam_end || '';
 
@@ -18154,22 +18375,15 @@
 
             case 'WASHING_COAL_ROM': {
               // Aturan SOP Pengguna: Washing Coal & ROM dikerjakan 4x sehari (setiap shift 2x).
-              // Sesi yang tidak di-action pada shift bersangkutan ditutup NON-ACH per sesi/shift
+              // PENGAMAN MUTLAK: Selama hari H (isToday), jadwal TIDAK BOLEH ditutup otomatis NON-ACH
+              // agar antrean aktif di Shift 1 (W1 & W2) dan Shift 2 (W1 & W2) tidak hilang saat shift berjalan.
+              // Evaluasi penutupan NON-ACH hanya berlaku jika hari operasional sudah lewat (isPastDate).
               const isOutstanding = (j.status === 'scheduled' || j.status === 'pending' || j.isPending);
               if (isOutstanding && !isFinishedStatus && !isHistoryDone && !hasPhotos) {
-                if (Number(j.shift) === 1 && (isPastDate || (isToday && isShift2Now))) {
+                if (isPastDate) {
                   j.status = 'non_ach';
                   j.isPending = false;
-                  j.alasanNonAch = 'Non ACH: Sesi washing coal/rom Shift 1 tidak ter-action (Tanpa Pending)';
-                  j.keterangan = 'Non ACH: SOP Washing Coal/ROM 4x Sehari';
-                  hasChanges = true;
-                  countClosed++;
-                  lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
-                  if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
-                } else if (Number(j.shift) === 2 && isPastDate) {
-                  j.status = 'non_ach';
-                  j.isPending = false;
-                  j.alasanNonAch = 'Non ACH: Sesi washing coal/rom Shift 2 tidak ter-action (Tanpa Pending)';
+                  j.alasanNonAch = `Non ACH: Sesi washing coal/rom Shift ${j.shift || 1} (Putaran ${j.washingRound || 1}) tidak ter-action di hari operasional`;
                   j.keterangan = 'Non ACH: SOP Washing Coal/ROM 4x Sehari';
                   hasChanges = true;
                   countClosed++;
@@ -18433,13 +18647,20 @@
 
         const shiftMatch = (rShift, rKodeShift) => {
           let sNum = Number(rShift);
-          if (!sNum && rKodeShift) {
-            const code = String(rKodeShift).trim().toUpperCase();
-            if (code.startsWith('N') || code === 'NS' || code === 'NIGHT') sNum = 2;
-            else if (code.startsWith('D') || code === 'DS' || code === 'DAY') sNum = 1;
+          const rawCode = String(rKodeShift || '').trim().toUpperCase();
+          if (!sNum && rawCode) {
+            if (rawCode.startsWith('N') || rawCode === 'NS' || rawCode === 'NIGHT') sNum = 2;
+            else if (rawCode.startsWith('D') || rawCode === 'DS' || rawCode === 'DAY') sNum = 1;
           }
-          if (!sNum) return true; // jika data roster tidak mendefinisikan shift, lolos
+          if (rawCode.startsWith('D') && targetShift === 1) return true;
+          if (rawCode.startsWith('N') && targetShift === 2) return true;
+          if (!sNum) return true;
           return sNum === targetShift;
+        };
+
+        const isOffOrCuti = (r) => {
+          const k = String(r.kodeShift || r.kode_shift || '').trim().toUpperCase();
+          return k === 'OOFF' || k === 'CCUTI' || k === 'OFF' || k === 'CUTI' || k.includes('OFF') || k.includes('CUTI');
         };
 
         // 1. Cari MP1 & MP2 aktif dari Roster yang bertugas pada armada/unit ini
@@ -18448,9 +18669,9 @@
           const found = roster.filter(r =>
             (r.jenis === targetJenis || (!isWt && r.jenis === 'OM') || (isWt && r.jenis === 'WM')) &&
             (r.tanggal === dt || (typeof normalizeDateStr === 'function' && normalizeDateStr(r.tanggal) === dt)) &&
-            shiftMatch(r.shift, r.kodeShift) &&
-            (normMatch(r.unit) || normMatch(r.unitEfektif)) &&
-            r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI'
+            shiftMatch(r.shift, r.kodeShift || r.kode_shift) &&
+            (normMatch(r.unit) || normMatch(r.unitEfektif) || normMatch(r.unit_efektif)) &&
+            !isOffOrCuti(r)
           );
           if (found.length > 0) {
             found.forEach(f => {
@@ -18466,9 +18687,9 @@
         if (matchedMp.length === 0) {
           matchedMp = roster.filter(r =>
             (r.jenis === targetJenis || (!isWt && r.jenis === 'OM') || (isWt && r.jenis === 'WM')) &&
-            shiftMatch(r.shift, r.kodeShift) &&
-            (normMatch(r.unit) || normMatch(r.unitEfektif)) &&
-            r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI'
+            shiftMatch(r.shift, r.kodeShift || r.kode_shift) &&
+            (normMatch(r.unit) || normMatch(r.unitEfektif) || normMatch(r.unit_efektif)) &&
+            !isOffOrCuti(r)
           );
         }
 
@@ -18485,9 +18706,9 @@
           const found = roster.filter(r =>
             r.jenis === 'OPT' &&
             (r.tanggal === dt || (typeof normalizeDateStr === 'function' && normalizeDateStr(r.tanggal) === dt)) &&
-            shiftMatch(r.shift, r.kodeShift) &&
-            r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI' &&
-            (normMatch(r.unitEfektif) || normMatch(r.unit))
+            shiftMatch(r.shift, r.kodeShift || r.kode_shift) &&
+            !isOffOrCuti(r) &&
+            (normMatch(r.unitEfektif) || normMatch(r.unit_efektif) || normMatch(r.unit))
           );
           if (found.length > 0) {
             optCandidates = found;
@@ -18499,14 +18720,14 @@
         if (optCandidates.length === 0) {
           optCandidates = roster.filter(r =>
             r.jenis === 'OPT' &&
-            shiftMatch(r.shift, r.kodeShift) &&
-            (normMatch(r.unitEfektif) || normMatch(r.unit)) &&
-            r.kodeShift !== 'OOFF' && r.kodeShift !== 'CCUTI'
+            shiftMatch(r.shift, r.kodeShift || r.kode_shift) &&
+            (normMatch(r.unitEfektif) || normMatch(r.unit_efektif) || normMatch(r.unit)) &&
+            !isOffOrCuti(r)
           );
         }
 
         // Prioritas kandidat OPT: unitEfektif (misal spare aktif pengganti), lalu unit batangan
-        const matchedOpt = optCandidates.find(r => normMatch(r.unitEfektif))
+        const matchedOpt = optCandidates.find(r => normMatch(r.unitEfektif) || normMatch(r.unit_efektif))
           || optCandidates.find(r => normMatch(r.unit))
           || null;
 
@@ -18568,7 +18789,7 @@
 
     function isDailyRollingCategory(cat, job) {
       const c = String(cat || (job && job.cat) || '').toLowerCase().trim();
-      return ['digger', 'aircleaner', 'air_cleaner', 'topup', 'topup_oil', 'non_coal', 'noncoal'].includes(c);
+      return ['digger', 'aircleaner', 'air_cleaner', 'topup', 'topup_oil'].includes(c);
     }
     window.isDailyRollingCategory = isDailyRollingCategory;
 
@@ -18599,7 +18820,7 @@
       const s = String(job.status || '').toLowerCase().trim();
       const isFinished = ['ach', 'achieved', 'done', 'non_ach', 'non-ach', 'service', 'bd', 'breakdown', 'cancel', 'cancelled'].includes(s) || (job.status_final !== undefined && job.status_final !== null && String(job.status_final).trim() !== '');
 
-      const effectiveShift = getEffectiveShiftForJob(job);
+      const effectiveShift = (job.shift && Number(job.shift)) ? Number(job.shift) : getEffectiveShiftForJob(job);
       const crew = getPersonnelForArmada(armadaUnit, job.cluster, effectiveShift, job.tanggal);
 
       let optName = crew.opt;
@@ -25799,8 +26020,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         }
       }
 
-      // Jika Tutup Buku, kunci ke snapshot riwayat pekerjaan permanen
+      // Jika Tutup Buku, deteksi armada dan personil pengisi keterangan lalu kunci ke snapshot riwayat pekerjaan permanen
       if (isClosed && typeof lockJobHistorySnapshot === 'function') {
+        if (typeof autoResolveJobArmadaAndCrew === 'function') {
+          autoResolveJobArmadaAndCrew(job, shiftNum, actionDate);
+        }
         lockJobHistorySnapshot(job, 'NON_ACH', job.keterangan);
       }
 
@@ -27170,6 +27394,17 @@ Keterangan : ${keterangan}`;
     }
     window.fetchJobDetailPayload = fetchJobDetailPayload;
 
+    function previewCurrentDetailPhoto(index) {
+      const photos = window.__currentDetailJobFotos || [];
+      if (!photos || photos.length === 0) return;
+      const job = state.currentDetailJobId ? findJobById(state.currentDetailJobId) : null;
+      const unitLabel = job?.noLambung || '';
+      if (typeof openPhotoPreview === 'function') {
+        openPhotoPreview(photos, `Evidence Foto - ${unitLabel}`, index, unitLabel);
+      }
+    }
+    window.previewCurrentDetailPhoto = previewCurrentDetailPhoto;
+
     function openJobDetailModal(jobId, isBackgroundUpdate = false) {
       const modalEl = document.getElementById('modal-job-detail');
       // Jika dipanggil dari sinkronisasi background tapi modal sedang tertutup / user sudah menutup, batalkan dan jangan buka modal
@@ -27540,18 +27775,19 @@ Keterangan : ${keterangan}`;
                 const directImgSrc = formatDriveImageUrl(src);
 
                 return `
-                  <div onclick="openPhotoPreview(window.__currentDetailJobFotos, 'Evidence Foto - ${job.noLambung || ''}', ${i}, '${job.noLambung || ''}')"
-                    class="group relative rounded-xl overflow-hidden border border-slate-200 bg-slate-900 cursor-pointer shadow-xs hover:shadow-md transition">
-                    <div class="h-28 sm:h-32 w-full overflow-hidden bg-slate-950 flex items-center justify-center">
-                      <img src="${directImgSrc}" alt="${label}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'text-white text-xs p-3 text-center\\'>Gagal memuat foto</div>';">
+                  <div onclick="previewCurrentDetailPhoto(${i})" role="button" tabindex="0"
+                    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();previewCurrentDetailPhoto(${i})}"
+                    class="group relative rounded-xl overflow-hidden border border-slate-200 bg-slate-900 cursor-pointer shadow-xs hover:shadow-md transition duration-150 select-none">
+                    <div class="h-28 sm:h-32 w-full overflow-hidden bg-slate-950 flex items-center justify-center pointer-events-none">
+                      <img src="${directImgSrc}" alt="${label}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200 pointer-events-none select-none" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'text-white text-xs p-3 text-center\\'>Gagal memuat foto</div>';">
                     </div>
-                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition p-1.5 text-center">
+                    <div class="pointer-events-none select-none absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity duration-150 p-1.5 text-center">
                       <svg class="w-5 h-5 text-white mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
                       </svg>
                       <span class="text-[9px] text-white font-bold leading-tight">Klik Perbesar Foto</span>
                     </div>
-                    <div class="absolute bottom-0 inset-x-0 bg-slate-950/80 backdrop-blur-xs py-0.5 px-2 flex items-center justify-between">
+                    <div class="pointer-events-none select-none absolute bottom-0 inset-x-0 bg-slate-950/80 backdrop-blur-xs py-0.5 px-2 flex items-center justify-between">
                       <span class="text-[9px] font-bold text-white truncate">${label}</span>
                       <span class="text-[8px] font-medium text-emerald-400">Lihat Full</span>
                     </div>
@@ -29764,9 +30000,12 @@ Keterangan : ${keterangan}`;
               const idx = targetArray.findIndex(item => item.id === nj.id);
               if (idx !== -1) {
                 const existingJob = targetArray[idx];
-                if (typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(existingJob)) {
-                  return; // JANGAN timpa job yang sudah selesai/terkunci
+                const s = String(existingJob?.status || '').toLowerCase();
+                const isRealDone = ['ach', 'achieved', 'done', 'service'].includes(s);
+                if (isRealDone) {
+                  return; // JANGAN timpa job yang sudah selesai/dikerjakan di lapangan
                 }
+                // Jika sebelumnya berstatus non_ach (false auto-close) atau scheduled, pulihkan ke scheduled baru
                 targetArray[idx] = nj;
               }
             } else {
@@ -29784,8 +30023,12 @@ Keterangan : ${keterangan}`;
             monthlyJobs.forEach(job => {
               const targetId = String(job.id);
               const existingJob = targetArray.find(item => String(item.id) === targetId);
-              if (existingJob && typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(existingJob)) {
-                return; // Lewati dari batch scheduled agar status selesai di Supabase tidak tertimpa
+              if (existingJob) {
+                const s = String(existingJob.status || '').toLowerCase();
+                const isRealDone = ['ach', 'achieved', 'done', 'service'].includes(s);
+                if (isRealDone) {
+                  return; // Lewati dari batch scheduled agar status selesai asli tidak tertimpa
+                }
               }
               const isSchWt = (targetId.startsWith('WT-SCH') || targetId.startsWith('WTJ') || job.targetType === 'WT' || (job.wtUnit && job.wtUnit !== '-') || ['coal', 'rom', 'non_coal', 'noncoal'].includes(job.cat));
               const isSchLt = (targetId.startsWith('LT-SCH') || targetId.startsWith('LTJ') || job.targetType === 'LT' || ['small', 'digger', 'aircleaner', 'air_cleaner', 'topup', 'top up oil', 'topup_oil'].includes(job.cat));
@@ -31493,8 +31736,12 @@ Keterangan : ${keterangan}`;
         const realisasiDateDisplay = formatDisplayDate(job.tanggalRealisasi || job.tanggal || selectedDate || '2026-10-05');
 
         // Evaluasi armada dan personil akurat tanpa tertimpa string '-'
-        const rawArmada = (job.armada && job.armada !== '-') ? job.armada : ((job.wtUnit && job.wtUnit !== '-') ? job.wtUnit : ((job.ltUnit && job.ltUnit !== '-') ? job.ltUnit : ((job.armadaUnit && job.armadaUnit !== '-') ? job.armadaUnit : '')));
-        const finalArmada = rawArmada || (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '') || '-';
+        let rawArmada = (job.armada && job.armada !== '-') ? job.armada : ((job.wtUnit && job.wtUnit !== '-') ? job.wtUnit : ((job.ltUnit && job.ltUnit !== '-') ? job.ltUnit : ((job.armadaUnit && job.armadaUnit !== '-') ? job.armadaUnit : '')));
+        let finalArmada = rawArmada || (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '') || '-';
+        if ((finalArmada === '-' || !finalArmada || finalArmada.startsWith('--')) && typeof autoResolveJobArmadaAndCrew === 'function') {
+          const res = autoResolveJobArmadaAndCrew(job);
+          if (res && res.armada && res.armada !== '-') finalArmada = res.armada;
+        }
         const isThisJobWt = (finalArmada.startsWith('WT') || job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat) || String(job.id || '').includes('WT') || job.serviceType === 'watertruck');
 
         // Personil fallback dari roster armada jika belum tersimpan di job
@@ -31502,9 +31749,9 @@ Keterangan : ${keterangan}`;
           ? getPersonnelForArmada(finalArmada, job.cluster, job.shift, job.tanggalRealisasi || job.tanggal)
           : { opt: '-', mp1: '-', mp2: '-' };
 
-        const optDisplay = !isDummyPersonnelName(job.opt) ? job.opt : (!isDummyPersonnelName(crewFallback.opt) ? crewFallback.opt : (job.opt && job.opt !== '-' ? job.opt : '-'));
-        const mp1Display = !isDummyPersonnelName(job.mp1) ? job.mp1 : (!isDummyPersonnelName(crewFallback.mp1) ? crewFallback.mp1 : (job.mp1 && job.mp1 !== '-' ? job.mp1 : '-'));
-        const mp2Display = !isDummyPersonnelName(job.mp2) ? job.mp2 : (!isDummyPersonnelName(crewFallback.mp2) ? crewFallback.mp2 : (job.mp2 && job.mp2 !== '-' ? job.mp2 : '-'));
+        let optDisplay = !isDummyPersonnelName(job.opt) ? job.opt : (!isDummyPersonnelName(crewFallback.opt) ? crewFallback.opt : (job.opt && job.opt !== '-' ? job.opt : '-'));
+        let mp1Display = !isDummyPersonnelName(job.mp1) ? job.mp1 : (!isDummyPersonnelName(crewFallback.mp1) ? crewFallback.mp1 : (job.mp1 && job.mp1 !== '-' ? job.mp1 : '-'));
+        let mp2Display = !isDummyPersonnelName(job.mp2) ? job.mp2 : (!isDummyPersonnelName(crewFallback.mp2) ? crewFallback.mp2 : (job.mp2 && job.mp2 !== '-' ? job.mp2 : '-'));
 
         let mpCombined = '-';
         if (mp1Display !== '-' && mp2Display !== '-') {
@@ -34520,6 +34767,14 @@ Keterangan : ${keterangan}`;
           return;
         }
 
+        const execShift = parseInt(document.getElementById('ach-execution-shift')?.value || job.shift || 1, 10);
+        const execDate = document.getElementById('ach-execution-date')?.value || getEffectiveTodayString();
+
+        // Otomatis deteksi armada & personil dari akun pengisi keterangan / settingan penugasan
+        const resolved = (typeof autoResolveJobArmadaAndCrew === 'function')
+          ? autoResolveJobArmadaAndCrew(job, execShift, execDate)
+          : { armada: '-', opt: '-', mp1: '-', mp2: '-' };
+
         let rawLtVal = (document.getElementById('ach-lt-custom')?.value || '').trim();
         let ltValue = rawLtVal.replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
         if (!ltValue || ltValue === '-' || ltValue.startsWith('--')) {
@@ -34529,15 +34784,13 @@ Keterangan : ${keterangan}`;
           if (cleanedText && cleanedText !== '-' && !cleanedText.startsWith('--')) ltValue = cleanedText;
         }
         if (!ltValue || ltValue === '-' || ltValue.startsWith('--')) {
-          ltValue = (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '') || job.armada || job.ltUnit || job.wtUnit || '-';
+          ltValue = resolved.armada || (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '') || job.armada || job.ltUnit || job.wtUnit || '-';
         }
         ltValue = ltValue.replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
 
-        const optVal = (document.getElementById('ach-opt-name')?.value || document.getElementById('search-ach-opt-name')?.value || '').trim() || job.opt || '-';
-        const mp1Val = (document.getElementById('ach-mp1-name')?.value || document.getElementById('search-ach-mp1-name')?.value || '').trim() || job.mp1 || '-';
-        const mp2Val = (document.getElementById('ach-mp2-name')?.value || document.getElementById('search-ach-mp2-name')?.value || '').trim() || job.mp2 || '-';
-        const execShift = parseInt(document.getElementById('ach-execution-shift')?.value || job.shift || 1, 10);
-        const execDate = document.getElementById('ach-execution-date')?.value || getEffectiveTodayString();
+        const optVal = (document.getElementById('ach-opt-name')?.value || document.getElementById('search-ach-opt-name')?.value || '').trim() || ((typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(resolved.opt)) ? resolved.opt : '') || job.opt || '-';
+        const mp1Val = (document.getElementById('ach-mp1-name')?.value || document.getElementById('search-ach-mp1-name')?.value || '').trim() || ((typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(resolved.mp1)) ? resolved.mp1 : '') || job.mp1 || '-';
+        const mp2Val = (document.getElementById('ach-mp2-name')?.value || document.getElementById('search-ach-mp2-name')?.value || '').trim() || ((typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(resolved.mp2)) ? resolved.mp2 : '') || job.mp2 || '-';
 
         job.status = 'service';
         job.unitCondition = 'service';
@@ -34552,6 +34805,7 @@ Keterangan : ${keterangan}`;
         job.armada_unit = ltValue;
         if (isWashing) job.targetType = 'WT';
         job.opt = optVal;
+        job.opt_name = optVal;
         job.mp1 = mp1Val;
         job.mp2 = mp2Val;
         job.keterangan = `[SERVICE]: ${serviceNotes}`;
@@ -34578,7 +34832,14 @@ Keterangan : ${keterangan}`;
 
       if (unitCondition === 'breakdown') {
         const bdNotes = document.getElementById('ach-bd-notes')?.value.trim() || 'Unit breakdown lapangan';
+        const execShift = parseInt(document.getElementById('ach-execution-shift')?.value || job.shift || 1, 10);
         const execDate = document.getElementById('ach-execution-date')?.value || getEffectiveTodayString();
+
+        // Otomatis deteksi armada & personil dari akun pengisi keterangan / settingan penugasan
+        if (typeof autoResolveJobArmadaAndCrew === 'function') {
+          autoResolveJobArmadaAndCrew(job, execShift, execDate);
+        }
+
         job.status = 'bd';
         job.unitCondition = 'breakdown';
         job.isPending = false;
@@ -34604,7 +34865,14 @@ Keterangan : ${keterangan}`;
       if (unitCondition === 'parkir') {
         // Sesuai permintaan pengguna: Unit parkir hanya dimintai keterangan (seperti breakdown), tanpa meminta foto!
         const parkirNotes = (document.getElementById('ach-parkir-notes')?.value || '').trim() || 'Unit parkir / standby lapangan';
+        const execShift = parseInt(document.getElementById('ach-execution-shift')?.value || job.shift || 1, 10);
         const execDate = document.getElementById('ach-execution-date')?.value || getEffectiveTodayString();
+
+        // Otomatis deteksi armada & personil dari akun pengisi keterangan / settingan penugasan
+        if (typeof autoResolveJobArmadaAndCrew === 'function') {
+          autoResolveJobArmadaAndCrew(job, execShift, execDate);
+        }
+
         job.status = 'parkir';
         job.unitCondition = 'parkir';
         job.isPending = false;
@@ -35458,7 +35726,7 @@ Keterangan : ${keterangan}`;
                   title="Klik untuk melihat foto eviden resolusi penuh">
                   <img src="${photoUrl}" alt="Eviden" class="w-full h-full object-cover group-hover:scale-110 transition duration-200"
                     loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<span class=\\'text-[9px] text-white flex items-center justify-center h-full\\'>Foto</span>'">
-                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                  <div class="pointer-events-none select-none absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-150">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
                   </div>
                 </button>
@@ -36684,7 +36952,7 @@ Keterangan : ${keterangan}`;
                 <img src="${directImgSrc}" alt="${label}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'text-white text-xs p-2 text-center\\'>Gagal memuat foto</div>';">
               </div>
               <div onclick="if(typeof openPhotoPreview==='function'){openPhotoPreview(window.__currentAcDetailPhotos, 'Foto Clean Air Cleaner - ${noLambung}', ${i}, '')}"
-                class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition p-1 text-center cursor-pointer">
+                class="pointer-events-none select-none absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity duration-150 p-1 text-center">
                 <svg class="w-4 h-4 text-white mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
                 </svg>
@@ -46529,10 +46797,23 @@ Keterangan : ${keterangan}`;
 
       const status = (j.status_final || j.status || 'SCHEDULED').toUpperCase();
       const kendala = j.alasanNonAch || j.non_ach_reason || j.keterangan || j.kendala || '-';
-      const armada = j.armada || j.ltUnit || (j.id && String(j.id).includes('WT') ? 'Water Truck' : 'Lubetruck');
-      const opt = j.opt || j.opt_name || j.operator || '-';
-      const mp1 = j.mp1 || j.personil1 || '-';
-      const mp2 = j.mp2 || j.personil2 || '-';
+      let armada = j.armada || j.armada_unit || j.ltUnit || j.wtUnit || '-';
+      let opt = j.opt || j.opt_name || j.operator || '-';
+      let mp1 = j.mp1 || j.personil1 || '-';
+      let mp2 = j.mp2 || j.personil2 || '-';
+
+      if ((armada === '-' || !armada || opt === '-' || !opt) && typeof autoResolveJobArmadaAndCrew === 'function') {
+        const res = autoResolveJobArmadaAndCrew(j);
+        if (res) {
+          if (armada === '-' || !armada) armada = res.armada;
+          if (opt === '-' || !opt) opt = res.opt;
+          if (mp1 === '-' || !mp1) mp1 = res.mp1;
+          if (mp2 === '-' || !mp2) mp2 = res.mp2;
+        }
+      }
+      if (armada === '-' || !armada) {
+        armada = (j.id && String(j.id).includes('WT')) ? 'Water Truck' : 'Lubetruck';
+      }
 
       let jenisJob = (typeof getJobSchLabel === 'function') ? getJobSchLabel(j) : 'Scheduled';
       if (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(j)) {
