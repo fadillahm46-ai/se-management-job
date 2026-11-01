@@ -15123,14 +15123,12 @@
     async function ensureJobsForDate(dateStr, force = false) {
       if (!dateStr || !state.supabaseClient) return;
       if (!force) {
-        // Periksa apakah di memori sudah ada jadwal untuk tanggal tersebut
-        const countInDate = (
-          (state.lubetruckState?.jobs ? state.lubetruckState.jobs.filter(j => j.tanggal === dateStr).length : 0) +
-          (state.watertruckState?.jobs ? state.watertruckState.jobs.filter(j => j.tanggal === dateStr).length : 0)
-        );
-        if (countInDate > 0) return;
-        if (window.globalDataCache?.loadedDates?.has(dateStr)) return;
+        window._dateLastFetched = window._dateLastFetched || {};
+        const lastFetchTime = window._dateLastFetched[dateStr] || 0;
+        if (Date.now() - lastFetchTime < 8000) return;
       }
+      window._dateLastFetched = window._dateLastFetched || {};
+      window._dateLastFetched[dateStr] = Date.now();
 
       try {
         console.log(`[Supabase On-Demand] Memuat jadwal untuk tanggal ${dateStr} (force: ${force})...`);
@@ -18054,12 +18052,10 @@
     window.generateMonthlySchedule = generateMonthlySchedule;
 
     /**
-     * Pengaman Jadwal Bulanan Tanggal 1:
-     * DILARANG KERAS menutup atau mendowngrade jadwal menjadi NON_ACH secara sepihak!
-     * Tugas pembersihan jadwal lama diserahkan sepenuhnya ke rekonsiliasi riwayat selesai.
+     * Reset Otomatis Jadwal Bulanan Setiap Tanggal 1 Pukul 00:00 (DINONAKTIFKAN PERMANEN)
+     * Tidak boleh ada fungsi yang mengubah status riwayat pekerjaan menjadi NON ACH secara sepihak.
      */
     function checkAndExecuteMonthlyReset() {
-      // Dinonaktifkan secara permanen: Mencegah perubahan liar jadwal close/done menjadi NON_ACH.
       return;
     }
 
@@ -18067,11 +18063,12 @@
      * Evaluator Pending & Transisi Status Otomatis untuk Seluruh Kategori Pekerjaan
      */
     function autoEvaluatePendingJobs(showNotification = false) {
-      if (typeof document !== 'undefined' && document.hidden) return 0; // Hemat kuota log saat tab di background
-      if (!state._initialJobsReconciled) {
-        // Tunda evaluasi sampai rekonsiliasi data dari Supabase selesai agar tidak ada push data zombie ke cloud
-        return 0;
-      }
+      try {
+        if (typeof document !== 'undefined' && document.hidden) return 0; // Hemat kuota log saat tab di background
+        if (!state._initialJobsReconciled) {
+          // Tunda evaluasi sampai rekonsiliasi data dari Supabase selesai agar tidak ada push data zombie ke cloud
+          return 0;
+        }
       if (!state.lubetruckState || !Array.isArray(state.lubetruckState.jobs)) return 0;
 
       // PENGAMAN MUTLAK ANTI-FALSE-POSITIVE & ANTI-ZOMBIE:
@@ -18574,7 +18571,11 @@
       }
 
       return countMoved + countClosed;
+    } catch (evalErr) {
+      console.warn('[autoEvaluatePendingJobs Safe Catch]', evalErr);
+      return 0;
     }
+  }
 
     function evaluateShift1PendingJobs() {
       const affected = autoEvaluatePendingJobs(true);
@@ -21344,12 +21345,12 @@
       const dir = sortConfig?.direction;
       const activeColor = isWt ? 'text-cyan-600' : 'text-emerald-600';
       if (current !== col) {
-        return '<span class="inline-block ml-1 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition select-none">?</span>';
+        return '<svg class="inline-block ml-1 w-2.5 h-2.5 text-slate-300 group-hover:text-slate-500 transition select-none shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>';
       }
       if (dir === 'asc') {
-        return `<span class="inline-block ml-1 ${activeColor} font-black text-[10px] leading-none select-none">?</span>`;
+        return `<svg class="inline-block ml-1 w-2.5 h-2.5 ${activeColor} transition select-none shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>`;
       }
-      return `<span class="inline-block ml-1 ${activeColor} font-black text-[10px] leading-none select-none">?</span>`;
+      return `<svg class="inline-block ml-1 w-2.5 h-2.5 ${activeColor} transition select-none shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>`;
     }
     window.renderSchedSortIcon = renderSchedSortIcon;
 
@@ -21730,7 +21731,7 @@
         const isWashingCoalRom = (jCat === 'coal' || jCat === 'rom');
         const jRound = (typeof getJobWashingRound === 'function')
           ? getJobWashingRound(j)
-          : (parseInt(j.washingRound || j.washing_round || 1, 10) || 1);
+          : (String(j.id || '').includes('-W2') ? 2 : (parseInt(j.washingRound || j.washing_round || 1, 10) || 1));
 
         const inHistory = Array.isArray(state.jobHistory) && state.jobHistory.some(h => {
           if (String(h.job_id) === cleanJobId || String(h.id) === cleanJobId) return true;
@@ -21741,7 +21742,7 @@
           if (isWashingCoalRom) {
             const hRound = (typeof getJobWashingRound === 'function')
               ? getJobWashingRound(h)
-              : (parseInt(h.washing_round || h.washingRound || (String(h.id || '').includes('-W2') ? 2 : 1), 10) || 1);
+              : (String(h.id || '').includes('-W2') ? 2 : (parseInt(h.washing_round || h.washingRound || 1, 10) || 1));
             return hUnit && jUnit && hUnit === jUnit && hDate === jDate && hShift === jShift && hCat === jCat && hRound === jRound;
           }
           return hUnit && jUnit && hUnit === jUnit && hDate === jDate && hShift === jShift && hCat === jCat;
@@ -21817,8 +21818,8 @@
         header.className = 'px-3.5 py-2.5 bg-emerald-800 text-white flex items-center justify-between shadow-2xs';
         header.innerHTML = `
           <div class="flex items-center space-x-2">
-            <span class="text-sm">??</span>
-            <span class="font-black text-xs uppercase tracking-tight">${catTitles[activeCat] || 'LUBETRUCK SCHEDULE'} • ${formattedDateText.toUpperCase()}${cycleBadgeHtml}</span>
+            <svg class="w-4 h-4 text-emerald-200 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <span class="font-black text-xs uppercase tracking-tight">${catTitles[activeCat] || 'LUBETRUCK SCHEDULE'} \u2022 ${formattedDateText.toUpperCase()}${cycleBadgeHtml}</span>
           </div>
           <div class="flex items-center space-x-2">
             <span class="text-[11px] font-bold text-emerald-100">Total: ${jobs.length} Unit</span>
@@ -22033,7 +22034,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           <div class="flex items-center space-x-2">
             <span class="w-2 h-2 rounded-full ${shiftNum === 1 ? 'bg-amber-400' : 'bg-cyan-200'}"></span>
             <span class="font-black text-xs uppercase tracking-tight">${shiftTitle}</span>
-            ${isMp && isThisShiftActive ? `<span class="ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-white/20 text-white animate-pulse">? SHIFT AKTIF</span>` : ''}
+            ${isMp && isThisShiftActive ? `<span class="ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-white/20 text-white animate-pulse">\u25CF SHIFT AKTIF</span>` : ''}
           </div>
           <div class="flex items-center space-x-2">
             <span class="text-[11px] font-bold text-emerald-100">Total: ${shiftJobs.length} Job</span>
@@ -22360,7 +22361,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         const isWashingCoalRom = (jCat === 'coal' || jCat === 'rom');
         const jRound = (typeof getJobWashingRound === 'function')
           ? getJobWashingRound(j)
-          : (parseInt(j.washingRound || j.washing_round || 1, 10) || 1);
+          : (String(j.id || '').includes('-W2') ? 2 : (parseInt(j.washingRound || j.washing_round || 1, 10) || 1));
 
         const inHistory = Array.isArray(state.jobHistory) && state.jobHistory.some(h => {
           if (String(h.job_id) === cleanJobId || String(h.id) === cleanJobId) return true;
@@ -22371,7 +22372,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           if (isWashingCoalRom) {
             const hRound = (typeof getJobWashingRound === 'function')
               ? getJobWashingRound(h)
-              : (parseInt(h.washing_round || h.washingRound || (String(h.id || '').includes('-W2') ? 2 : 1), 10) || 1);
+              : (String(h.id || '').includes('-W2') ? 2 : (parseInt(h.washing_round || h.washingRound || 1, 10) || 1));
             return hUnit && jUnit && hUnit === jUnit && hDate === jDate && hShift === jShift && hCat === jCat && hRound === jRound;
           }
           return hUnit && jUnit && hUnit === jUnit && hDate === jDate && hShift === jShift && hCat === jCat;
@@ -22426,8 +22427,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         dateHeader.className = 'px-3.5 py-2.5 bg-cyan-700 text-white flex items-center justify-between shadow-2xs';
         dateHeader.innerHTML = `
           <div class="flex items-center space-x-2">
-            <span class="text-sm">??</span>
-            <span class="font-black text-xs uppercase tracking-tight">JADWAL WASHING NON-COAL • ${formattedDateText.toUpperCase()}</span>
+            <svg class="w-4 h-4 text-cyan-200 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <span class="font-black text-xs uppercase tracking-tight">JADWAL WASHING NON-COAL \u2022 ${formattedDateText.toUpperCase()}</span>
           </div>
           <div class="flex items-center space-x-2">
             <span class="text-[10px] font-bold bg-white/20 px-2.5 py-0.5 rounded-full text-white">Siklus Mingguan</span>
@@ -22631,7 +22632,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           <div class="flex items-center space-x-2">
             <span class="w-2 h-2 rounded-full ${shiftNum === 1 ? 'bg-amber-400' : 'bg-cyan-200'}"></span>
             <span class="font-black text-xs uppercase tracking-tight">${shiftTitle}</span>
-            ${isMp && isThisShiftActive ? `<span class="ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-white/20 text-white animate-pulse">? SHIFT AKTIF</span>` : ''}
+            ${isMp && isThisShiftActive ? `<span class="ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-white/20 text-white animate-pulse">\u25CF SHIFT AKTIF</span>` : ''}
           </div>
           <div class="flex items-center space-x-2">
             <span class="text-[11px] font-bold text-cyan-100">Total: ${shiftJobs.length} Job</span>
@@ -27699,7 +27700,7 @@ Keterangan : ${keterangan}`;
       if (waktuDisplayEl) {
         const dateRaw = job.tanggal || job.tanggal_rencana || job.tanggalRealisasi || job.tanggal_eksekusi || '';
         const tglStr = (typeof formatDisplayDate === 'function') ? formatDisplayDate(dateRaw) : (dateRaw || '-');
-        waktuDisplayEl.textContent = `${tglStr} • ${job.waktu || '-'}`;
+        waktuDisplayEl.textContent = `${tglStr} \u2022 ${job.waktu || '-'}`;
       }
       const lokasiDisplayEl = document.getElementById('detail-modal-lokasi-display');
       if (lokasiDisplayEl) {
@@ -31352,12 +31353,12 @@ Keterangan : ${keterangan}`;
       const current = state.completedSort?.column;
       const dir = state.completedSort?.direction;
       if (current !== col) {
-        return '<span class="inline-block ml-0.5 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition">?</span>';
+        return '<svg class="inline-block ml-0.5 w-2.5 h-2.5 text-slate-300 group-hover:text-slate-500 transition select-none shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>';
       }
       if (dir === 'asc') {
-        return '<span class="inline-block ml-0.5 text-emerald-600 font-black text-[10px] leading-none">?</span>';
+        return '<svg class="inline-block ml-0.5 w-2.5 h-2.5 text-emerald-600 transition select-none shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>';
       }
-      return '<span class="inline-block ml-0.5 text-emerald-600 font-black text-[10px] leading-none">?</span>';
+      return '<svg class="inline-block ml-0.5 w-2.5 h-2.5 text-emerald-600 transition select-none shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>';
     }
     window.renderCompletedSortIcon = renderCompletedSortIcon;
 
@@ -36163,7 +36164,7 @@ Keterangan : ${keterangan}`;
       if (typeEl) typeEl.textContent = item.type_model || 'Unit';
 
       const tglWaktuEl = document.getElementById('repdetail-tanggal-waktu');
-      if (tglWaktuEl) tglWaktuEl.textContent = `${displayDate} • ${jamVal} WITA`;
+      if (tglWaktuEl) tglWaktuEl.textContent = `${displayDate} \u2022 ${jamVal} WITA`;
 
       const statusBadge = document.getElementById('repdetail-status-badge');
       if (statusBadge) {
