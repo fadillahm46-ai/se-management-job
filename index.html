@@ -13105,11 +13105,20 @@
           jCat === 'unscheduled' || jCat === 'request' || jCat === 'job_request';
 
         const baseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(jId) : jId.replace(/-\d{4}$/, '');
+        const isWtJob = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(j) : (jCat === 'coal' || jCat === 'rom' || jCat === 'non_coal');
+        const round = isWtJob ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(j) : (parseInt(j.washingRound || j.washing_round || 1, 10))) : 0;
+        const roundSuffix = (isWtJob && round) ? `_W${round}` : '';
         const uKey = isUnsch
           ? (baseId || ((jNo && jDate) ? `${jNo}_${jDate}_${jShift}_${jCat}_${j.jamStart || j.jam_start || ''}` : jId))
-          : ((jNo && jDate) ? `${jNo}_${jDate}_${jShift}_${jCat}` : jId);
+          : ((jNo && jDate) ? `${jNo}_${jDate}_${jShift}_${jCat}${roundSuffix}` : jId);
 
-        const ex = (jId && existingJobMap.get(jId)) || (baseId && existingJobMap.get(baseId)) || (uKey && existingJobMap.get(uKey));
+        let ex = (jId && existingJobMap.get(jId)) || (baseId && existingJobMap.get(baseId)) || (uKey && existingJobMap.get(uKey));
+        if (ex && isWtJob) {
+          const exRound = (typeof getJobWashingRound === 'function') ? getJobWashingRound(ex) : (parseInt(ex.washingRound || ex.washing_round || 1, 10) || 1);
+          if (round && exRound && round !== exRound) {
+            ex = null;
+          }
+        }
         if (ex) {
           if (isFromHistory) {
             const sf = String(j.status_final || j.status || '').toLowerCase().trim();
@@ -17345,12 +17354,16 @@
       }
       const cleanId = histId;
 
-      const existingIdx = state.jobHistory.findIndex(h =>
-        h.id === histId ||
-        h.job_id === cleanBaseId ||
-        h.id === cleanBaseId ||
-        String(h.id || '').startsWith(cleanBaseId + '-')
-      );
+      const existingIdx = state.jobHistory.findIndex(h => {
+        if (!h) return false;
+        if (h.id === histId || h.job_id === cleanBaseId || h.id === cleanBaseId) return true;
+        const hIdStr = String(h.id || '');
+        if (hIdStr.startsWith(cleanBaseId + '-')) {
+          const suffix = hIdStr.slice(cleanBaseId.length);
+          if (/^-\d{4}$/.test(suffix)) return true;
+        }
+        return false;
+      });
 
       // Proteksi Anti-Downgrade: Jika job sudah pernah berstatus ACHIEVED / SERVICE / BREAKDOWN,
       // DILARANG KERAS ditimpa menjadi NON_ACH oleh evaluasi otomatis atau sinkronisasi background!
@@ -17841,7 +17854,14 @@
 
       const shiftPart = parseInt(shift || job.shift || job.shift_rencana || 1, 10) || 1;
       const cleanLambung = String(job.noLambung || job.no_lambung || job.kodeUnit || job.unit || 'UNIT').trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || 'UNIT';
-      const round = parseInt(washingRound || job.washingRound || job.washing_round || 1, 10);
+      let round = parseInt(washingRound !== null && washingRound !== undefined ? washingRound : (job.washingRound !== undefined ? job.washingRound : job.washing_round), 10);
+      if (isNaN(round) && typeof getJobWashingRound === 'function') {
+        round = getJobWashingRound(job);
+      }
+      const rawIdStr = String(job.id || job.job_id || job.noId || job.no_id || '').toUpperCase();
+      if (rawIdStr.includes('-W2-') || rawIdStr.endsWith('-W2') || rawIdStr.includes('_W2')) {
+        round = 2;
+      }
       const roundPart = (isWt && round === 2) ? '-W2' : '';
 
       return `${prefix}-${typeCode}-${cleanDate}-${shiftPart}-${cleanLambung}${roundPart}`;
@@ -18034,45 +18054,13 @@
     window.generateMonthlySchedule = generateMonthlySchedule;
 
     /**
-     * Reset Otomatis Jadwal Bulanan Setiap Tanggal 1 Pukul 00:00
+     * Pengaman Jadwal Bulanan Tanggal 1:
+     * DILARANG KERAS menutup atau mendowngrade jadwal menjadi NON_ACH secara sepihak!
+     * Tugas pembersihan jadwal lama diserahkan sepenuhnya ke rekonsiliasi riwayat selesai.
      */
     function checkAndExecuteMonthlyReset() {
-      const today = getEffectiveTodayString();
-      const currentDay = parseDateString(today).getDate();
-      const currentMonthKey = today.slice(0, 7);
-      const lastResetMonth = safeStorage.getItem('SE_LAST_MONTHLY_RESET');
-
-      if (currentDay === 1 && lastResetMonth !== currentMonthKey) {
-        console.log(`[Monthly Reset] Melakukan reset otomatis jadwal bulanan untuk ${currentMonthKey}...`);
-        const collections = [
-          state.lubetruckState?.jobs || [],
-          state.watertruckState?.jobs || []
-        ];
-
-        let resetCount = 0;
-        collections.forEach(list => {
-          list.forEach(j => {
-            if (j.tanggal && j.tanggal < today) {
-              const s = (j.status || '').toLowerCase();
-              if (s !== 'ach' && s !== 'achieved' && s !== 'done' && s !== 'non_ach' && s !== 'non-ach') {
-                j.status = 'non_ach';
-                j.isPending = false;
-                j.alasanNonAch = 'Non ACH: Reset otomatis pergantian bulan tanggal 1';
-                j.keterangan = 'Non ACH: Reset tanggal 1';
-                lockJobHistorySnapshot(j, 'NON_ACH', j.alasanNonAch);
-                if (state.supabaseClient && typeof syncJobToSupabase === 'function') syncJobToSupabase(j);
-                resetCount++;
-              }
-            }
-          });
-        });
-
-        safeStorage.setItem('SE_LAST_MONTHLY_RESET', currentMonthKey);
-        saveDatabaseSync();
-        if (resetCount > 0) {
-          console.log(`[Monthly Reset Selesai] ${resetCount} jadwal bulan sebelumnya ditutup NON ACH.`);
-        }
-      }
+      // Dinonaktifkan secara permanen: Mencegah perubahan liar jadwal close/done menjadi NON_ACH.
+      return;
     }
 
     /**
@@ -20467,14 +20455,16 @@
 
     function getJobWashingRound(job) {
       if (!job) return 1;
+      const idStr = String(job.job_id || job.no_id || job.noId || job.id || '').toUpperCase();
+      if (idStr.includes('-W2-') || idStr.endsWith('-W2') || idStr.includes('_W2')) return 2;
+      if (idStr.includes('-W1-') || idStr.endsWith('-W1') || idStr.includes('_W1')) return 1;
+
       const explicitRound = parseInt(job.washingRound !== undefined ? job.washingRound : job.washing_round, 10);
       if (explicitRound === 2) return 2;
       if (explicitRound === 1) return 1;
-      const idStr = String(job.id || '');
-      if (idStr.includes('-W2-') || idStr.endsWith('-W2') || idStr.includes('_W2')) return 2;
-      if (idStr.includes('-W1-') || idStr.endsWith('-W1') || idStr.includes('_W1')) return 1;
-      const waktuStr = String(job.waktu || job.waktu_rencana || '');
-      if (waktuStr.includes('11:30') || waktuStr.includes('12:00') || waktuStr.includes('23:30') || waktuStr.includes('00:00')) return 2;
+
+      const waktuStr = String(job.waktu || job.waktu_rencana || job.jamStart || job.jam_start || '');
+      if (/(?:11:[2-5]\d|12:\d\d|13:\d\d|14:\d\d|23:[3-5]\d|00:\d\d|01:\d\d|02:\d\d)/.test(waktuStr)) return 2;
       return 1;
     }
     window.getJobWashingRound = getJobWashingRound;
@@ -31062,32 +31052,55 @@ Keterangan : ${keterangan}`;
       // CABANG 2: KHUSUS SCHEDULE REGULER (Lubetruck & Water Truck)
       // ----------------------------------------------------------------------
       const typeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(j) : (isWt ? 'WSC' : 'GRS');
-      const round = parseInt(j.washingRound || j.washing_round || 1, 10);
-      const roundPart = (isWt && round === 2) ? '-W2' : '';
+      let isRound2 = false;
+      if (isWt) {
+        const curUpper = curId.toUpperCase();
+        if (curUpper.includes('-W2-') || curUpper.endsWith('-W2') || curUpper.includes('_W2')) {
+          isRound2 = true;
+        } else if (typeof getJobWashingRound === 'function') {
+          isRound2 = (getJobWashingRound(j) === 2);
+        } else {
+          const explicitRound = parseInt(j.washingRound !== undefined ? j.washingRound : j.washing_round, 10);
+          isRound2 = (explicitRound === 2);
+        }
+      }
+      const roundPart = (isWt && isRound2) ? '-W2' : '';
       const baseNoId = `${prefix}-${typeCode}-${datePart}-${shiftPart}-${cleanLambung}${roundPart}`;
 
       if (isActioned || hasRealizationTime) {
-        // Jika curId sudah berformat lengkap dengan jam menit di belakang nomor lambung (contoh LT-CAC-24102026-1-D85185-0628 atau format lama bertitik -06.28)
-        const mFull = curId.match(new RegExp(`^${prefix}-[A-Z0-9]+-\\d{8}-\\d-${cleanLambung}${roundPart}-(\\d{2})[.:]?(\\d{2})$`, 'i'));
+        // Jika curId sudah berformat lengkap dengan jam menit (mendukung opsional -W2)
+        const mFull = curId.match(new RegExp(`^${prefix}-[A-Z0-9]+-\\d{8}-\\d-${cleanLambung}(?:-W2)?-(\\d{2})[.:]?(\\d{2})$`, 'i'));
         let timePart = '';
         if (mFull) {
           timePart = `${mFull[1]}${mFull[2]}`;
+          if (curId.toUpperCase().includes('-W2-')) {
+            isRound2 = true;
+          }
         } else {
           timePart = getJobTimeHHmm(j);
         }
-        const fullId = `${baseNoId}-${timePart}`;
+        const activeRoundPart = (isWt && isRound2) ? '-W2' : '';
+        const fullId = `${prefix}-${typeCode}-${datePart}-${shiftPart}-${cleanLambung}${activeRoundPart}-${timePart}`;
         if (j && typeof j === 'object') {
           j.job_id = fullId;
           j.noId = fullId;
           j.no_id = fullId;
+          if (isWt) {
+            j.washingRound = isRound2 ? 2 : 1;
+            j.washing_round = isRound2 ? 2 : 1;
+          }
         }
         return fullId;
       }
 
-      // Jika masih jadwal aktif belum di-action: format menyertakan nomor lambung tanpa jam (LT-CAC-24102026-1-D85183)
+      // Jika masih jadwal aktif belum di-action: format menyertakan nomor lambung tanpa jam (WT-WSC-01112026-1-E1225-W2)
       if (j && typeof j === 'object') {
         j.noId = baseNoId;
         j.no_id = baseNoId;
+        if (isWt) {
+          j.washingRound = isRound2 ? 2 : 1;
+          j.washing_round = isRound2 ? 2 : 1;
+        }
         if (!j.id || /^LT-[A-Z0-9]+-\d{8}-\d$/i.test(String(j.id)) || /^WT-[A-Z0-9]+-\d{8}-\d$/i.test(String(j.id))) {
           j.id = baseNoId;
         }
@@ -31522,15 +31535,30 @@ Keterangan : ${keterangan}`;
           if (j.job_id) existingJobMap.set(String(j.job_id), j);
           if (j.noId && j.noId !== '-') existingJobMap.set(String(j.noId), j);
           if (j.no_id && j.no_id !== '-') existingJobMap.set(String(j.no_id), j);
-          const uKey = `${String(j.noLambung || j.no_lambung || '').trim().toUpperCase()}_${j.tanggalRealisasi || j.tanggal || ''}_${j.shift || 1}_${String(j.cat || '').toLowerCase().trim()}`;
+          const isWtJob = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(j) : false;
+          const round = isWtJob ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(j) : (parseInt(j.washingRound || j.washing_round || 1, 10))) : 0;
+          const roundSuffix = (isWtJob && round) ? `_W${round}` : '';
+          const uKey = `${String(j.noLambung || j.no_lambung || '').trim().toUpperCase()}_${j.tanggalRealisasi || j.tanggal || ''}_${j.shift || 1}_${String(j.cat || '').toLowerCase().trim()}${roundSuffix}`;
           if (uKey) existingJobMap.set(uKey, j);
         });
 
         state.jobHistory.forEach(h => {
           const hid = String(h.job_id || h.no_id || h.id || '');
           if (!hid) return;
-          const hUnitKey = `${String(h.no_lambung || '').trim().toUpperCase()}_${h.tanggal_eksekusi || h.tanggal_rencana || ''}_${h.shift_rencana || 1}_${String(h.cat || '').toLowerCase().trim()}`;
-          const ex = existingJobMap.get(hid) || existingJobMap.get(String(h.no_id || '')) || existingJobMap.get(String(h.job_id || '')) || existingJobMap.get(hUnitKey);
+          const isWtHist = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(h) : false;
+          const hRound = isWtHist ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(h) : (parseInt(h.washing_round || h.washingRound || 1, 10))) : 0;
+          const hRoundSuffix = (isWtHist && hRound) ? `_W${hRound}` : '';
+          const hUnitKey = `${String(h.no_lambung || '').trim().toUpperCase()}_${h.tanggal_eksekusi || h.tanggal_rencana || ''}_${h.shift_rencana || 1}_${String(h.cat || '').toLowerCase().trim()}${hRoundSuffix}`;
+          let ex = existingJobMap.get(hid) || existingJobMap.get(String(h.no_id || '')) || existingJobMap.get(String(h.job_id || '')) || existingJobMap.get(hUnitKey);
+
+          // PENGAMAN MUTLAK: Jika record Water Truck memiliki putaran cuci (round) berbeda, JANGAN campur aduk ex dengan h!
+          if (ex && isWtHist) {
+            const exRound = (typeof getJobWashingRound === 'function') ? getJobWashingRound(ex) : (parseInt(ex.washingRound || ex.washing_round || 1, 10) || 1);
+            if (hRound && exRound && hRound !== exRound) {
+              ex = null;
+            }
+          }
+
           // PENGAMAN MUTLAK: Pencocokan hanya boleh jika shift-nya selaras (Shift 2 DILARANG menimpa Shift 1!)
           const isShiftMatched = !ex || !h.shift_rencana || !ex.shift || String(ex.shift) === String(h.shift_rencana);
 
@@ -31586,6 +31614,8 @@ Keterangan : ${keterangan}`;
               noLambung: h.no_lambung,
               typeUnit: h.type_unit,
               cat: h.cat,
+              washingRound: hRound || 1,
+              washing_round: hRound || 1,
               tanggal: h.tanggal_rencana,
               tanggalRealisasi: h.tanggal_eksekusi,
               shift: h.shift_rencana,
@@ -31637,10 +31667,13 @@ Keterangan : ${keterangan}`;
         return getRank(b) - getRank(a);
       });
 
-      // Deduplikasi Mutlak: Pastikan setiap unit per shift dan kategori hanya muncul tepat 1 baris
+      // Deduplikasi Mutlak: Pastikan setiap unit per shift, kategori, dan putaran cuci muncul tepat 1 baris
       const seenCompletedKeys = new Set();
       allCompleted = allCompleted.filter(j => {
-        const uKey = `${String(j.noLambung || j.no_lambung || '').trim().toUpperCase()}_${j.tanggalRealisasi || j.tanggal || ''}_${j.shift || 1}_${String(j.cat || '').toLowerCase().trim()}`;
+        const isWtJob = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(j) : false;
+        const round = isWtJob ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(j) : (parseInt(j.washingRound || j.washing_round || 1, 10))) : 0;
+        const roundSuffix = (isWtJob && round) ? `_W${round}` : '';
+        const uKey = `${String(j.noLambung || j.no_lambung || '').trim().toUpperCase()}_${j.tanggalRealisasi || j.tanggal || ''}_${j.shift || 1}_${String(j.cat || '').toLowerCase().trim()}${roundSuffix}`;
         if (seenCompletedKeys.has(uKey)) return false;
         seenCompletedKeys.add(uKey);
         return true;
@@ -42261,16 +42294,6 @@ Keterangan : ${keterangan}`;
           const statusEl = document.getElementById('header-db-status');
           if (statusEl) statusEl.textContent = 'Online';
 
-          // Auto-sync / upsert akun standar (admin, bsc, track, cmc) ke Supabase jika belum ada
-          try {
-            state.supabaseClient.from('users').upsert([
-              { nrp: 'admin', nama: 'Admin Operasional', role: 'admin', jabatan: 'Admin / Planner', password: 'admin123', status_aktif: true },
-              { nrp: 'bsc', nama: 'Base Control', role: 'basecontrol', jabatan: 'Base Control', password: 'bsc123', status_aktif: true },
-              { nrp: 'track', nama: 'Tim Track Lapangan', role: 'track', jabatan: 'Tim Track', password: 'track123', status_aktif: true },
-              { nrp: 'cmc', nama: 'CMC Operasional', role: 'cmc', jabatan: 'CMC', password: 'cmc123', status_aktif: true }
-            ], { onConflict: 'nrp' }).then(() => { }).catch(() => { });
-          } catch (eSyncDef) { }
-
           // Cek apakah data master sudah ada di cache lokal (Master Data TTL Cache)
           // Cek role pengguna: apakah operator lapangan?
           const userRole = state.currentUser?.role || 'user';
@@ -47398,15 +47421,30 @@ Keterangan : ${keterangan}`;
           if (j.job_id) existingJobMap.set(String(j.job_id), j);
           if (j.noId && j.noId !== '-') existingJobMap.set(String(j.noId), j);
           if (j.no_id && j.no_id !== '-') existingJobMap.set(String(j.no_id), j);
-          const uKey = `${String(j.noLambung || j.no_lambung || '').trim().toUpperCase()}_${j.tanggalRealisasi || j.tanggal || ''}_${j.shift || 1}_${String(j.cat || '').toLowerCase().trim()}`;
+          const isWtJob = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(j) : false;
+          const round = isWtJob ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(j) : (parseInt(j.washingRound || j.washing_round || 1, 10))) : 0;
+          const roundSuffix = (isWtJob && round) ? `_W${round}` : '';
+          const uKey = `${String(j.noLambung || j.no_lambung || '').trim().toUpperCase()}_${j.tanggalRealisasi || j.tanggal || ''}_${j.shift || 1}_${String(j.cat || '').toLowerCase().trim()}${roundSuffix}`;
           if (uKey) existingJobMap.set(uKey, j);
         });
 
         state.jobHistory.forEach(h => {
           const hid = String(h.job_id || h.no_id || h.id || '');
           if (!hid) return;
-          const hUnitKey = `${String(h.no_lambung || '').trim().toUpperCase()}_${h.tanggal_eksekusi || h.tanggal_rencana || ''}_${h.shift_rencana || 1}_${String(h.cat || '').toLowerCase().trim()}`;
-          const ex = existingJobMap.get(hid) || existingJobMap.get(String(h.no_id || '')) || existingJobMap.get(String(h.job_id || '')) || existingJobMap.get(hUnitKey);
+          const isWtHist = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(h) : false;
+          const hRound = isWtHist ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(h) : (parseInt(h.washing_round || h.washingRound || 1, 10))) : 0;
+          const hRoundSuffix = (isWtHist && hRound) ? `_W${hRound}` : '';
+          const hUnitKey = `${String(h.no_lambung || '').trim().toUpperCase()}_${h.tanggal_eksekusi || h.tanggal_rencana || ''}_${h.shift_rencana || 1}_${String(h.cat || '').toLowerCase().trim()}${hRoundSuffix}`;
+          let ex = existingJobMap.get(hid) || existingJobMap.get(String(h.no_id || '')) || existingJobMap.get(String(h.job_id || '')) || existingJobMap.get(hUnitKey);
+
+          // PENGAMAN MUTLAK: Jika record Water Truck memiliki putaran cuci (round) berbeda, JANGAN campur aduk ex dengan h!
+          if (ex && isWtHist) {
+            const exRound = (typeof getJobWashingRound === 'function') ? getJobWashingRound(ex) : (parseInt(ex.washingRound || ex.washing_round || 1, 10) || 1);
+            if (hRound && exRound && hRound !== exRound) {
+              ex = null;
+            }
+          }
+
           const isShiftMatched = !ex || !h.shift_rencana || !ex.shift || String(ex.shift) === String(h.shift_rencana);
 
           if (ex && isShiftMatched) {
@@ -47440,6 +47478,8 @@ Keterangan : ${keterangan}`;
               noLambung: h.no_lambung,
               typeUnit: h.type_unit,
               cat: h.cat,
+              washingRound: hRound || 1,
+              washing_round: hRound || 1,
               tanggal: h.tanggal_rencana,
               tanggalRealisasi: h.tanggal_eksekusi,
               shift: h.shift_rencana,
@@ -47484,7 +47524,10 @@ Keterangan : ${keterangan}`;
 
       const seenCompletedKeys = new Set();
       allCompleted = allCompleted.filter(j => {
-        const uKey = `${String(j.noLambung || j.no_lambung || '').trim().toUpperCase()}_${j.tanggalRealisasi || j.tanggal || ''}_${j.shift || 1}_${String(j.cat || '').toLowerCase().trim()}`;
+        const isWtJob = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(j) : false;
+        const round = isWtJob ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(j) : (parseInt(j.washingRound || j.washing_round || 1, 10))) : 0;
+        const roundSuffix = (isWtJob && round) ? `_W${round}` : '';
+        const uKey = `${String(j.noLambung || j.no_lambung || '').trim().toUpperCase()}_${j.tanggalRealisasi || j.tanggal || ''}_${j.shift || 1}_${String(j.cat || '').toLowerCase().trim()}${roundSuffix}`;
         if (seenCompletedKeys.has(uKey)) return false;
         seenCompletedKeys.add(uKey);
         return true;
