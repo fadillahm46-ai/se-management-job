@@ -12001,6 +12001,9 @@
         safeStorage.removeItem('SE_UNSCH_LT_JOBS');
         safeStorage.removeItem('SE_UNSCH_WT_JOBS');
         safeStorage.removeItem('SE_AIR_CLEANER');
+        // Bersihkan cache foto salah sasaran untuk job Non-ACH Washing ROM EB56001AMM
+        safeStorage.removeItem('SE_JOB_FOTOS_WT-WSC-02112026-1-EB56001AMM-W2-1843');
+        safeStorage.removeItem('SE_JOB_FOTOS_WT-WSC-02112026-1-EB56001AMM-W2');
 
         // RENDER-FIRST CACHE RESTORE: Pulihkan transaksi terbaru & status aktif dari LocalStorage
         try {
@@ -18221,10 +18224,14 @@
         cleanDate = '26102026';
       }
 
-      const shiftPart = parseInt(shift || job.shift || job.shift_rencana || 1, 10) || 1;
+      const shiftPart = (shift !== null && shift !== undefined)
+        ? (parseInt(shift, 10) || 1)
+        : ((typeof extractShiftFromJob === 'function') ? extractShiftFromJob(job) : (parseInt(job.shift || job.shift_rencana, 10) || 1));
       const cleanLambung = String(job.noLambung || job.no_lambung || job.kodeUnit || job.unit || 'UNIT').trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || 'UNIT';
       let round = parseInt(washingRound !== null && washingRound !== undefined ? washingRound : (job.washingRound !== undefined ? job.washingRound : job.washing_round), 10);
-      if (isNaN(round) && typeof getJobWashingRound === 'function') {
+      if (isNaN(round) && typeof extractRoundFromJob === 'function') {
+        round = extractRoundFromJob(job);
+      } else if (isNaN(round) && typeof getJobWashingRound === 'function') {
         round = getJobWashingRound(job);
       }
       const rawIdStr = String(job.id || job.job_id || job.noId || job.no_id || '').toUpperCase();
@@ -20450,10 +20457,12 @@
       // 1. Ambil unit di Washing 1 untuk tanggal & shift ini
       const allWtJobs = state.watertruckState?.jobs || [];
       const sourceJobs = allWtJobs.filter(j => {
+        const jS = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (parseInt(j.shift, 10) || 1);
+        const jR = (typeof extractRoundFromJob === 'function') ? extractRoundFromJob(j) : (parseInt(j.washingRound, 10) || 1);
         return (j.cat === activeCat) &&
           (j.tanggal === selectedDate) &&
-          (parseInt(j.shift, 10) === shift) &&
-          (!j.washingRound || parseInt(j.washingRound, 10) === 1);
+          (jS === shift) &&
+          (jR === 1);
       });
 
       if (sourceJobs.length === 0) {
@@ -20464,10 +20473,12 @@
       // 2. Cek unit yang sudah ada di Washing 2 (cegah duplikasi)
       const existingW2Lambungs = new Set(
         allWtJobs.filter(j => {
+          const jS = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (parseInt(j.shift, 10) || 1);
+          const jR = (typeof extractRoundFromJob === 'function') ? extractRoundFromJob(j) : (parseInt(j.washingRound, 10) || 1);
           return (j.cat === activeCat) &&
             (j.tanggal === selectedDate) &&
-            (parseInt(j.shift, 10) === shift) &&
-            (parseInt(j.washingRound, 10) === 2);
+            (jS === shift) &&
+            (jR === 2);
         }).map(j => (j.noLambung || '').trim().toUpperCase())
       );
 
@@ -21066,8 +21077,11 @@
           const defaultTime = (shift === 1) ? '11:30 s/d 12:00' : '23:30 s/d 00:00';
 
           const existingW2 = new Set(
-            allWtJobs.filter(j => j.cat === activeCat && j.tanggal === selectedDate && parseInt(j.shift, 10) === shift && parseInt(j.washingRound, 10) === 2)
-              .map(j => (j.noLambung || '').trim().toUpperCase())
+            allWtJobs.filter(j => {
+              const jS = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (parseInt(j.shift, 10) || 1);
+              const jR = (typeof extractRoundFromJob === 'function') ? extractRoundFromJob(j) : (parseInt(j.washingRound, 10) || 1);
+              return j.cat === activeCat && j.tanggal === selectedDate && jS === shift && jR === 2;
+            }).map(j => (j.noLambung || '').trim().toUpperCase())
           );
 
           sourceList.forEach(src => {
@@ -21113,13 +21127,18 @@
           });
         } else if (mode === 's1_to_s2') {
           const existingS2 = new Set(
-            allWtJobs.filter(j => j.cat === activeCat && j.tanggal === selectedDate && parseInt(j.shift, 10) === 2)
-              .map(j => `${(j.noLambung || '').trim().toUpperCase()}_W${j.washingRound || 1}`)
+            allWtJobs.filter(j => {
+              const jS = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (parseInt(j.shift, 10) || 1);
+              return j.cat === activeCat && j.tanggal === selectedDate && jS === 2;
+            }).map(j => {
+              const jR = (typeof extractRoundFromJob === 'function') ? extractRoundFromJob(j) : (parseInt(j.washingRound, 10) || 1);
+              return `${(j.noLambung || '').trim().toUpperCase()}_W${jR}`;
+            })
           );
 
           sourceList.forEach(src => {
             const cleanLambung = (src.noLambung || '').trim().toUpperCase();
-            const round = parseInt(src.washingRound, 10) || 1;
+            const round = (typeof extractRoundFromJob === 'function') ? extractRoundFromJob(src) : (parseInt(src.washingRound, 10) || 1);
             const key = `${cleanLambung}_W${round}`;
             if (skipExisting && existingS2.has(key)) return;
 
@@ -21893,12 +21912,14 @@
         const cleanJobId = String(j.id || '');
         const jUnit = String(j.noLambung || '').trim().toUpperCase();
         const jDate = j.tanggal || '';
-        const jShift = String(j.shift || 1);
+        const jShift = String((typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (j.shift || 1));
         const jCat = String(j.cat || '').toLowerCase().trim();
         const isWashingCoalRom = (jCat === 'coal' || jCat === 'rom');
-        const jRound = (typeof getJobWashingRound === 'function')
-          ? getJobWashingRound(j)
-          : (String(j.id || '').includes('-W2') ? 2 : (parseInt(j.washingRound || j.washing_round || 1, 10) || 1));
+        const jRound = (typeof extractRoundFromJob === 'function')
+          ? extractRoundFromJob(j)
+          : ((typeof getJobWashingRound === 'function')
+            ? getJobWashingRound(j)
+            : (String(j.id || '').includes('-W2') ? 2 : (parseInt(j.washingRound || j.washing_round || 1, 10) || 1)));
 
         const inHistory = Array.isArray(state.jobHistory) && state.jobHistory.some(h => {
           const hId = String(h.id || '').trim();
@@ -22193,7 +22214,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       // Render shift yang dipilih oleh filter (default: shift aktif saat ini untuk MP)
       let shiftsToRender = [];
       if (shiftFilter !== 'ALL') {
-        jobs = jobs.filter(j => Number(j.shift) === Number(shiftFilter));
+        jobs = jobs.filter(j => Number((typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (j.shift || 1)) === Number(shiftFilter));
         shiftsToRender = [Number(shiftFilter)];
       } else {
         shiftsToRender = [1, 2];
@@ -22201,7 +22222,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       shiftsToRender.forEach(shiftNum => {
         const isThisShiftActive = (Number(shiftNum) === Number(currentShiftNum));
-        const shiftJobs = jobs.filter(j => Number(j.shift) === Number(shiftNum));
+        const shiftJobs = jobs.filter(j => Number((typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (j.shift || 1)) === Number(shiftNum));
         const formattedShiftDate = formatDisplayDate(selectedDate);
         const shiftTitle = shiftNum === 1 ? `SHIFT 1 (${formattedShiftDate})` : `SHIFT 2 (${formattedShiftDate})`;
 
@@ -22536,12 +22557,14 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         const cleanJobId = String(j.id || '');
         const jUnit = String(j.noLambung || '').trim().toUpperCase();
         const jDate = j.tanggal || '';
-        const jShift = String(j.shift || 1);
+        const jShift = String((typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (j.shift || 1));
         const jCat = String(j.cat || '').toLowerCase().trim();
         const isWashingCoalRom = (jCat === 'coal' || jCat === 'rom');
-        const jRound = (typeof getJobWashingRound === 'function')
-          ? getJobWashingRound(j)
-          : (String(j.id || '').includes('-W2') ? 2 : (parseInt(j.washingRound || j.washing_round || 1, 10) || 1));
+        const jRound = (typeof extractRoundFromJob === 'function')
+          ? extractRoundFromJob(j)
+          : ((typeof getJobWashingRound === 'function')
+            ? getJobWashingRound(j)
+            : (String(j.id || '').includes('-W2') ? 2 : (parseInt(j.washingRound || j.washing_round || 1, 10) || 1)));
 
         const inHistory = Array.isArray(state.jobHistory) && state.jobHistory.some(h => {
           const hId = String(h.id || '').trim();
@@ -22809,7 +22832,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       // Sesuai Foto 5: Akses MP fleksibel melihat All Shift / Shift 1 / Shift 2
       let shiftsToRender = [];
       if (shiftFilter !== 'ALL') {
-        jobs = jobs.filter(j => Number(j.shift) === Number(shiftFilter));
+        jobs = jobs.filter(j => Number((typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (j.shift || 1)) === Number(shiftFilter));
         shiftsToRender = [Number(shiftFilter)];
       } else {
         shiftsToRender = [1, 2];
@@ -22817,7 +22840,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       shiftsToRender.forEach(shiftNum => {
         const isThisShiftActive = (Number(shiftNum) === Number(currentShiftNum));
-        const shiftJobs = jobs.filter(j => Number(j.shift) === Number(shiftNum));
+        const shiftJobs = jobs.filter(j => Number((typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (j.shift || 1)) === Number(shiftNum));
         const formattedShiftDate = formatDisplayDate(selectedDate);
         const shiftTitle = shiftNum === 1 ? `SHIFT 1 (${formattedShiftDate})` : `SHIFT 2 (${formattedShiftDate})`;
 
@@ -22848,7 +22871,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         ];
 
         rounds.forEach(round => {
-          const roundJobs = shiftJobs.filter(j => (typeof getJobWashingRound === 'function' ? getJobWashingRound(j) : (parseInt(j.washingRound, 10) || (String(j.id || '').includes('-W2-') ? 2 : 1))) === round.num);
+          const roundJobs = shiftJobs.filter(j => ((typeof extractRoundFromJob === 'function') ? extractRoundFromJob(j) : ((typeof getJobWashingRound === 'function') ? getJobWashingRound(j) : (parseInt(j.washingRound, 10) || (String(j.id || '').includes('-W2') ? 2 : 1)))) === round.num);
 
           const roundHeader = document.createElement('div');
           roundHeader.className = `px-3 py-1.5 ${round.bg} text-white flex items-center justify-between border-t border-teal-500/40`;
@@ -28009,15 +28032,20 @@ Keterangan : ${keterangan}`;
               'Foto 4: Area / Selesai'
             ];
             const isUnexecutedScheduled = (String(job.status || '').toLowerCase().trim() === 'scheduled' && !job.tanggalRealisasi && !job.jamStart && !job.jamEnd);
-            let fotosArray = (!isUnexecutedScheduled && Array.isArray(job.fotos) && job.fotos.some(p => p && p.trim())) ? job.fotos : [];
+            const jobStatusLower = String(job.status || '').toLowerCase().trim();
+            const isNonAchJob = (jobStatusLower === 'non_ach' || jobStatusLower === 'non-ach' || jobStatusLower === 'service' || jobStatusLower === 'bd' || jobStatusLower === 'breakdown' || jobStatusLower === 'parkir' || Boolean(job.alasanNonAch) || String(job.keterangan || '').includes('Non ACH') || String(job.keterangan || '').startsWith('[SERVICE]') || String(job.keterangan || '').startsWith('[BREAKDOWN]'));
+            
+            let fotosArray = (!isUnexecutedScheduled && !isNonAchJob && Array.isArray(job.fotos) && job.fotos.some(p => p && p.trim())) ? job.fotos : [];
             const standardNoId = (typeof getJobNoId === 'function') ? getJobNoId(job) : (job.noId || job.no_id);
-            if (isUnexecutedScheduled) {
+            if (isUnexecutedScheduled || isNonAchJob) {
               job.fotos = [];
               fotosArray = [];
               if (standardNoId && standardNoId !== '-') safeStorage.removeItem('SE_JOB_FOTOS_' + standardNoId);
               if (job.id) safeStorage.removeItem('SE_JOB_FOTOS_' + job.id);
+              const cleanBaseToPurge = String(standardNoId || job.id || '').replace(/-\d{4}$/, '');
+              if (cleanBaseToPurge) safeStorage.removeItem('SE_JOB_FOTOS_' + cleanBaseToPurge);
             }
-            if (!isUnexecutedScheduled && fotosArray.length === 0) {
+            if (!isUnexecutedScheduled && !isNonAchJob && fotosArray.length === 0) {
               try {
                 if (standardNoId && standardNoId !== '-') {
                   const savedNoId = safeStorage.getItem('SE_JOB_FOTOS_' + standardNoId);
@@ -28043,7 +28071,7 @@ Keterangan : ${keterangan}`;
             }
             // Pencarian cerdas ke cleanBaseId (jika di spreadsheet atau cache tersimpan tanpa -HHMM)
             const cleanBaseId = String(standardNoId || job.id || '').replace(/-\d{4}$/, '');
-            if (fotosArray.length === 0 && cleanBaseId) {
+            if (!isNonAchJob && fotosArray.length === 0 && cleanBaseId) {
               try {
                 const savedBase = safeStorage.getItem('SE_JOB_FOTOS_' + cleanBaseId);
                 if (savedBase) {
@@ -28055,7 +28083,7 @@ Keterangan : ${keterangan}`;
                 }
               } catch (e) { }
             }
-            if (fotosArray.length === 0 && state.jobPhotosMap) {
+            if (!isNonAchJob && fotosArray.length === 0 && state.jobPhotosMap) {
               if (standardNoId && state.jobPhotosMap[standardNoId]) {
                 fotosArray = state.jobPhotosMap[standardNoId];
                 job.fotos = fotosArray;
@@ -28067,14 +28095,7 @@ Keterangan : ${keterangan}`;
                 job.fotos = fotosArray;
               }
             }
-            if (fotosArray.length === 0 && job.noLambung && state.unitDatePhotosMap) {
-              const uKey = `${job.noLambung}_${job.tanggal || getEffectiveTodayString()}`;
-              if (state.unitDatePhotosMap[uKey]) {
-                fotosArray = state.unitDatePhotosMap[uKey];
-                job.fotos = fotosArray;
-              }
-            }
-            if (fotosArray.length === 0 && job.serviceNotes && job.serviceNotes.includes('PHOTOS:')) {
+            if (!isNonAchJob && fotosArray.length === 0 && job.serviceNotes && job.serviceNotes.includes('PHOTOS:')) {
               try {
                 const raw = job.serviceNotes.slice(job.serviceNotes.indexOf('PHOTOS:') + 7);
                 const parsed = JSON.parse(raw);
@@ -28084,7 +28105,7 @@ Keterangan : ${keterangan}`;
                 }
               } catch (e) { }
             }
-            if (!isUnexecutedScheduled && fotosArray.length === 0 && typeof loadRemotePhotoLogsFromGoogleSheet === 'function') {
+            if (!isUnexecutedScheduled && !isNonAchJob && fotosArray.length === 0 && typeof loadRemotePhotoLogsFromGoogleSheet === 'function') {
               if (!state._sheetPhotosLoading || (Date.now() - state._sheetPhotosLoading > 4000)) {
                 state._sheetPhotosLoading = Date.now();
                 setTimeout(() => {
@@ -33023,7 +33044,9 @@ Keterangan : ${keterangan}`;
         const targetId = String(job.id || '');
         const cleanUnit = String(unitNo).toUpperCase().replace(/[^A-Z0-9]/g, '');
         const cleanDate = String(job.tanggal || job.tanggal_rencana || record.tanggal_rencana || '').split('T')[0];
-        const shift = parseInt(job.shift || job.shift_rencana || record.shift_rencana || 1, 10);
+        const shift = (typeof extractShiftFromJob === 'function') 
+          ? extractShiftFromJob(job) 
+          : parseInt(job.shift || job.shift_rencana || record.shift_rencana || 1, 10);
         const jobTypeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(job) : '';
         const jobCat = String(job.cat || record.cat || '').toLowerCase().trim();
 
@@ -33032,7 +33055,7 @@ Keterangan : ${keterangan}`;
             if (String(j.id) === targetId) return false;
             const jU = String(j.noLambung || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
             const jD = String(j.tanggal || '').split('T')[0];
-            const jS = parseInt(j.shift || 1, 10);
+            const jS = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : parseInt(j.shift || 1, 10);
             const jTypeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(j) : '';
             const jCat = String(j.cat || '').toLowerCase().trim();
 
@@ -33044,20 +33067,24 @@ Keterangan : ${keterangan}`;
           });
         }
         if (state.watertruckState?.jobs) {
-          const currentRound = (typeof getJobWashingRound === 'function')
-            ? getJobWashingRound(job)
-            : (parseInt(job.washingRound || (String(job.id || '').includes('-W2') ? 2 : 1), 10) || 1);
+          const currentRound = (typeof extractRoundFromJob === 'function')
+            ? extractRoundFromJob(job)
+            : ((typeof getJobWashingRound === 'function')
+              ? getJobWashingRound(job)
+              : (parseInt(job.washingRound || (String(job.id || '').includes('-W2') ? 2 : 1), 10) || 1));
 
           state.watertruckState.jobs = state.watertruckState.jobs.filter(j => {
             if (String(j.id) === targetId) return false;
             const jU = String(j.noLambung || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
             const jD = String(j.tanggal || '').split('T')[0];
-            const jS = parseInt(j.shift || 1, 10);
+            const jS = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : parseInt(j.shift || 1, 10);
             const jTypeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(j) : '';
             const jCat = String(j.cat || '').toLowerCase().trim();
-            const jRound = (typeof getJobWashingRound === 'function')
-              ? getJobWashingRound(j)
-              : (parseInt(j.washingRound || (String(j.id || '').includes('-W2') ? 2 : 1), 10) || 1);
+            const jRound = (typeof extractRoundFromJob === 'function')
+              ? extractRoundFromJob(j)
+              : ((typeof getJobWashingRound === 'function')
+                ? getJobWashingRound(j)
+                : (parseInt(j.washingRound || (String(j.id || '').includes('-W2') ? 2 : 1), 10) || 1));
 
             const isSameUnitDateShiftRound = (jU === cleanUnit && jD === cleanDate && jS === shift && jRound === currentRound);
             const isSameCategory = (jobTypeCode && jTypeCode && jobTypeCode === jTypeCode) || (jobCat && jCat && jobCat === jCat);
@@ -33775,7 +33802,7 @@ Keterangan : ${keterangan}`;
             state.jobPhotosMap[baseId][slotIdx] = photoUrl;
           }
 
-          // 2. Simpan juga berdasarkan kombinasi spesifik: NO_LAMBUNG + KATEGORI + TANGGAL (misal: E347_aircleaner_2026-10-23)
+          // 2. Simpan juga berdasarkan kombinasi spesifik: NO_LAMBUNG + KATEGORI + TANGGAL + SHIFT + ROUND
           if (unit && idxWaktu !== -1) {
             const rawWaktu = row[idxWaktu] || '';
             const tglMatch = rawWaktu.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
@@ -33786,7 +33813,13 @@ Keterangan : ${keterangan}`;
               const dateIso = `${y}-${m}-${d}`;
               const isWtCat = (kat.includes('wash') || kat.includes('coal') || kat.includes('rom'));
               const roundSuffix = isWtCat ? (jobId.includes('-W2') ? '_W2' : '_W1') : '';
-              const unitCatKey = `${unit}_${kat}_${dateIso}${roundSuffix}`;
+
+              // Ekstrak Shift dari Job ID baris sheet (misal: WT-WSC-02112026-1-... vs WT-WSC-02112026-2-...)
+              const shiftMatch = jobId.match(/-\d{8}-([12])-/i) || jobId.match(/[-_]S([12])[-_]/i);
+              const rowShift = shiftMatch ? shiftMatch[1] : (jobId.includes('-1-') ? '1' : (jobId.includes('-2-') ? '2' : ''));
+              const shiftSuffix = rowShift ? `_S${rowShift}` : '';
+
+              const unitCatKey = `${unit}_${kat}_${dateIso}${shiftSuffix}${roundSuffix}`;
               if (!state.unitCatDatePhotosMap[unitCatKey]) state.unitCatDatePhotosMap[unitCatKey] = ['', '', '', '', ''];
               state.unitCatDatePhotosMap[unitCatKey][slotIdx] = photoUrl;
             }
@@ -33808,16 +33841,31 @@ Keterangan : ${keterangan}`;
             j.fotos = [];
             return;
           }
+
           const jId = String(j.id || j.job_id || '');
           const jNoId = String(j.noId || j.no_id || '');
+
+          // PENGAMAN MUTLAK: Job NON-ACH / KENDALA (Service, BD, Breakdown, Parkir) DILARANG disuntikkan foto fallback pencucian!
+          const s = String(j.status || '').toLowerCase().trim();
+          const isNonAch = (s === 'non_ach' || s === 'non-ach' || s === 'service' || s === 'bd' || s === 'breakdown' || s === 'parkir' || Boolean(j.alasanNonAch) || String(j.keterangan || '').includes('Non ACH') || String(j.keterangan || '').startsWith('[SERVICE]') || String(j.keterangan || '').startsWith('[BREAKDOWN]'));
+          if (isNonAch) {
+            if (jId) safeStorage.removeItem('SE_JOB_FOTOS_' + jId);
+            if (jNoId && jNoId !== '-') safeStorage.removeItem('SE_JOB_FOTOS_' + jNoId);
+            const cleanBaseNonAch = jId.replace(/-\d{4}$/, '');
+            if (cleanBaseNonAch) safeStorage.removeItem('SE_JOB_FOTOS_' + cleanBaseNonAch);
+            j.fotos = [];
+            return;
+          }
+
           const cleanBase = jId.replace(/-\d{4}$/, '');
           const cleanNoBase = jNoId.replace(/-\d{4}$/, '');
           const jUnit = String(j.noLambung || j.no_lambung || '').trim().toUpperCase();
           const jCat = String(j.cat || '').trim().toLowerCase();
           const jDate = j.tanggal || j.tanggal_rencana || j.tanggal_eksekusi || j.tanggalRealisasi || '';
           const isWtJob = (jCat === 'coal' || jCat === 'rom' || jCat === 'non_coal' || jCat === 'noncoal' || jId.startsWith('WT'));
-          const jRound = (typeof getJobWashingRound === 'function') ? getJobWashingRound(j) : (parseInt(j.washingRound || (jId.includes('-W2') ? 2 : 1), 10) || 1);
-          const jUnitCatKey = (jUnit && jCat && jDate) ? `${jUnit}_${jCat}_${jDate}${isWtJob ? `_W${jRound}` : ''}` : '';
+          const jShift = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (j.shift || 1);
+          const jRound = (typeof extractRoundFromJob === 'function') ? extractRoundFromJob(j) : ((typeof getJobWashingRound === 'function') ? getJobWashingRound(j) : (parseInt(j.washingRound || (jId.includes('-W2') ? 2 : 1), 10) || 1));
+          const jUnitCatKey = (jUnit && jCat && jDate) ? `${jUnit}_${jCat}_${jDate}_S${jShift}${isWtJob ? `_W${jRound}` : ''}` : '';
 
           let photos = null;
           if (jId && state.jobPhotosMap[jId]) {
@@ -35240,12 +35288,16 @@ Keterangan : ${keterangan}`;
         }
       }
 
-      // Prefill Shift Pelaksanaan Pekerjaan (Default otomatis mengikuti jam kerja saat ini)
+      // Prefill Shift Pelaksanaan Pekerjaan (Default otomatis mengikuti shift jadwal asli atau jam kerja realtime)
       const currentHour = new Date().getHours();
       // Jam 05:00 s/d 16:59 adalah Shift 1, Jam 17:00 s/d 04:59 adalah Shift 2
       const currentLiveShift = (currentHour >= 5 && currentHour < 17) ? 1 : 2;
 
-      // Jika SCH Top Up (atau pekerjaan belum direalisasi), shift default selalu mengikuti jam kerja realtime saat ini
+      // AMBIL SHIFT ASLI DARI JADWAL (ID Baku atau properti shift/shift_rencana)
+      const scheduledShift = (typeof extractShiftFromJob === 'function') 
+        ? extractShiftFromJob(job) 
+        : (parseInt(job.shift_rencana !== undefined ? job.shift_rencana : job.shift, 10) || null);
+
       let initialExecShift = currentLiveShift;
       if (isTopUpJob && !isJobActuallyDone) {
         // SCH Top Up yang baru dijalankan selalu mengikuti jam realtime saat form dibuka
@@ -35254,6 +35306,11 @@ Keterangan : ${keterangan}`;
         initialExecShift = parseInt(job.executedShift, 10) || currentLiveShift;
       } else if (job.tanggalRealisasi && job.shift && !isTopUpJob) {
         initialExecShift = parseInt(job.shift, 10) || currentLiveShift;
+      } else if (scheduledShift) {
+        // ATURAN INTEGRITAS: Jadwal reguler (Greasing, Washing Coal/ROM, Air Cleaner) 
+        // WAJIB menghormati shift jadwal aslinya (Shift 1 tetap 1, Shift 2 tetap 2)
+        // agar jadwal Shift 1 tidak otomatis membajak Shift 2 saat diinput di malam hari!
+        initialExecShift = scheduledShift;
       } else {
         initialExecShift = currentLiveShift;
       }
