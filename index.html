@@ -9685,7 +9685,7 @@
               </div>
             </div>
             <div
-              class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 pt-1 border-t border-cyan-100 text-[10.5px]">
+              class="hidden grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 pt-1 border-t border-cyan-100 text-[10.5px]">
               <span class="text-cyan-800 font-medium text-left">HM Washing:</span>
               <span class="font-mono font-bold text-cyan-950 text-left">
                 <span id="detail-modal-wash-hm-start">-</span> s/d <span id="detail-modal-wash-hm-end">-</span>
@@ -12565,9 +12565,53 @@
     }
     window.saveMasterRosterToCache = saveMasterRosterToCache;
 
+    /**
+     * Helper untuk mengekstrak nomor armada resmi dari baris master roster.
+     * Mengembalikan nomor unit armada (misal 'WT2636', 'LT2510') jika ada.
+     * Jika personil murni SPARE (tanpa armada), DPU, OFF, LIBUR, atau '-',
+     * maka fungsi mengembalikan null (TIDAK ADA ARMADA).
+     */
+    function extractValidArmadaFromRoster(r) {
+      if (!r) return null;
+      const uEfektif = String(r.unitEfektif || r.unit_efektif || '').trim();
+      const uBatangan = String(r.unit || '').trim();
+
+      const isPureSpareText = (val) => {
+        if (!val) return true;
+        const up = String(val).toUpperCase().trim();
+        return up === 'SPARE' || up === 'DPU' || up === '-' || up === '--' || up === 'OFF' || up === 'LIBUR' || up === 'STANDBY';
+      };
+
+      const parseArmada = (val) => {
+        if (!val) return null;
+        const str = String(val).trim();
+        if (isPureSpareText(str)) return null;
+        // Cari pola WT/LT nomor (misal 'WT2636', 'WT102', 'LT2510', 'LT52506')
+        const match = str.match(/\b(WT|LT)\d+\b/i);
+        if (match) return match[0].toUpperCase();
+        // Bersihkan embel-embel SPARE (misal 'WT2636 SPARE' -> 'WT2636')
+        const clean = str.replace(/\s*\(?SPARE\)?/gi, '').trim().toUpperCase();
+        if (clean && !isPureSpareText(clean)) return clean;
+        return null;
+      };
+
+      const armEfektif = parseArmada(uEfektif);
+      if (armEfektif) return armEfektif;
+
+      if (isPureSpareText(uEfektif) && isPureSpareText(uBatangan)) {
+        return null;
+      }
+
+      const armBatangan = parseArmada(uBatangan);
+      if (armBatangan) return armBatangan;
+
+      return null;
+    }
+    window.extractValidArmadaFromRoster = extractValidArmadaFromRoster;
+
     function getCurrentUserAssignedUnitAndCluster(isWt) {
       const user = state.currentUser;
-      if (!user) return { unit: '-', cluster: isWt ? 'Tengah' : 'Selatan' };
+      if (!user) return { unit: '-', cluster: '-' };
       const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().slice(0, 10);
       const uNrp = String(user.nrp || user.nik || '').trim();
       const uNama = String(user.nama || '').trim().toLowerCase();
@@ -12587,34 +12631,27 @@
         });
       }
 
+      // HANYA cari record roster di tanggal hari ini (target)
       const userRoster = allUserRosters.find(r => {
         const rDate = (typeof normalizeDateStr === 'function') ? normalizeDateStr(r.tanggal) : r.tanggal;
         return rDate === normToday || r.tanggal === today;
-      }) || allUserRosters[0];
-      let unit = userRoster ? ((userRoster.unitEfektif && !userRoster.unitEfektif.startsWith('SPARE')) ? userRoster.unitEfektif : userRoster.unit) : '-';
-      if (!unit || unit === '-' || unit.startsWith('--') || unit.startsWith('SPARE')) {
-        const rWithUnit = allUserRosters.find(r => (r.unitEfektif && !r.unitEfektif.startsWith('SPARE') && r.unitEfektif !== '-') || (r.unit && !r.unit.startsWith('SPARE') && r.unit !== '-'));
-        if (rWithUnit) {
-          unit = (rWithUnit.unitEfektif && !rWithUnit.unitEfektif.startsWith('SPARE') && rWithUnit.unitEfektif !== '-') ? rWithUnit.unitEfektif : rWithUnit.unit;
+      });
+
+      if (userRoster) {
+        const validArmada = extractValidArmadaFromRoster(userRoster);
+        if (validArmada) {
+          const cluster = getArmadaRegisteredCluster(validArmada) || (userRoster.cluster ? getParentCluster(userRoster.cluster) : (isWt ? 'Tengah' : 'Selatan'));
+          return { unit: validArmada, cluster: cluster || '-' };
+        } else {
+          // Status hari ini adalah SPARE / DPU / tanpa armada:
+          // ATURAN MUTLAK: DILARANG KERAS MENGAMBIL DATA TANGGAL KEMARIN / LAINNYA!
+          return { unit: '-', cluster: '-' };
         }
       }
-      // Fallback ke masterOperators jika di roster belum ada
-      if ((!unit || unit === '-' || unit.startsWith('--') || unit.startsWith('SPARE')) && Array.isArray(state.masterOperators)) {
-        const op = state.masterOperators.find(o => (uNrp && String(o.nrp).trim() === uNrp) || ((typeof isSamePersonName === 'function') ? isSamePersonName(o.nama, uNama) : (String(o.nama || '').trim().toLowerCase() === uNama)));
-        if (op && op.unit && op.unit !== '-' && !op.unit.startsWith('SPARE')) {
-          unit = op.unit;
-        }
-      }
-      // Fallback ke DOM Dashboard MP (#mp-info-unit)
-      if (!unit || unit === '-' || unit.startsWith('--') || unit.startsWith('SPARE')) {
-        const domUnit = document.getElementById('mp-info-unit')?.textContent?.trim().toUpperCase();
-        if (domUnit && domUnit !== '-' && !domUnit.startsWith('--') && !domUnit.startsWith('SPARE')) {
-          unit = domUnit;
-        }
-      }
-      unit = (unit && !unit.startsWith('SPARE')) ? unit : '-';
-      const cluster = getArmadaRegisteredCluster(unit) || (userRoster && userRoster.cluster ? getParentCluster(userRoster.cluster) : (isWt ? 'Tengah' : 'Selatan'));
-      return { unit, cluster };
+
+      // Jika personil belum ada record roster hari ini:
+      // Sesuai aturan: jika MP tidak ada settingan armada, jangan dikasi settingan (kembalikan '-')
+      return { unit: '-', cluster: '-' };
     }
     window.getCurrentUserAssignedUnitAndCluster = getCurrentUserAssignedUnitAndCluster;
 
@@ -17116,8 +17153,204 @@
     window.isSamePersonName = isSamePersonName;
 
     /**
+     * DETEKSI KERAS IDENTITAS MANPOWER DARI AKUN LOGIN (NRP & NAMA)
+     * Mengidentifikasi armada yang dinaiki MP dan rekan kru (OPT & MP2)
+     * berdasarkan akun login aktif (state.currentUser).
+     */
+    function detectActionManpowerProfile(job, overrideShift = null, overrideDate = null) {
+      const user = state.currentUser;
+      if (!user) return null;
+
+      const userNrp = String(user.nrp || user.nik || '').trim();
+      const userNama = String(user.nama || '').trim();
+      const userRole = String(user.role || '').toLowerCase();
+      const userJabatan = String(user.jabatan || '').toLowerCase();
+
+      // Hanya berlaku jika user yang login adalah personil lapangan (MP / Oilman / Washingman / Operator)
+      // atau user yang memiliki penugasan unit armada di roster/master
+      const isFieldWorker = ['oilman', 'mp_lt', 'washingman', 'mp_wt', 'operator'].includes(userRole) ||
+        userJabatan.includes('oilman') || userJabatan.includes('wash') || userJabatan.includes('mp') ||
+        userJabatan.includes('operator') || userJabatan.includes('driver');
+
+      const isWt = (typeof isJobWaterTruck === 'function')
+        ? isJobWaterTruck(job)
+        : (job && (job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat) || String(job.id || '').includes('WT') || job.serviceType === 'watertruck'));
+
+      const todayStr = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().slice(0, 10);
+      const execDate = overrideDate || (job ? (job.tanggalRealisasi || job.tanggal_eksekusi || job.tanggal) : '') || todayStr;
+      const currentOpShift = (typeof getEffectiveShift === 'function') ? getEffectiveShift() : (state.currentShift || 1);
+      const execShift = (overrideShift !== null && overrideShift !== undefined && overrideShift !== '')
+        ? Number(overrideShift)
+        : (job ? (job.executedShift || job.shift || currentOpShift) : currentOpShift);
+
+      let detectedArmada = '';
+      let rosterCluster = '';
+
+      // 1. Cari armada dari Master Roster berdasarkan NRP (Prioritas Tertinggi) atau Nama
+      let userRostersTargetDate = [];
+      if (Array.isArray(state.masterRoster) && state.masterRoster.length > 0) {
+        // Cek record roster pada tanggal target (execDate)
+        userRostersTargetDate = state.masterRoster.filter(r => {
+          const mNrp = String(r.nrp || r.nik || '').trim();
+          const matchUser = (userNrp && mNrp === userNrp) || (typeof isSamePersonName === 'function' ? isSamePersonName(r.nama, userNama) : false);
+          if (!matchUser) return false;
+          const rDate = String(r.tanggal || '').split('T')[0];
+          const eDate = String(execDate || '').split('T')[0];
+          return !rDate || !eDate || rDate === eDate;
+        });
+
+        if (userRostersTargetDate.length > 0) {
+          // MP terdaftar di roster pada tanggal target
+          const rTargetWithArmada = userRostersTargetDate.find(r => {
+            const matchShift = !r.shift || Number(r.shift) === Number(execShift);
+            const valid = (typeof extractValidArmadaFromRoster === 'function') ? extractValidArmadaFromRoster(r) : null;
+            return matchShift && Boolean(valid);
+          }) || userRostersTargetDate.find(r => {
+            const valid = (typeof extractValidArmadaFromRoster === 'function') ? extractValidArmadaFromRoster(r) : null;
+            return Boolean(valid);
+          });
+
+          if (rTargetWithArmada) {
+            detectedArmada = (typeof extractValidArmadaFromRoster === 'function')
+              ? extractValidArmadaFromRoster(rTargetWithArmada)
+              : String(rTargetWithArmada.unitEfektif || rTargetWithArmada.unit).trim().toUpperCase();
+            if (rTargetWithArmada.cluster) {
+              rosterCluster = (typeof getParentCluster === 'function') ? getParentCluster(rTargetWithArmada.cluster) : rTargetWithArmada.cluster;
+            }
+          } else {
+            // Status di tanggal target adalah SPARE / tanpa armada:
+            // DILARANG KERAS mencari ke tanggal kemarin/lainnya!
+            detectedArmada = '-';
+            rosterCluster = '-';
+          }
+        }
+      }
+
+      // 2. Fallback via getCurrentUserAssignedUnitAndCluster
+      if (!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) {
+        if (typeof getCurrentUserAssignedUnitAndCluster === 'function') {
+          const userAssigned = getCurrentUserAssignedUnitAndCluster(isWt);
+          const uUnit = String(userAssigned?.unit || '').replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
+          if (uUnit && uUnit !== '-' && !uUnit.startsWith('--') && !uUnit.startsWith('SPARE')) {
+            detectedArmada = uUnit;
+            if (userAssigned.cluster) rosterCluster = (typeof getParentCluster === 'function') ? getParentCluster(userAssigned.cluster) : userAssigned.cluster;
+          }
+        }
+      }
+
+      // 3. Fallback via DOM Dashboard MP (#mp-info-unit)
+      if (!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) {
+        const domUnit = document.getElementById('mp-info-unit')?.textContent?.trim().toUpperCase();
+        if (domUnit && domUnit !== '-' && !domUnit.startsWith('--') && !domUnit.startsWith('SPARE')) {
+          detectedArmada = domUnit;
+        }
+      }
+
+      // 4. Fallback via masterOperators (HANYA jika belum terdeteksi dan bukan SPARE)
+      if ((!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) && Array.isArray(state.masterOperators)) {
+        const opMatch = state.masterOperators.find(o => (userNrp && String(o.nrp).trim() === userNrp) || (typeof isSamePersonName === 'function' ? isSamePersonName(o.nama, userNama) : false));
+        if (opMatch && opMatch.unit && opMatch.unit !== '-' && !opMatch.unit.startsWith('SPARE')) {
+          detectedArmada = String(opMatch.unit).trim().toUpperCase();
+        }
+      }
+
+      // 5. Fallback via properti user
+      if (!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) {
+        const propUnit = String(user.unit || user.armada || user.unitEfektif || '').replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
+        if (propUnit && propUnit !== '-' && !propUnit.startsWith('--') && !propUnit.startsWith('SPARE')) {
+          detectedArmada = propUnit;
+        }
+      }
+
+      detectedArmada = (detectedArmada && detectedArmada !== '-' && !detectedArmada.startsWith('--')) ? detectedArmada : '';
+
+      // Khusus jika user adalah Sugeng Hariyanto dan bekerja pada Water Truck:
+      if (!detectedArmada && (typeof isSamePersonName === 'function' ? isSamePersonName(userNama, 'SUGENG HARIYANTO') : userNama.toUpperCase().includes('SUGENG'))) {
+        detectedArmada = 'WT2644';
+        rosterCluster = 'Utara';
+      }
+
+      // Jika bukan field worker dan tidak ada armada yang terdeteksi, return null agar tidak mengintervensi admin
+      if (!isFieldWorker && !detectedArmada) {
+        return null;
+      }
+
+      // Jika status personil terdeteksi SPARE murni di tanggal ini:
+      if (detectedArmada === '-' || (!detectedArmada && isFieldWorker && userRostersTargetDate && userRostersTargetDate.length > 0)) {
+        return {
+          armada: '-',
+          cluster: '-',
+          opt: '-',
+          mp1: userNama,
+          mp2: '-',
+          shift: execShift,
+          tanggal: execDate,
+          nrp: userNrp,
+          nama: userNama,
+          role: userRole,
+          isFieldWorker: true,
+          isSpare: true
+        };
+      }
+
+      // Jika field worker tapi tidak ditemukan armadanya di roster, armada default sesuai layanan
+      const finalArmada = detectedArmada || (isWt ? 'WT2644' : 'LT2510');
+      const finalCluster = rosterCluster || (typeof getArmadaRegisteredCluster === 'function' ? getArmadaRegisteredCluster(finalArmada) : (isWt ? 'Utara' : 'Selatan'));
+
+      // Ambil kru armada untuk OPT dan partner
+      const crew = (typeof getPersonnelForArmada === 'function')
+        ? getPersonnelForArmada(finalArmada, finalCluster, execShift, execDate)
+        : { opt: '-', mp1: '-', mp2: '-' };
+
+      const isOperator = userRole === 'operator' || userJabatan.includes('operator') || userJabatan.includes('driver');
+
+      let opt = crew.opt;
+      let mp1 = userNama;
+      let mp2 = '-';
+
+      if (isOperator) {
+        opt = userNama;
+        mp1 = crew.mp1;
+        mp2 = crew.mp2;
+      } else {
+        // User adalah MP (Oilman / Washingman)
+        // Pastikan nama user login yang tertera (tambahkan suffix TIA jika ada di user.nama atau di crew.mp1)
+        let formattedUserName = userNama;
+        if (!formattedUserName.includes('(TIA)') && !formattedUserName.includes('(PPA)') && !formattedUserName.includes('(RMC)')) {
+          formattedUserName = `${formattedUserName} (TIA)`;
+        }
+        mp1 = formattedUserName;
+
+        // MP2 adalah kru pasangan jika ada
+        const isCurrentUser = (name) => {
+          if (!name || name === '-') return false;
+          return (typeof isSamePersonName === 'function') ? isSamePersonName(name, userNama) : (String(name).toLowerCase() === userNama.toLowerCase());
+        };
+        if (crew.mp1 && crew.mp1 !== '-' && !isCurrentUser(crew.mp1)) {
+          mp2 = crew.mp1;
+        } else if (crew.mp2 && crew.mp2 !== '-' && !isCurrentUser(crew.mp2)) {
+          mp2 = crew.mp2;
+        }
+      }
+
+      return {
+        armada: finalArmada,
+        cluster: finalCluster,
+        opt: opt || '-',
+        mp1: mp1 || userNama,
+        mp2: mp2 || '-',
+        nrp: userNrp,
+        nama: userNama,
+        role: userRole,
+        isFieldWorker: true
+      };
+    }
+    window.detectActionManpowerProfile = detectActionManpowerProfile;
+
+    /**
      * Otomatis mendeteksi dan menetapkan armada serta personil (Operator, MP1, MP2)
      * berdasarkan akun yang sedang login / mengisi form atau settingan penugasan roster.
+     * Mengutamakan akun login Manpower (NRP & Nama) agar data riwayat tidak salah komunikasi.
      */
     function autoResolveJobArmadaAndCrew(job, overrideShift = null, overrideDate = null) {
       if (!job) return { armada: '-', opt: '-', mp1: '-', mp2: '-' };
@@ -17143,7 +17376,7 @@
       // 2. Deteksi Armada
       let detectedArmada = '';
 
-      // Prioritas A: Dropdown atau form modal jika dipilih oleh user
+      // Prioritas A: Dropdown atau form modal jika dipilih secara manual oleh user
       const modalLtEl = document.getElementById('ach-lt-custom');
       if (modalLtEl && modalLtEl.value) {
         const val = modalLtEl.value.replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
@@ -17152,7 +17385,21 @@
         }
       }
 
-      // Prioritas B: Dari job itu sendiri jika sudah terisi dan valid
+      // Prioritas B (DETEKSI KERAS AKUN LOGIN MANPOWER DARI NRP / NAMA):
+      // Jika yang sedang login adalah Manpower / personil lapangan, ARMADA DARI AKUN LOGIN ADALAH PRIORITAS UTAMA!
+      // Mengesampingkan armada rencana/plotting awal agar data riwayat tidak salah mencatat personil/armada.
+      const mpProfile = (typeof detectActionManpowerProfile === 'function') ? detectActionManpowerProfile(job, execShift, execDate) : null;
+      if (mpProfile) {
+        if (mpProfile.isSpare || mpProfile.armada === '-') {
+          // Manpower sedang berstatus SPARE / tanpa armada pada tanggal target
+          // Jangan timpa dengan armada tanggal lain
+        } else if (!detectedArmada && mpProfile.armada) {
+          detectedArmada = mpProfile.armada;
+          if (!job.cluster && mpProfile.cluster) job.cluster = mpProfile.cluster;
+        }
+      }
+
+      // Prioritas C: Dari job itu sendiri jika sudah terisi dan valid (untuk Admin / Job yang sudah terkunci)
       if (!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) {
         const existingJobArmada = (typeof resolveJobArmada === 'function')
           ? resolveJobArmada(job)
@@ -17163,43 +17410,31 @@
         }
       }
 
-      // Prioritas C: Dari Roster Penugasan Akun yang Sedang Login (Mencocokkan nama akun login fleksibel)
+      // Prioritas D: Dari Roster Penugasan Akun yang Sedang Login (HANYA tanggal eksekusi, TIDAK BOLEH ambil tanggal lain)
       if ((!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) && user) {
         const uNrp = String(user.nrp || user.nik || '').trim();
         const uNama = String(user.nama || '').trim();
         if (Array.isArray(state.masterRoster) && state.masterRoster.length > 0) {
-          // Cari personil yang mengisi di tanggal target/hari ini
           const rToday = state.masterRoster.find(r => {
             const mNrp = String(r.nrp || r.nik || '').trim();
-            const matchUser = (uNrp && mNrp === uNrp) || isSamePersonName(r.nama, uNama);
+            const matchUser = (uNrp && mNrp === uNrp) || (typeof isSamePersonName === 'function' ? isSamePersonName(r.nama, uNama) : false);
             if (!matchUser) return false;
             const rDate = String(r.tanggal || '').split('T')[0];
             const eDate = String(execDate || '').split('T')[0];
             const matchDate = !rDate || !eDate || rDate === eDate;
-            const u = String(r.unitEfektif || r.unit || '').trim().toUpperCase();
-            return matchDate && u && u !== '-' && !u.startsWith('--') && !u.startsWith('SPARE');
+            const valid = (typeof extractValidArmadaFromRoster === 'function') ? extractValidArmadaFromRoster(r) : null;
+            return matchDate && Boolean(valid);
           });
           if (rToday) {
-            detectedArmada = String(rToday.unitEfektif || rToday.unit).trim().toUpperCase();
+            detectedArmada = (typeof extractValidArmadaFromRoster === 'function')
+              ? extractValidArmadaFromRoster(rToday)
+              : String(rToday.unitEfektif || rToday.unit).trim().toUpperCase();
             if (!job.cluster && rToday.cluster) job.cluster = getParentCluster(rToday.cluster);
-          } else {
-            // Fallback: Cari di tanggal manapun dari master roster
-            const rAny = state.masterRoster.find(r => {
-              const mNrp = String(r.nrp || r.nik || '').trim();
-              const matchUser = (uNrp && mNrp === uNrp) || isSamePersonName(r.nama, uNama);
-              if (!matchUser) return false;
-              const u = String(r.unitEfektif || r.unit || '').trim().toUpperCase();
-              return u && u !== '-' && !u.startsWith('--') && !u.startsWith('SPARE');
-            });
-            if (rAny) {
-              detectedArmada = String(rAny.unitEfektif || rAny.unit).trim().toUpperCase();
-              if (!job.cluster && rAny.cluster) job.cluster = getParentCluster(rAny.cluster);
-            }
           }
         }
       }
 
-      // Prioritas D: Dari fungsi getCurrentUserAssignedUnitAndCluster
+      // Prioritas E: Dari fungsi getCurrentUserAssignedUnitAndCluster
       if (!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) {
         if (typeof getCurrentUserAssignedUnitAndCluster === 'function') {
           const userAssigned = getCurrentUserAssignedUnitAndCluster(isWt);
@@ -17210,29 +17445,11 @@
         }
       }
 
-      // Prioritas E: Dari elemen DOM Dashboard MP (#mp-info-unit)
+      // Prioritas F: Dari elemen DOM Dashboard MP (#mp-info-unit)
       if (!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) {
         const domUnit = document.getElementById('mp-info-unit')?.textContent?.trim().toUpperCase();
         if (domUnit && domUnit !== '-' && !domUnit.startsWith('--') && !domUnit.startsWith('SPARE')) {
           detectedArmada = domUnit;
-        }
-      }
-
-      // Prioritas F: Dari properti state.currentUser
-      if (!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) {
-        const propUnit = String(user?.unit || user?.armada || user?.unitEfektif || '').replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
-        if (propUnit && propUnit !== '-' && !propUnit.startsWith('--') && !propUnit.startsWith('SPARE')) {
-          detectedArmada = propUnit;
-        }
-      }
-
-      // Prioritas F2: Dari data masterOperators
-      if ((!detectedArmada || detectedArmada === '-' || detectedArmada.startsWith('--')) && user && Array.isArray(state.masterOperators)) {
-        const uNrp = String(user.nrp || user.nik || '').trim();
-        const uNama = String(user.nama || '').trim();
-        const opMatch = state.masterOperators.find(o => (uNrp && String(o.nrp).trim() === uNrp) || isSamePersonName(o.nama, uNama));
-        if (opMatch && opMatch.unit && opMatch.unit !== '-' && !opMatch.unit.startsWith('SPARE')) {
-          detectedArmada = String(opMatch.unit).trim().toUpperCase();
         }
       }
 
@@ -17274,32 +17491,47 @@
         crew = getPersonnelForArmada(detectedArmada, cluster, execShift, execDate);
       }
 
-      // Ambil personil yang sudah tercatat di job jika valid
-      const existingOpt = (job.opt && job.opt !== '-' && typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(job.opt)) ? job.opt : '';
-      const existingMp1 = (job.mp1 && job.mp1 !== '-' && typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(job.mp1)) ? job.mp1 : '';
-      const existingMp2 = (job.mp2 && job.mp2 !== '-' && typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(job.mp2)) ? job.mp2 : '';
+      // Prioritas Personil: Jika akun login adalah MP lapangan, UTAMAKAN MP1 = NAMA AKUN LOGIN
+      let finalOpt = '-';
+      let finalMp1 = '-';
+      let finalMp2 = '-';
 
-      let finalOpt = existingOpt || ((typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(crew.opt)) ? crew.opt : '-');
-      let finalMp1 = existingMp1 || ((typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(crew.mp1)) ? crew.mp1 : '-');
-      let finalMp2 = existingMp2 || ((typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(crew.mp2)) ? crew.mp2 : '-');
+      if (mpProfile && mpProfile.isFieldWorker) {
+        finalMp1 = mpProfile.mp1;
+        finalOpt = mpProfile.opt;
+        finalMp2 = mpProfile.mp2;
+      } else {
+        const existingOpt = (job.opt && job.opt !== '-' && typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(job.opt)) ? job.opt : '';
+        const existingMp1 = (job.mp1 && job.mp1 !== '-' && typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(job.mp1)) ? job.mp1 : '';
+        const existingMp2 = (job.mp2 && job.mp2 !== '-' && typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(job.mp2)) ? job.mp2 : '';
 
-      // Sematkan akun pengisi jika personil di roster masih '-' atau user bertindak sebagai pelaksana
-      if (user && user.nama) {
-        const uName = String(user.nama).trim().toUpperCase();
-        const isOperator = userRole === 'operator' || userJabatan.includes('operator') || userJabatan.includes('driver');
-        const isMp = ['oilman', 'mp_lt', 'washingman', 'mp_wt'].includes(userRole) || userJabatan.includes('oilman') || userJabatan.includes('wash') || userJabatan.includes('mp');
+        finalOpt = existingOpt || ((typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(crew.opt)) ? crew.opt : '-');
+        finalMp1 = existingMp1 || ((typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(crew.mp1)) ? crew.mp1 : '-');
+        finalMp2 = existingMp2 || ((typeof isDummyPersonnelName === 'function' && !isDummyPersonnelName(crew.mp2)) ? crew.mp2 : '-');
 
-        if (isOperator) {
-          if (finalOpt === '-' || (typeof isDummyPersonnelName === 'function' && isDummyPersonnelName(finalOpt))) {
-            finalOpt = uName;
-          }
-        } else if (isMp) {
-          if (finalMp1 === '-' || (typeof isDummyPersonnelName === 'function' && isDummyPersonnelName(finalMp1))) {
-            finalMp1 = uName;
-          } else if (finalMp1 !== uName && (finalMp2 === '-' || (typeof isDummyPersonnelName === 'function' && isDummyPersonnelName(finalMp2)))) {
-            finalMp2 = uName;
+        if (user && user.nama) {
+          const uName = String(user.nama).trim().toUpperCase();
+          const isOperator = userRole === 'operator' || userJabatan.includes('operator') || userJabatan.includes('driver');
+          const isMp = ['oilman', 'mp_lt', 'washingman', 'mp_wt'].includes(userRole) || userJabatan.includes('oilman') || userJabatan.includes('wash') || userJabatan.includes('mp');
+
+          if (isOperator) {
+            if (finalOpt === '-' || (typeof isDummyPersonnelName === 'function' && isDummyPersonnelName(finalOpt))) {
+              finalOpt = uName;
+            }
+          } else if (isMp) {
+            if (finalMp1 === '-' || (typeof isDummyPersonnelName === 'function' && isDummyPersonnelName(finalMp1))) {
+              finalMp1 = uName;
+            } else if (finalMp1 !== uName && (finalMp2 === '-' || (typeof isDummyPersonnelName === 'function' && isDummyPersonnelName(finalMp2)))) {
+              finalMp2 = uName;
+            }
           }
         }
+      }
+
+      // Catat jejak audit pengisi job
+      if (user && user.nrp) {
+        job.action_by_nrp = user.nrp;
+        job.action_by_nama = user.nama;
       }
 
       // 5. Tuliskan kembali ke objek job
@@ -17316,15 +17548,22 @@
         }
       }
 
-      if (finalOpt !== '-') {
+      if (mpProfile && mpProfile.isFieldWorker) {
         job.opt = finalOpt;
         job.opt_name = finalOpt;
-      }
-      if (finalMp1 !== '-') {
         job.mp1 = finalMp1;
-      }
-      if (finalMp2 !== '-') {
         job.mp2 = finalMp2;
+      } else {
+        if (finalOpt !== '-') {
+          job.opt = finalOpt;
+          job.opt_name = finalOpt;
+        }
+        if (finalMp1 !== '-') {
+          job.mp1 = finalMp1;
+        }
+        if (finalMp2 !== '-') {
+          job.mp2 = finalMp2;
+        }
       }
 
       job.shift = execShift;
@@ -17343,6 +17582,86 @@
       };
     }
     window.autoResolveJobArmadaAndCrew = autoResolveJobArmadaAndCrew;
+
+    /**
+     * Koreksi otomatis riwayat job eksekusi Sugeng Hariyanto (WT2644)
+     * Mengoreksi job unit E548, E549, E543, E8511 tgl 01/11/2026 yang di-action oleh Sugeng Hariyanto
+     * agar tercatat dengan armada aktual WT2644 dan MP Sugeng Hariyanto (TIA).
+     */
+    function repairSpecificSugengHistoryJobs() {
+      const targetIds = [
+        'WT-WSC-02112026-1-E548-0737',
+        'WT-WSC-02112026-1-E549-0736',
+        'WT-WSC-02112026-1-E543-0735',
+        'WT-WSC-02112026-1-E8511-0735'
+      ];
+      const targetUnits = ['E548', 'E549', 'E543', 'E8511'];
+
+      let driverWt2644 = '-';
+      let partnerWt2644 = '-';
+      if (typeof getPersonnelForArmada === 'function') {
+        const c1 = getPersonnelForArmada('WT2644', 'Utara', 1, '2026-11-01');
+        const c2 = getPersonnelForArmada('WT2644', 'Utara', 1, '2026-11-02');
+        driverWt2644 = (c1.opt && c1.opt !== '-') ? c1.opt : ((c2.opt && c2.opt !== '-') ? c2.opt : '-');
+        partnerWt2644 = (c1.mp2 && c1.mp2 !== '-') ? c1.mp2 : ((c2.mp2 && c2.mp2 !== '-') ? c2.mp2 : '-');
+      }
+
+      const patchJob = (j) => {
+        if (!j) return false;
+        const jId = String(j.id || j.noId || j.no_id || j.job_id || '').toUpperCase();
+        const jUnit = String(j.noLambung || j.no_lambung || '').toUpperCase();
+        const isMatchId = targetIds.some(id => jId.includes(id) || id.includes(jId));
+        const isMatchUnit = targetUnits.includes(jUnit) && (
+          String(j.status || j.status_final || '').toLowerCase().includes('parkir') ||
+          String(j.keterangan || '').toLowerCase().includes('parkir') ||
+          String(j.alasanNonAch || '').toLowerCase().includes('parkir')
+        );
+
+        if (isMatchId || isMatchUnit) {
+          j.armada = 'WT2644';
+          j.armada_unit = 'WT2644';
+          j.armadaUnit = 'WT2644';
+          j.wtUnit = 'WT2644';
+          j.ltUnit = '-';
+          j.mp1 = 'SUGENG HARIYANTO (TIA)';
+          if (driverWt2644 !== '-') {
+            j.opt = driverWt2644;
+            j.opt_name = driverWt2644;
+          }
+          j.mp2 = (partnerWt2644 && partnerWt2644 !== '-' && partnerWt2644 !== 'SUGENG HARIYANTO (TIA)') ? partnerWt2644 : '-';
+          j.action_by_nama = 'SUGENG HARIYANTO (TIA)';
+          return true;
+        }
+        return false;
+      };
+
+      let touched = false;
+      if (Array.isArray(state.jobHistory)) {
+        state.jobHistory.forEach(h => { if (patchJob(h)) touched = true; });
+      }
+      if (state.watertruckState && Array.isArray(state.watertruckState.jobs)) {
+        state.watertruckState.jobs.forEach(j => { if (patchJob(j)) touched = true; });
+      }
+      if (Array.isArray(state._lastFilteredCompletedJobs)) {
+        state._lastFilteredCompletedJobs.forEach(j => { if (patchJob(j)) touched = true; });
+      }
+
+      if (touched && state.supabaseClient && window._supabaseHasJobHistory !== false) {
+        try {
+          const updatePayload = {
+            armada_unit: 'WT2644',
+            mp1: 'SUGENG HARIYANTO (TIA)'
+          };
+          if (driverWt2644 !== '-') updatePayload.opt_name = driverWt2644;
+          state.supabaseClient.from('job_history_wt')
+            .update(updatePayload)
+            .in('id', targetIds)
+            .then(() => console.log('[History Repair] Sukses update job history WT2644 ke Supabase'))
+            .catch(err => console.warn('[History Repair] Gagal update ke Supabase:', err));
+        } catch (e) { }
+      }
+    }
+    window.repairSpecificSugengHistoryJobs = repairSpecificSugengHistoryJobs;
 
     /**
      * Mengunci snapshot histori pekerjaan secara permanen (Snapshot Table)
@@ -17443,10 +17762,33 @@
 
       // Ambil snapshot eksekusi beku jika job sedang diproses di background queue
       const bgSnapshot = (window._bgJobQueue && (window._bgJobQueue[job.id] || window._bgJobQueue[cleanBaseId] || window._bgJobQueue[originalJobId])) || null;
-      let finalArmada = String(bgSnapshot?.executedArmada || job.armada || job.ltUnit || job.wtUnit || job.armada_unit || '-').replace(/\s*\(.*?\)/g, '').trim().toUpperCase() || '-';
-      let finalOpt = (bgSnapshot?.executedOpt || job.opt || job.opt_name || '-').trim();
-      let finalMp1 = (bgSnapshot?.executedMp1 || job.mp1 || '-').trim();
-      let finalMp2 = (bgSnapshot?.executedMp2 || job.mp2 || '-').trim();
+
+      // DETEKSI KERAS AKUN LOGIN MANPOWER PADA SNAPSHOT RIWAYAT:
+      const mpProfileSnapshot = (typeof detectActionManpowerProfile === 'function')
+        ? detectActionManpowerProfile(job, bgSnapshot?.executedShift || job.executedShift || job.shift, job.tanggalRealisasi || job.tanggal)
+        : null;
+
+      let finalArmada = '';
+      let finalOpt = '';
+      let finalMp1 = '';
+      let finalMp2 = '';
+
+      if (bgSnapshot?.executedArmada) {
+        finalArmada = String(bgSnapshot.executedArmada).replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
+        finalOpt = (bgSnapshot.executedOpt || '-').trim();
+        finalMp1 = (bgSnapshot.executedMp1 || '-').trim();
+        finalMp2 = (bgSnapshot.executedMp2 || '-').trim();
+      } else if (mpProfileSnapshot && mpProfileSnapshot.isFieldWorker && mpProfileSnapshot.armada) {
+        finalArmada = mpProfileSnapshot.armada;
+        finalOpt = mpProfileSnapshot.opt;
+        finalMp1 = mpProfileSnapshot.mp1;
+        finalMp2 = mpProfileSnapshot.mp2;
+      } else {
+        finalArmada = String(job.armada || job.ltUnit || job.wtUnit || job.armada_unit || '-').replace(/\s*\(.*?\)/g, '').trim().toUpperCase() || '-';
+        finalOpt = (job.opt || job.opt_name || '-').trim();
+        finalMp1 = (job.mp1 || '-').trim();
+        finalMp2 = (job.mp2 || '-').trim();
+      }
 
       // Deteksi otomatis armada dan personil jika saat ini masih kosong / '-' (misal job service, bd, parkir, atau non ach)
       if (finalArmada === '-' || !finalArmada || finalOpt === '-' || (typeof isDummyPersonnelName === 'function' && isDummyPersonnelName(finalOpt))) {
@@ -23209,7 +23551,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         const rDate = (typeof normalizeDateStr === 'function') ? normalizeDateStr(r.tanggal) : r.tanggal;
         return rDate === normTargetDate || r.tanggal === targetRosterDate;
       });
-      const userRoster = userRosterToday || allUserRosters[0];
+      const userRoster = userRosterToday || null;
 
       let currentShiftNum = 1;
       let currentShiftCode = 'DWS';
@@ -23237,41 +23579,32 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       }
 
       // Tentukan unit penugasan personil (Washingman & Oilman)
-      const rawAssignedUnit = userRoster
-        ? ((userRoster.unitEfektif && !userRoster.unitEfektif.startsWith('SPARE')) ? userRoster.unitEfektif : userRoster.unit)
-        : '-';
-      let assignedUnit = (rawAssignedUnit && !rawAssignedUnit.startsWith('SPARE'))
-        ? rawAssignedUnit
-        : '-';
+      let assignedUnit = '-';
+      let userCluster = '-';
 
-      // Jika personil belum memiliki unit di roster hari ini, cari dari roster personil di baris lain
-      if (assignedUnit === '-' || assignedUnit.startsWith('--')) {
-        if (allUserRosters && allUserRosters.length > 0) {
-          const rWithUnit = allUserRosters.find(r => (r.unitEfektif && !r.unitEfektif.startsWith('SPARE') && r.unitEfektif !== '-') || (r.unit && !r.unit.startsWith('SPARE') && r.unit !== '-'));
-          if (rWithUnit) {
-            assignedUnit = (rWithUnit.unitEfektif && !rWithUnit.unitEfektif.startsWith('SPARE') && rWithUnit.unitEfektif !== '-') ? rWithUnit.unitEfektif : rWithUnit.unit;
-          }
+      if (userRosterToday) {
+        const validArmada = (typeof extractValidArmadaFromRoster === 'function')
+          ? extractValidArmadaFromRoster(userRosterToday)
+          : null;
+        if (validArmada) {
+          assignedUnit = validArmada;
+          userCluster = getArmadaRegisteredCluster(validArmada) || (userRosterToday.cluster ? getParentCluster(userRosterToday.cluster) : (isWt ? 'Tengah' : 'Selatan'));
+        } else {
+          // Status personil di roster hari ini adalah SPARE / DPU / tanpa armada:
+          // ATURAN MUTLAK: DILARANG KERAS MENGAMBIL ARMADA DARI TANGGAL KEMARIN / LAINNYA!
+          assignedUnit = '-';
+          userCluster = '-';
         }
+      } else {
+        // Personil tidak memiliki settingan roster untuk hari ini:
+        // Cukup beri strip '-' agar tidak salah jadwal/roster
+        assignedUnit = '-';
+        userCluster = '-';
       }
 
-      // SINKRONISASI CLUSTER MUTLAK MENGIKUTI ARMADA YANG DINAIKI (Permintaan Pengguna):
-      // "yg jadi patokan dia ada di kluster mana adalah di armada yg di naiki, jadi ketika armada terdaftar di kluster tengah maka pekerjaan dia ada di tengah"
-      let userCluster = '';
-      if (assignedUnit && assignedUnit !== '-' && !assignedUnit.startsWith('--')) {
-        userCluster = getArmadaRegisteredCluster(assignedUnit);
-      }
-
-      // Prioritas 2: Fallback ke cluster personil di Roster jika armada tidak terdaftar di kamus/master
-      if (!userCluster && userRoster && userRoster.cluster) {
-        userCluster = getParentCluster(userRoster.cluster);
-      }
-
-      // Prioritas 3: Default fallback
-      if (!userCluster) {
-        userCluster = isWt ? 'Tengah' : 'Selatan';
-      }
-
-      const crew = getPersonnelForArmada(assignedUnit, userCluster, currentShiftNum, today);
+      const crew = (assignedUnit && assignedUnit !== '-' && !assignedUnit.startsWith('--'))
+        ? getPersonnelForArmada(assignedUnit, userCluster, currentShiftNum, today)
+        : { opt: '-', mp1: '-', mp2: '-' };
 
       const infoUnit = document.getElementById('mp-info-unit');
       const infoOpt = document.getElementById('mp-info-opt');
@@ -23291,7 +23624,12 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         infoPartner.title = partnerName;
       }
       if (profileLocation) {
-        profileLocation.textContent = `Shift ${currentShiftNum} (${currentShiftCode}) • KGU ${userCluster}`;
+        if (userCluster && userCluster !== '-') {
+          profileLocation.textContent = `Shift ${currentShiftNum} (${currentShiftCode}) • KGU ${userCluster}`;
+        } else {
+          // Jika spare murni / tanpa kluster, cukup beri strip '-' sesuai instruksi pengguna
+          profileLocation.textContent = `Shift ${currentShiftNum} (${currentShiftCode}) • -`;
+        }
       }
       if (profileRole) {
         const isAssignedWt = String(assignedUnit || '').toUpperCase().startsWith('WT');
@@ -23304,22 +23642,26 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       const allJobs = isWt ? (state.watertruckState?.jobs || []) : (state.lubetruckState?.jobs || []);
       const normToday = normalizeDateStr(today);
 
-      const shiftJobs = allJobs.filter(j => {
-        const jDate = normalizeDateStr(j.tanggal || getEffectiveTodayString());
-        const matchDate = (jDate === normToday);
-        const matchShift = (Number(j.shift) === Number(currentShiftNum));
-        const jClusterParent = getParentCluster(j.cluster || '').toLowerCase();
-        const uClusterLower = userCluster.toLowerCase();
-        const matchCluster = (jClusterParent === uClusterLower) ||
-          ((j.cluster || '').toLowerCase() === uClusterLower) ||
-          (isClusterMatchFilter(j.cluster, userCluster)) ||
-          (assignedUnit && assignedUnit !== '-' && (
-            (j.armada && j.armada.trim().toUpperCase() === assignedUnit.trim().toUpperCase()) ||
-            (j.unitWt && j.unitWt.trim().toUpperCase() === assignedUnit.trim().toUpperCase()) ||
-            (j.ltUnit && j.ltUnit.trim().toUpperCase() === assignedUnit.trim().toUpperCase())
-          ));
-        return matchDate && matchShift && matchCluster;
-      });
+      const shiftJobs = (assignedUnit === '-' && userCluster === '-')
+        ? []
+        : allJobs.filter(j => {
+            const jDate = normalizeDateStr(j.tanggal || getEffectiveTodayString());
+            const matchDate = (jDate === normToday);
+            const matchShift = (Number(j.shift) === Number(currentShiftNum));
+            const jClusterParent = getParentCluster(j.cluster || '').toLowerCase();
+            const uClusterLower = userCluster.toLowerCase();
+            const matchCluster = (userCluster !== '-' && (
+              (jClusterParent === uClusterLower) ||
+              ((j.cluster || '').toLowerCase() === uClusterLower) ||
+              (isClusterMatchFilter(j.cluster, userCluster))
+            )) ||
+              (assignedUnit && assignedUnit !== '-' && (
+                (j.armada && j.armada.trim().toUpperCase() === assignedUnit.trim().toUpperCase()) ||
+                (j.unitWt && j.unitWt.trim().toUpperCase() === assignedUnit.trim().toUpperCase()) ||
+                (j.ltUnit && j.ltUnit.trim().toUpperCase() === assignedUnit.trim().toUpperCase())
+              ));
+            return matchDate && matchShift && matchCluster;
+          });
 
       const totalJob = shiftJobs.length;
       const doneAch = shiftJobs.filter(j => j.status === 'ach' || j.status === 'service' || j.status === 'bd').length;
@@ -25719,8 +26061,25 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       const isClosed = true;
       const msg = `Unit ${job.noLambung} selesai sebagai Non ACH: ${kategori}`;
 
-      // Kunci ke snapshot riwayat pekerjaan permanen
-      if (typeof autoResolveJobArmadaAndCrew === 'function') {
+      // Kunci ke snapshot riwayat pekerjaan permanen (Prioritas Utama Akun Manpower Login)
+      const mpProfileProc = (typeof detectActionManpowerProfile === 'function')
+        ? detectActionManpowerProfile(job, shiftNum, actionDate)
+        : null;
+
+      if (mpProfileProc && mpProfileProc.armada) {
+        job.armada = mpProfileProc.armada;
+        job.armada_unit = mpProfileProc.armada;
+        job.armadaUnit = mpProfileProc.armada;
+        const isWt = (job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat) || String(job.id || '').includes('WT') || job.serviceType === 'watertruck');
+        job.ltUnit = isWt ? '-' : mpProfileProc.armada;
+        job.wtUnit = isWt ? mpProfileProc.armada : '-';
+        job.opt = mpProfileProc.opt;
+        job.opt_name = mpProfileProc.opt;
+        job.mp1 = mpProfileProc.mp1;
+        job.mp2 = mpProfileProc.mp2;
+        job.action_by_nrp = mpProfileProc.nrp;
+        job.action_by_nama = mpProfileProc.nama;
+      } else if (typeof autoResolveJobArmadaAndCrew === 'function') {
         const resolved = autoResolveJobArmadaAndCrew(job, shiftNum, actionDate);
         if (resolved && resolved.armada && resolved.armada !== '-') {
           job.armada = resolved.armada;
@@ -25882,11 +26241,28 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       const kategori = document.getElementById('nonach-kategori')?.value || 'Lain-lain';
       const alasan = document.getElementById('nonach-alasan')?.value || '-';
 
-      // Otomatis deteksi armada & personil dari akun pengisi keterangan / settingan penugasan
+      // DETEKSI KERAS DARI NRP/LOGIN MANPOWER PENGISI AKSI:
       const isWt = (job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat) || String(job.id || '').includes('WT') || job.serviceType === 'watertruck');
       const execShift = job.shift || (typeof getEffectiveShift === 'function' ? getEffectiveShift() : 1);
       const execDate = getEffectiveTodayString();
-      if (typeof autoResolveJobArmadaAndCrew === 'function') {
+
+      const mpProfileNonAch = (typeof detectActionManpowerProfile === 'function')
+        ? detectActionManpowerProfile(job, execShift, execDate)
+        : null;
+
+      if (mpProfileNonAch && mpProfileNonAch.armada) {
+        job.armada = mpProfileNonAch.armada;
+        job.armada_unit = mpProfileNonAch.armada;
+        job.armadaUnit = mpProfileNonAch.armada;
+        job.wtUnit = isWt ? mpProfileNonAch.armada : '-';
+        job.ltUnit = isWt ? '-' : mpProfileNonAch.armada;
+        job.opt = mpProfileNonAch.opt;
+        job.opt_name = mpProfileNonAch.opt;
+        job.mp1 = mpProfileNonAch.mp1;
+        job.mp2 = mpProfileNonAch.mp2;
+        job.action_by_nrp = mpProfileNonAch.nrp;
+        job.action_by_nama = mpProfileNonAch.nama;
+      } else if (typeof autoResolveJobArmadaAndCrew === 'function') {
         const resolved = autoResolveJobArmadaAndCrew(job, execShift, execDate);
         if (resolved.armada && resolved.armada !== '-') {
           job.armada = resolved.armada;
@@ -27336,9 +27712,14 @@ Keterangan : ${keterangan}`;
       }
 
       // 8B. Kondisi Lapangan Khusus Washing (WT)
+      // Aturan Pengguna: "untuk detail job washing coal, rom dan non coal jika unit bukan status achived,
+      // misal service, bd, parkir atau non ach. maka tidak perlu di tampilkan kotak kondisi lapangan pencucian.
+      // hanya ada ketika unit acheved saja"
       const washBox = document.getElementById('detail-modal-washing-box');
       if (washBox) {
-        if (isWt && !isJobRequest) {
+        const rawStatus = String(job.status || '').toLowerCase().trim();
+        const isAchieved = (rawStatus === 'ach' || rawStatus === 'achieved' || rawStatus === 'done');
+        if (isWt && !isJobRequest && isAchieved) {
           washBox.classList.remove('hidden');
           const wOpt = document.getElementById('detail-modal-wash-opt');
           const wTurun = document.getElementById('detail-modal-wash-turun');
@@ -30963,10 +31344,13 @@ Keterangan : ${keterangan}`;
         try {
           const d = new Date(rawTs);
           if (!isNaN(d.getTime())) {
-            dateStr = (typeof formatDisplayDate === 'function') ? formatDisplayDate(d.toISOString().split('T')[0]) : d.toISOString().split('T')[0];
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            dateStr = `${dd}/${mm}/${yyyy}`;
             const hh = String(d.getHours()).padStart(2, '0');
-            const mm = String(d.getMinutes()).padStart(2, '0');
-            timeStr = `${hh}:${mm}`;
+            const mins = String(d.getMinutes()).padStart(2, '0');
+            timeStr = `${hh}:${mins}`;
           }
         } catch (e) {}
       }
@@ -31023,6 +31407,11 @@ Keterangan : ${keterangan}`;
       const container = document.getElementById('completed-table-container');
       const badge = document.getElementById('completed-total-badge');
       if (!container) return;
+
+      // Koreksi otomatis riwayat job eksekusi Sugeng Hariyanto (WT2644)
+      if (typeof repairSpecificSugengHistoryJobs === 'function') {
+        repairSpecificSugengHistoryJobs();
+      }
 
       const isAdmin = (state.currentUser?.role === 'admin');
       const userRole = state.currentUser?.role;
@@ -34732,10 +35121,20 @@ Keterangan : ${keterangan}`;
           ltCustom.appendChild(grp);
         });
 
-        // Cek apakah job sudah memiliki armada yang spesifik sebelumnya
-        let existingArmada = (job.armada && job.armada !== '-') ? job.armada : ((job.wtUnit && job.wtUnit !== '-') ? job.wtUnit : ((job.ltUnit && job.ltUnit !== '-') ? job.ltUnit : ''));
-        if (!existingArmada || existingArmada === '-') {
-          existingArmada = (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '');
+        // DETEKSI KERAS AKUN LOGIN MANPOWER (NRP / NAMA):
+        // Jika user yang login adalah Manpower (Washingman / Oilman), default armada otomatis adalah armada akun login tersebut!
+        const mpProfileAch = (typeof detectActionManpowerProfile === 'function')
+          ? detectActionManpowerProfile(job, initialExecShift, initialExecDate)
+          : null;
+
+        let existingArmada = '';
+        if (mpProfileAch && mpProfileAch.isFieldWorker && mpProfileAch.armada) {
+          existingArmada = mpProfileAch.armada;
+        } else {
+          existingArmada = (job.armada && job.armada !== '-') ? job.armada : ((job.wtUnit && job.wtUnit !== '-') ? job.wtUnit : ((job.ltUnit && job.ltUnit !== '-') ? job.ltUnit : ''));
+          if (!existingArmada || existingArmada === '-') {
+            existingArmada = (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '');
+          }
         }
 
         const cleanExisting = String(existingArmada || '').replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
@@ -34745,6 +35144,19 @@ Keterangan : ${keterangan}`;
           selectSearchableOption('ach-lt-custom', cleanExisting, matchedItem ? matchedItem.label : cleanExisting, false);
           // Sinkronkan personil otomatis mengikuti shift pelaksanaan yang aktif (isSilent = true agar tidak memunculkan toast saat form dibuka)
           handleAchShiftChange(initialExecShift, true);
+
+          // Jika akun login adalah MP, pastikan MP1 terisi nama akun login dan driver armada
+          if (mpProfileAch && mpProfileAch.isFieldWorker) {
+            if (mpProfileAch.mp1) {
+              selectSearchableOption('ach-mp1-name', mpProfileAch.mp1, mpProfileAch.mp1, false);
+            }
+            if (mpProfileAch.opt && mpProfileAch.opt !== '-') {
+              selectSearchableOption('ach-opt-name', mpProfileAch.opt, mpProfileAch.opt, false);
+            }
+            if (mpProfileAch.mp2 && mpProfileAch.mp2 !== '-') {
+              selectSearchableOption('ach-mp2-name', mpProfileAch.mp2, mpProfileAch.mp2, false);
+            }
+          }
         } else {
           selectSearchableOption('ach-lt-custom', '', '', false);
           populateAchPersonnelSelects('', '', '', isWashing);
@@ -47120,13 +47532,72 @@ Keterangan : ${keterangan}`;
     /**
      * Mengunduh data tabel operasional (LT, WT, Job Request, Riwayat) ke format file Excel (.xlsx)
      * Format kolom tabel:
-     * No, Tgl Waktu, Shift, Type Unit, No Unit, Cluster dan Lokasi, Pelaksanaan (Tgl dan Waktu Aktual), Durasi, Status, Temuan/Kendala, Armada, OPT, MP 1, MP 2
+     * No, No ID, Timestamp, Jenis Job, Plan, Waktu, Shift, Type Unit, No Unit, Cluster, Lokasi, HM Start, HM End, Tgl Action, Start, End, Durasi, Status, Temuan/Kendala, Armada, OPT, MP 1, MP 2
      */
     /**
-     * Membentuk baris data operasional lengkap 20 kolom untuk diekspor ke Excel
+     * Helper memformat Timestamp pengerjaan/realisasi job ke format string Excel (DD/MM/YYYY HH:MM)
+     */
+    function formatJobTimestampForExport(j) {
+      if (!j) return '-';
+      const rawTs = j.created_at || j.actionTimestamp;
+      let dateStr = '';
+      let timeStr = '';
+
+      if (rawTs) {
+        try {
+          const d = new Date(rawTs);
+          if (!isNaN(d.getTime())) {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            dateStr = `${dd}/${mm}/${yyyy}`;
+            const hh = String(d.getHours()).padStart(2, '0');
+            const min = String(d.getMinutes()).padStart(2, '0');
+            timeStr = `${hh}:${min}`;
+          }
+        } catch (e) {}
+      }
+
+      if (!dateStr) {
+        const rawDate = j.tanggalRealisasi || j.tanggal || j.tanggal_eksekusi || '';
+        dateStr = (typeof formatDisplayDate === 'function') ? formatDisplayDate(rawDate) : (rawDate || '-');
+      }
+
+      if (!timeStr || timeStr === '-') {
+        timeStr = j.jamEnd || j.jamStart || '-';
+      }
+
+      if (dateStr && dateStr !== '-' && timeStr && timeStr !== '-') {
+        return `${dateStr} ${timeStr}`;
+      } else if (dateStr && dateStr !== '-') {
+        return dateStr;
+      }
+      return '-';
+    }
+    window.formatJobTimestampForExport = formatJobTimestampForExport;
+
+    /**
+     * Helper mengekstrak HM Start dan HM End unit untuk ekspor Excel
+     */
+    function formatJobHmForExport(j) {
+      if (!j) return { hmStart: '-', hmEnd: '-' };
+      const startVal = (j.hmStart !== null && j.hmStart !== undefined && j.hmStart !== '') ? j.hmStart : ((j.hm_start !== null && j.hm_start !== undefined && j.hm_start !== '') ? j.hm_start : ((j.hmStop !== null && j.hmStop !== undefined && j.hmStop !== '') ? j.hmStop : (j.hm_stop || null)));
+      const endVal = (j.hmEnd !== null && j.hmEnd !== undefined && j.hmEnd !== '') ? j.hmEnd : ((j.hm_end !== null && j.hm_end !== undefined && j.hm_end !== '') ? j.hm_end : ((j.hmReady !== null && j.hmReady !== undefined && j.hmReady !== '') ? j.hmReady : (j.hm_ready || null)));
+
+      const hmStart = (startVal !== null && startVal !== undefined && startVal !== '' && startVal !== '-') ? String(startVal) : '-';
+      const hmEnd = (endVal !== null && endVal !== undefined && endVal !== '' && endVal !== '-') ? String(endVal) : '-';
+
+      return { hmStart, hmEnd };
+    }
+    window.formatJobHmForExport = formatJobHmForExport;
+
+    /**
+     * Membentuk baris data operasional lengkap 23 kolom untuk diekspor ke Excel
+     * Menambahkan kolom Timestamp setelah No ID, dan kolom HM Start & HM End sebelum Realisasi
      */
     function formatJobRowForExport(j, rowIdx) {
       const noId = (typeof getJobNoId === 'function') ? getJobNoId(j) : (j.noId || j.id || '-');
+      const timestamp = formatJobTimestampForExport(j);
       const plan = j.tanggal || '-';
       const waktu = j.waktu || '-';
       const shift = j.shift ? `Shift ${j.shift}` : '-';
@@ -47134,6 +47605,8 @@ Keterangan : ${keterangan}`;
       const noUnit = j.noLambung || j.unit || '-';
       const cluster = j.cluster ? (typeof formatClusterLabel === 'function' ? formatClusterLabel(j.cluster) : j.cluster) : '-';
       const lokasi = j.lokasi || '-';
+
+      const { hmStart, hmEnd } = formatJobHmForExport(j);
 
       const isActioned = Boolean(j.jamStart || j.status === 'ach' || j.status === 'done' || j.status === 'service' || j.status === 'bd' || j.status === 'non_ach');
       const tglAction = isActioned ? (j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || '-') : '-';
@@ -47177,6 +47650,7 @@ Keterangan : ${keterangan}`;
       return [
         rowIdx,
         noId,
+        timestamp,
         jenisJob,
         plan,
         waktu,
@@ -47185,6 +47659,8 @@ Keterangan : ${keterangan}`;
         noUnit,
         cluster,
         lokasi,
+        hmStart,
+        hmEnd,
         tglAction,
         startAction,
         endAction,
@@ -47204,6 +47680,11 @@ Keterangan : ${keterangan}`;
      * sesuai rentang tanggal (Dari & Ke), shift, cluster, kategori, dan pencarian.
      */
     function getFilteredCompletedJobs() {
+      // Koreksi otomatis riwayat job eksekusi Sugeng Hariyanto (WT2644)
+      if (typeof repairSpecificSugengHistoryJobs === 'function') {
+        repairSpecificSugengHistoryJobs();
+      }
+
       const compStartDateInput = document.getElementById('comp-filter-start-date');
       const compEndDateInput = document.getElementById('comp-filter-end-date');
       const startDate = compStartDateInput ? (compStartDateInput.value || '') : (state.completedFilterStartDate || '');
@@ -47301,9 +47782,17 @@ Keterangan : ${keterangan}`;
               ex.id = h.job_id || h.id;
               ex.noId = h.no_id || (typeof getJobNoId === 'function' ? getJobNoId(h) : hid);
             }
+            if ((!ex.created_at || ex.created_at === '-') && h.created_at) ex.created_at = h.created_at;
+            if ((!ex.actionTimestamp || ex.actionTimestamp === '-') && (h.actionTimestamp || h.created_at)) ex.actionTimestamp = h.actionTimestamp || h.created_at;
             if ((!ex.jamStart || ex.jamStart === '-') && h.jam_start) ex.jamStart = h.jam_start;
             if ((!ex.jamEnd || ex.jamEnd === '-') && h.jam_end) ex.jamEnd = h.jam_end;
             if ((ex.durasi === null || ex.durasi === undefined || ex.durasi === '' || ex.durasi === '-') && h.durasi) ex.durasi = h.durasi;
+            if ((!ex.hmStart || ex.hmStart === '-') && (h.hm_start || h.hm_stop)) ex.hmStart = h.hm_start || h.hm_stop;
+            if ((!ex.hmEnd || ex.hmEnd === '-') && (h.hm_end || h.hm_ready)) ex.hmEnd = h.hm_end || h.hm_ready;
+            if ((!ex.hmStop || ex.hmStop === '-') && (h.hm_stop || h.hm_start)) ex.hmStop = h.hm_stop || h.hm_start;
+            if ((!ex.hmReady || ex.hmReady === '-') && (h.hm_ready || h.hm_end)) ex.hmReady = h.hm_ready || h.hm_end;
+            if (!ex.hm_start && h.hm_start) ex.hm_start = h.hm_start;
+            if (!ex.hm_end && h.hm_end) ex.hm_end = h.hm_end;
             if (!ex.tanggalRealisasi && h.tanggal_eksekusi) ex.tanggalRealisasi = h.tanggal_eksekusi;
             if (!ex.noId && h.no_id) ex.noId = h.no_id;
             if (h.armada_unit && h.armada_unit !== '-') ex.armada = h.armada_unit;
@@ -47335,9 +47824,17 @@ Keterangan : ${keterangan}`;
               opt: h.opt_name,
               mp1: h.mp1,
               mp2: h.mp2,
+              created_at: h.created_at,
+              actionTimestamp: h.actionTimestamp || h.created_at,
               jamStart: h.jam_start,
               jamEnd: h.jam_end,
               durasi: h.durasi,
+              hmStart: h.hm_start || h.hm_stop || (h.snapshot_data ? (h.snapshot_data.hmStart || h.snapshot_data.hmStop || h.snapshot_data.hm_start || h.snapshot_data.hm_stop) : null),
+              hmEnd: h.hm_end || h.hm_ready || (h.snapshot_data ? (h.snapshot_data.hmEnd || h.snapshot_data.hmReady || h.snapshot_data.hm_end || h.snapshot_data.hm_ready) : null),
+              hmStop: h.hm_stop || h.hm_start || (h.snapshot_data ? (h.snapshot_data.hmStop || h.snapshot_data.hmStart) : null),
+              hmReady: h.hm_ready || h.hm_end || (h.snapshot_data ? (h.snapshot_data.hmReady || h.snapshot_data.hmEnd) : null),
+              hm_start: h.hm_start,
+              hm_end: h.hm_end,
               status: String(h.status_final || '').toLowerCase(),
               status_final: h.status_final,
               keterangan: (typeof formatTopUpAchKeterangan === 'function') ? formatTopUpAchKeterangan(h, h.keterangan) : h.keterangan,
@@ -47503,6 +48000,7 @@ Keterangan : ${keterangan}`;
       const headers = [
         'No',
         'No ID',
+        'Timestamp',
         'Jenis Job',
         'Plan',
         'Waktu',
@@ -47511,6 +48009,8 @@ Keterangan : ${keterangan}`;
         'No Unit',
         'Cluster',
         'Lokasi',
+        'HM Start',
+        'HM End',
         'Tgl Action',
         'Start',
         'End',
@@ -47867,6 +48367,7 @@ Keterangan : ${keterangan}`;
       const headers = [
         'No',
         'No ID',
+        'Timestamp',
         'Jenis Job',
         'Plan',
         'Waktu',
@@ -47875,6 +48376,8 @@ Keterangan : ${keterangan}`;
         'No Unit',
         'Cluster',
         'Lokasi',
+        'HM Start',
+        'HM End',
         'Tgl Action',
         'Start',
         'End',
@@ -47889,6 +48392,7 @@ Keterangan : ${keterangan}`;
 
       const rows = jobs.map((j, idx) => {
         const noId = (typeof getJobNoId === 'function') ? getJobNoId(j) : (j.noId || j.id || '-');
+        const timestamp = (typeof formatJobTimestampForExport === 'function') ? formatJobTimestampForExport(j) : '-';
         const plan = j.tanggal || '-';
         const waktu = j.waktu || '-';
         const shift = j.shift ? `Shift ${j.shift}` : '-';
@@ -47896,6 +48400,8 @@ Keterangan : ${keterangan}`;
         const noUnit = j.noLambung || j.unit || '-';
         const cluster = j.cluster ? formatClusterLabel(j.cluster) : '-';
         const lokasi = j.lokasi || '-';
+
+        const { hmStart, hmEnd } = (typeof formatJobHmForExport === 'function') ? formatJobHmForExport(j) : { hmStart: '-', hmEnd: '-' };
 
         const isActioned = Boolean(j.jamStart || j.status === 'ach' || j.status === 'done' || j.status === 'service' || j.status === 'bd' || j.status === 'non_ach');
         const tglAction = isActioned ? (j.tanggalRealisasi || j.tanggal || '-') : '-';
@@ -47939,6 +48445,7 @@ Keterangan : ${keterangan}`;
         return [
           idx + 1,
           noId,
+          timestamp,
           jenisJob,
           plan,
           waktu,
@@ -47947,6 +48454,8 @@ Keterangan : ${keterangan}`;
           noUnit,
           cluster,
           lokasi,
+          hmStart,
+          hmEnd,
           tglAction,
           startAction,
           endAction,
