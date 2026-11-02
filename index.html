@@ -15151,10 +15151,11 @@
 
       if (ltDate) ltDate.value = today;
       if (wtDate) wtDate.value = today;
-      if (compStartDate) compStartDate.value = defWeekRange.startDate;
-      if (compEndDate) compEndDate.value = defWeekRange.endDate;
-      state.completedFilterStartDate = defWeekRange.startDate;
-      state.completedFilterEndDate = defWeekRange.endDate;
+      // [Ultra-Low Egress] Default filter tanggal riwayat selesai dikosongkan (hanya menampilkan job hari ini)
+      if (compStartDate) compStartDate.value = '';
+      if (compEndDate) compEndDate.value = '';
+      state.completedFilterStartDate = '';
+      state.completedFilterEndDate = '';
       if (orderDate) orderDate.value = today;
 
       if (state.lubetruckState) state.lubetruckState.filterDate = today;
@@ -31405,7 +31406,7 @@ Keterangan : ${keterangan}`;
     }
     window.calculateDurationPlain = calculateDurationPlain;
 
-    function resetCompMiningWeekFilter() {
+    async function resetCompMiningWeekFilter() {
       const startEl = document.getElementById('comp-filter-start-date');
       const endEl = document.getElementById('comp-filter-end-date');
       const weekRange = (typeof getMiningWeekRange === 'function')
@@ -31417,19 +31418,28 @@ Keterangan : ${keterangan}`;
       state.completedFilterStartDate = weekRange.startDate;
       state.completedFilterEndDate = weekRange.endDate;
       updateCompDateClearBtn();
+      renderCompletedTable();
+
       if (typeof loadJobHistoryFromSupabase === 'function') {
-        loadJobHistoryFromSupabase(true);
-      } else {
-        renderCompletedTable();
+        const ind = document.getElementById('archive-loading-indicator');
+        if (ind) ind.classList.remove('hidden');
+        try {
+          await loadJobHistoryFromSupabase(true, weekRange.startDate, weekRange.endDate);
+        } catch (err) {
+          console.warn('[Reset Mining Week Fetch Error]', err);
+        } finally {
+          if (ind) ind.classList.add('hidden');
+          renderCompletedTable();
+        }
       }
 
       const dispStart = (typeof formatDisplayDate === 'function') ? formatDisplayDate(weekRange.startDate) : weekRange.startDate;
       const dispEnd = (typeof formatDisplayDate === 'function') ? formatDisplayDate(weekRange.endDate) : weekRange.endDate;
-      showToast(`Filter riwayat di-reset ke Mining Week hari ini (${dispStart} - ${dispEnd})`, 'info');
+      showToast(`Filter riwayat di-reset ke Mining Week (${dispStart} - ${dispEnd})`, 'info');
     }
     window.resetCompMiningWeekFilter = resetCompMiningWeekFilter;
 
-    function handleCompDateRangeChange() {
+    async function handleCompDateRangeChange() {
       const startEl = document.getElementById('comp-filter-start-date');
       const endEl = document.getElementById('comp-filter-end-date');
       state.completedFilterStartDate = startEl ? startEl.value : '';
@@ -31439,22 +31449,17 @@ Keterangan : ${keterangan}`;
 
       const startDate = state.completedFilterStartDate;
       const endDate = state.completedFilterEndDate || startDate;
-      if (startDate && typeof fetchArchiveJobsOnDemand === 'function' && window.globalDataCache && window.globalDataCache.loadedDates) {
-        let hasMissing = false;
-        let cur = new Date(startDate);
-        const endD = new Date(endDate);
-        while (cur <= endD) {
-          const dStr = cur.toISOString().split('T')[0];
-          if (!window.globalDataCache.loadedDates.has(dStr)) {
-            hasMissing = true;
-            break;
-          }
-          cur.setDate(cur.getDate() + 1);
-        }
-        if (hasMissing && !window.globalDataCache.isFetchingArchive) {
-          fetchArchiveJobsOnDemand(startDate, endDate).then(() => {
-            renderCompletedTable();
-          });
+
+      if (startDate && typeof loadJobHistoryFromSupabase === 'function') {
+        const ind = document.getElementById('archive-loading-indicator');
+        if (ind) ind.classList.remove('hidden');
+        try {
+          await loadJobHistoryFromSupabase(true, startDate, endDate);
+        } catch (err) {
+          console.warn('[On-Demand History Fetch Error]', err);
+        } finally {
+          if (ind) ind.classList.add('hidden');
+          renderCompletedTable();
         }
       }
     }
@@ -31470,6 +31475,7 @@ Keterangan : ${keterangan}`;
       state.completedFilterDate = '';
       updateCompDateClearBtn();
       renderCompletedTable();
+      showToast('Filter tanggal dikosongkan. Menampilkan riwayat hari ini.', 'info');
     }
     window.clearCompDateFilter = clearCompDateFilter;
 
@@ -31915,27 +31921,38 @@ Keterangan : ${keterangan}`;
       });
 
       // FILTER RENTANG TANGGAL: Saring data riwayat sesuai rentang "Dari" dan "Sampai"
+      // [ATURAN ULTRA-LOW EGRESS]: Jika tanggal dikosongkan, HANYA tampilkan pekerjaan HARI INI.
+      // Pencarian kata kunci & seluruh filter hanya aktif pada tanggal/rentang tanggal yang sedang ditampilkan!
       const normStart = startDate ? normalizeDateStr(startDate) : '';
       const normEnd = endDate ? normalizeDateStr(endDate) : '';
+      const todayStr = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+      const activeFilterStartDate = normStart ? normStart : (!normEnd ? todayStr : '');
+      const activeFilterEndDate = normEnd ? normEnd : (!normStart ? todayStr : '');
 
-      if (normStart || normEnd) {
-        allCompleted = allCompleted.filter(j => {
-          // Aturan Cerdas: Jika user sedang mencari kata kunci spesifik (misal nama unit 'E2008'),
-          // jangan dibatasi oleh rentang tanggal agar riwayat yang dicari langsung ditemukan!
-          if (searchVal) return true;
-          const jobDate = normalizeDateStr(j.tanggalRealisasi || j.tanggal);
-          if (!jobDate) return false;
-          if (normStart && jobDate < normStart) return false;
-          if (normEnd && jobDate > normEnd) return false;
-          return true;
-        });
-      }
+      allCompleted = allCompleted.filter(j => {
+        const jobDate = normalizeDateStr(j.tanggalRealisasi || j.tanggal);
+        if (!jobDate) return false;
+        if (activeFilterStartDate && jobDate < activeFilterStartDate) return false;
+        if (activeFilterEndDate && jobDate > activeFilterEndDate) return false;
+        return true;
+      });
 
       const totalAch = allCompleted.filter(j => isAchLikeStatus(j)).length;
       const totalNonAch = allCompleted.filter(j => j.status === 'non_ach').length;
 
       if (badge) {
-        const dateSuffix = selectedDate ? ` • ${formatDisplayDate(selectedDate)}` : ' • Semua Tanggal';
+        let dateSuffix = '';
+        if (!normStart && !normEnd) {
+          dateSuffix = ` • Hari Ini (${typeof formatDisplayDate === 'function' ? formatDisplayDate(todayStr) : todayStr})`;
+        } else if (normStart && normEnd && normStart === normEnd) {
+          dateSuffix = ` • ${typeof formatDisplayDate === 'function' ? formatDisplayDate(normStart) : normStart}`;
+        } else if (normStart && normEnd) {
+          dateSuffix = ` • ${typeof formatDisplayDate === 'function' ? formatDisplayDate(normStart) : normStart} s/d ${typeof formatDisplayDate === 'function' ? formatDisplayDate(normEnd) : normEnd}`;
+        } else if (normStart) {
+          dateSuffix = ` • Dari ${typeof formatDisplayDate === 'function' ? formatDisplayDate(normStart) : normStart}`;
+        } else if (normEnd) {
+          dateSuffix = ` • Sampai ${typeof formatDisplayDate === 'function' ? formatDisplayDate(normEnd) : normEnd}`;
+        }
         badge.textContent = `Total Riwayat: ${allCompleted.length} Unit (${totalAch} ACH • ${totalNonAch} Non-ACH${dateSuffix})`;
         if (isWt) {
           badge.className = 'px-3 py-1.5 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-800 font-extrabold text-xs shadow-2xs';
@@ -32094,7 +32111,7 @@ Keterangan : ${keterangan}`;
       }
 
       // Reset ke halaman 1 jika filter tanggal, shift, cluster, kategori, atau kata kunci berubah
-      const currentFilterKey = `${normStart}|${normEnd}|${shiftFilter}|${clusterFilter}|${cat}|${searchVal}`;
+      const currentFilterKey = `${activeFilterStartDate}|${activeFilterEndDate}|${shiftFilter}|${clusterFilter}|${cat}|${searchVal}`;
       if (state._lastCompFilterKey !== currentFilterKey) {
         state._lastCompFilterKey = currentFilterKey;
         state.completedPage = 1;
@@ -46277,33 +46294,34 @@ function isJobAlreadyClosedInHistory(job, historyList = state.jobHistory) {
 
     // 3. TARIK RIWAYAT SELESAI DARI TABEL job_history_lt & job_history_wt SUPABASE (Hot-Window & Throttled)
     let _lastJobHistoryFetchTs = 0;
-    async function loadJobHistoryFromSupabase(force = false) {
+    async function loadJobHistoryFromSupabase(force = false, targetStartDate = null, targetEndDate = null) {
       if (!state.supabaseClient) return;
 
       const now = Date.now();
-      // Throttle 5 menit jika data sudah ada di memori dan tidak dipaksa (force)
-      if (!force && window._hasLoadedJobHistory && (now - _lastJobHistoryFetchTs < 300000) && Array.isArray(state.jobHistory) && state.jobHistory.length > 0) {
+      const hasSpecificRange = Boolean(targetStartDate);
+
+      // Throttle 5 menit jika data default hari ini sudah ada di memori dan tidak dipaksa (force)
+      if (!hasSpecificRange && !force && window._hasLoadedJobHistory && (now - _lastJobHistoryFetchTs < 300000) && Array.isArray(state.jobHistory) && state.jobHistory.length > 0) {
         return;
       }
 
       try {
-        _lastJobHistoryFetchTs = now;
+        if (!hasSpecificRange) {
+          _lastJobHistoryFetchTs = now;
+        }
         // Jalankan sanitasi otomatis baris selesai/kendala yang tertinggal di jobs_wt
         if (typeof sanitizeCompletedJobsInActiveTables === 'function') {
           await sanitizeCompletedJobsInActiveTables();
         }
 
-        // [Audit Ultra-Low Egress] Tarik kolom teks ringkasan dari job_history_lt & job_history_wt (Mencakup sejak awal peluncuran 25/10/2026)
+        // [Optimasi Ultra-Low Egress]:
+        // Default penarikan HANYA untuk hari ini (today). Jika user memfilter rentang tanggal tertentu, tarik On-Demand rentang tersebut.
         const HIST_COLS_LT = 'id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,non_ach_category,non_ach_reason,created_at';
         const HIST_COLS_WT = 'id,no_lambung,type_unit,cat,job_type,washing_round,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,non_ach_category,non_ach_reason,created_at';
-        const APP_START_DATE = '2026-10-25';
-        const dStart = new Date(getEffectiveTodayString());
-        dStart.setDate(dStart.getDate() - 14);
-        let startWindowStr = dStart.toISOString().split('T')[0];
-        // Pastikan penarikan riwayat selesai selalu mencakup seluruh operasional sejak awal aplikasi (25 Oktober 2026)
-        if (startWindowStr > APP_START_DATE) {
-          startWindowStr = APP_START_DATE;
-        }
+        const todayStr = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+
+        let startWindowStr = targetStartDate ? normalizeDateStr(targetStartDate) : todayStr;
+        let endWindowStr = targetEndDate ? normalizeDateStr(targetEndDate) : (targetStartDate ? startWindowStr : todayStr);
 
         // Helper fetching paginasi bertahap (chunk 1000 baris) agar data historis tidak terpotong (Aturan #2)
         async function fetchAllHistoryFromTable(tableName, selectCols) {
@@ -46312,18 +46330,26 @@ function isJobAlreadyClosedInHistory(job, historyList = state.jobHistory) {
           let keep = true;
           let allRows = [];
           while (keep && offset < 50000) {
-            let res = await state.supabaseClient
+            let q = state.supabaseClient
               .from(tableName)
               .select(selectCols)
-              .gte('tanggal_rencana', startWindowStr)
+              .gte('tanggal_rencana', startWindowStr);
+            if (endWindowStr) {
+              q = q.lte('tanggal_rencana', endWindowStr);
+            }
+            let res = await q
               .order('created_at', { ascending: false })
               .range(offset, offset + CHUNK - 1);
 
             if (res.error && tableName === 'job_history_wt' && (/washing_round/i.test(res.error.message || '') || res.error.code === '42703')) {
-              res = await state.supabaseClient
+              let q2 = state.supabaseClient
                 .from(tableName)
                 .select(HIST_COLS_LT)
-                .gte('tanggal_rencana', startWindowStr)
+                .gte('tanggal_rencana', startWindowStr);
+              if (endWindowStr) {
+                q2 = q2.lte('tanggal_rencana', endWindowStr);
+              }
+              res = await q2
                 .order('created_at', { ascending: false })
                 .range(offset, offset + CHUNK - 1);
             }
@@ -46364,14 +46390,29 @@ function isJobAlreadyClosedInHistory(job, historyList = state.jobHistory) {
               item.hmReady = item.hm_ready || item.hm_end || null;
             }
           });
-          state.jobHistory = data;
+
+          // [Aturan #1 & #4]: Merge & Deduplikasi ke dalam state.jobHistory di RAM
+          const mergedHistMap = new Map();
+          if (Array.isArray(state.jobHistory)) {
+            state.jobHistory.forEach(oldItem => {
+              if (oldItem && oldItem.id) mergedHistMap.set(String(oldItem.id), oldItem);
+            });
+          }
+          data.forEach(newItem => {
+            if (newItem && newItem.id) {
+              mergedHistMap.set(String(newItem.id), newItem);
+            }
+          });
+
+          state.jobHistory = Array.from(mergedHistMap.values()).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
           window._hasLoadedJobHistory = true;
           try {
             safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory.slice(0, 300)));
           } catch (e) { }
           await reconcileActiveJobsAgainstHistory(true);
-          console.log('[Supabase History Sync OK] Total ' + state.jobHistory.length + ' riwayat selesai termuat & direkonsiliasi dari Supabase.');
+          console.log('[Supabase History Sync OK] Total ' + state.jobHistory.length + ' riwayat selesai tersimpan di cache RAM (' + startWindowStr + (endWindowStr !== startWindowStr ? ' s/d ' + endWindowStr : '') + ').');
           if (typeof renderHistoryTable === 'function') renderHistoryTable();
+          if (typeof renderCompletedTable === 'function') renderCompletedTable();
           if (state.activeTab === 'pica' && typeof renderPicaTable === 'function') renderPicaTable();
           if (state.activeTab === 'dashboard') {
             if (typeof refreshDashboardData === 'function') refreshDashboardData();
@@ -48176,16 +48217,15 @@ function isJobAlreadyClosedInHistory(job, historyList = state.jobHistory) {
         }
       });
 
-      if (normStart || normEnd) {
-        allCompleted = allCompleted.filter(j => {
-          if (searchVal) return true;
-          const jobDate = normalizeDateStr(j.tanggalRealisasi || j.tanggal);
-          if (!jobDate) return false;
-          if (normStart && jobDate < normStart) return false;
-          if (normEnd && jobDate > normEnd) return false;
-          return true;
-        });
-      }
+      // [ATURAN ULTRA-LOW EGRESS]: Jika tanggal kosong, default HANYA ambil pekerjaan HARI INI.
+      // Pencarian kata kunci & seluruh filter hanya aktif pada tanggal yang sedang ditampilkan!
+      allCompleted = allCompleted.filter(j => {
+        const jobDate = normalizeDateStr(j.tanggalRealisasi || j.tanggal);
+        if (!jobDate) return false;
+        if (activeFilterStartDate && jobDate < activeFilterStartDate) return false;
+        if (activeFilterEndDate && jobDate > activeFilterEndDate) return false;
+        return true;
+      });
 
       let filtered = allCompleted;
       if (cat === 'all') {
