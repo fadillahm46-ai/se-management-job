@@ -2522,8 +2522,8 @@
                           <span
                             class="text-[10px] font-bold text-slate-800 group-hover:text-emerald-900 block flex items-center gap-1">
                             <span>Washing Non-Coal</span>
-                            <span class="text-[9px] text-emerald-600 opacity-0 group-hover:opacity-100 transition">
-                            </span>
+                            <span
+                              class="text-[9px] text-emerald-600 opacity-0 group-hover:opacity-100 transition">&rarr;</span>
                           </span>
                           <span class="text-[9px] text-slate-400">Unit non-coal & support</span>
                         </div>
@@ -13323,8 +13323,15 @@
         const jNo = String(j.noLambung || j.no_lambung || '').trim().toUpperCase();
         const jDate = j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || j.tanggal_rencana || '';
         const jShift = String(j.shift || j.shift_rencana || 1);
-        const jCat = String(j.cat || '').trim().toLowerCase();
+        let jCat = String(j.cat || '').trim().toLowerCase();
         const rawUpperId = jId.toUpperCase();
+        if (jCat === 'wnc' || jCat === 'noncoal' || jCat === 'non_coal' || jCat.includes('non_coal') || rawUpperId.includes('-WNC-') || rawUpperId.startsWith('WT-WNC')) {
+          jCat = 'non_coal';
+        } else if (jCat === 'wsc' || rawUpperId.includes('-WSC-') || rawUpperId.startsWith('WT-WSC')) {
+          if (jCat !== 'rom' && jCat !== 'non_coal') {
+            jCat = 'coal';
+          }
+        }
         const isUnsch = (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(j)) ||
           (typeof getJobTypeCode === 'function' && getJobTypeCode(j) === 'REQ') ||
           rawUpperId.startsWith('UNS') || rawUpperId.startsWith('LT-REQ') || rawUpperId.startsWith('WT-REQ') ||
@@ -25256,7 +25263,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       const diggerJobs = schJobs.filter(j => j.cat === 'digger');
       const greasingJobs = [...smallJobs, ...diggerJobs];
       const coalJobs = schJobs.filter(j => j.cat === 'coal');
-      const nonCoalJobs = schJobs.filter(j => j.cat === 'non_coal' || j.cat === 'noncoal');
+      const nonCoalJobs = schJobs.filter(j => {
+        const c = String(j.cat || '').toLowerCase();
+        const id = String(j.id || '').toUpperCase();
+        return c === 'non_coal' || c === 'noncoal' || c === 'wnc' || c.includes('non_coal') || id.includes('-WNC-') || id.startsWith('WT-WNC');
+      });
       const romJobs = schJobs.filter(j => j.cat === 'rom');
       const aircleanerJobs = schJobs.filter(j => j.cat === 'aircleaner');
       const topupJobs = schJobs.filter(j => j.cat === 'topup');
@@ -25278,6 +25289,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
       if (catGreasingEl) catGreasingEl.textContent = `${greasingJobs.length} Job (${calcCatRate(greasingJobs)})`;
       if (catCoalEl) catCoalEl.textContent = `${coalJobs.length} Job (${calcCatRate(coalJobs)})`;
+      if (catNoncoalEl) catNoncoalEl.textContent = `${nonCoalJobs.length} Job (${calcCatRate(nonCoalJobs)})`;
       if (catRomEl) catRomEl.textContent = `${romJobs.length} Job (${calcCatRate(romJobs)})`;
       if (catAircleanerEl) catAircleanerEl.textContent = `${aircleanerJobs.length} Job (${calcCatRate(aircleanerJobs)})`;
       if (catTopupEl) catTopupEl.textContent = `${topupJobs.length} Job (${calcCatRate(topupJobs)})`;
@@ -25369,18 +25381,19 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             categoryDonutChartInstance = new Chart(donutCtx, {
               type: 'doughnut',
               data: {
-                labels: ['Small Track (SCH)', 'Big Digger (SCH)', 'Washing Coal (SCH)', 'Washing ROM (SCH)', 'Clean Air Cleaner (SCH)', 'Top Up Oil (SCH)', 'Unscheduled'],
+                labels: ['Small Track (SCH)', 'Big Digger (SCH)', 'Washing Coal (SCH)', 'Washing ROM (SCH)', 'Washing Non-Coal (SCH)', 'Clean Air Cleaner (SCH)', 'Top Up Oil (SCH)', 'Unscheduled'],
                 datasets: [{
                   data: [
                     smallJobs.length,
                     diggerJobs.length,
                     coalJobs.length,
                     romJobs.length,
+                    nonCoalJobs.length,
                     aircleanerJobs.length,
                     topupJobs.length,
                     unschedAll
                   ],
-                  backgroundColor: ['#10B981', '#06B6D4', '#3B82F6', '#14B8A6', '#F59E0B', '#6366F1', '#EC4899'],
+                  backgroundColor: ['#10B981', '#06B6D4', '#3B82F6', '#14B8A6', '#8B5CF6', '#F59E0B', '#6366F1', '#EC4899'],
                   borderWidth: 2,
                   borderColor: '#ffffff'
                 }]
@@ -25472,7 +25485,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       } else if (selectedCat === 'coal') {
         targetJobs = schJobs.filter(j => j.cat === 'coal');
       } else if (selectedCat === 'non_coal' || selectedCat === 'noncoal') {
-        targetJobs = schJobs.filter(j => j.cat === 'non_coal' || j.cat === 'noncoal');
+        targetJobs = schJobs.filter(j => {
+          const c = String(j.cat || '').toLowerCase();
+          const id = String(j.id || '').toUpperCase();
+          return c === 'non_coal' || c === 'noncoal' || c === 'wnc' || c.includes('non_coal') || id.includes('-WNC-') || id.startsWith('WT-WNC');
+        });
       } else if (selectedCat === 'rom') {
         targetJobs = schJobs.filter(j => j.cat === 'rom');
       } else if (selectedCat === 'aircleaner') {
