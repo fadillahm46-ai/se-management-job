@@ -9921,9 +9921,16 @@
                 </div>
               </div>
 
-              <div class="flex items-center justify-end pt-1">
+              <div class="flex items-center justify-between pt-1">
+                <span id="detail-modal-save-feedback"
+                  class="hidden text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                  <svg class="w-3 h-3 text-emerald-600 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <span>Tersimpan!</span>
+                </span>
                 <button type="button" id="detail-modal-btn-save-loc" onclick="saveMpLocationUpdate(event)"
-                  class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-semibold transition cursor-pointer flex items-center gap-1.5">
+                  class="ml-auto px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-semibold transition cursor-pointer flex items-center gap-1.5">
                   <svg class="w-3.5 h-3.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                   </svg>
@@ -29626,9 +29633,13 @@ Keterangan : ${keterangan}`;
       job.no_lambung = job.noLambung;
 
       const clusterSel = document.getElementById('detail-modal-cluster-select');
+      const feedbackPill = document.getElementById('detail-modal-save-feedback');
+      if (feedbackPill) feedbackPill.classList.add('hidden');
+
       const lokasiInp = document.getElementById('detail-modal-lokasi-input');
       const waktuInp = document.getElementById('detail-modal-waktu-input');
       const btn = document.getElementById('detail-modal-btn-save-loc');
+      const feedback = document.getElementById('detail-modal-save-feedback');
       const waktuSchEl = document.getElementById('detail-modal-waktu-sch');
 
       const originalBtnHtml = '<svg class="w-3 h-3 text-brand-900 inline shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg><span>Simpan Lokasi & Waktu</span>';
@@ -29698,6 +29709,15 @@ Keterangan : ${keterangan}`;
         if (waktuSchEl) {
           const dateStr = typeof formatDisplayDate === 'function' ? formatDisplayDate(job.tanggal || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : '2026-10-16')) : (job.tanggal || '');
           waktuSchEl.textContent = newWaktu ? `${newWaktu} (${dateStr})` : '-';
+        }
+
+        // Tampilkan badge feedback inline di sebelah tombol
+        if (feedback) {
+          feedback.innerHTML = '<svg class="w-3 h-3 text-emerald-600 inline shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg><span>Lokasi & Waktu Diterapkan!</span>';
+          feedback.classList.remove('hidden');
+          setTimeout(() => {
+            if (feedback) feedback.classList.add('hidden');
+          }, 4000);
         }
 
         // 3. Sinkronkan waktu & lokasi penugasan khusus job ini ke tabel fisik jobs_lt / jobs_wt di Supabase
@@ -32643,6 +32663,15 @@ Keterangan : ${keterangan}`;
     }
     window.renderCompletedTimestampHtml = renderCompletedTimestampHtml;
 
+    function renderCompletedShiftHtml(job) {
+      const s = parseInt(job.shift || job.shift_rencana || 1, 10);
+      if (s === 2) {
+        return `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-[8px] font-medium bg-purple-50 text-purple-700 border border-purple-200/80 whitespace-nowrap shadow-2xs">Shift 2</span>`;
+      }
+      return `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-[8px] font-medium bg-blue-50 text-blue-700 border border-blue-200/80 whitespace-nowrap shadow-2xs">Shift 1</span>`;
+    }
+    window.renderCompletedShiftHtml = renderCompletedShiftHtml;
+
     function renderCompletedHmUnitHtml(job) {
       const startVal = (job.hmStart !== null && job.hmStart !== undefined && job.hmStart !== '') ? job.hmStart : ((job.hm_start !== null && job.hm_start !== undefined && job.hm_start !== '') ? job.hm_start : ((job.hmStop !== null && job.hmStop !== undefined && job.hmStop !== '') ? job.hmStop : (job.hm_stop || null)));
       const endVal = (job.hmEnd !== null && job.hmEnd !== undefined && job.hmEnd !== '') ? job.hmEnd : ((job.hm_end !== null && job.hm_end !== undefined && job.hm_end !== '') ? job.hm_end : ((job.hmReady !== null && job.hmReady !== undefined && job.hmReady !== '') ? job.hmReady : (job.hm_ready || null)));
@@ -32929,7 +32958,8 @@ Keterangan : ${keterangan}`;
         const isWtJob = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(j) : false;
         const round = isWtJob ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(j) : (parseInt(j.washingRound || j.washing_round || 1, 10))) : 0;
         const roundSuffix = (isWtJob && round) ? `_W${round}` : '';
-        const uKey = `${String(j.noLambung || j.no_lambung || '').trim().toUpperCase()}_${j.tanggalRealisasi || j.tanggal || ''}_${j.shift || 1}_${String(j.cat || '').toLowerCase().trim()}${roundSuffix}`;
+        const rawDateForDedup = j.tanggal || j.tanggal_rencana || j.planDate || j.tanggalRealisasi || '';
+        const uKey = `${String(j.noLambung || j.no_lambung || '').trim().toUpperCase()}_${rawDateForDedup}_${j.shift || 1}_${String(j.cat || '').toLowerCase().trim()}${roundSuffix}`;
         if (seenCompletedKeys.has(uKey)) return false;
         seenCompletedKeys.add(uKey);
         return true;
@@ -32954,15 +32984,16 @@ Keterangan : ${keterangan}`;
         }
       });
 
-      // FILTER RENTANG TANGGAL: Semua acuan data mutlak berdasar rentang tanggal!
-      // Jika user mencari unit (searchVal), pencarian HANYA mencari di dalam rentang tanggal ini.
+      // FILTER RENTANG TANGGAL: Mutlak diambil dari tanggal kolom waktu (jadwal/rencana), BUKAN dari realisasi atau timestamp
       const normStart = startDate ? normalizeDateStr(startDate) : '';
       const normEnd = endDate ? normalizeDateStr(endDate) : '';
 
       if (normStart || normEnd) {
         allCompleted = allCompleted.filter(j => {
-          const rawDate = j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || j.tanggal_rencana || '';
-          const jobDate = normalizeDateStr(String(rawDate).split('T')[0]);
+          // Tanggal kolom waktu (jadwal/rencana) diutamakan
+          const rawDate = j.tanggal || j.tanggal_rencana || j.planDate || '';
+          const fallbackDate = rawDate || j.tanggalRealisasi || j.tanggal_eksekusi || '';
+          const jobDate = normalizeDateStr(String(fallbackDate).split('T')[0]);
           if (!jobDate) return false;
           if (normStart && jobDate < normStart) return false;
           if (normEnd && jobDate > normEnd) return false;
@@ -33038,7 +33069,7 @@ Keterangan : ${keterangan}`;
       }
 
       if (shiftFilter !== 'ALL') {
-        filtered = filtered.filter(j => String(j.shift) === String(shiftFilter));
+        filtered = filtered.filter(j => String(j.shift || j.shift_rencana || '') === String(shiftFilter));
       }
       if (clusterFilter !== 'ALL') {
         filtered = filtered.filter(j => isClusterMatchFilter(j.cluster, clusterFilter));
@@ -33095,11 +33126,17 @@ Keterangan : ${keterangan}`;
               break;
             }
             case 'waktu': {
-              const dateA = (typeof normalizeDateStr === 'function') ? normalizeDateStr(a.tanggal || a.tanggalRealisasi) : (a.tanggal || '');
-              const dateB = (typeof normalizeDateStr === 'function') ? normalizeDateStr(b.tanggal || b.tanggalRealisasi) : (b.tanggal || '');
+              const dateA = (typeof normalizeDateStr === 'function') ? normalizeDateStr(a.tanggal || a.tanggal_rencana || a.planDate || a.tanggalRealisasi) : (a.tanggal || '');
+              const dateB = (typeof normalizeDateStr === 'function') ? normalizeDateStr(b.tanggal || b.tanggal_rencana || b.planDate || b.tanggalRealisasi) : (b.tanggal || '');
               const valA = dateA + ' ' + (a.waktu || '');
               const valB = dateB + ' ' + (b.waktu || '');
               cmp = sortDir * valA.localeCompare(valB);
+              break;
+            }
+            case 'shift': {
+              const valA = parseInt(a.shift || a.shift_rencana || 1, 10);
+              const valB = parseInt(b.shift || b.shift_rencana || 1, 10);
+              cmp = sortDir * (valA - valB);
               break;
             }
             case 'unit': {
@@ -33202,79 +33239,85 @@ Keterangan : ${keterangan}`;
               <thead class="sticky top-0 bg-slate-100 text-slate-700 uppercase text-[8.5px] md:text-[9.5px] tracking-wider border-b border-slate-200 font-semibold select-none z-20">
               <tr>
                 ${state.isCompSelectMode ? `
-                  <th class="py-2 px-1 w-[8%] md:w-[3%] text-center align-middle select-none" title="Pilih Semua yang Tampil">
+                  <th class="py-2 px-1 w-[7%] md:w-[3%] text-center align-middle select-none" title="Pilih Semua yang Tampil">
                     <input type="checkbox" id="comp-check-all" onchange="toggleSelectAllCompletedCheckboxes(this.checked)"
                       class="rounded text-rose-600 focus:ring-rose-500 cursor-pointer w-3.5 h-3.5">
                   </th>
                 ` : ''}
-                <th onclick="sortCompletedBy('noId')" class="hidden md:table-cell py-2 px-1.5 text-left align-middle ${state.isCompSelectMode ? 'md:w-[9.5%]' : 'md:w-[10%]'} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan No ID Unik">
+                <th onclick="sortCompletedBy('noId')" class="hidden md:table-cell py-2 px-1.5 text-left align-middle ${state.isCompSelectMode ? (isWt ? 'md:w-[8.5%]' : 'md:w-[9.5%]') : (isWt ? 'md:w-[9%]' : 'md:w-[9.5%]')} cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan No ID Unik">
                   <div class="flex items-center justify-start space-x-1">
                     <span>NO ID</span>
                     ${renderCompletedSortIcon('noId')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('timestamp')" class="hidden md:table-cell py-2 px-1.5 ${state.isCompSelectMode ? 'md:w-[7.5%]' : 'md:w-[7.5%]'} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Waktu Submit / Input Riwayat">
+                <th onclick="sortCompletedBy('timestamp')" class="hidden md:table-cell py-2 px-1.5 ${state.isCompSelectMode ? (isWt ? 'md:w-[7%]' : 'md:w-[7.5%]') : (isWt ? 'md:w-[7%]' : 'md:w-[7.5%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Waktu Submit / Input Riwayat">
                   <div class="flex items-center justify-start space-x-1">
                     <span>TIMESTAMP</span>
                     ${renderCompletedSortIcon('timestamp')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('sch')" class="py-2 px-1 ${state.isCompSelectMode ? (isWt ? 'w-[12%] md:w-[5%]' : 'w-[14%] md:w-[5%]') : (isWt ? 'w-[12%] md:w-[5%]' : 'w-[15%] md:w-[5%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition whitespace-nowrap" title="Urutkan berdasarkan Type Job">
+                <th onclick="sortCompletedBy('sch')" class="py-2 px-1 ${state.isCompSelectMode ? (isWt ? 'w-[11%] md:w-[5%]' : 'w-[13%] md:w-[5%]') : (isWt ? 'w-[11%] md:w-[5%]' : 'w-[13%] md:w-[5%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition whitespace-nowrap" title="Urutkan berdasarkan Type Job">
                   <div class="flex items-center justify-start space-x-1 whitespace-nowrap">
                     <span class="whitespace-nowrap">TYPE JOB</span>
                     ${renderCompletedSortIcon('sch')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('waktu')" class="hidden md:table-cell py-2 px-1.5 ${state.isCompSelectMode ? 'md:w-[7.5%]' : 'md:w-[7.5%]'} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Waktu Rencana">
+                <th onclick="sortCompletedBy('waktu')" class="hidden md:table-cell py-2 px-1.5 ${state.isCompSelectMode ? (isWt ? 'md:w-[7%]' : 'md:w-[7%]') : (isWt ? 'md:w-[7%]' : 'md:w-[7.5%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Waktu Rencana">
                   <div class="flex items-center justify-start space-x-1">
                     <span>WAKTU</span>
                     ${renderCompletedSortIcon('waktu')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('unit')" class="py-2 px-1.5 ${state.isCompSelectMode ? (isWt ? 'w-[18%] md:w-[9%]' : 'w-[20%] md:w-[9%]') : (isWt ? 'w-[20%] md:w-[9.5%]' : 'w-[22%] md:w-[9.5%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan No Lambung Unit">
+                <th onclick="sortCompletedBy('shift')" class="hidden md:table-cell py-2 px-1.5 ${state.isCompSelectMode ? (isWt ? 'md:w-[4.5%]' : 'md:w-[4.5%]') : (isWt ? 'md:w-[4.5%]' : 'md:w-[5%]')} text-center align-middle cursor-pointer group hover:bg-slate-100 transition whitespace-nowrap" title="Urutkan berdasarkan Shift">
+                  <div class="flex items-center justify-center space-x-1 whitespace-nowrap">
+                    <span>SHIFT</span>
+                    ${renderCompletedSortIcon('shift')}
+                  </div>
+                </th>
+                <th onclick="sortCompletedBy('unit')" class="py-2 px-1.5 ${state.isCompSelectMode ? (isWt ? 'w-[18%] md:w-[9%]' : 'w-[20%] md:w-[9.5%]') : (isWt ? 'w-[18%] md:w-[9%]' : 'w-[20%] md:w-[10%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan No Lambung Unit">
                   <div class="flex items-center justify-start space-x-1">
                     <span class="md:hidden">NO UNIT</span>
                     <span class="hidden md:inline">${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
                     ${renderCompletedSortIcon('unit')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('cluster')" class="py-2 px-1.5 ${state.isCompSelectMode ? (isWt ? 'w-[25%] md:w-[11%]' : 'w-[30%] md:w-[11%]') : (isWt ? 'w-[25%] md:w-[11.5%]' : 'w-[32%] md:w-[11.5%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Cluster & Lokasi Pit">
+                <th onclick="sortCompletedBy('cluster')" class="py-2 px-1.5 ${state.isCompSelectMode ? (isWt ? 'w-[23%] md:w-[10.5%]' : 'w-[30%] md:w-[11.5%]') : (isWt ? 'w-[24%] md:w-[11%]' : 'w-[32%] md:w-[12%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Cluster & Lokasi Pit">
                   <div class="flex items-center justify-start space-x-1">
                     <span>CLUSTER & LOKASI</span>
                     ${renderCompletedSortIcon('cluster')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('armada')" class="py-2 px-1.5 ${state.isCompSelectMode ? (isWt ? 'w-[13%] md:w-[6%]' : 'w-[13%] md:w-[6%]') : (isWt ? 'w-[14%] md:w-[6%]' : 'w-[15%] md:w-[6%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Armada">
+                <th onclick="sortCompletedBy('armada')" class="py-2 px-1.5 ${state.isCompSelectMode ? (isWt ? 'w-[13%] md:w-[6%]' : 'w-[14%] md:w-[6.5%]') : (isWt ? 'w-[13%] md:w-[6%]' : 'w-[15%] md:w-[6.5%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Armada">
                   <div class="flex items-center justify-start space-x-1">
                     <span>ARMADA</span>
                     ${renderCompletedSortIcon('armada')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('personil')" class="hidden md:table-cell py-2 px-1.5 ${state.isCompSelectMode ? 'md:w-[14%]' : 'md:w-[14.5%]'} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Personil Petugas">
+                <th onclick="sortCompletedBy('personil')" class="hidden md:table-cell py-2 px-1.5 ${state.isCompSelectMode ? (isWt ? 'md:w-[13%]' : 'md:w-[14%]') : (isWt ? 'md:w-[13.5%]' : 'md:w-[15%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Personil Petugas">
                   <div class="flex items-center justify-start space-x-1">
                     <span>PERSONIL</span>
                     ${renderCompletedSortIcon('personil')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('hmUnit')" class="${isWt ? '' : 'hidden'} md:table-cell py-2 px-1 md:px-1.5 ${state.isCompSelectMode ? (isWt ? 'w-[15%] md:w-[8.5%]' : 'md:w-[8.5%]') : (isWt ? 'w-[15%] md:w-[8.5%]' : 'md:w-[8.5%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Hour Meter (HM) Unit">
+                <th onclick="sortCompletedBy('hmUnit')" class="${isWt ? '' : 'hidden'} md:table-cell py-2 px-1 md:px-1.5 ${state.isCompSelectMode ? (isWt ? 'w-[15%] md:w-[8%]' : 'md:w-[8%]') : (isWt ? 'w-[17%] md:w-[8%]' : 'md:w-[8%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Hour Meter (HM) Unit">
                   <div class="flex items-center justify-start space-x-1">
                     <span>HM UNIT</span>
                     ${renderCompletedSortIcon('hmUnit')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('realisasi')" class="hidden md:table-cell py-2 px-1.5 ${state.isCompSelectMode ? 'md:w-[9.5%]' : 'md:w-[10%]'} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Tanggal & Jam Realisasi">
+                <th onclick="sortCompletedBy('realisasi')" class="hidden md:table-cell py-2 px-1.5 ${state.isCompSelectMode ? (isWt ? 'md:w-[9%]' : 'md:w-[11%]') : (isWt ? 'md:w-[9.5%]' : 'md:w-[11.5%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Tanggal & Jam Realisasi">
                   <div class="flex items-center justify-start space-x-1">
                     <span>REALISASI</span>
                     ${renderCompletedSortIcon('realisasi')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('durasi')" class="hidden md:table-cell py-2 px-1 ${state.isCompSelectMode ? 'md:w-[4%]' : 'md:w-[4.5%]'} text-center align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Durasi Pengerjaan">
+                <th onclick="sortCompletedBy('durasi')" class="hidden md:table-cell py-2 px-1 ${state.isCompSelectMode ? (isWt ? 'md:w-[4.5%]' : 'md:w-[5%]') : (isWt ? 'md:w-[4.5%]' : 'md:w-[5%]')} text-center align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Durasi Pengerjaan">
                   <div class="flex items-center justify-center space-x-1">
                     <span>DURASI</span>
                     ${renderCompletedSortIcon('durasi')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('status')" class="py-2 px-1 ${state.isCompSelectMode ? (isWt ? 'w-[13%] md:w-[5%]' : 'w-[15%] md:w-[5%]') : (isWt ? 'w-[14%] md:w-[5.5%]' : 'w-[16%] md:w-[5.5%]')} text-center align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Status (ACH / Non-ACH)">
+                <th onclick="sortCompletedBy('status')" class="py-2 px-1 ${state.isCompSelectMode ? (isWt ? 'w-[13%] md:w-[5%]' : 'w-[16%] md:w-[5.5%]') : (isWt ? 'w-[17%] md:w-[5%]' : 'w-[20%] md:w-[5.5%]')} text-center align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Status (ACH / Non-ACH)">
                   <div class="flex items-center justify-center space-x-1">
                     <span>STATUS</span>
                     ${renderCompletedSortIcon('status')}
@@ -33325,7 +33368,7 @@ Keterangan : ${keterangan}`;
             ? `Tidak ada riwayat pekerjaan ${emptyDateMsg}`
             : 'Belum ada riwayat pekerjaan selesai untuk kategori ini');
 
-        tbody.innerHTML = `<tr><td colspan="${(state.isCompSelectMode ? 1 : 0) + 10 + (isAdmin ? 1 : 0)}" class="py-8 text-center text-slate-400 italic text-xs">${emptyMsg}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${(state.isCompSelectMode ? 1 : 0) + 11 + (isAdmin ? 1 : 0)}" class="py-8 text-center text-slate-400 italic text-xs">${emptyMsg}</td></tr>`;
         const footerCount = container.querySelector('#completed-footer-count');
         if (footerCount) footerCount.textContent = 'Menampilkan 0 riwayat';
         renderCompletedPagination(0, 1);
@@ -33395,6 +33438,11 @@ Keterangan : ${keterangan}`;
           <td class="hidden md:table-cell py-2 px-1.5 text-left align-middle text-slate-700 break-words">
             <div class="font-medium text-slate-800 text-[8.5px] leading-tight text-left">${planDateDisplay}</div>
             <div class="text-slate-400 text-[8px] mt-0.5 leading-tight text-left">${job.waktu || '-'}</div>
+          </td>
+
+          <!-- KOLOM 3B: SHIFT (SEBELAH KANAN WAKTU - DESKTOP ONLY) -->
+          <td class="hidden md:table-cell py-2 px-1.5 text-center align-middle whitespace-nowrap">
+            ${renderCompletedShiftHtml(job)}
           </td>
 
           <!-- KOLOM 4: NO UNIT (RATA KIRI TENGAH) -->
