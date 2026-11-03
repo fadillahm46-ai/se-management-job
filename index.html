@@ -3675,6 +3675,10 @@
                 </svg>
                 <span>Hapus Job Terpilih</span>
               </button>
+              <button type="button" onclick="openBulkDeleteScheduleModal('LT')"
+                class="px-3.5 py-1.5 rounded-xl bg-white border border-rose-200 text-rose-700 hover:bg-rose-50 font-bold text-xs transition shadow-2xs cursor-pointer flex items-center space-x-1">
+                <span>🗑️ Opsi Hapus Tanggal / Bulan</span>
+              </button>
               <button type="button" onclick="cancelLtScheduleSelectMode()"
                 class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition cursor-pointer">
                 Batal
@@ -3692,7 +3696,7 @@
                 class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center transition">
               <div id="lt-filter-shift-wrapper" class="w-full sm:w-auto min-w-0">
                 <select id="lt-filter-shift" onchange="handleLtShiftFilterChange(this.value)"
-                  class="w-full sm:w-auto min-w-[110px] sm:min-w-[125px] h-9 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-left cursor-pointer transition">
+                  class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center truncate cursor-pointer transition">
                   <option value="ALL">All Shift</option>
                   <option value="1">Shift 1 (DWS)</option>
                   <option value="2">Shift 2 (NWS)</option>
@@ -3700,7 +3704,7 @@
               </div>
               <div class="w-full sm:w-auto min-w-0">
                 <select id="lt-filter-cluster" onchange="handleLtClusterFilterChange(this.value)"
-                  class="w-full sm:w-auto min-w-[110px] sm:min-w-[125px] h-9 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-left cursor-pointer transition">
+                  class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center truncate cursor-pointer transition">
                   <option value="ALL" selected>All Cluster</option>
                   <optgroup label="Cluster Utama" id="lt-optgroup-cluster-utama">
                     <option value="Selatan">KGU Selatan</option>
@@ -3851,6 +3855,10 @@
                 </svg>
                 <span>Hapus Job Terpilih</span>
               </button>
+              <button type="button" onclick="openBulkDeleteScheduleModal('WT')"
+                class="px-3.5 py-1.5 rounded-xl bg-white border border-rose-200 text-rose-700 hover:bg-rose-50 font-bold text-xs transition shadow-2xs cursor-pointer flex items-center space-x-1">
+                <span>🗑️ Opsi Hapus Tanggal / Bulan</span>
+              </button>
               <button type="button" onclick="cancelWtScheduleSelectMode()"
                 class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition cursor-pointer">
                 Batal
@@ -3868,7 +3876,7 @@
                 class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center transition">
               <div id="wt-filter-shift-wrapper" class="w-full sm:w-auto min-w-0">
                 <select id="wt-filter-shift" onchange="handleWtShiftFilterChange(this.value)"
-                  class="w-full sm:w-auto min-w-[110px] sm:min-w-[125px] h-9 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-left cursor-pointer transition">
+                  class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center truncate cursor-pointer transition">
                   <option value="ALL">All Shift</option>
                   <option value="1">Shift 1 (DWS)</option>
                   <option value="2">Shift 2 (NWS)</option>
@@ -3876,7 +3884,7 @@
               </div>
               <div class="w-full sm:w-auto min-w-0">
                 <select id="wt-filter-cluster" onchange="handleWtClusterFilterChange(this.value)"
-                  class="w-full sm:w-auto min-w-[110px] sm:min-w-[125px] h-9 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-left cursor-pointer transition">
+                  class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center truncate cursor-pointer transition">
                   <option value="ALL" selected>All Cluster</option>
                   <optgroup label="Cluster Utama">
                     <option value="Selatan">KGU Selatan</option>
@@ -5835,10 +5843,10 @@
                   title="Filter riwayat sampai tanggal">
               </label>
 
-              <!-- Tombol Reset Lingkaran -->
-              <button type="button" onclick="resetCompMiningWeekFilter()"
+              <!-- Tombol Reset Lingkaran (Reset ke Tanggal Hari Ini) -->
+              <button type="button" onclick="resetCompDateFilterToToday()"
                 class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-full bg-white border border-slate-200 shadow-2xs hover:bg-slate-50 active:scale-95 text-slate-600 flex items-center justify-center transition cursor-pointer"
-                title="Reset ke Mining Week Hari Ini (Minggu - Sabtu)" aria-label="Reset Filter Tanggal">
+                title="Reset ke Tanggal Hari Ini" aria-label="Reset Filter Tanggal Hari Ini">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
@@ -8789,7 +8797,8 @@
                   Akhir Bulan</span>
               </label>
               <p class="text-[10.5px] text-emerald-800 font-medium leading-tight">Otomatis membentuk jadwal berulang
-                mulai tanggal input sampai akhir bulan sesuai frekuensi unit (harian / siklus 3 & 5 hari / mingguan).</p>
+                mulai tanggal input sampai akhir bulan sesuai frekuensi unit (harian / siklus 3 & 5 hari / mingguan).
+              </p>
             </div>
             <input type="checkbox" id="add-job-generate-month" checked
               class="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer shrink-0">
@@ -11016,79 +11025,27 @@
 
   <div id="modal-confirm-bulk-delete-selected-jobs"
     class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl text-left">
-      <div class="flex items-center space-x-3">
-        <div class="w-11 h-11 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 shadow-2xs">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-            </path>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-sm font-black text-slate-900">Hapus Massal Unit Terpilih</h3>
-          <p class="text-[11px] text-slate-500" id="bulk-sched-delete-desc">Tentukan rentang tanggal penghapusan untuk unit yang dicentang</p>
-        </div>
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center">
+      <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-2xs">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+          </path>
+        </svg>
       </div>
-
-      <!-- Daftar Unit yang Dicentang -->
-      <div class="space-y-1.5">
-        <div class="flex items-center justify-between text-xs font-bold text-slate-700">
-          <span>Unit Dicentang:</span>
-          <span id="bulk-sched-selected-count-label" class="text-rose-600 font-mono">0 Unit</span>
-        </div>
-        <div id="bulk-sched-selected-units-badge"
-          class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200 text-[11px] font-mono text-slate-700">
-        </div>
+      <div>
+        <h3 class="text-sm font-black text-slate-900">Hapus Jadwal Terpilih?</h3>
+        <p class="text-xs text-slate-500 mt-1 leading-relaxed" id="bulk-sched-delete-desc">
+          Apakah Anda yakin ingin menghapus jadwal yang dipilih dari antrean jadwal dan database?
+        </p>
       </div>
-
-      <!-- Pilihan Rentang Hapus -->
-      <div class="space-y-2 text-xs font-semibold">
-        <!-- Opsi 1: Hari Ini Saja -->
-        <label
-          class="flex items-start p-3 rounded-2xl border-2 border-slate-200 hover:border-amber-400 bg-slate-50/50 cursor-pointer transition">
-          <input type="radio" name="bulk-sched-delete-range" value="today" checked
-            class="mt-0.5 text-amber-600 focus:ring-amber-500 mr-2.5">
-          <div class="flex-1">
-            <div class="font-bold text-slate-900 flex items-center justify-between">
-              <span>Hanya Hari / Tanggal Ini Saja</span>
-              <span id="bulk-sched-today-label" class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10.5px] font-mono font-bold">-</span>
-            </div>
-            <p class="text-[11px] text-slate-500 font-normal mt-0.5">
-              Menghapus antrean unit yang dicentang hanya pada tanggal ini.
-            </p>
-          </div>
-        </label>
-
-        <!-- Opsi 2: Hari Ini dan Kedepannya s/d Akhir Bulan -->
-        <label
-          class="flex items-start p-3 rounded-2xl border-2 border-slate-200 hover:border-rose-500 bg-slate-50/50 cursor-pointer transition">
-          <input type="radio" name="bulk-sched-delete-range" value="future"
-            class="mt-0.5 text-rose-600 focus:ring-rose-500 mr-2.5">
-          <div class="flex-1">
-            <div class="font-bold text-rose-900 flex items-center justify-between flex-wrap gap-1">
-              <span>Hari Ini &amp; Kedepannya s/d Akhir Bulan</span>
-              <span id="bulk-sched-future-label" class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 text-[10.5px] font-mono font-bold">-</span>
-            </div>
-            <p class="text-[11px] text-slate-500 font-normal mt-0.5">
-              Menghapus unit yang dicentang mulai dari hari ini hingga akhir bulan. Unit lain yang tidak dicentang tetap aman.
-            </p>
-          </div>
-        </label>
-      </div>
-
-      <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-tight flex items-start gap-2">
-        <span class="text-sm">⚠️</span>
-        <span>Jadwal yang dihapus akan dibersihkan dari penyimpanan lokal serta Supabase secara permanen.</span>
-      </div>
-
-      <div class="flex items-center space-x-2 pt-1 border-t border-slate-100">
+      <div class="flex items-center space-x-2 pt-2">
         <button type="button" onclick="executeBulkDeleteSelectedJobs()"
           class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition cursor-pointer">
-          Ya, Hapus Unit Terpilih
+          Ya, Hapus Jadwal
         </button>
         <button type="button" onclick="toggleModal('modal-confirm-bulk-delete-selected-jobs', false)"
-          class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
+          class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
           Batal
         </button>
       </div>
@@ -12156,7 +12113,7 @@
     function loadDatabaseSync() {
       try {
         // FORCE BUILD VERSION UPGRADE: Bersihkan seluruh cache kotor & data zombie di seluruh client
-        const APP_BUILD_VERSION = 'v2026_10_22_daily_shift_v2';
+        const APP_BUILD_VERSION = 'v2026_11_03_fix_comp_date_filter_v2';
         if (safeStorage.getItem('SE_APP_BUILD_VERSION') !== APP_BUILD_VERSION) {
           console.log('[Version Upgrade] Memperbarui aplikasi & membersihkan cache lokal ke versi:', APP_BUILD_VERSION);
           safeStorage.setItem('SE_APP_BUILD_VERSION', APP_BUILD_VERSION);
@@ -14474,6 +14431,11 @@
         `;
         tbody.appendChild(tr);
       });
+
+      // Render matriks kendala PICA dashboard agar sinkron seketika
+      if (typeof renderDashboardPicaMatrix === 'function') {
+        renderDashboardPicaMatrix();
+      }
     }
 
     // ========================================================================
@@ -14485,17 +14447,20 @@
       const tfoot = document.getElementById('dash-pica-matrix-tfoot');
       if (!tbody) return;
 
-      if (state.supabaseClient && !window._hasLoadedJobHistory && (!state.jobHistory || state.jobHistory.length === 0)) {
-        showTableLazyLoading(tbody, 'Menghitung matriks kendala PICA...', 'amber');
-        if (tfoot) tfoot.innerHTML = '';
-        return;
-      }
-
       const currentDefWeek = (typeof getMiningWeekRange === 'function') ? getMiningWeekRange(new Date()) : { startDate: '2026-11-01', endDate: '2026-11-07' };
       const startDate = document.getElementById('dash-filter-start')?.value || currentDefWeek.startDate;
       const endDate = document.getElementById('dash-filter-end')?.value || currentDefWeek.endDate;
       const clusterFilter = document.getElementById('dash-filter-cluster')?.value || 'ALL';
       const shiftFilter = document.getElementById('dash-filter-shift')?.value || 'ALL';
+
+      // Jika riwayat cloud belum ter-load dan sedang tidak fetching, ambil di background tanpa memblokir UI
+      if (state.supabaseClient && !window._hasLoadedJobHistory && !state._jobHistoryLoading && typeof loadJobHistoryFromSupabase === 'function') {
+        state._jobHistoryLoading = Date.now();
+        loadJobHistoryFromSupabase(false, startDate, endDate).finally(() => {
+          state._jobHistoryLoading = null;
+          renderDashboardPicaMatrix();
+        });
+      }
 
       // Ambil seluruh job schedule dari unified (antrean aktif + riwayat terkunci)
       const { schJobs } = (typeof getUnifiedDashboardJobs === 'function')
@@ -15636,10 +15601,10 @@
 
       if (ltDate) ltDate.value = today;
       if (wtDate) wtDate.value = today;
-      if (compStartDate) compStartDate.value = defWeekRange.startDate;
-      if (compEndDate) compEndDate.value = defWeekRange.endDate;
-      state.completedFilterStartDate = defWeekRange.startDate;
-      state.completedFilterEndDate = defWeekRange.endDate;
+      if (compStartDate) compStartDate.value = today;
+      if (compEndDate) compEndDate.value = today;
+      state.completedFilterStartDate = today;
+      state.completedFilterEndDate = today;
       if (orderDate) orderDate.value = today;
 
       const ltClusterEl = document.getElementById('lt-filter-cluster');
@@ -17187,10 +17152,23 @@
         } else if (tabKey === 'master-data') {
           switchMasterSection(state.masterActiveSection || 'roster');
         } else if (tabKey === 'completed') {
+          const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+          const compStartEl = document.getElementById('comp-filter-start-date');
+          const compEndEl = document.getElementById('comp-filter-end-date');
+          if (compStartEl && !compStartEl.value) {
+            compStartEl.value = state.completedFilterStartDate || today;
+            state.completedFilterStartDate = compStartEl.value;
+          }
+          if (compEndEl && !compEndEl.value) {
+            compEndEl.value = state.completedFilterEndDate || compStartEl?.value || today;
+            state.completedFilterEndDate = compEndEl.value;
+          }
           renderCompletedTable();
-          // ON-DEMAND LAZY LOAD: Tarik riwayat dari Supabase hanya saat tab riwayat dibuka pertama kali
+          // ON-DEMAND LAZY LOAD: Tarik riwayat hari ini dari Supabase hanya saat tab riwayat dibuka pertama kali
           if (!window._hasLoadedJobHistory && typeof loadJobHistoryFromSupabase === 'function') {
-            loadJobHistoryFromSupabase(true).then(() => {
+            const curStart = compStartEl?.value || state.completedFilterStartDate || today;
+            const curEnd = compEndEl?.value || state.completedFilterEndDate || curStart;
+            loadJobHistoryFromSupabase(true, curStart, curEnd).then(() => {
               if (state.activeTab === 'completed') renderCompletedTable();
             }).catch(() => { });
           }
@@ -22216,17 +22194,19 @@
       const targetLambung = String(unitNo).trim().toUpperCase();
       const targetD = targetDate || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : new Date().toISOString().split('T')[0]);
 
-      // 1. Cek di antrean Lubetruck aktif (Greasing Small Track atau Big Digger)
+      // 1. Cek di antrean Lubetruck aktif (Greasing Small Track atau Big Digger yang aktif / scheduled / pending)
       const matchLtGrs = (state.lubetruckState?.jobs || []).some(j => {
         if (!j) return false;
         const isGrs = (j.cat === 'digger' || j.cat === 'small' || j.cat === 'greasing');
         const jDate = j.tanggal || targetD;
         const jLambung = String(j.noLambung || j.unit || '').trim().toUpperCase();
-        return isGrs && jDate === targetD && jLambung === targetLambung;
+        const s = String(j.status || '').toLowerCase().trim();
+        const isActive = (s === 'scheduled' || s === 'pending' || !s) && !['non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s);
+        return isGrs && jDate === targetD && jLambung === targetLambung && isActive;
       });
       if (matchLtGrs) return true;
 
-      // 2. Cek di antrean Unscheduled / Order Request Greasing
+      // 2. Cek di antrean Unscheduled / Order Request Greasing aktif
       const matchUnschGrs = (state.unscheduledLtJobs || []).some(j => {
         if (!j) return false;
         const jLambung = String(j.noLambung || j.unit || '').trim().toUpperCase();
@@ -22234,7 +22214,9 @@
         const reqStr = String(j.requestedJob || '').toLowerCase();
         const descStr = String(j.deskripsi || j.keterangan || '').toLowerCase();
         const isGrs = (j.cat === 'digger' || j.cat === 'small' || reqStr.includes('greasing') || descStr.includes('greasing'));
-        return isGrs && jDate === targetD && jLambung === targetLambung;
+        const s = String(j.status || '').toLowerCase().trim();
+        const isActive = !['non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s);
+        return isGrs && jDate === targetD && jLambung === targetLambung && isActive;
       });
       if (matchUnschGrs) return true;
 
@@ -22245,17 +22227,22 @@
         const oLambung = String(o.noLambung || o.no_lambung || '').trim().toUpperCase();
         const oSvc = String(o.serviceType || o.service_type || o.job_type || '').toLowerCase();
         const isGrs = (oSvc.includes('greas') || oSvc.includes('small') || oSvc.includes('digger'));
-        return isGrs && oDate === targetD && oLambung === targetLambung;
+        const s = String(o.status || '').toLowerCase().trim();
+        const isActive = !['non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s);
+        return isGrs && oDate === targetD && oLambung === targetLambung && isActive;
       });
       if (matchOrderGrs) return true;
 
-      // 4. Cek di Riwayat Pekerjaan Selesai (jika pekerjaan greasing hari ini sudah diselesaikan/ACH)
+      // 4. Cek di Riwayat Pekerjaan Selesai (HANYA JIKA pekerjaan greasing hari ini benar-benar SUDAH SELESAI / ACHIEVED)
+      // Status NON_ACH atau CANCEL DILARANG memicu badge + GRS!
       const matchHistGrs = (state.jobHistory || []).some(h => {
         if (!h) return false;
         const isGrs = (h.cat === 'digger' || h.cat === 'small' || String(h.job_type || '').includes('digger') || String(h.job_type || '').includes('small') || String(h.job_type || '').includes('greas'));
-        const hDate = h.tanggal_rencana || h.tanggal_eksekusi || h.tanggal;
+        const hDate = String(h.tanggal_rencana || h.tanggal_eksekusi || h.tanggal || '').split('T')[0];
         const hLambung = String(h.no_lambung || h.noLambung || '').trim().toUpperCase();
-        return isGrs && hDate === targetD && hLambung === targetLambung;
+        const hStatus = String(h.status_final || h.status || '').toUpperCase().trim();
+        const isRealDone = ['ACHIEVED', 'ACH', 'DONE', 'SERVICE'].includes(hStatus) || Boolean(h.is_achieved);
+        return isGrs && hDate === targetD && hLambung === targetLambung && isRealDone;
       });
       if (matchHistGrs) return true;
 
@@ -22346,11 +22333,18 @@
         return false;
       }
 
-      // Tentukan target kluster sesuai filter dropdown saat ini
-      // Sesuai aturan pengguna: Keterangan pendingan tampil seragam di SEMUA akses
-      // (Admin, Oilman, Washingman, BSC, CMC, Track). Jika filter kluster bernilai 'ALL',
-      // tampilkan seluruh pendingan dari kategori aktif tersebut.
-      const targetCluster = clusterFilter || 'ALL';
+      // Tentukan target kluster
+      let targetCluster = clusterFilter || 'ALL';
+      let myUnit = '';
+      if (isMp) {
+        const myUnitInfo = (typeof getCurrentUserAssignedUnitAndCluster === 'function')
+          ? getCurrentUserAssignedUnitAndCluster(isWt)
+          : { unit: '-', cluster: (isWt ? 'Tengah' : 'Selatan') };
+        myUnit = (myUnitInfo.unit || '').trim().toUpperCase();
+        if ((!targetCluster || targetCluster === 'ALL') && myUnitInfo.cluster) {
+          targetCluster = myUnitInfo.cluster;
+        }
+      }
 
       // Ambil daftar pekerjaan sumber dari state dan globalDataCache (deduplikasi berdasarkan ID)
       const rawJobList = [
@@ -22391,12 +22385,17 @@
         if (!jDate || jDate >= todayStr) return;
         if (minDateLimit && jDate < minDateLimit) return;
 
-        // Cek kecocokan kluster jika user memilih filter kluster tertentu (bukan ALL)
+        // Cek kecocokan kluster jika ada filter kluster spesifik (untuk Manpower / Operator)
         if (targetCluster && targetCluster !== 'ALL') {
           const matchCluster = (typeof isClusterMatchFilter === 'function')
             ? isClusterMatchFilter(j.cluster, targetCluster)
             : String(j.cluster || '').toLowerCase().includes(String(targetCluster).toLowerCase());
-          if (!matchCluster) return;
+          const matchMyUnit = isMp && myUnit && myUnit !== '-' && (
+            (j.ltUnit && j.ltUnit.trim().toUpperCase() === myUnit) ||
+            (j.armada && j.armada.trim().toUpperCase() === myUnit) ||
+            (j.unitWt && j.unitWt.trim().toUpperCase() === myUnit)
+          );
+          if (!matchCluster && !matchMyUnit) return;
         }
 
         // Cek status apakah sudah di-action
@@ -22706,10 +22705,6 @@
             state.lubetruckState.filterCluster = clusterFilterEl.value;
           }
         }
-        if (clusterFilterEl.selectedIndex === -1 || !clusterFilterEl.value) {
-          clusterFilterEl.value = 'ALL';
-          clusterFilterEl.selectedIndex = 0;
-        }
       }
 
       const shiftFilter = shiftFilterEl?.value || state.lubetruckState.filterShift || (isMp ? String(currentShiftNum) : 'ALL');
@@ -22777,6 +22772,13 @@
           : (String(j.id || '').includes('-W2') ? 2 : (parseInt(j.washingRound || j.washing_round || 1, 10) || 1));
 
         const inHistory = Array.isArray(state.jobHistory) && state.jobHistory.some(h => {
+          if (!h) return false;
+          // PENGAMAN KRUSIAL: Hanya riwayat yang SELESAI/TEREKSEKUSI yang dapat menyembunyikan jadwal aktif!
+          // Riwayat NON_ACH atau CANCEL DILARANG menyembunyikan unit yang dijadwalkan kembali!
+          const hFinal = String(h.status_final || h.status || '').toUpperCase().trim();
+          const isRealDone = ['ACHIEVED', 'ACH', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR'].includes(hFinal) || Boolean(h.is_achieved);
+          if (!isRealDone) return false;
+
           const hId = String(h.id || '').trim();
           const hJobId = String(h.job_id || '').trim();
           const hBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(hJobId || hId) : (hJobId || hId).replace(/-\d{4}$/, '');
@@ -23397,10 +23399,6 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             state.watertruckState.filterCluster = clusterFilterEl.value;
           }
         }
-        if (clusterFilterEl.selectedIndex === -1 || !clusterFilterEl.value) {
-          clusterFilterEl.value = 'ALL';
-          clusterFilterEl.selectedIndex = 0;
-        }
       }
 
       const shiftFilter = shiftFilterEl?.value || state.watertruckState.filterShift || (isMp ? String(currentShiftNum) : 'ALL');
@@ -23472,6 +23470,13 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           : (String(j.id || '').includes('-W2') ? 2 : (parseInt(j.washingRound || j.washing_round || 1, 10) || 1));
 
         const inHistory = Array.isArray(state.jobHistory) && state.jobHistory.some(h => {
+          if (!h) return false;
+          // PENGAMAN KRUSIAL: Hanya riwayat yang SELESAI/TEREKSEKUSI yang dapat menyembunyikan jadwal aktif!
+          // Riwayat NON_ACH atau CANCEL DILARANG menyembunyikan unit yang dijadwalkan kembali!
+          const hFinal = String(h.status_final || h.status || '').toUpperCase().trim();
+          const isRealDone = ['ACHIEVED', 'ACH', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR'].includes(hFinal) || Boolean(h.is_achieved);
+          if (!isRealDone) return false;
+
           const hId = String(h.id || '').trim();
           const hJobId = String(h.job_id || '').trim();
           const hBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(hJobId || hId) : (hJobId || hId).replace(/-\d{4}$/, '');
@@ -25274,7 +25279,6 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       if (catGreasingEl) catGreasingEl.textContent = `${greasingJobs.length} Job (${calcCatRate(greasingJobs)})`;
       if (catCoalEl) catCoalEl.textContent = `${coalJobs.length} Job (${calcCatRate(coalJobs)})`;
       if (catRomEl) catRomEl.textContent = `${romJobs.length} Job (${calcCatRate(romJobs)})`;
-      if (catNoncoalEl) catNoncoalEl.textContent = `${nonCoalJobs.length} Job (${calcCatRate(nonCoalJobs)})`;
       if (catAircleanerEl) catAircleanerEl.textContent = `${aircleanerJobs.length} Job (${calcCatRate(aircleanerJobs)})`;
       if (catTopupEl) catTopupEl.textContent = `${topupJobs.length} Job (${calcCatRate(topupJobs)})`;
       if (catUnschedEl) catUnschedEl.textContent = `${unschedAll} Job (Di luar SCH)`;
@@ -25323,6 +25327,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       renderDashboardAchievementChart(state.dashboardSelectedCategory || 'ALL');
       renderArmadaJobChart();
       initKpiSchedulePicaCharts();
+      if (typeof renderDashboardPicaMatrix === 'function') {
+        renderDashboardPicaMatrix();
+      }
 
       if (typeof Chart !== 'undefined') {
         try {
@@ -29856,6 +29863,9 @@ Keterangan : ${keterangan}`;
       if (Array.isArray(state.jobHistory)) {
         state.jobHistory = state.jobHistory.filter(h => !isTargetMatch(h));
       }
+      if (Array.isArray(state.picaCloudRecords)) {
+        state.picaCloudRecords = state.picaCloudRecords.filter(p => !isTargetMatch(p) && !targetIds.has(String(p.id)) && !targetIds.has(String(p.job_id)));
+      }
 
       // 2. Hapus bersih dari RAM cache untuk SEMUA ID yang bersangkutan
       if (window.globalDataCache) {
@@ -31425,6 +31435,35 @@ Keterangan : ${keterangan}`;
       // 2. Single Day Job (Fallback jika toggle dimatikan)
       const catKey = (typeof getScheduleCategoryKey === 'function') ? getScheduleCategoryKey(baseJob.cat, isWt) : (isWt ? 'coal' : 'small');
       baseJob.id = (typeof generateScheduleJobId === 'function') ? generateScheduleJobId(baseJob, baseJob.tanggal, baseJob.shift, baseJob.washingRound) : (isWt ? ('WT-SCH-' + (baseJob.tanggal || '').replace(/-/g, '') + '-' + noLambung + '-' + catKey + '-S' + baseJob.shift) : ('LT-SCH-' + (baseJob.tanggal || '').replace(/-/g, '') + '-' + noLambung + '-' + catKey + '-S' + baseJob.shift));
+
+      // PEMBERSIHAN RESIDU KENDALA LAMA: Jika unit ini sebelumnya pernah salah action NON_ACH / dibatalkan
+      // dan admin menjadwalkan kembali unit ini, bersihkan sisa status NON_ACH di state.jobHistory & PICA
+      if (Array.isArray(state.jobHistory)) {
+        state.jobHistory = state.jobHistory.filter(h => {
+          if (!h) return false;
+          const hUnit = String(h.no_lambung || h.noLambung || '').trim().toUpperCase();
+          const hDate = String(h.tanggal_rencana || h.tanggal || h.tanggal_eksekusi || '').split('T')[0];
+          const hShift = String((typeof extractShiftFromJob === 'function') ? extractShiftFromJob(h) : (h.shift_rencana || h.shift || 1));
+          const hStatus = String(h.status_final || h.status || '').toUpperCase().trim();
+          const isSameJob = (hUnit === noLambung && hDate === targetDate && hShift === String(shift));
+          if (isSameJob && ['NON_ACH', 'NON-ACH', 'CANCEL', 'CANCELLED'].includes(hStatus)) {
+            return false;
+          }
+          return true;
+        });
+      }
+      if (Array.isArray(state.picaCloudRecords)) {
+        state.picaCloudRecords = state.picaCloudRecords.filter(p => {
+          const pUnit = String(p.no_lambung || '').trim().toUpperCase();
+          const pDate = String(p.tanggal || '').split('T')[0];
+          const pShift = String(p.shift || 1);
+          return !(pUnit === noLambung && pDate === targetDate && pShift === String(shift));
+        });
+      }
+      if (state.supabaseClient) {
+        state.supabaseClient.from('pica_records').delete().eq('no_lambung', noLambung).eq('tanggal', targetDate).eq('shift', shift).then(() => { });
+      }
+
       if (typeof registerJobToGlobalCache === 'function') {
         registerJobToGlobalCache(baseJob);
       }
@@ -32387,26 +32426,25 @@ Keterangan : ${keterangan}`;
     }
     window.calculateDurationPlain = calculateDurationPlain;
 
-    function resetCompMiningWeekFilter() {
+    function resetCompDateFilterToToday() {
+      const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
       const startEl = document.getElementById('comp-filter-start-date');
       const endEl = document.getElementById('comp-filter-end-date');
-      const weekRange = (typeof getMiningWeekRange === 'function')
-        ? getMiningWeekRange(new Date())
-        : { startDate: '2026-10-11', endDate: '2026-10-17' };
 
-      if (startEl) startEl.value = weekRange.startDate;
-      if (endEl) endEl.value = weekRange.endDate;
-      state.completedFilterStartDate = weekRange.startDate;
-      state.completedFilterEndDate = weekRange.endDate;
+      if (startEl) startEl.value = today;
+      if (endEl) endEl.value = today;
+      state.completedFilterStartDate = today;
+      state.completedFilterEndDate = today;
+      state.completedFilterDate = today;
       updateCompDateClearBtn();
 
       const container = document.getElementById('completed-table-container');
       if (container && typeof showTableLazyLoading === 'function') {
-        showTableLazyLoading(container, 'Memuat riwayat Mining Week...', 'emerald', 10);
+        showTableLazyLoading(container, 'Memuat riwayat hari ini...', 'emerald', 10);
       }
 
       if (typeof loadJobHistoryFromSupabase === 'function') {
-        loadJobHistoryFromSupabase(true).then(() => {
+        loadJobHistoryFromSupabase(true, today, today).then(() => {
           renderCompletedTable();
         }).catch(() => {
           renderCompletedTable();
@@ -32415,24 +32453,26 @@ Keterangan : ${keterangan}`;
         renderCompletedTable();
       }
 
-      const dispStart = (typeof formatDisplayDate === 'function') ? formatDisplayDate(weekRange.startDate) : weekRange.startDate;
-      const dispEnd = (typeof formatDisplayDate === 'function') ? formatDisplayDate(weekRange.endDate) : weekRange.endDate;
-      showToast(`Filter riwayat di-reset ke Mining Week hari ini (${dispStart} - ${dispEnd})`, 'info');
+      const dispToday = (typeof formatDisplayDate === 'function') ? formatDisplayDate(today) : today;
+      showToast(`Filter riwayat di-reset ke hari ini (${dispToday})`, 'info');
     }
-    window.resetCompMiningWeekFilter = resetCompMiningWeekFilter;
+    window.resetCompDateFilterToToday = resetCompDateFilterToToday;
+    window.resetCompMiningWeekFilter = resetCompDateFilterToToday; // Backwards compatibility
 
     function handleCompDateRangeChange() {
       const startEl = document.getElementById('comp-filter-start-date');
       const endEl = document.getElementById('comp-filter-end-date');
-      state.completedFilterStartDate = startEl ? startEl.value : '';
-      state.completedFilterEndDate = endEl ? endEl.value : '';
+      const rawStart = startEl ? startEl.value : '';
+      const rawEnd = endEl ? endEl.value : '';
+      state.completedFilterStartDate = rawStart;
+      state.completedFilterEndDate = rawEnd || rawStart;
       updateCompDateClearBtn();
 
       const startDate = state.completedFilterStartDate;
       const endDate = state.completedFilterEndDate || startDate;
       const container = document.getElementById('completed-table-container');
 
-      // LAZY LOADING ON-DEMAND UNTUK RENTANG TANGGAL BANYAK (RIWAYAT SELESAI & SINKRONISASI SUPABASE LENGKAP)
+      // LAZY LOADING ON-DEMAND UNTUK RENTANG TANGGAL (RIWAYAT SELESAI & SINKRONISASI SUPABASE)
       if (startDate && state.supabaseClient) {
         if (container && typeof showTableLazyLoading === 'function') {
           showTableLazyLoading(container, 'Memuat seluruh riwayat selesai dari Cloud Supabase...', 'emerald', 10);
@@ -32457,13 +32497,14 @@ Keterangan : ${keterangan}`;
     window.handleCompDateRangeChange = handleCompDateRangeChange;
 
     function clearCompDateFilter() {
+      const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
       const startEl = document.getElementById('comp-filter-start-date');
       const endEl = document.getElementById('comp-filter-end-date');
-      if (startEl) startEl.value = '';
-      if (endEl) endEl.value = '';
-      state.completedFilterStartDate = '';
-      state.completedFilterEndDate = '';
-      state.completedFilterDate = '';
+      if (startEl) startEl.value = today;
+      if (endEl) endEl.value = today;
+      state.completedFilterStartDate = today;
+      state.completedFilterEndDate = today;
+      state.completedFilterDate = today;
       updateCompDateClearBtn();
       renderCompletedTable();
     }
@@ -32677,11 +32718,18 @@ Keterangan : ${keterangan}`;
         return;
       }
 
-      // Ambil filter rentang tanggal (Dari & Sampai)
+      // Ambil filter rentang tanggal (Dari & Sampai) - Default: Tanggal Hari Ini
+      const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
       const compStartDateInput = document.getElementById('comp-filter-start-date');
       const compEndDateInput = document.getElementById('comp-filter-end-date');
-      const startDate = compStartDateInput ? (compStartDateInput.value || '') : (state.completedFilterStartDate || '');
-      const endDate = compEndDateInput ? (compEndDateInput.value || '') : (state.completedFilterEndDate || '');
+      if (compStartDateInput && !compStartDateInput.value) {
+        compStartDateInput.value = state.completedFilterStartDate || today;
+      }
+      if (compEndDateInput && !compEndDateInput.value) {
+        compEndDateInput.value = state.completedFilterEndDate || compStartDateInput?.value || today;
+      }
+      const startDate = compStartDateInput ? compStartDateInput.value : (state.completedFilterStartDate || today);
+      const endDate = compEndDateInput ? compEndDateInput.value : (state.completedFilterEndDate || startDate);
       state.completedFilterStartDate = startDate;
       state.completedFilterEndDate = endDate;
       state.completedFilterDate = startDate;
@@ -32918,16 +32966,15 @@ Keterangan : ${keterangan}`;
         }
       });
 
-      // FILTER RENTANG TANGGAL: Saring data riwayat sesuai rentang "Dari" dan "Sampai"
+      // FILTER RENTANG TANGGAL: Semua acuan data mutlak berdasar rentang tanggal!
+      // Jika user mencari unit (searchVal), pencarian HANYA mencari di dalam rentang tanggal ini.
       const normStart = startDate ? normalizeDateStr(startDate) : '';
       const normEnd = endDate ? normalizeDateStr(endDate) : '';
 
       if (normStart || normEnd) {
         allCompleted = allCompleted.filter(j => {
-          // Aturan Cerdas: Jika user sedang mencari kata kunci spesifik (misal nama unit 'E2008'),
-          // jangan dibatasi oleh rentang tanggal agar riwayat yang dicari langsung ditemukan!
-          if (searchVal) return true;
-          const jobDate = normalizeDateStr(j.tanggalRealisasi || j.tanggal);
+          const rawDate = j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || j.tanggal_rencana || '';
+          const jobDate = normalizeDateStr(String(rawDate).split('T')[0]);
           if (!jobDate) return false;
           if (normStart && jobDate < normStart) return false;
           if (normEnd && jobDate > normEnd) return false;
@@ -32939,7 +32986,14 @@ Keterangan : ${keterangan}`;
       const totalNonAch = allCompleted.filter(j => j.status === 'non_ach').length;
 
       if (badge) {
-        const dateSuffix = selectedDate ? ` • ${formatDisplayDate(selectedDate)}` : ' • Semua Tanggal';
+        let dateSuffix = '';
+        if (startDate && endDate && startDate === endDate) {
+          dateSuffix = ` • ${formatDisplayDate(startDate)}`;
+        } else if (startDate && endDate) {
+          dateSuffix = ` • ${formatDisplayDate(startDate)} s/d ${formatDisplayDate(endDate)}`;
+        } else if (startDate) {
+          dateSuffix = ` • Dari ${formatDisplayDate(startDate)}`;
+        }
         badge.textContent = `Total Riwayat: ${allCompleted.length} Unit (${totalAch} ACH • ${totalNonAch} Non-ACH${dateSuffix})`;
         if (isWt) {
           badge.className = 'px-3 py-1.5 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-800 font-extrabold text-xs shadow-2xs';
@@ -42334,15 +42388,35 @@ Keterangan : ${keterangan}`;
         }
 
         const idList = Array.from(targetIds);
+        const picaIds = [];
+        idList.forEach(id => {
+          picaIds.push(id);
+          if (!id.startsWith('PICA-')) picaIds.push('PICA-' + id);
+          else picaIds.push(id.replace(/^PICA-/, ''));
+        });
 
         // Hapus tuntas langsung dari seluruh tabel fisik Supabase:
-        await Promise.allSettled([
+        const delTasks = [
           state.supabaseClient.from('jobs_lt').delete().in('id', idList),
           state.supabaseClient.from('jobs_wt').delete().in('id', idList),
           state.supabaseClient.from('job_history_lt').delete().in('id', idList),
           state.supabaseClient.from('job_history_wt').delete().in('id', idList),
-          state.supabaseClient.from('pica_records').delete().in('id', idList)
-        ]);
+          state.supabaseClient.from('pica_records').delete().in('id', picaIds),
+          state.supabaseClient.from('pica_records').delete().in('job_id', idList)
+        ];
+
+        // Jika ada info lambung dan tanggal, hapus juga PICA spesifik
+        const targetLambung = job?.noLambung || job?.no_lambung;
+        const targetDate = job?.tanggal || job?.tanggal_rencana || job?.tanggal_eksekusi;
+        if (targetLambung && targetDate) {
+          const tgl = String(targetDate).split('T')[0];
+          const sft = parseInt(job?.shift || job?.shift_rencana || 1, 10);
+          delTasks.push(
+            state.supabaseClient.from('pica_records').delete().eq('no_lambung', targetLambung).eq('tanggal', tgl).eq('shift', sft)
+          );
+        }
+
+        await Promise.allSettled(delTasks);
 
         console.log('[Supabase Outbound Job Deleted OK]', idList);
 
@@ -47465,6 +47539,12 @@ Keterangan : ${keterangan}`;
 
       return historyList.some(h => {
         if (!h) return false;
+        // PENGAMAN KRUSIAL: Hanya riwayat yang berstatus SELESAI/TEREKSEKUSI yang dapat menutup job aktif!
+        // Record kendala NON_ACH, CANCEL, atau job gagal TIDAK BOLEH menutup jadwal aktif yang ditambahkan kembali!
+        const hFinal = String(h.status_final || h.status || '').toUpperCase().trim();
+        const isClosedStatus = ['ACHIEVED', 'ACH', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR'].includes(hFinal) || Boolean(h.is_achieved);
+        if (!isClosedStatus) return false;
+
         const hId = String(h.id || '').trim();
         const hJobId = String(h.job_id || '').trim();
         const hBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(hJobId || hId) : (hJobId || hId).replace(/-\d{4}$/, '');
@@ -47657,7 +47737,7 @@ Keterangan : ${keterangan}`;
       try {
         _lastJobHistoryFetchTs = now;
         if (typeof sanitizeCompletedJobsInActiveTables === 'function') {
-          await sanitizeCompletedJobsInActiveTables();
+          sanitizeCompletedJobsInActiveTables().catch(err => console.warn('[Sanitize Background]', err));
         }
 
         const HIST_COLS_LT = 'id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,non_ach_category,non_ach_reason,fotos,created_at';
@@ -47785,6 +47865,7 @@ Keterangan : ${keterangan}`;
           if (state.activeTab === 'dashboard') {
             if (typeof refreshDashboardData === 'function') refreshDashboardData();
             else if (typeof initKpiSchedulePicaCharts === 'function') initKpiSchedulePicaCharts();
+            if (typeof renderDashboardPicaMatrix === 'function') renderDashboardPicaMatrix();
           }
         }
       } catch (e) {
@@ -48366,61 +48447,15 @@ Keterangan : ${keterangan}`;
 
     let pendingBulkDeleteSchedType = 'LT';
     function promptBulkDeleteSelectedJobs(type = 'LT') {
-      if (!state.selectedSchedJobIds || state.selectedSchedJobIds.size === 0) {
-        showToast('Pilih / centang setidaknya satu unit yang ingin dihapus!', 'warning');
+      if (state.selectedSchedJobIds.size === 0) {
+        showToast('Pilih setidaknya satu jadwal untuk dihapus!', 'warning');
         return;
       }
       pendingBulkDeleteSchedType = type;
-      const isWt = (type === 'WT');
-      const targetArray = isWt ? (state.watertruckState?.jobs || []) : (state.lubetruckState?.jobs || []);
-      const selectedIds = Array.from(state.selectedSchedJobIds);
-      const selectedSet = new Set(selectedIds);
-
-      // Ambil objek job dan daftar nomor lambung unik dari unit yang dicentang
-      const selectedJobs = targetArray.filter(j => selectedSet.has(j.id));
-      const selectedUnitSet = new Set();
-      selectedJobs.forEach(j => {
-        const u = (j.noLambung || '').trim().toUpperCase();
-        if (u) selectedUnitSet.add(u);
-      });
-      const selectedUnits = Array.from(selectedUnitSet);
-
-      const filterDate = isWt
-        ? (document.getElementById('wt-filter-date')?.value || state.watertruckState?.filterDate || getEffectiveTodayString())
-        : (document.getElementById('lt-filter-date')?.value || state.lubetruckState?.filterDate || getEffectiveTodayString());
-
-      const monthKey = filterDate.slice(0, 7);
-      const [yearNum, monthNum] = monthKey.split('-').map(Number);
-      const lastDay = new Date(yearNum, monthNum, 0).getDate();
-      const endOfMonthStr = `${monthKey}-${String(lastDay).padStart(2, '0')}`;
-
-      const formatD = (dStr) => {
-        if (!dStr) return '-';
-        const p = dStr.split('-');
-        return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : dStr;
-      };
-
-      const countLabel = document.getElementById('bulk-sched-selected-count-label');
-      if (countLabel) {
-        countLabel.textContent = `${selectedUnits.length} Unit (${selectedIds.length} Job)`;
-      }
-
-      const badgeContainer = document.getElementById('bulk-sched-selected-units-badge');
-      if (badgeContainer) {
-        badgeContainer.innerHTML = selectedUnits.map(u => `<span class="px-2 py-0.5 rounded-md bg-white border border-slate-200 shadow-2xs font-bold text-slate-800">${u}</span>`).join('');
-      }
-
-      const todayLabel = document.getElementById('bulk-sched-today-label');
-      if (todayLabel) todayLabel.textContent = formatD(filterDate);
-
-      const futureLabel = document.getElementById('bulk-sched-future-label');
-      if (futureLabel) futureLabel.textContent = `${formatD(filterDate)} s/d ${formatD(endOfMonthStr)}`;
-
       const descEl = document.getElementById('bulk-sched-delete-desc');
       if (descEl) {
-        descEl.textContent = `Pilih rentang tanggal penghapusan untuk ${selectedUnits.length} unit yang dicentang.`;
+        descEl.textContent = `Apakah Anda yakin ingin menghapus ${state.selectedSchedJobIds.size} jadwal yang dipilih dari antrean jadwal dan database?`;
       }
-
       toggleModal('modal-confirm-bulk-delete-selected-jobs', true);
     }
     window.promptBulkDeleteSelectedJobs = promptBulkDeleteSelectedJobs;
@@ -48429,65 +48464,15 @@ Keterangan : ${keterangan}`;
       const type = pendingBulkDeleteSchedType;
       const isWt = (type === 'WT');
       const targetArray = isWt ? (state.watertruckState?.jobs || []) : (state.lubetruckState?.jobs || []);
-      const selectedIds = Array.from(state.selectedSchedJobIds || []);
+      const deleteIds = Array.from(state.selectedSchedJobIds);
 
-      if (selectedIds.length === 0) {
+      if (deleteIds.length === 0) {
         toggleModal('modal-confirm-bulk-delete-selected-jobs', false);
         return;
       }
 
-      const filterDate = isWt
-        ? (document.getElementById('wt-filter-date')?.value || state.watertruckState?.filterDate || getEffectiveTodayString())
-        : (document.getElementById('lt-filter-date')?.value || state.lubetruckState?.filterDate || getEffectiveTodayString());
-
-      const monthKey = filterDate.slice(0, 7);
-      const activeCat = isWt ? (state.watertruckState?.activeCategory || 'coal') : (state.lubetruckState?.activeCategory || 'small');
-
-      const rangeEl = document.querySelector('input[name="bulk-sched-delete-range"]:checked');
-      const range = rangeEl ? rangeEl.value : 'today';
-
-      const selectedSet = new Set(selectedIds);
-      const selectedUnits = new Set();
-      targetArray.forEach(j => {
-        if (selectedSet.has(j.id)) {
-          const u = (j.noLambung || '').trim().toUpperCase();
-          if (u) selectedUnits.add(u);
-        }
-      });
-
-      const toDelete = [];
-      const toKeep = [];
-
-      targetArray.forEach(j => {
-        const jUnit = (j.noLambung || '').trim().toUpperCase();
-        const jDate = j.tanggal || '';
-        const matchCat = (j.cat === activeCat);
-
-        if (range === 'today') {
-          // Hanya job yang dipilih pada tanggal ini
-          if (selectedSet.has(j.id)) {
-            toDelete.push(j);
-          } else {
-            toKeep.push(j);
-          }
-        } else {
-          // Hari ini dan ke depannya s/d akhir bulan UNTUK UNIT YANG DICENTANG SAJA
-          const matchUnit = selectedUnits.has(jUnit);
-          const isForwardInMonth = (jDate.slice(0, 7) === monthKey && jDate >= filterDate);
-
-          if (matchUnit && matchCat && isForwardInMonth) {
-            toDelete.push(j);
-          } else {
-            toKeep.push(j);
-          }
-        }
-      });
-
-      if (toDelete.length === 0) {
-        showToast('Tidak ada jadwal yang cocok untuk dihapus!', 'warning');
-        toggleModal('modal-confirm-bulk-delete-selected-jobs', false);
-        return;
-      }
+      const deleteSet = new Set(deleteIds);
+      const toKeep = targetArray.filter(j => !deleteSet.has(j.id));
 
       // Update state in-memory murni (tanpa residu cache lokal)
       if (isWt) {
@@ -48497,7 +48482,6 @@ Keterangan : ${keterangan}`;
       }
 
       // Bersihkan dari cache RAM & LocalStorage agar saat F5 tidak kembali
-      const deleteIds = toDelete.map(j => String(j.id));
       if (window.globalDataCache?.jobs) {
         deleteIds.forEach(id => {
           window.globalDataCache.jobs.delete(String(id));
@@ -48517,15 +48501,14 @@ Keterangan : ${keterangan}`;
               state.supabaseClient.from('jobs_wt').delete().in('id', chunk)
             ]);
           }
-          console.log(`[Supabase Delete Selected] ${deleteIds.length} jadwal (${selectedUnits.size} unit) berhasil dihapus.`);
+          console.log(`[Supabase Delete Selected] ${deleteIds.length} jadwal berhasil dihapus.`);
         } catch (e) {
           console.warn('[Supabase Delete Selected Error]', e);
         }
       }
 
       toggleModal('modal-confirm-bulk-delete-selected-jobs', false);
-      const rangeText = (range === 'today') ? 'hari ini saja' : 'hari ini s/d akhir bulan';
-      showToast(`Berhasil menghapus ${deleteIds.length} jadwal (${selectedUnits.size} unit terpilih, ${rangeText})!`, 'success');
+      showToast(`Berhasil menghapus ${deleteIds.length} jadwal terpilih!`, 'success');
 
       if (isWt) {
         cancelWtScheduleSelectMode();
@@ -49713,8 +49696,8 @@ Keterangan : ${keterangan}`;
 
       if (normStart || normEnd) {
         allCompleted = allCompleted.filter(j => {
-          if (searchVal) return true;
-          const jobDate = normalizeDateStr(j.tanggalRealisasi || j.tanggal);
+          const rawDate = j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || j.tanggal_rencana || '';
+          const jobDate = normalizeDateStr(String(rawDate).split('T')[0]);
           if (!jobDate) return false;
           if (normStart && jobDate < normStart) return false;
           if (normEnd && jobDate > normEnd) return false;
