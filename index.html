@@ -19,7 +19,7 @@
   <meta name="navigation-bar-color" content="#ffffff">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-7web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Job LT WT">
 
   <!-- Sinkronisasi Skala Ukuran Font Permanen (Cegah font mengecil/reset saat reload) -->
@@ -3675,10 +3675,6 @@
                 </svg>
                 <span>Hapus Job Terpilih</span>
               </button>
-              <button type="button" onclick="openBulkDeleteScheduleModal('LT')"
-                class="px-3.5 py-1.5 rounded-xl bg-white border border-rose-200 text-rose-700 hover:bg-rose-50 font-bold text-xs transition shadow-2xs cursor-pointer flex items-center space-x-1">
-                <span>🗑️ Opsi Hapus Tanggal / Bulan</span>
-              </button>
               <button type="button" onclick="cancelLtScheduleSelectMode()"
                 class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition cursor-pointer">
                 Batal
@@ -3696,7 +3692,7 @@
                 class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center transition">
               <div id="lt-filter-shift-wrapper" class="w-full sm:w-auto min-w-0">
                 <select id="lt-filter-shift" onchange="handleLtShiftFilterChange(this.value)"
-                  class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center truncate cursor-pointer transition">
+                  class="w-full sm:w-auto min-w-[110px] sm:min-w-[125px] h-9 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-left cursor-pointer transition">
                   <option value="ALL">All Shift</option>
                   <option value="1">Shift 1 (DWS)</option>
                   <option value="2">Shift 2 (NWS)</option>
@@ -3704,7 +3700,7 @@
               </div>
               <div class="w-full sm:w-auto min-w-0">
                 <select id="lt-filter-cluster" onchange="handleLtClusterFilterChange(this.value)"
-                  class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center truncate cursor-pointer transition">
+                  class="w-full sm:w-auto min-w-[110px] sm:min-w-[125px] h-9 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-left cursor-pointer transition">
                   <option value="ALL" selected>All Cluster</option>
                   <optgroup label="Cluster Utama" id="lt-optgroup-cluster-utama">
                     <option value="Selatan">KGU Selatan</option>
@@ -3855,10 +3851,6 @@
                 </svg>
                 <span>Hapus Job Terpilih</span>
               </button>
-              <button type="button" onclick="openBulkDeleteScheduleModal('WT')"
-                class="px-3.5 py-1.5 rounded-xl bg-white border border-rose-200 text-rose-700 hover:bg-rose-50 font-bold text-xs transition shadow-2xs cursor-pointer flex items-center space-x-1">
-                <span>🗑️ Opsi Hapus Tanggal / Bulan</span>
-              </button>
               <button type="button" onclick="cancelWtScheduleSelectMode()"
                 class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition cursor-pointer">
                 Batal
@@ -3876,7 +3868,7 @@
                 class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center transition">
               <div id="wt-filter-shift-wrapper" class="w-full sm:w-auto min-w-0">
                 <select id="wt-filter-shift" onchange="handleWtShiftFilterChange(this.value)"
-                  class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center truncate cursor-pointer transition">
+                  class="w-full sm:w-auto min-w-[110px] sm:min-w-[125px] h-9 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-left cursor-pointer transition">
                   <option value="ALL">All Shift</option>
                   <option value="1">Shift 1 (DWS)</option>
                   <option value="2">Shift 2 (NWS)</option>
@@ -3884,7 +3876,7 @@
               </div>
               <div class="w-full sm:w-auto min-w-0">
                 <select id="wt-filter-cluster" onchange="handleWtClusterFilterChange(this.value)"
-                  class="w-full sm:w-auto min-w-0 h-9 px-1.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-center truncate cursor-pointer transition">
+                  class="w-full sm:w-auto min-w-[110px] sm:min-w-[125px] h-9 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-[11px] sm:text-xs text-left cursor-pointer transition">
                   <option value="ALL" selected>All Cluster</option>
                   <optgroup label="Cluster Utama">
                     <option value="Selatan">KGU Selatan</option>
@@ -8797,7 +8789,7 @@
                   Akhir Bulan</span>
               </label>
               <p class="text-[10.5px] text-emerald-800 font-medium leading-tight">Otomatis membentuk jadwal berulang
-                mulai tanggal input sampai akhir bulan sesuai frekuensi unit (harian / siklus 3 hari / mingguan).</p>
+                mulai tanggal input sampai akhir bulan sesuai frekuensi unit (harian / siklus 3 & 5 hari / mingguan).</p>
             </div>
             <input type="checkbox" id="add-job-generate-month" checked
               class="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer shrink-0">
@@ -11024,27 +11016,79 @@
 
   <div id="modal-confirm-bulk-delete-selected-jobs"
     class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center">
-      <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-2xs">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-          </path>
-        </svg>
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl text-left">
+      <div class="flex items-center space-x-3">
+        <div class="w-11 h-11 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 shadow-2xs">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+            </path>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-black text-slate-900">Hapus Massal Unit Terpilih</h3>
+          <p class="text-[11px] text-slate-500" id="bulk-sched-delete-desc">Tentukan rentang tanggal penghapusan untuk unit yang dicentang</p>
+        </div>
       </div>
-      <div>
-        <h3 class="text-sm font-black text-slate-900">Hapus Jadwal Terpilih?</h3>
-        <p class="text-xs text-slate-500 mt-1 leading-relaxed" id="bulk-sched-delete-desc">
-          Apakah Anda yakin ingin menghapus jadwal yang dipilih dari antrean jadwal dan database?
-        </p>
+
+      <!-- Daftar Unit yang Dicentang -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+          <span>Unit Dicentang:</span>
+          <span id="bulk-sched-selected-count-label" class="text-rose-600 font-mono">0 Unit</span>
+        </div>
+        <div id="bulk-sched-selected-units-badge"
+          class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200 text-[11px] font-mono text-slate-700">
+        </div>
       </div>
-      <div class="flex items-center space-x-2 pt-2">
+
+      <!-- Pilihan Rentang Hapus -->
+      <div class="space-y-2 text-xs font-semibold">
+        <!-- Opsi 1: Hari Ini Saja -->
+        <label
+          class="flex items-start p-3 rounded-2xl border-2 border-slate-200 hover:border-amber-400 bg-slate-50/50 cursor-pointer transition">
+          <input type="radio" name="bulk-sched-delete-range" value="today" checked
+            class="mt-0.5 text-amber-600 focus:ring-amber-500 mr-2.5">
+          <div class="flex-1">
+            <div class="font-bold text-slate-900 flex items-center justify-between">
+              <span>Hanya Hari / Tanggal Ini Saja</span>
+              <span id="bulk-sched-today-label" class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10.5px] font-mono font-bold">-</span>
+            </div>
+            <p class="text-[11px] text-slate-500 font-normal mt-0.5">
+              Menghapus antrean unit yang dicentang hanya pada tanggal ini.
+            </p>
+          </div>
+        </label>
+
+        <!-- Opsi 2: Hari Ini dan Kedepannya s/d Akhir Bulan -->
+        <label
+          class="flex items-start p-3 rounded-2xl border-2 border-slate-200 hover:border-rose-500 bg-slate-50/50 cursor-pointer transition">
+          <input type="radio" name="bulk-sched-delete-range" value="future"
+            class="mt-0.5 text-rose-600 focus:ring-rose-500 mr-2.5">
+          <div class="flex-1">
+            <div class="font-bold text-rose-900 flex items-center justify-between flex-wrap gap-1">
+              <span>Hari Ini &amp; Kedepannya s/d Akhir Bulan</span>
+              <span id="bulk-sched-future-label" class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 text-[10.5px] font-mono font-bold">-</span>
+            </div>
+            <p class="text-[11px] text-slate-500 font-normal mt-0.5">
+              Menghapus unit yang dicentang mulai dari hari ini hingga akhir bulan. Unit lain yang tidak dicentang tetap aman.
+            </p>
+          </div>
+        </label>
+      </div>
+
+      <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-tight flex items-start gap-2">
+        <span class="text-sm">⚠️</span>
+        <span>Jadwal yang dihapus akan dibersihkan dari penyimpanan lokal serta Supabase secara permanen.</span>
+      </div>
+
+      <div class="flex items-center space-x-2 pt-1 border-t border-slate-100">
         <button type="button" onclick="executeBulkDeleteSelectedJobs()"
           class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition cursor-pointer">
-          Ya, Hapus Jadwal
+          Ya, Hapus Unit Terpilih
         </button>
         <button type="button" onclick="toggleModal('modal-confirm-bulk-delete-selected-jobs', false)"
-          class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
+          class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
           Batal
         </button>
       </div>
@@ -17430,7 +17474,7 @@
         return 'Aturan Big Digger (Interval 3 Hari): Jika tidak ter-action / Non-Ach di Shift 1 akan pending ke Shift 2. Jika tgl ini tidak close, otomatis terpending (rollover H+1) ke tgl selanjutnya dan bergabung dengan jadwal baru.';
       }
       if (cat === 'aircleaner' || cat === 'air_cleaner') {
-        return 'Aturan Air Cleaner (Interval 2 Hari untuk Coal & PC3000 / Seminggu Sekali untuk Non-Coal): Jika tidak close, otomatis terpending (carry-over) ke tgl selanjutnya dalam siklus mingguan (Minggu s/d Sabtu) dan bergabung dengan antrean aktif.';
+        return 'Aturan Air Cleaner (Interval 5 Hari untuk Coal PC2000, PC1200, PC800 / Seminggu Sekali untuk Non-Coal): Jika tidak close, otomatis terpending (carry-over) ke tgl selanjutnya dalam siklus mingguan (Minggu s/d Sabtu) dan bergabung dengan antrean aktif.';
       }
       if (cat === 'topup' || cat === 'topup_oil' || cat === 'top up oil') {
         return 'Aturan Top Up Oil: Jika tidak close, otomatis terpending (carry-over) ke tgl selanjutnya dan bergabung dengan jadwal Top Up Oil baru.';
@@ -17626,6 +17670,40 @@
     }
     window.isUnitCoal = isUnitCoal;
 
+    // Helper deteksi unit Air Cleaner Coal PC2000, PC1200 / PC1250, dan PC800 / PC850
+    function isAirCleanerUnitCoalPc2000_1200_800(job) {
+      if (!job) return false;
+      const noUnit = String(job.noLambung || job.unit || job.no_lambung || '').trim().toUpperCase();
+      const cleanNo = noUnit.replace(/[\s\-_]/g, '');
+      let fullType = String(job.typeUnit || job.type || job.type_model || '').toUpperCase();
+
+      if (!fullType || fullType === 'UNIT' || fullType === '-' || fullType === 'EXCAVATOR') {
+        if (typeof getUnitTypeFromMaster === 'function' && noUnit) {
+          fullType = String(getUnitTypeFromMaster(noUnit, '')).toUpperCase();
+        }
+        if ((!fullType || fullType === 'UNIT') && typeof state !== 'undefined' && Array.isArray(state?.masterUnits)) {
+          const mu = state.masterUnits.find(m => {
+            const l = (m.lambung || m.no_lambung || m.noLambung || '').trim().toUpperCase();
+            return l === noUnit;
+          });
+          if (mu) {
+            fullType = String(mu.type || mu.type_model || '').toUpperCase();
+          }
+        }
+      }
+
+      // Deteksi nomor lambung untuk PC2000, PC1200/PC1250, PC800/PC850
+      if (/^E20/i.test(cleanNo) || /^E520/i.test(cleanNo) || /^E2\d{2}/i.test(cleanNo)) return true;
+      if (/^E12/i.test(cleanNo) || /^E512/i.test(cleanNo)) return true;
+      if (/^E85/i.test(cleanNo) || /^EX85/i.test(cleanNo)) return true;
+
+      // Deteksi tipe model untuk PC2000, PC1200/PC1250, PC800/PC850
+      if (/PC\s*(2000|1250|1200|850|800)/i.test(fullType) || /EX\s*(2000|1200)/i.test(fullType)) return true;
+
+      return false;
+    }
+    window.isAirCleanerUnitCoalPc2000_1200_800 = isAirCleanerUnitCoalPc2000_1200_800;
+
     function getJobCategoryRule(job) {
       const cat = (job.cat || '').toLowerCase().trim();
       if (cat === 'small') return 'GREASING_SMALL';
@@ -17636,6 +17714,10 @@
         const isPc3000 = /PC\s*3000|PC3000/i.test(typeStr) || (typeof findMasterUnitRecord === 'function' && /PC\s*3000|PC3000/i.test(String(findMasterUnitRecord(noLambungStr)?.type || '')));
         const isCoal = isPc3000 || isCoalUnit(job) || (typeof isAirCleanerUnitCoal === 'function' && isAirCleanerUnitCoal(noLambungStr, typeStr));
         if (isCoal) {
+          // ATURAN BARU USER: Unit Coal PC2000, PC1200/PC1250, dan PC800/PC850 dibuat per 5 hari sekali
+          if (isAirCleanerUnitCoalPc2000_1200_800(job)) {
+            return 'AIR_CLEANER_COAL_5DAYS';
+          }
           const isBig = isBigDiggerUnit(job);
           return isBig ? 'AIR_CLEANER_COAL_BIG_DIGGER' : 'AIR_CLEANER_COAL_SMALL_TRACK';
         }
@@ -18872,11 +18954,38 @@
             break;
           }
 
+          case 'AIR_CLEANER_COAL_5DAYS': {
+            // Sesuai aturan baru pengguna:
+            // Unit Coal PC2000, PC1200 / PC1250, dan PC800 / PC850:
+            // Awalnya per 3 hari diubah menjadi per 5 hari sekali.
+            // Dibuat mulai dari baseDayNum dan berulang tepat setiap 5 hari sekali sampai akhir bulan.
+            const dCurrent = new Date(year, month - 1, day);
+            const [bYear, bMonth, bDay] = baseDate.slice(0, 10).split('-').map(Number);
+            const dBase = new Date(bYear, bMonth - 1, bDay);
+            const diffDays = Math.round((dCurrent.getTime() - dBase.getTime()) / (1000 * 60 * 60 * 24));
+
+            if (diffDays >= 0 && diffDays % 5 === 0) {
+              shouldInclude = true;
+            }
+            break;
+          }
+
           case 'AIR_CLEANER_COAL_BIG_DIGGER':
           case 'AIR_CLEANER_COAL_SMALL_TRACK':
           case 'AIR_CLEANER_COAL': {
-            // Sesuai konfirmasi pengguna (Opsi 1):
-            // Unit Coal dan PC3000 (baik Small Track maupun Big Digger):
+            // Pengaman ganda: Jika unit terdeteksi PC2000, PC1200 / PC1250, atau PC800 / PC850
+            if (typeof isAirCleanerUnitCoalPc2000_1200_800 === 'function' && isAirCleanerUnitCoalPc2000_1200_800(baseJob)) {
+              const dCurrent = new Date(year, month - 1, day);
+              const [bYear, bMonth, bDay] = baseDate.slice(0, 10).split('-').map(Number);
+              const dBase = new Date(bYear, bMonth - 1, bDay);
+              const diffDays = Math.round((dCurrent.getTime() - dBase.getTime()) / (1000 * 60 * 60 * 24));
+              if (diffDays >= 0 && diffDays % 5 === 0) {
+                shouldInclude = true;
+              }
+              break;
+            }
+
+            // Unit Coal lainnya jika ada (misal PC3000 / Small Track Coal):
             // Menggunakan sistem Interval 2 Hari (3x seminggu).
             // Misal didaftarkan Senin (1), maka Rabu (3) dan Jumat (5) muncul kembali.
             // Hari SABTU (6) LIBUR unit coal (tidak dijadwalkan).
@@ -22237,18 +22346,11 @@
         return false;
       }
 
-      // Tentukan target kluster
-      let targetCluster = clusterFilter || 'ALL';
-      let myUnit = '';
-      if (isMp) {
-        const myUnitInfo = (typeof getCurrentUserAssignedUnitAndCluster === 'function')
-          ? getCurrentUserAssignedUnitAndCluster(isWt)
-          : { unit: '-', cluster: (isWt ? 'Tengah' : 'Selatan') };
-        myUnit = (myUnitInfo.unit || '').trim().toUpperCase();
-        if ((!targetCluster || targetCluster === 'ALL') && myUnitInfo.cluster) {
-          targetCluster = myUnitInfo.cluster;
-        }
-      }
+      // Tentukan target kluster sesuai filter dropdown saat ini
+      // Sesuai aturan pengguna: Keterangan pendingan tampil seragam di SEMUA akses
+      // (Admin, Oilman, Washingman, BSC, CMC, Track). Jika filter kluster bernilai 'ALL',
+      // tampilkan seluruh pendingan dari kategori aktif tersebut.
+      const targetCluster = clusterFilter || 'ALL';
 
       // Ambil daftar pekerjaan sumber dari state dan globalDataCache (deduplikasi berdasarkan ID)
       const rawJobList = [
@@ -22289,17 +22391,12 @@
         if (!jDate || jDate >= todayStr) return;
         if (minDateLimit && jDate < minDateLimit) return;
 
-        // Cek kecocokan kluster jika ada filter kluster spesifik (untuk Manpower / Operator)
+        // Cek kecocokan kluster jika user memilih filter kluster tertentu (bukan ALL)
         if (targetCluster && targetCluster !== 'ALL') {
           const matchCluster = (typeof isClusterMatchFilter === 'function')
             ? isClusterMatchFilter(j.cluster, targetCluster)
             : String(j.cluster || '').toLowerCase().includes(String(targetCluster).toLowerCase());
-          const matchMyUnit = isMp && myUnit && myUnit !== '-' && (
-            (j.ltUnit && j.ltUnit.trim().toUpperCase() === myUnit) ||
-            (j.armada && j.armada.trim().toUpperCase() === myUnit) ||
-            (j.unitWt && j.unitWt.trim().toUpperCase() === myUnit)
-          );
-          if (!matchCluster && !matchMyUnit) return;
+          if (!matchCluster) return;
         }
 
         // Cek status apakah sudah di-action
@@ -22608,6 +22705,10 @@
             clusterFilterEl.value = Array.from(clusterFilterEl.options).some(o => o.value === fallback) ? fallback : 'ALL';
             state.lubetruckState.filterCluster = clusterFilterEl.value;
           }
+        }
+        if (clusterFilterEl.selectedIndex === -1 || !clusterFilterEl.value) {
+          clusterFilterEl.value = 'ALL';
+          clusterFilterEl.selectedIndex = 0;
         }
       }
 
@@ -23295,6 +23396,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             clusterFilterEl.value = Array.from(clusterFilterEl.options).some(o => o.value === fallback) ? fallback : 'ALL';
             state.watertruckState.filterCluster = clusterFilterEl.value;
           }
+        }
+        if (clusterFilterEl.selectedIndex === -1 || !clusterFilterEl.value) {
+          clusterFilterEl.value = 'ALL';
+          clusterFilterEl.selectedIndex = 0;
         }
       }
 
@@ -25169,6 +25274,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       if (catGreasingEl) catGreasingEl.textContent = `${greasingJobs.length} Job (${calcCatRate(greasingJobs)})`;
       if (catCoalEl) catCoalEl.textContent = `${coalJobs.length} Job (${calcCatRate(coalJobs)})`;
       if (catRomEl) catRomEl.textContent = `${romJobs.length} Job (${calcCatRate(romJobs)})`;
+      if (catNoncoalEl) catNoncoalEl.textContent = `${nonCoalJobs.length} Job (${calcCatRate(nonCoalJobs)})`;
       if (catAircleanerEl) catAircleanerEl.textContent = `${aircleanerJobs.length} Job (${calcCatRate(aircleanerJobs)})`;
       if (catTopupEl) catTopupEl.textContent = `${topupJobs.length} Job (${calcCatRate(topupJobs)})`;
       if (catUnschedEl) catUnschedEl.textContent = `${unschedAll} Job (Di luar SCH)`;
@@ -34073,18 +34179,27 @@ Keterangan : ${keterangan}`;
         const isPc500 = /PC\s*5000|PC5000|PC\s*500|PC500/i.test(unitNo) || /PC\s*5000|PC5000|PC\s*500|PC500/i.test(typeStr);
         const isPc3000 = /PC\s*3000|PC3000|3000/i.test(unitNo) || /PC\s*3000|PC3000/i.test(typeStr);
 
-        // Unit Interval 3 Hari: Air Cleaner PC3000, PC5000 / PC500 Non-Coal, Dozer 85
-        if (isDozer85 || isPc500 || isPc3000) {
-          return 3;
-        }
-
         // Cek apakah Air Cleaner Unit Coal
         const isCoal = (typeof isAirCleanerUnitCoal === 'function')
           ? isAirCleanerUnitCoal(unitNo, typeStr)
           : (/COAL/i.test(typeStr) || /COAL/i.test(String(job.kategori_unit || job.kategori || '')) || String(job.kondisi || '').toLowerCase().includes('coal'));
 
+        // ATURAN BARU USER: Unit Coal PC2000, PC1200 / PC1250, dan PC800 / PC850 -> Interval 5 Hari Sekali!
+        const isPc2000_1200_800 = (typeof isAirCleanerUnitCoalPc2000_1200_800 === 'function')
+          ? isAirCleanerUnitCoalPc2000_1200_800(job)
+          : (/PC\s*(2000|1250|1200|850|800)/i.test(typeStr) || /^E(20|520|2\d{2}|12|512|85|EX85)/i.test(unitNo.replace(/[\s\-_]/g, '')));
+
+        if (isCoal && isPc2000_1200_800) {
+          return 5;
+        }
+
+        // Unit Interval 3 Hari: Air Cleaner PC3000, PC5000 / PC500 Non-Coal, Dozer 85
+        if (isDozer85 || isPc500 || isPc3000) {
+          return 3;
+        }
+
         if (isCoal) {
-          return 1; // Air Cleaner Coal -> Harian (1 hari), pilihan ACH & NON-ACH selalu ada setiap hari
+          return 1; // Air Cleaner Coal lainnya -> Harian (1 hari), pilihan ACH & NON-ACH selalu ada setiap hari
         }
 
         // Unit Air Cleaner Non-Coal Interval 7 Hari: PC2000, PC200, PC300, Dozer 15 (D155 / D15), dll.
@@ -48251,15 +48366,61 @@ Keterangan : ${keterangan}`;
 
     let pendingBulkDeleteSchedType = 'LT';
     function promptBulkDeleteSelectedJobs(type = 'LT') {
-      if (state.selectedSchedJobIds.size === 0) {
-        showToast('Pilih setidaknya satu jadwal untuk dihapus!', 'warning');
+      if (!state.selectedSchedJobIds || state.selectedSchedJobIds.size === 0) {
+        showToast('Pilih / centang setidaknya satu unit yang ingin dihapus!', 'warning');
         return;
       }
       pendingBulkDeleteSchedType = type;
+      const isWt = (type === 'WT');
+      const targetArray = isWt ? (state.watertruckState?.jobs || []) : (state.lubetruckState?.jobs || []);
+      const selectedIds = Array.from(state.selectedSchedJobIds);
+      const selectedSet = new Set(selectedIds);
+
+      // Ambil objek job dan daftar nomor lambung unik dari unit yang dicentang
+      const selectedJobs = targetArray.filter(j => selectedSet.has(j.id));
+      const selectedUnitSet = new Set();
+      selectedJobs.forEach(j => {
+        const u = (j.noLambung || '').trim().toUpperCase();
+        if (u) selectedUnitSet.add(u);
+      });
+      const selectedUnits = Array.from(selectedUnitSet);
+
+      const filterDate = isWt
+        ? (document.getElementById('wt-filter-date')?.value || state.watertruckState?.filterDate || getEffectiveTodayString())
+        : (document.getElementById('lt-filter-date')?.value || state.lubetruckState?.filterDate || getEffectiveTodayString());
+
+      const monthKey = filterDate.slice(0, 7);
+      const [yearNum, monthNum] = monthKey.split('-').map(Number);
+      const lastDay = new Date(yearNum, monthNum, 0).getDate();
+      const endOfMonthStr = `${monthKey}-${String(lastDay).padStart(2, '0')}`;
+
+      const formatD = (dStr) => {
+        if (!dStr) return '-';
+        const p = dStr.split('-');
+        return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : dStr;
+      };
+
+      const countLabel = document.getElementById('bulk-sched-selected-count-label');
+      if (countLabel) {
+        countLabel.textContent = `${selectedUnits.length} Unit (${selectedIds.length} Job)`;
+      }
+
+      const badgeContainer = document.getElementById('bulk-sched-selected-units-badge');
+      if (badgeContainer) {
+        badgeContainer.innerHTML = selectedUnits.map(u => `<span class="px-2 py-0.5 rounded-md bg-white border border-slate-200 shadow-2xs font-bold text-slate-800">${u}</span>`).join('');
+      }
+
+      const todayLabel = document.getElementById('bulk-sched-today-label');
+      if (todayLabel) todayLabel.textContent = formatD(filterDate);
+
+      const futureLabel = document.getElementById('bulk-sched-future-label');
+      if (futureLabel) futureLabel.textContent = `${formatD(filterDate)} s/d ${formatD(endOfMonthStr)}`;
+
       const descEl = document.getElementById('bulk-sched-delete-desc');
       if (descEl) {
-        descEl.textContent = `Apakah Anda yakin ingin menghapus ${state.selectedSchedJobIds.size} jadwal yang dipilih dari antrean jadwal dan database?`;
+        descEl.textContent = `Pilih rentang tanggal penghapusan untuk ${selectedUnits.length} unit yang dicentang.`;
       }
+
       toggleModal('modal-confirm-bulk-delete-selected-jobs', true);
     }
     window.promptBulkDeleteSelectedJobs = promptBulkDeleteSelectedJobs;
@@ -48268,15 +48429,65 @@ Keterangan : ${keterangan}`;
       const type = pendingBulkDeleteSchedType;
       const isWt = (type === 'WT');
       const targetArray = isWt ? (state.watertruckState?.jobs || []) : (state.lubetruckState?.jobs || []);
-      const deleteIds = Array.from(state.selectedSchedJobIds);
+      const selectedIds = Array.from(state.selectedSchedJobIds || []);
 
-      if (deleteIds.length === 0) {
+      if (selectedIds.length === 0) {
         toggleModal('modal-confirm-bulk-delete-selected-jobs', false);
         return;
       }
 
-      const deleteSet = new Set(deleteIds);
-      const toKeep = targetArray.filter(j => !deleteSet.has(j.id));
+      const filterDate = isWt
+        ? (document.getElementById('wt-filter-date')?.value || state.watertruckState?.filterDate || getEffectiveTodayString())
+        : (document.getElementById('lt-filter-date')?.value || state.lubetruckState?.filterDate || getEffectiveTodayString());
+
+      const monthKey = filterDate.slice(0, 7);
+      const activeCat = isWt ? (state.watertruckState?.activeCategory || 'coal') : (state.lubetruckState?.activeCategory || 'small');
+
+      const rangeEl = document.querySelector('input[name="bulk-sched-delete-range"]:checked');
+      const range = rangeEl ? rangeEl.value : 'today';
+
+      const selectedSet = new Set(selectedIds);
+      const selectedUnits = new Set();
+      targetArray.forEach(j => {
+        if (selectedSet.has(j.id)) {
+          const u = (j.noLambung || '').trim().toUpperCase();
+          if (u) selectedUnits.add(u);
+        }
+      });
+
+      const toDelete = [];
+      const toKeep = [];
+
+      targetArray.forEach(j => {
+        const jUnit = (j.noLambung || '').trim().toUpperCase();
+        const jDate = j.tanggal || '';
+        const matchCat = (j.cat === activeCat);
+
+        if (range === 'today') {
+          // Hanya job yang dipilih pada tanggal ini
+          if (selectedSet.has(j.id)) {
+            toDelete.push(j);
+          } else {
+            toKeep.push(j);
+          }
+        } else {
+          // Hari ini dan ke depannya s/d akhir bulan UNTUK UNIT YANG DICENTANG SAJA
+          const matchUnit = selectedUnits.has(jUnit);
+          const isForwardInMonth = (jDate.slice(0, 7) === monthKey && jDate >= filterDate);
+
+          if (matchUnit && matchCat && isForwardInMonth) {
+            toDelete.push(j);
+          } else {
+            toKeep.push(j);
+          }
+        }
+      });
+
+      if (toDelete.length === 0) {
+        showToast('Tidak ada jadwal yang cocok untuk dihapus!', 'warning');
+        toggleModal('modal-confirm-bulk-delete-selected-jobs', false);
+        return;
+      }
 
       // Update state in-memory murni (tanpa residu cache lokal)
       if (isWt) {
@@ -48286,6 +48497,7 @@ Keterangan : ${keterangan}`;
       }
 
       // Bersihkan dari cache RAM & LocalStorage agar saat F5 tidak kembali
+      const deleteIds = toDelete.map(j => String(j.id));
       if (window.globalDataCache?.jobs) {
         deleteIds.forEach(id => {
           window.globalDataCache.jobs.delete(String(id));
@@ -48305,14 +48517,15 @@ Keterangan : ${keterangan}`;
               state.supabaseClient.from('jobs_wt').delete().in('id', chunk)
             ]);
           }
-          console.log(`[Supabase Delete Selected] ${deleteIds.length} jadwal berhasil dihapus.`);
+          console.log(`[Supabase Delete Selected] ${deleteIds.length} jadwal (${selectedUnits.size} unit) berhasil dihapus.`);
         } catch (e) {
           console.warn('[Supabase Delete Selected Error]', e);
         }
       }
 
       toggleModal('modal-confirm-bulk-delete-selected-jobs', false);
-      showToast(`Berhasil menghapus ${deleteIds.length} jadwal terpilih!`, 'success');
+      const rangeText = (range === 'today') ? 'hari ini saja' : 'hari ini s/d akhir bulan';
+      showToast(`Berhasil menghapus ${deleteIds.length} jadwal (${selectedUnits.size} unit terpilih, ${rangeText})!`, 'success');
 
       if (isWt) {
         cancelWtScheduleSelectMode();
