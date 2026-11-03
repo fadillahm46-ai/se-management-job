@@ -13325,12 +13325,15 @@
         const jShift = String(j.shift || j.shift_rencana || 1);
         let jCat = String(j.cat || '').trim().toLowerCase();
         const rawUpperId = jId.toUpperCase();
-        if (jCat === 'wnc' || jCat === 'noncoal' || jCat === 'non_coal' || jCat.includes('non_coal') || rawUpperId.includes('-WNC-') || rawUpperId.startsWith('WT-WNC')) {
+        const jClusterUpper = String(j.cluster || '').toUpperCase().trim();
+
+        // JANGAN PERNAH menimpa kategori jika unit sudah berstatus 'rom' atau berada di cluster 'ROM'
+        if (jCat === 'rom' || jClusterUpper === 'ROM') {
+          jCat = 'rom';
+        } else if (jCat === 'coal' || jCat === 'wsc') {
+          jCat = 'coal';
+        } else if (jCat === 'non_coal' || jCat === 'noncoal' || jCat === 'wnc' || jCat.includes('non_coal') || jCat.includes('noncoal') || ((rawUpperId.includes('-WNC-') || rawUpperId.startsWith('WT-WNC')) && jCat !== 'rom' && jCat !== 'coal')) {
           jCat = 'non_coal';
-        } else if (jCat === 'wsc' || rawUpperId.includes('-WSC-') || rawUpperId.startsWith('WT-WSC')) {
-          if (jCat !== 'rom' && jCat !== 'non_coal') {
-            jCat = 'coal';
-          }
         }
         const isUnsch = (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(j)) ||
           (typeof getJobTypeCode === 'function' && getJobTypeCode(j) === 'REQ') ||
@@ -13886,8 +13889,8 @@
       };
       const matchNonCoal = j => {
         const cat = String(j.cat || '').toLowerCase();
-        const id = String(j.id || '').toUpperCase();
-        return cat === 'non_coal' || cat === 'noncoal' || cat === 'wnc' || id.includes('-WNC-') || id.startsWith('WT-WNC');
+        const cluster = String(j.cluster || '').toUpperCase().trim();
+        return (cat === 'non_coal' || cat === 'noncoal' || cat === 'wnc') && cat !== 'rom' && cluster !== 'ROM';
       };
 
       const achCoal = calcCatStats(matchCoal);
@@ -25263,12 +25266,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       const diggerJobs = schJobs.filter(j => j.cat === 'digger');
       const greasingJobs = [...smallJobs, ...diggerJobs];
       const coalJobs = schJobs.filter(j => j.cat === 'coal');
-      const nonCoalJobs = schJobs.filter(j => {
-        const c = String(j.cat || '').toLowerCase();
-        const id = String(j.id || '').toUpperCase();
-        return c === 'non_coal' || c === 'noncoal' || c === 'wnc' || c.includes('non_coal') || id.includes('-WNC-') || id.startsWith('WT-WNC');
-      });
-      const romJobs = schJobs.filter(j => j.cat === 'rom');
+      const romJobs = schJobs.filter(j => j.cat === 'rom' || String(j.cluster || '').toUpperCase().trim() === 'ROM');
+      const nonCoalJobs = schJobs.filter(j => (j.cat === 'non_coal' || j.cat === 'noncoal' || j.cat === 'wnc') && j.cat !== 'rom' && String(j.cluster || '').toUpperCase().trim() !== 'ROM');
       const aircleanerJobs = schJobs.filter(j => j.cat === 'aircleaner');
       const topupJobs = schJobs.filter(j => j.cat === 'topup');
       const unschedAll = totalUnscheduled;
@@ -25485,13 +25484,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       } else if (selectedCat === 'coal') {
         targetJobs = schJobs.filter(j => j.cat === 'coal');
       } else if (selectedCat === 'non_coal' || selectedCat === 'noncoal') {
-        targetJobs = schJobs.filter(j => {
-          const c = String(j.cat || '').toLowerCase();
-          const id = String(j.id || '').toUpperCase();
-          return c === 'non_coal' || c === 'noncoal' || c === 'wnc' || c.includes('non_coal') || id.includes('-WNC-') || id.startsWith('WT-WNC');
-        });
+        targetJobs = schJobs.filter(j => (j.cat === 'non_coal' || j.cat === 'noncoal' || j.cat === 'wnc') && j.cat !== 'rom' && String(j.cluster || '').toUpperCase().trim() !== 'ROM');
       } else if (selectedCat === 'rom') {
-        targetJobs = schJobs.filter(j => j.cat === 'rom');
+        targetJobs = schJobs.filter(j => j.cat === 'rom' || String(j.cluster || '').toUpperCase().trim() === 'ROM');
       } else if (selectedCat === 'aircleaner') {
         targetJobs = schJobs.filter(j => j.cat === 'aircleaner');
       } else if (selectedCat === 'topup') {
