@@ -726,6 +726,31 @@
       overflow: visible !important;
     }
 
+    /* ========================================================================== */
+    /* RIWAYAT SELESAI: FOOTER FLUSH MENEMPEL DI GARIS BAWAH TANPA SPACE KOSONG  */
+    /* ========================================================================== */
+    @media (min-width: 768px) {
+      #tab-completed {
+        margin-bottom: -1.5rem !important;
+        padding-bottom: 0 !important;
+      }
+      #tab-completed > div:first-child {
+        margin-bottom: 0.5rem !important;
+      }
+      #completed-table-container > div {
+        height: calc(100vh - 114px) !important;
+        min-height: calc(100vh - 114px) !important;
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        border-bottom-width: 0 !important;
+      }
+      #completed-table-container .table-freeze-container {
+        flex: 1 1 0% !important;
+        height: 100% !important;
+        max-height: none !important;
+      }
+    }
+
   </style>
 
   <style id="sidebar-compact-plain">
@@ -16730,6 +16755,72 @@
     let _lastRawHapticTime = 0;
     let _lastPointerDownHapticTime = 0;
     let _pendingNavRenderRaf = null;
+    let _pendingNavRenderTimer = null;
+
+    /**
+     * =========================================================================
+     * HELPER UNIVERSAL LAZY LOADING SKELETON PLACEHOLDER UNTUK SEMUA MENU
+     * Seperti menu monitoring Air Cleaner: saat menu disentuh/diketuk, area tabel
+     * langsung menampilkan baris skeleton shimmer seketika (0 ms), sehingga UI
+     * terasa sangat ringan dan bebas delay. Kemudian data ditarik/dirender halus.
+     * =========================================================================
+     */
+    function displayTabSkeletonPlaceholder(tabKey) {
+      try {
+        if (typeof showTableLazyLoading !== 'function') return;
+
+        if (tabKey === 'dashboard') {
+          const kpiTb = document.getElementById('dash-kpi-perf-tbody');
+          const picaTb = document.getElementById('dash-pica-matrix-tbody');
+          if (kpiTb) showTableLazyLoading(kpiTb, 'Menyiapkan analitik KPI Schedule...', 'brand', 6);
+          if (picaTb) showTableLazyLoading(picaTb, 'Menghitung matriks kendala PICA...', 'amber', 6);
+        } else if (tabKey === 'lt-schedule') {
+          const c = document.getElementById('lt-schedule-table-container');
+          if (c) showTableLazyLoading(c, 'Memuat jadwal Lubetruck...', 'emerald', 8);
+        } else if (tabKey === 'wt-schedule') {
+          const c = document.getElementById('wt-schedule-table-container');
+          if (c) showTableLazyLoading(c, 'Memuat jadwal Water Truck...', 'cyan', 8);
+        } else if (tabKey === 'completed') {
+          const c = document.getElementById('completed-table-container');
+          if (c) showTableLazyLoading(c, 'Memuat riwayat pekerjaan selesai...', 'emerald', 10);
+        } else if (tabKey === 'air-cleaner-monitor') {
+          const tb = document.getElementById('aircleaner-monitor-tbody');
+          if (tb) showTableLazyLoading(tb, 'Memuat data monitoring filter Air Cleaner...', 'teal', 10);
+          const repTb = document.getElementById('ac-replace-tbody');
+          if (repTb) showTableLazyLoading(repTb, 'Memuat riwayat penggantian filter...', 'teal', 8);
+        } else if (tabKey === 'pica') {
+          const tb = document.getElementById('pica-logs-tbody');
+          if (tb) showTableLazyLoading(tb, 'Memuat catatan kendala PICA...', 'amber', 8);
+        } else if (tabKey === 'job-requests') {
+          const c = document.getElementById('admin-jobreq-table-container');
+          if (c) showTableLazyLoading(c, 'Memuat antrean Job Request...', 'brand', 8);
+        } else if (tabKey === 'mp-kontak-pro') {
+          const tb = document.getElementById('mp-kontak-pro-tbody');
+          if (tb) showTableLazyLoading(tb, 'Memuat data kontak personil...', 'brand', 8);
+        } else if (tabKey === 'master-data') {
+          const sec = state.masterActiveSection || 'units';
+          if (sec === 'units') {
+            const tb = document.getElementById('master-units-tbody');
+            if (tb) showTableLazyLoading(tb, 'Memuat data master unit...', 'emerald', 8);
+          } else if (sec === 'accounts') {
+            const tb = document.getElementById('master-accounts-tbody');
+            if (tb) showTableLazyLoading(tb, 'Memuat data akun pengguna...', 'brand', 8);
+          } else if (sec === 'roster') {
+            const tb = document.getElementById('master-roster-tbody');
+            if (tb) showTableLazyLoading(tb, 'Memuat jadwal roster armada...', 'amber', 8);
+          }
+        } else if (tabKey === 'lt-unschedule') {
+          const c = document.getElementById('lt-unschedule-table-container');
+          if (c) showTableLazyLoading(c, 'Memuat job request Lubetruck...', 'emerald', 8);
+        } else if (tabKey === 'wt-unschedule') {
+          const c = document.getElementById('wt-unschedule-table-container');
+          if (c) showTableLazyLoading(c, 'Memuat job request Water Truck...', 'cyan', 8);
+        }
+      } catch (e) {
+        console.warn('[displayTabSkeletonPlaceholder Error]', e);
+      }
+    }
+    window.displayTabSkeletonPlaceholder = displayTabSkeletonPlaceholder;
 
     function triggerHaptic(pattern = 8, fromPointerDown = false) {
       const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
@@ -16862,6 +16953,10 @@
       updateSidebarActiveMenu(tabKey);
       updateMobileNav(tabKey);
 
+      // LANGSUNG TAMPILKAN SKELETON LAZY LOADING DI TAB AKTIF (SEPERTI MONITORING AIR CLEANER)
+      // Ini membuat perpindahan menu terasa 100% instan (0 ms), ringan, bebas delay/freezing!
+      displayTabSkeletonPlaceholder(tabKey);
+
       // Selalu tampilkan Nama Pemilik Akun di Header Utama (Sesuai Permintaan)
       const titleEl = document.getElementById('page-title');
       if (titleEl) {
@@ -16938,9 +17033,14 @@
         cancelAnimationFrame(_pendingNavRenderRaf);
         _pendingNavRenderRaf = null;
       }
+      if (_pendingNavRenderTimer) {
+        clearTimeout(_pendingNavRenderTimer);
+        _pendingNavRenderTimer = null;
+      }
 
       const runTabSubRenderer = () => {
         _pendingNavRenderRaf = null;
+        _pendingNavRenderTimer = null;
         if (state.activeTab !== tabKey) return;
         if (tabKey === 'dashboard') {
           if (state.currentUser?.role === 'admin' || state.currentUser?.role === 'basecontrol') {
@@ -16964,7 +17064,9 @@
           renderCompletedTable();
           // ON-DEMAND LAZY LOAD: Tarik riwayat dari Supabase hanya saat tab riwayat dibuka pertama kali
           if (!window._hasLoadedJobHistory && typeof loadJobHistoryFromSupabase === 'function') {
-            loadJobHistoryFromSupabase(true);
+            loadJobHistoryFromSupabase(true).then(() => {
+              if (state.activeTab === 'completed') renderCompletedTable();
+            }).catch(() => {});
           }
         } else if (tabKey === 'mp-kontak-pro') {
           renderMpKontakProTable();
@@ -16995,11 +17097,15 @@
         }
       };
 
-      if (typeof requestAnimationFrame === 'function') {
-        _pendingNavRenderRaf = requestAnimationFrame(runTabSubRenderer);
-      } else {
-        runTabSubRenderer();
-      }
+      // Berikan jeda sekejap (~70ms) agar skeleton shimmer ter-render seketika di frame pertama
+      // Layar berganti detik itu juga tanpa jeda macet, lalu data riil ditarik/dirender mulus!
+      _pendingNavRenderTimer = setTimeout(() => {
+        if (typeof requestAnimationFrame === 'function') {
+          _pendingNavRenderRaf = requestAnimationFrame(runTabSubRenderer);
+        } else {
+          runTabSubRenderer();
+        }
+      }, 70);
 
       // Pastikan tombol silang pencarian di tab aktif terinisialisasi
       try {
@@ -20401,7 +20507,11 @@
           try { btn.blur(); } catch (e) { }
         }
       });
-      renderLtScheduleTable();
+      const ltCont = document.getElementById('lt-schedule-table-container');
+      if (ltCont && typeof showTableLazyLoading === 'function') {
+        showTableLazyLoading(ltCont, `Memuat antrean jadwal (${cat})...`, 'emerald', 8);
+      }
+      setTimeout(renderLtScheduleTable, 50);
     }
 
     /**
@@ -22212,7 +22322,56 @@
      * agar aplikasi terasa sangat ringan dan transisi data mulus.
      * =========================================================================
      */
-    function showTableLazyLoading(targetEl, message = 'Memuat data secara bertahap...', themeColor = 'brand') {
+    /**
+     * =========================================================================
+     * HELPER UNIVERSAL FULL SKELETON TABLE SHIMMER (LAZY LOADING)
+     * Persis sesuai referensi foto pengguna (media_1793675121844_253dcc8f.jpg):
+     * Menampilkan baris-baris horizontal skeleton shimmer penuh (8-12 baris)
+     * berulang dengan animasi pulse halus, membuat perpindahan menu dan filter
+     * tanggal terasa instan tanpa delay/freezing saat data ditarik dari Supabase.
+     * =========================================================================
+     */
+    function generateTableSkeletonTrRows(numRows = 10) {
+      const colWidths2 = ['w-24', 'w-28', 'w-32', 'w-20', 'w-36'];
+      const colWidths3 = ['w-36', 'w-44', 'w-40', 'w-48', 'w-32'];
+      const colWidths4 = ['w-28', 'w-32', 'w-24', 'w-36', 'w-40'];
+      const colWidths5 = ['w-20', 'w-24', 'w-16', 'w-28', 'w-20'];
+      let trs = '';
+      for (let i = 0; i < numRows; i++) {
+        const w2 = colWidths2[i % colWidths2.length];
+        const w3 = colWidths3[i % colWidths3.length];
+        const w4 = colWidths4[i % colWidths4.length];
+        const w5 = colWidths5[i % colWidths5.length];
+        trs += `
+          <tr class="animate-pulse border-b border-slate-100/90 hover:bg-slate-50/40 transition">
+            <td class="py-3 px-3 text-center w-12 shrink-0">
+              <div class="flex items-center justify-center space-x-1.5">
+                <div class="h-4 w-4 bg-slate-200/80 rounded shrink-0"></div>
+                <div class="h-3 w-8 bg-slate-200/70 rounded hidden sm:block"></div>
+              </div>
+            </td>
+            <td class="py-3 px-3">
+              <div class="h-3.5 bg-slate-200/80 rounded-md ${w2}"></div>
+            </td>
+            <td class="py-3 px-3">
+              <div class="h-3.5 bg-slate-200/70 rounded-md ${w3}"></div>
+            </td>
+            <td class="py-3 px-3 hidden md:table-cell">
+              <div class="h-3.5 bg-slate-200/60 rounded-md ${w4}"></div>
+            </td>
+            <td class="py-3 px-3 hidden lg:table-cell">
+              <div class="h-3.5 bg-slate-200/60 rounded-md ${w5}"></div>
+            </td>
+            <td class="py-3 px-3 text-center w-24 shrink-0">
+              <div class="h-5 w-16 bg-slate-200/80 rounded-full mx-auto"></div>
+            </td>
+          </tr>`;
+      }
+      return trs;
+    }
+    window.generateTableSkeletonTrRows = generateTableSkeletonTrRows;
+
+    function showTableLazyLoading(targetEl, message = 'Memuat data secara bertahap...', themeColor = 'brand', numRows = 10) {
       if (!targetEl) return;
       if (typeof targetEl === 'string') {
         targetEl = document.getElementById(targetEl);
@@ -22226,32 +22385,57 @@
         brand: { spin: 'text-brand-700', badge: 'bg-brand-50 text-brand-900 border-brand-200' }
       };
       const c = colorMap[themeColor] || colorMap.brand;
-
-      const contentHtml = `
-        <div class="py-12 px-4 flex flex-col items-center justify-center space-y-3 select-none">
-          <div class="w-10 h-10 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center">
-            <svg class="w-5 h-5 animate-spin ${c.spin}" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-            </svg>
-          </div>
-          <div class="text-center">
-            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold border ${c.badge}">${message}</span>
-            <p class="text-[11px] text-slate-400 mt-1 font-medium">Lazy loading aktif • Mengambil data bertahap agar aplikasi tetap ringan</p>
-          </div>
-          <!-- Shimmer Skeleton Baris -->
-          <div class="w-full max-w-sm space-y-2 pt-2 opacity-50">
-            <div class="h-3 bg-slate-200/80 rounded-full animate-pulse w-full"></div>
-            <div class="h-3 bg-slate-200/60 rounded-full animate-pulse w-5/6 mx-auto"></div>
-            <div class="h-3 bg-slate-200/40 rounded-full animate-pulse w-4/6 mx-auto"></div>
-          </div>
-        </div>
-      `;
+      const skeletonTrs = generateTableSkeletonTrRows(numRows);
 
       if (targetEl.tagName === 'TBODY') {
-        targetEl.innerHTML = `<tr><td colspan="100%" class="p-0 text-center">${contentHtml}</td></tr>`;
+        targetEl.innerHTML = skeletonTrs;
       } else {
-        targetEl.innerHTML = contentHtml;
+        targetEl.innerHTML = `
+          <div class="w-full space-y-2 select-none">
+            <!-- Mini status badge tipis elegan -->
+            <div class="flex items-center justify-between px-3.5 py-2 bg-slate-50/90 border border-slate-200/60 rounded-xl text-xs">
+              <span class="inline-flex items-center gap-2 font-semibold text-slate-700">
+                <svg class="w-4 h-4 animate-spin ${c.spin}" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                <span class="px-2.5 py-0.5 rounded-full border ${c.badge} text-[11px] font-bold">${message}</span>
+              </span>
+              <span class="text-[11px] text-slate-400 font-medium hidden sm:inline">Lazy loading aktif • Supabase on-demand</span>
+            </div>
+
+            <!-- Full Skeleton Table (Persis Foto Referensi media_1793675121844_253dcc8f.jpg) -->
+            <div class="overflow-x-auto rounded-2xl md:rounded-b-none md:border-b-0 border border-slate-200/70 bg-white shadow-2xs min-h-[calc(100vh-210px)] md:h-[calc(100vh-114px)]">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-100 bg-slate-50/70 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th class="py-3 px-3 w-12 text-center">
+                      <div class="h-3.5 w-6 bg-slate-200/70 rounded mx-auto animate-pulse"></div>
+                    </th>
+                    <th class="py-3 px-3">
+                      <div class="h-3.5 w-20 bg-slate-200/70 rounded animate-pulse"></div>
+                    </th>
+                    <th class="py-3 px-3">
+                      <div class="h-3.5 w-28 bg-slate-200/70 rounded animate-pulse"></div>
+                    </th>
+                    <th class="py-3 px-3 hidden md:table-cell">
+                      <div class="h-3.5 w-24 bg-slate-200/70 rounded animate-pulse"></div>
+                    </th>
+                    <th class="py-3 px-3 hidden lg:table-cell">
+                      <div class="h-3.5 w-20 bg-slate-200/70 rounded animate-pulse"></div>
+                    </th>
+                    <th class="py-3 px-3 text-center w-24">
+                      <div class="h-3.5 w-16 bg-slate-200/70 rounded mx-auto animate-pulse"></div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100/80">
+                  ${skeletonTrs}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
       }
     }
     window.showTableLazyLoading = showTableLazyLoading;
@@ -22923,7 +23107,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           }
         }
       });
-      renderWtScheduleTable();
+      const wtCont = document.getElementById('wt-schedule-table-container');
+      if (wtCont && typeof showTableLazyLoading === 'function') {
+        showTableLazyLoading(wtCont, `Memuat antrean jadwal (${cat})...`, 'cyan', 8);
+      }
+      setTimeout(renderWtScheduleTable, 50);
     }
 
     function renderWtScheduleTable() {
@@ -24678,6 +24866,12 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           cur.setDate(cur.getDate() + 1);
         }
         if (hasMissing && !window.globalDataCache.isFetchingArchive) {
+          // Tampilkan baris skeleton shimmer pada tabel KPI dan PICA dashboard seketika
+          const kpiTbody = document.getElementById('dash-kpi-perf-tbody');
+          const picaTbody = document.getElementById('dash-pica-matrix-tbody');
+          if (kpiTbody) showTableLazyLoading(kpiTbody, 'Menyiapkan analitik KPI Schedule...', 'brand', 6);
+          if (picaTbody) showTableLazyLoading(picaTbody, 'Menghitung matriks kendala PICA...', 'amber', 6);
+
           // Tandai tanggal di cache SEBELUM query berjalan agar tidak dipanggil berulang-ulang
           let markD = new Date(startDate);
           while (markD <= endD) {
@@ -26754,7 +26948,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       if (select) {
         state.completedCategory = select.value;
       }
-      renderCompletedTable();
+      const c = document.getElementById('completed-table-container');
+      if (c && typeof showTableLazyLoading === 'function') {
+        showTableLazyLoading(c, 'Memuat riwayat kategori terpilih...', 'emerald', 10);
+      }
+      setTimeout(renderCompletedTable, 50);
     }
     window.handleCompCategoryChange = handleCompCategoryChange;
 
@@ -26762,7 +26960,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       state.completedCategory = cat;
       const select = document.getElementById('comp-filter-category');
       if (select) select.value = cat;
-      renderCompletedTable();
+      const c = document.getElementById('completed-table-container');
+      if (c && typeof showTableLazyLoading === 'function') {
+        showTableLazyLoading(c, 'Memuat riwayat kategori terpilih...', 'emerald', 10);
+      }
+      setTimeout(renderCompletedTable, 50);
     }
     window.switchCompletedCategory = switchCompletedCategory;
 
@@ -31987,8 +32189,18 @@ Keterangan : ${keterangan}`;
       state.completedFilterStartDate = weekRange.startDate;
       state.completedFilterEndDate = weekRange.endDate;
       updateCompDateClearBtn();
+
+      const container = document.getElementById('completed-table-container');
+      if (container && typeof showTableLazyLoading === 'function') {
+        showTableLazyLoading(container, 'Memuat riwayat Mining Week...', 'emerald', 10);
+      }
+
       if (typeof loadJobHistoryFromSupabase === 'function') {
-        loadJobHistoryFromSupabase(true);
+        loadJobHistoryFromSupabase(true).then(() => {
+          renderCompletedTable();
+        }).catch(() => {
+          renderCompletedTable();
+        });
       } else {
         renderCompletedTable();
       }
@@ -32005,10 +32217,11 @@ Keterangan : ${keterangan}`;
       state.completedFilterStartDate = startEl ? startEl.value : '';
       state.completedFilterEndDate = endEl ? endEl.value : '';
       updateCompDateClearBtn();
-      renderCompletedTable();
 
       const startDate = state.completedFilterStartDate;
       const endDate = state.completedFilterEndDate || startDate;
+
+      // LAZY LOADING ON-DEMAND UNTUK RENTANG TANGGAL BANYAK (RIWAYAT SELESAI)
       if (startDate && typeof fetchArchiveJobsOnDemand === 'function' && window.globalDataCache && window.globalDataCache.loadedDates) {
         let hasMissing = false;
         let cur = new Date(startDate);
@@ -32022,11 +32235,20 @@ Keterangan : ${keterangan}`;
           cur.setDate(cur.getDate() + 1);
         }
         if (hasMissing && !window.globalDataCache.isFetchingArchive) {
+          const container = document.getElementById('completed-table-container');
+          if (container) {
+            showTableLazyLoading(container, 'Memuat riwayat arsip rentang tanggal...', 'emerald', 10);
+          }
           fetchArchiveJobsOnDemand(startDate, endDate).then(() => {
             renderCompletedTable();
+          }).catch(() => {
+            renderCompletedTable();
           });
+          return;
         }
       }
+
+      renderCompletedTable();
     }
     window.handleCompDateRangeChange = handleCompDateRangeChange;
 
@@ -32528,12 +32750,43 @@ Keterangan : ${keterangan}`;
       } else if (cat === 'unscheduled') {
         filtered = filtered.filter(j => isJobAnOrderRequest(j));
       } else if (cat === 'coal') {
-        // Washing ROM masuk kategori WSC (Washing Coal), sehingga tampil saat filter Washing Coal
-        filtered = filtered.filter(j => ((j.cat === 'coal' || j.cat === 'rom' || String(j.lokasi || j.cluster || '').toLowerCase().includes('rom') || String(j.armada || '').toUpperCase() === 'WT2620') && !isJobAnOrderRequest(j)));
+        // Washing Coal murni: HANYA unit washing coal pit/tambang (Kecualikan Washing ROM karena sudah ada filter Washing ROM tersendiri)
+        filtered = filtered.filter(j => {
+          if (isJobAnOrderRequest(j)) return false;
+          const isRom = (j.cat === 'rom' ||
+            String(j.lokasi || j.cluster || '').toUpperCase().includes('ROM') ||
+            String(j.armada || j.armada_unit || j.wtUnit || '').toUpperCase() === 'WT2620' ||
+            String(j.id || j.job_id || '').toUpperCase().includes('-ROM-') ||
+            String(j.jenis_pekerjaan || j.typeJob || j.job_type || '').toUpperCase().includes('ROM'));
+          if (isRom) return false;
+
+          const isCoal = (j.cat === 'coal' || j.cat === 'wsc' ||
+            String(j.id || '').toUpperCase().includes('-WSC-') ||
+            String(j.id || '').toUpperCase().startsWith('WT-WSC') ||
+            String(j.jenis_pekerjaan || j.typeJob || j.job_type || '').toUpperCase().includes('WASHING COAL'));
+          return isCoal;
+        });
       } else if (cat === 'rom') {
-        filtered = filtered.filter(j => ((j.cat === 'rom' || String(j.lokasi || j.cluster || '').toLowerCase().includes('rom') || String(j.armada || '').toUpperCase() === 'WT2620') && !isJobAnOrderRequest(j)));
+        // Washing ROM murni: HANYA unit pencucian area ROM (lokasi ROM, cluster ROM, armada WT2620, atau cat rom)
+        filtered = filtered.filter(j => {
+          if (isJobAnOrderRequest(j)) return false;
+          const isRom = (j.cat === 'rom' ||
+            String(j.lokasi || j.cluster || '').toUpperCase().includes('ROM') ||
+            String(j.armada || j.armada_unit || j.wtUnit || '').toUpperCase() === 'WT2620' ||
+            String(j.id || j.job_id || '').toUpperCase().includes('-ROM-') ||
+            String(j.jenis_pekerjaan || j.typeJob || j.job_type || '').toUpperCase().includes('ROM'));
+          return isRom;
+        });
       } else if (cat === 'non_coal') {
-        filtered = filtered.filter(j => ((j.cat === 'non_coal' || j.cat === 'noncoal' || String(j.cat || '').includes('non_coal')) && !String(j.lokasi || j.cluster || '').toLowerCase().includes('rom') && String(j.armada || '').toUpperCase() !== 'WT2620' && !isJobAnOrderRequest(j)));
+        filtered = filtered.filter(j => {
+          if (isJobAnOrderRequest(j)) return false;
+          const isRom = (j.cat === 'rom' ||
+            String(j.lokasi || j.cluster || '').toUpperCase().includes('ROM') ||
+            String(j.armada || j.armada_unit || j.wtUnit || '').toUpperCase() === 'WT2620' ||
+            String(j.id || j.job_id || '').toUpperCase().includes('-ROM-'));
+          if (isRom) return false;
+          return (j.cat === 'non_coal' || j.cat === 'noncoal' || String(j.cat || '').includes('non_coal') || String(j.id || '').toUpperCase().includes('-WNC-') || String(j.id || '').toUpperCase().startsWith('WT-WNC'));
+        });
       } else {
         filtered = filtered.filter(j => j.cat === cat && !isJobAnOrderRequest(j));
       }
@@ -32696,9 +32949,11 @@ Keterangan : ${keterangan}`;
       state._lastPagedCompletedIds = pagedList.map(j => String(j.id));
 
       container.innerHTML = `
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs table-freeze-container">
-          <table class="w-full table-fixed text-left text-xs">
-            <thead class="bg-slate-100 text-slate-700 uppercase text-[8.5px] md:text-[9.5px] tracking-wider border-b border-slate-200 font-semibold select-none">
+        <div class="bg-white rounded-2xl md:rounded-b-none md:border-b-0 border border-slate-200/80 shadow-2xs flex flex-col overflow-hidden min-h-[calc(100vh-210px)] md:h-[calc(100vh-114px)]">
+          <!-- Area Scroll Tabel dengan Sticky Header (Mengisi Penuh Layar Bawah) -->
+          <div class="flex-1 overflow-y-auto overflow-x-auto table-freeze-container" style="max-height: none !important; height: 100% !important; border-radius: 0 !important;">
+            <table class="w-full table-fixed text-left text-xs">
+              <thead class="sticky top-0 bg-slate-100 text-slate-700 uppercase text-[8.5px] md:text-[9.5px] tracking-wider border-b border-slate-200 font-semibold select-none z-20">
               <tr>
                 ${state.isCompSelectMode ? `
                   <th class="py-2 px-1 w-[8%] md:w-[3%] text-center align-middle select-none" title="Pilih Semua yang Tampil">
@@ -32783,24 +33038,25 @@ Keterangan : ${keterangan}`;
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
           </table>
-
-          <!-- Footer Navigasi & Pagination Riwayat Selesai -->
-          <div class="p-3 sm:p-3.5 bg-slate-50 border-t border-slate-200/90 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-600 select-none">
-            <div class="flex items-center space-x-2 flex-wrap gap-y-1">
-              <span id="completed-footer-count" class="font-semibold text-slate-700"></span>
-              <span class="text-slate-300">|</span>
-              <span class="text-slate-500 font-medium">Per halaman:</span>
-              <select id="comp-page-size" onchange="changeCompletedPageSize(this.value)"
-                class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer shadow-2xs">
-                <option value="50" ${pageSize === 50 ? 'selected' : ''}>50 / halaman</option>
-                <option value="100" ${pageSize === 100 ? 'selected' : ''}>100 / halaman (Rekomendasi)</option>
-                <option value="200" ${pageSize === 200 ? 'selected' : ''}>200 / halaman</option>
-                <option value="ALL" ${state.completedPageSize === 'ALL' ? 'selected' : ''}>Semua Data</option>
-              </select>
-            </div>
-            <div id="completed-pagination-controls" class="flex items-center space-x-1 flex-wrap"></div>
-          </div>
         </div>
+
+        <!-- Footer Navigasi & Pagination Riwayat Selesai (Docked di Bagian Bawah Kartu) -->
+        <div class="shrink-0 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border-t border-slate-200/90 flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs text-slate-600 select-none z-10 md:rounded-b-none">
+          <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+            <span id="completed-footer-count" class="font-semibold text-slate-700"></span>
+            <span class="text-slate-300">|</span>
+            <span class="text-slate-500 font-medium">Per halaman:</span>
+            <select id="comp-page-size" onchange="changeCompletedPageSize(this.value)"
+              class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer shadow-2xs">
+              <option value="50" ${pageSize === 50 ? 'selected' : ''}>50 / halaman</option>
+              <option value="100" ${pageSize === 100 ? 'selected' : ''}>100 / halaman (Rekomendasi)</option>
+              <option value="200" ${pageSize === 200 ? 'selected' : ''}>200 / halaman</option>
+              <option value="ALL" ${state.completedPageSize === 'ALL' ? 'selected' : ''}>Semua Data</option>
+            </select>
+          </div>
+          <div id="completed-pagination-controls" class="flex items-center space-x-1 flex-wrap"></div>
+        </div>
+      </div>
       `;
 
       const tbody = container.querySelector('tbody');
@@ -36986,6 +37242,11 @@ Keterangan : ${keterangan}`;
     function renderAirCleanerReplacementsTable() {
       const tbody = document.getElementById('ac-replace-tbody');
       if (!tbody) return;
+
+      // LAZY LOADING ON-DEMAND UNTUK RIWAYAT PENGGANTIAN AIR CLEANER
+      if ((!Array.isArray(state.airCleanerReplacements) || state.airCleanerReplacements.length === 0) && state.supabaseClient && !window._hasLoadedAirCleanerReplacements) {
+        showTableLazyLoading(tbody, 'Memuat riwayat penggantian filter...', 'teal', 8);
+      }
 
       updateAirCleanerTabButtons();
       updateAirCleanerTypeOptions();
@@ -47257,7 +47518,8 @@ function isJobAlreadyClosedInHistory(job, historyList = state.jobHistory) {
           } catch (e) { }
           await reconcileActiveJobsAgainstHistory(true);
           console.log('[Supabase History Sync OK] Total ' + state.jobHistory.length + ' riwayat selesai termuat & direkonsiliasi dari Supabase.');
-          if (typeof renderHistoryTable === 'function') renderHistoryTable();
+          if (typeof renderCompletedTable === 'function') renderCompletedTable();
+          if (typeof window.renderHistoryTable === 'function') window.renderHistoryTable();
           if (state.activeTab === 'pica' && typeof renderPicaTable === 'function') renderPicaTable();
           if (state.activeTab === 'dashboard') {
             if (typeof refreshDashboardData === 'function') refreshDashboardData();
@@ -49103,6 +49365,41 @@ function isJobAlreadyClosedInHistory(job, historyList = state.jobHistory) {
       if (cat === 'all') {
       } else if (cat === 'unscheduled') {
         filtered = filtered.filter(j => isJobAnOrderRequest(j));
+      } else if (cat === 'coal') {
+        filtered = filtered.filter(j => {
+          if (isJobAnOrderRequest(j)) return false;
+          const isRom = (j.cat === 'rom' ||
+            String(j.lokasi || j.cluster || '').toUpperCase().includes('ROM') ||
+            String(j.armada || j.armada_unit || j.wtUnit || '').toUpperCase() === 'WT2620' ||
+            String(j.id || j.job_id || '').toUpperCase().includes('-ROM-') ||
+            String(j.jenis_pekerjaan || j.typeJob || j.job_type || '').toUpperCase().includes('ROM'));
+          if (isRom) return false;
+          const isCoal = (j.cat === 'coal' || j.cat === 'wsc' ||
+            String(j.id || '').toUpperCase().includes('-WSC-') ||
+            String(j.id || '').toUpperCase().startsWith('WT-WSC') ||
+            String(j.jenis_pekerjaan || j.typeJob || j.job_type || '').toUpperCase().includes('WASHING COAL'));
+          return isCoal;
+        });
+      } else if (cat === 'rom') {
+        filtered = filtered.filter(j => {
+          if (isJobAnOrderRequest(j)) return false;
+          const isRom = (j.cat === 'rom' ||
+            String(j.lokasi || j.cluster || '').toUpperCase().includes('ROM') ||
+            String(j.armada || j.armada_unit || j.wtUnit || '').toUpperCase() === 'WT2620' ||
+            String(j.id || j.job_id || '').toUpperCase().includes('-ROM-') ||
+            String(j.jenis_pekerjaan || j.typeJob || j.job_type || '').toUpperCase().includes('ROM'));
+          return isRom;
+        });
+      } else if (cat === 'non_coal') {
+        filtered = filtered.filter(j => {
+          if (isJobAnOrderRequest(j)) return false;
+          const isRom = (j.cat === 'rom' ||
+            String(j.lokasi || j.cluster || '').toUpperCase().includes('ROM') ||
+            String(j.armada || j.armada_unit || j.wtUnit || '').toUpperCase() === 'WT2620' ||
+            String(j.id || j.job_id || '').toUpperCase().includes('-ROM-'));
+          if (isRom) return false;
+          return (j.cat === 'non_coal' || j.cat === 'noncoal' || String(j.cat || '').includes('non_coal') || String(j.id || '').toUpperCase().includes('-WNC-') || String(j.id || '').toUpperCase().startsWith('WT-WNC'));
+        });
       } else {
         filtered = filtered.filter(j => j.cat === cat && !isJobAnOrderRequest(j));
       }
