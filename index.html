@@ -38168,6 +38168,8 @@ Keterangan : ${keterangan}`;
         return;
       }
 
+      const cleanNoLambung = String(noLambung || '').trim().toUpperCase();
+
       // Hapus dari state lokal
       state.airCleanerReplacements = (state.airCleanerReplacements || []).filter(item => {
         if (id && item.id && item.id === id) return false;
@@ -38193,10 +38195,87 @@ Keterangan : ${keterangan}`;
         }
       }
 
+      // SINKRONISASI / ROLLBACK STATUS MONITORING AIR CLEANER:
+      // Ambil riwayat ganti yang tersisa untuk unit ini
+      const remainingForUnit = (state.airCleanerReplacements || []).filter(item => {
+        const u = String(item.no_lambung || item.noLambung || '').trim().toUpperCase();
+        return u === cleanNoLambung;
+      });
+
+      remainingForUnit.sort((a, b) => {
+        const tsA = a.created_at ? new Date(a.created_at).getTime() : new Date((a.tanggal || '') + 'T' + (a.jam || '00:00') + ':00').getTime();
+        const tsB = b.created_at ? new Date(b.created_at).getTime() : new Date((b.tanggal || '') + 'T' + (b.jam || '00:00') + ':00').getTime();
+        return tsB - tsA;
+      });
+
+      const monItem = (state.airCleanerMonitor || []).find(m => String(m.noLambung || '').trim().toUpperCase() === cleanNoLambung);
+
+      if (remainingForUnit.length > 0) {
+        // Ada history sebelumnya: kembalikan ke history terakhir yang sah sebelumnya
+        const prevRep = remainingForUnit[0];
+        const prevDate = prevRep.tanggal || (prevRep.created_at ? prevRep.created_at.slice(0, 10) : '');
+        const prevEvidence = prevRep.evidence_url || prevRep.evidenceUrl || '';
+        const prevPic = prevRep.pic || '';
+        const prevNotes = prevRep.keterangan || '';
+
+        if (monItem) {
+          monItem.lastReplacedAt = prevRep.created_at || (prevDate ? prevDate + 'T00:00:00.000Z' : null);
+          monItem.lastEvidenceUrl = prevEvidence;
+          monItem.evidence_url = prevEvidence;
+          monItem.lastReplacedBy = prevPic;
+          monItem.replaceNotes = prevNotes;
+        }
+
+        if (state.supabaseClient) {
+          try {
+            await state.supabaseClient.from('air_cleaner_monitoring').update({
+              last_replaced_at: prevRep.created_at || (prevDate ? prevDate + 'T00:00:00.000Z' : null),
+              evidence_url: prevEvidence || null,
+              last_replaced_by: prevPic || null,
+              replace_notes: prevNotes || null,
+              updated_at: new Date().toISOString()
+            }).eq('no_lambung', cleanNoLambung);
+          } catch (supaUpErr) {
+            console.warn('[Supabase rollback replace error]', supaUpErr);
+          }
+        }
+      } else {
+        // Tidak ada history ganti sebelumnya: HILANGKAN keterangan terakhir ganti dan foto eviden
+        if (monItem) {
+          monItem.lastReplacedAt = null;
+          monItem.lastEvidenceUrl = null;
+          monItem.evidence_url = null;
+          monItem.lastReplacedBy = null;
+          monItem.replaceNotes = null;
+          monItem.lastReplaceNotes = null;
+        }
+
+        if (state.supabaseClient) {
+          try {
+            await state.supabaseClient.from('air_cleaner_monitoring').update({
+              last_replaced_at: null,
+              evidence_url: null,
+              last_replaced_by: null,
+              replace_notes: null,
+              updated_at: new Date().toISOString()
+            }).eq('no_lambung', cleanNoLambung);
+          } catch (supaResetErr) {
+            console.warn('[Supabase clean replace error]', supaResetErr);
+          }
+        }
+      }
+
+      try {
+        safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(state.airCleanerMonitor));
+      } catch (e) { }
+
       updateAirCleanerTabButtons();
       renderAirCleanerReplacementsTable();
+      if (typeof renderAirCleanerMonitorTable === 'function') {
+        renderAirCleanerMonitorTable();
+      }
       if (typeof showToast === 'function') {
-        showToast(`Catatan pergantian unit ${noLambung} berhasil dihapus.`, 'info');
+        showToast(`Catatan pergantian unit ${noLambung} berhasil dihapus & data monitoring telah disinkronkan.`, 'info');
       }
     }
     window.deleteAirCleanerReplacement = deleteAirCleanerReplacement;
@@ -38301,7 +38380,7 @@ Keterangan : ${keterangan}`;
       );
 
       // 4. Susun teks dan tanggal replace terakhir
-      let lastReplacedDisplay = 'Belum pernah diganti (Filter Baru / Siklus Awal)';
+      let lastReplacedDisplay = '-';
       let repDateForFilter = null; // format YYYY-MM-DD
       if (latestRep) {
         const rawDate = latestRep.tanggal || (latestRep.created_at ? latestRep.created_at.slice(0, 10) : '');
@@ -38310,12 +38389,16 @@ Keterangan : ${keterangan}`;
         const picStr = (latestRep.pic || latestRep.pic_nrp) ? ` • Oleh: ${latestRep.pic || latestRep.pic_nrp}` : '';
         lastReplacedDisplay = `${dispDate}${jamStr}${picStr}`;
         repDateForFilter = rawDate.includes('/') ? rawDate.split('/').reverse().join('-') : rawDate;
-      } else if (acItem && acItem.lastReplacedAt) {
-        const rawDate = String(acItem.lastReplacedAt).slice(0, 10);
-        const dispDate = (typeof formatDisplayDate === 'function') ? formatDisplayDate(rawDate) : rawDate;
-        const byStr = acItem.lastReplacedBy ? ` • Oleh: ${acItem.lastReplacedBy}` : '';
-        lastReplacedDisplay = `${dispDate}${byStr}`;
-        repDateForFilter = rawDate;
+      } else {
+        lastReplacedDisplay = '-';
+        repDateForFilter = null;
+        if (acItem) {
+          acItem.lastReplacedAt = null;
+          acItem.lastEvidenceUrl = null;
+          acItem.evidence_url = null;
+          acItem.lastReplacedBy = null;
+          acItem.replaceNotes = null;
+        }
       }
 
       // 5. Hitung jumlah semprotan / cleaning sejak penggantian terakhir
@@ -38387,68 +38470,21 @@ Keterangan : ${keterangan}`;
     window.getAirCleanerUnitStatusInfo = getAirCleanerUnitStatusInfo;
 
     /**
-     * Render komponen visual card status Air Cleaner untuk ditempatkan di modal
+     * Render komponen visual keterangan status Air Cleaner untuk modal (Simpel & Polosan)
      */
     function renderAirCleanerUnitInfoCardHtml(info) {
       if (!info) return '';
 
-      let borderClass = 'border-teal-300 bg-teal-50/80 text-teal-950';
-      let quotaBadgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-      let quotaIcon = '✅';
-
-      if (info.quotaStatus === 'danger') {
-        borderClass = 'border-rose-300 bg-rose-50/90 text-rose-950 ring-1 ring-rose-200';
-        quotaBadgeClass = 'bg-rose-100 text-rose-900 border-rose-300 animate-pulse';
-        quotaIcon = '⚠️';
-      } else if (info.quotaStatus === 'warning') {
-        borderClass = 'border-amber-300 bg-amber-50/90 text-amber-950 ring-1 ring-amber-200';
-        quotaBadgeClass = 'bg-amber-100 text-amber-900 border-amber-300';
-        quotaIcon = '⚡';
+      let tglGantiStr = '-';
+      if (info.latestRep) {
+        const rawDate = info.latestRep.tanggal || (info.latestRep.created_at ? info.latestRep.created_at.slice(0, 10) : '');
+        tglGantiStr = (typeof formatDisplayDate === 'function') ? formatDisplayDate(rawDate) : (rawDate || '-');
       }
-
-      const catBadge = info.isCoal
-        ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-300">COAL (Maks. 3x Cleaning)</span>`
-        : `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-slate-100 text-slate-800 border border-slate-300">NON-COAL (Maks. 6x Cleaning)</span>`;
+      const cleansCount = (info.cleansCount !== undefined) ? info.cleansCount : 0;
 
       return `
-        <div class="rounded-2xl border p-3 space-y-2.5 ${borderClass} shadow-2xs select-none">
-          <!-- Baris 1: Header Info Status Unit -->
-          <div class="flex items-center justify-between flex-wrap gap-1.5 pb-1.5 border-b border-black/5">
-            <div class="flex items-center space-x-1.5">
-              <span class="text-sm">💨</span>
-              <span class="text-[11px] font-bold text-slate-900">
-                Monitoring Filter Unit: <span class="font-mono font-black text-emerald-800 bg-white/70 px-1.5 py-0.5 rounded border border-black/5">${escapeHtml(info.noLambung)}</span>
-                ${info.unitType ? `<span class="text-[10px] font-normal text-slate-500 ml-1">(${escapeHtml(info.unitType)})</span>` : ''}
-              </span>
-            </div>
-            ${catBadge}
-          </div>
-
-          <!-- Baris 2: Informasi Terakhir Kali Ganti & Jumlah Cleaning -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-            <div class="bg-white/90 p-2 rounded-xl border border-black/5 shadow-2xs">
-              <span class="text-[10px] text-slate-500 font-medium block">🗓️ Terakhir Kali Diganti (Replace):</span>
-              <div class="font-bold text-slate-800 text-[11px] mt-0.5 leading-snug break-words">
-                ${escapeHtml(info.lastReplacedDisplay)}
-              </div>
-            </div>
-            <div class="bg-white/90 p-2 rounded-xl border border-black/5 shadow-2xs">
-              <span class="text-[10px] text-slate-500 font-medium block">🔄 Frekuensi Cleaning Berjalan:</span>
-              <div class="font-bold text-slate-800 text-[11px] mt-0.5 leading-snug flex items-center justify-between">
-                <span>Sudah ${info.cleansCount}x Cleaning</span>
-                <span class="text-[10px] text-slate-500 font-medium">(Maks. ${info.maxCleans}x)</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Baris 3: Status Sisa Kuota Cleaning -->
-          <div class="flex items-center justify-between flex-wrap gap-2 pt-0.5">
-            <span class="text-[11px] font-medium text-slate-700">Sisa Kuota Cleaning:</span>
-            <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border ${quotaBadgeClass} shadow-2xs">
-              <span>${quotaIcon}</span>
-              <span>${info.quotaStatusText}</span>
-            </span>
-          </div>
+        <div class="py-1 px-0.5 text-xs text-slate-700 font-medium select-none">
+          <span>tanggal ganti : <strong class="font-mono text-slate-900">${escapeHtml(tglGantiStr)}</strong> &nbsp;dan&nbsp; cleaning : <strong class="font-mono text-slate-900">${cleansCount}x</strong></span>
         </div>
       `;
     }
@@ -40192,6 +40228,15 @@ Keterangan : ${keterangan}`;
             item.status = 'Baik';
             item.serviceCode = '';
           }
+        } else {
+          // UNIT TIDAK MEMILIKI CATATAN REPLACE AKTIF DI state.airCleanerReplacements:
+          // Bersihkan sisa field replace agar tidak menimbulkan tampilan "Terakhir Ganti" palsu!
+          item.lastEvidenceUrl = null;
+          item.evidence_url = null;
+          item.lastReplacedAt = null;
+          item.lastReplacedBy = null;
+          item.lastReplaceNotes = null;
+          item.replaceNotes = null;
         }
       });
 
@@ -40327,10 +40372,11 @@ Keterangan : ${keterangan}`;
         const cleanCount = Array.isArray(item.cleans) ? item.cleans.length : 0;
         const u = String(item.noLambung || '').trim().toUpperCase();
         let lastDateDisplay = '';
-        const repInfo = (typeof lastRepMap !== 'undefined' && lastRepMap && lastRepMap.has(u)) ? lastRepMap.get(u) : null;
+        const hasValidReplace = Boolean(typeof lastRepMap !== 'undefined' && lastRepMap && lastRepMap.has(u));
+        const repInfo = hasValidReplace ? lastRepMap.get(u) : null;
         const repObj = repInfo ? repInfo.rep : null;
-        const evPhotoUrl = item.lastEvidenceUrl || item.evidence_url || item.evidenceUrl || (repObj ? (repObj.evidence_url || repObj.evidenceUrl) : '') || '';
-        const rawLastDate = item.lastReplacedAt || (repInfo ? repInfo.dateStr : '') || item.last_cleaned_date || '';
+        const evPhotoUrl = repObj ? (repObj.evidence_url || repObj.evidenceUrl || '') : '';
+        const rawLastDate = repInfo ? (repInfo.dateStr || '') : '';
         if (rawLastDate) {
           const datePart = String(rawLastDate).split('T')[0];
           if (datePart.includes('-')) {
@@ -40408,7 +40454,7 @@ Keterangan : ${keterangan}`;
           <td class="py-2.5 px-2 md:px-3 text-center ${canReplace ? 'border-r border-slate-100' : ''}">
             <div class="flex flex-col items-center gap-1">
               ${statusBadge}
-              ${(evPhotoUrl || rawLastDate || (typeof lastRepMap !== 'undefined' && lastRepMap && lastRepMap.has(u))) ? `
+              ${(hasValidReplace && (evPhotoUrl || rawLastDate)) ? `
               <button type="button" ${evPhotoUrl ? `onclick="openPhotoPreview('${evPhotoUrl}', 'Evidence Replace ${item.noLambung} (${lastDateDisplay || ''})')"` : `onclick="showToast('Unit ${item.noLambung}: Terakhir ganti tanggal ${lastDateDisplay || '-'}', 'info')"`}
                 class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-teal-50 hover:bg-teal-100 text-teal-800 text-[9.5px] md:text-[10px] font-bold border border-teal-200 transition cursor-pointer shadow-2xs whitespace-nowrap"
                 title="Terakhir Ganti: ${lastDateDisplay || '-'}${evPhotoUrl ? ' (Klik untuk lihat foto evidence)' : ''}">
@@ -43220,9 +43266,9 @@ Keterangan : ${keterangan}`;
 
     async function loadAirCleanerFromSupabase(force = false) {
       if (!state.supabaseClient) return;
-      // Master Data TTL Cache (12 Jam) - Versi 5 untuk reset zombie cache & sinkronisasi foto eviden
+      // Master Data TTL Cache (12 Jam) - Versi 8 untuk reset zombie cache & sinkronisasi data replace bersih
       const savedAcTs = Number(safeStorage.getItem('SE_AIR_CLEANER_TS') || 0);
-      const isAcFresh = (Date.now() - savedAcTs) < MASTER_DATA_TTL_MS && safeStorage.getItem('SE_AIR_CLEANER_VER') === '7';
+      const isAcFresh = (Date.now() - savedAcTs) < MASTER_DATA_TTL_MS && safeStorage.getItem('SE_AIR_CLEANER_VER') === '8';
       if (!force && isAcFresh && Array.isArray(state.airCleanerMonitor) && state.airCleanerMonitor.length > 0) {
         console.log('[Supabase Cache TTL] Air Cleaner fresh dari cache lokal (TTL 12 Jam):', state.airCleanerMonitor.length, 'unit');
         return;
@@ -43429,6 +43475,45 @@ Keterangan : ${keterangan}`;
           }
         });
 
+        // Sinkronisasi Single Source of Truth untuk Replace:
+        // Jika unit TIDAK ADA di lastReplacementMap (riwayat replacenya tidak ada atau sudah dihapus),
+        // maka lastReplacedAt, evidence_url, lastEvidenceUrl, dsb HARUS dibersihkan (null)!
+        const orphanReplaceUnitsToClean = [];
+        supaMap.forEach((monItem, nl) => {
+          if (lastReplacementMap.has(nl)) {
+            const rInfo = lastReplacementMap.get(nl);
+            monItem.lastReplacedAt = rInfo.dateStr;
+            monItem.lastEvidenceUrl = rInfo.evidenceUrl;
+            monItem.evidence_url = rInfo.evidenceUrl;
+            monItem.lastReplacedBy = rInfo.pic;
+            monItem.replaceNotes = rInfo.keterangan;
+          } else {
+            if (monItem.lastReplacedAt || monItem.evidence_url || monItem.lastEvidenceUrl || monItem.lastReplacedBy) {
+              orphanReplaceUnitsToClean.push(nl);
+            }
+            monItem.lastReplacedAt = null;
+            monItem.lastEvidenceUrl = null;
+            monItem.evidence_url = null;
+            monItem.lastReplacedBy = null;
+            monItem.replaceNotes = null;
+          }
+        });
+
+        // Bersihkan data orphan di Supabase air_cleaner_monitoring jika ada
+        if (orphanReplaceUnitsToClean.length > 0 && state.supabaseClient) {
+          orphanReplaceUnitsToClean.forEach(cleanUnit => {
+            state.supabaseClient.from('air_cleaner_monitoring').update({
+              last_replaced_at: null,
+              evidence_url: null,
+              last_replaced_by: null,
+              replace_notes: null,
+              updated_at: new Date().toISOString()
+            }).eq('no_lambung', cleanUnit).then(() => {
+              console.log('[Supabase Cleaned Orphan Replace]', cleanUnit);
+            }).catch(e => console.warn('[Supabase Clean Error]', e));
+          });
+        }
+
         actualCompletedJobs.forEach(job => {
           if (!job.noLambung) return;
           const uLambung = job.noLambung.toUpperCase().trim();
@@ -43452,10 +43537,6 @@ Keterangan : ${keterangan}`;
             if (repInfo) {
               const jobDateStr = dStr.includes('/') ? dStr.split('/').reverse().join('-') : dStr;
               if (jobDateStr <= repInfo.dateStr) return;
-            } else if (monItem.lastReplacedAt) {
-              const repDateStr = String(monItem.lastReplacedAt).slice(0, 10);
-              const jobDateStr = dStr.includes('/') ? dStr.split('/').reverse().join('-') : dStr;
-              if (jobDateStr <= repDateStr) return;
             }
 
             const parts = dStr.split('-');
@@ -43532,7 +43613,7 @@ Keterangan : ${keterangan}`;
         // Update cache lokal yang bersih
         safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(state.airCleanerMonitor));
         safeStorage.setItem('SE_AIR_CLEANER_TS', String(Date.now()));
-        safeStorage.setItem('SE_AIR_CLEANER_VER', '7');
+        safeStorage.setItem('SE_AIR_CLEANER_VER', '8');
 
         if (typeof renderAirCleanerMonitorTable === 'function') {
           renderAirCleanerMonitorTable();
