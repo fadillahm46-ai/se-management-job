@@ -1,4 +1,4 @@
-const CACHE_NAME = 'se-mine-ops-v133';
+const CACHE_NAME = 'se-mine-ops-v134';
 const ASSETS_TO_CACHE = [
   './',
   './index.html'

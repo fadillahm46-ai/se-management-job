@@ -9524,7 +9524,7 @@
           <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
             <span class="text-slate-400 font-medium text-left">Realisasi Jam</span>
             <span class="font-mono font-medium text-slate-900 flex items-center gap-1.5 flex-wrap text-left">
-              <span id="repdetail-tgl" class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 text-[10.5px]">-</span>
+              <span id="repdetail-tgl" class="text-slate-900 font-semibold text-xs">-</span>
               <span id="repdetail-jam-realisasi">-</span>
             </span>
           </div>
@@ -9823,7 +9823,7 @@
           <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
             <span class="text-slate-400 font-medium text-left">Realisasi Jam</span>
             <span class="font-mono font-medium text-slate-900 flex items-center gap-1.5 flex-wrap text-left">
-              <span id="detail-modal-tgl" class="hidden px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 text-[10.5px]"></span>
+              <span id="detail-modal-tgl" class="hidden text-slate-900 font-semibold text-xs"></span>
               <span id="detail-modal-start">-</span> s/d <span id="detail-modal-end">-</span>
               <span id="detail-modal-durasi" class="inline-block"></span>
             </span>
@@ -51402,7 +51402,89 @@ Keterangan : ${keterangan}`;
           });
           safeStorage.setItem('SE_LT_JOBS', JSON.stringify(state.lubetruckState.jobs));
         }
+        // Normalisasi riwayat ROM 04/11/2026 Shift 1 pagi (05:00-09:00) yang sempat tercatat sebagai W2 agar kembali ke W1
+        if (Array.isArray(state.jobHistory)) {
+          let histChanged = false;
+          state.jobHistory.forEach(h => {
+            if (!h) return;
+            const hCat = String(h.cat || '').toLowerCase().trim();
+            const hTgl = String(h.tanggal_rencana || h.tanggal_eksekusi || '').split('T')[0];
+            const hShift = parseInt(h.shift_rencana || h.shift || 1, 10);
+            const hJam = String(h.jam_start || h.jamStart || '').trim();
+            if (hCat === 'rom' && hTgl === '2026-11-04' && hShift === 1 && hJam >= '05:00' && hJam <= '09:00') {
+              if (h.washing_round === 2 || String(h.id || '').includes('-W2-') || h.waktu_rencana === '11:55 s/d 12:10') {
+                h.id = String(h.id || '').replace('-W2-', '-');
+                if (h.job_id) h.job_id = String(h.job_id).replace('-W2-', '-');
+                if (h.no_id) h.no_id = String(h.no_id).replace('-W2-', '-');
+                h.washing_round = 1;
+                h.washingRound = 1;
+                h.waktu_rencana = '06:25 s/d 06:44';
+                histChanged = true;
+              }
+            }
+          });
+          if (histChanged && typeof saveHistoryToLocalStorageSafely === 'function') {
+            saveHistoryToLocalStorageSafely(state.jobHistory);
+          }
+        }
         if (state.watertruckState?.jobs) {
+          state.watertruckState.jobs.forEach(j => {
+            if (j && typeof j.id === 'string' && j.id.startsWith('WT-WSR-')) {
+              j.id = j.id.replace(/^WT-WSR-/, 'WT-WSC-');
+            }
+          });
+          const romUnits0411 = [
+            { noLambung: 'D5172AMM', typeUnit: 'D155A-6' },
+            { noLambung: 'EB521001AMM', typeUnit: 'AMM_SY215E' },
+            { noLambung: 'EB521002AMM', typeUnit: 'AMM_SY215E' },
+            { noLambung: 'EB56001AMM', typeUnit: 'AMM_SY600E' },
+            { noLambung: 'EB56002AMM', typeUnit: 'AMM_SY600E' },
+            { noLambung: 'EB56003AMM', typeUnit: 'AMM_SY600E' },
+            { noLambung: 'EB56004AMM', typeUnit: 'AMM_SY600E' },
+            { noLambung: 'EB56005AMM', typeUnit: 'AMM_SY600E' },
+            { noLambung: 'WB596001AMM', typeUnit: 'AMM_SW966E' },
+            { noLambung: 'WB596002AMM', typeUnit: 'AMM_SW966E' },
+            { noLambung: 'WB596003AMM', typeUnit: 'AMM_SW966E' },
+            { noLambung: 'WB596004AMM', typeUnit: 'AMM_SW966E' }
+          ];
+          const existingW2Ids0411 = new Set(state.watertruckState.jobs.map(j => String(j?.id || '')));
+          const histIds0411 = new Set((state.jobHistory || []).map(h => String(h?.id || h?.job_id || '').replace(/-\d{4}$/, '')));
+          romUnits0411.forEach(u => {
+            const w2Id = `WT-WSC-04112026-1-${u.noLambung}-W2`;
+            if (!existingW2Ids0411.has(w2Id) && !histIds0411.has(w2Id)) {
+              state.watertruckState.jobs.push({
+                id: w2Id,
+                noLambung: u.noLambung,
+                typeUnit: u.typeUnit,
+                cat: 'rom',
+                jobType: 'sch_wt',
+                tanggal: '2026-11-04',
+                tanggalRealisasi: '2026-11-04',
+                shift: 1,
+                washingRound: 2,
+                washing_round: 2,
+                cluster: 'ROM',
+                waktu: '11:55 s/d 12:10',
+                lokasi: 'ROM A2',
+                wtUnit: 'WT2620',
+                armada: 'WT2620',
+                opt: 'RENO SAFRUDIN SYIHFULLAH',
+                mp1: 'ARYA (TIA)',
+                mp2: 'HERFAN FRANSISCO (TIA)',
+                adaOperator: 'Ya',
+                unitTurun: 'Ya',
+                unitSwing: 'Tidak',
+                jamStart: '',
+                jamEnd: '',
+                durasi: null,
+                hmStart: null,
+                hmEnd: null,
+                status: 'scheduled',
+                keterangan: '',
+                fotos: []
+              });
+            }
+          });
           const histJobIds = new Set((state.jobHistory || []).map(h => String(h.job_id || h.id || '')));
           const histUnitKeys = new Set((state.jobHistory || []).map(h => `${String(h.no_lambung || '').trim().toUpperCase()}_${h.tanggal_eksekusi || h.tanggal_rencana || ''}_${h.shift_rencana || 1}_${String(h.cat || '').toLowerCase().trim()}_W${h.washing_round || h.washingRound || 1}`));
           state.watertruckState.jobs.forEach(j => {
