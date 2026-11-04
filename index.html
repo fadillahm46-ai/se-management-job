@@ -9600,144 +9600,152 @@
     </div>
   </div>
 
-  <!-- MODAL DETAIL AKSI CLEAN AIR CLEANER -->
-  <div id="modal-ac-detail"
+  <!-- MODAL DETAIL AKSI CLEAN AIR CLEANER (Desain Simpel, Rapi & Identik dengan Detail Riwayat) -->
+  <div id="modal-ac-detail" onclick="if (event.target === this) toggleModal('modal-ac-detail', false)"
     class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-3 sm:p-4 overflow-y-auto">
     <div
-      class="bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-4 sm:p-5 space-y-3 shadow-2xl max-h-[92vh] flex flex-col">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 shrink-0">
-        <div class="flex items-center space-x-2.5">
-          <div id="ac-detail-icon-container"
-            class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
-            </svg>
-          </div>
-          <div>
-            <span id="ac-detail-job-tag"
-              class="text-[10px] md:text-[10.5px] font-mono font-bold text-slate-400 block tracking-tight select-all"></span>
-            <h3 class="text-sm font-extrabold text-slate-900" id="ac-detail-title">Detail Air Cleaner</h3>
-            <p class="text-[11px] text-slate-500 font-medium" id="ac-detail-subtitle">No Unit: -</p>
-          </div>
+      class="bg-white rounded-3xl max-w-md w-full p-4 sm:p-5 shadow-2xl border border-slate-100 max-h-[92vh] flex flex-col font-sans transition-all">
+
+      <!-- Modal Header -->
+      <div class="flex items-start justify-between pb-3 border-b border-slate-100 shrink-0">
+        <div class="min-w-0 pr-2">
+          <h2 id="ac-detail-job-tag"
+            class="text-xs sm:text-sm font-semibold font-mono text-slate-700 tracking-tight break-all select-all">#JOB-ID</h2>
+          <p class="text-xs text-slate-500 font-medium mt-0.5" id="ac-detail-category">Clean Air Cleaner • Shift 1</p>
         </div>
         <button type="button" onclick="toggleModal('modal-ac-detail', false)"
-          class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer">
+          class="text-slate-400 hover:text-slate-600 p-1.5 -mr-1 rounded-full hover:bg-slate-100 transition cursor-pointer"
+          aria-label="Tutup">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
         </button>
       </div>
 
-      <div class="space-y-2.5 text-xs overflow-y-auto pr-1 flex-1">
-        <!-- Tanggal Action -->
-        <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-          <span class="text-slate-500 font-semibold text-[11px]">Tanggal Action:</span>
-          <span
-            class="font-bold font-mono text-emerald-800 text-xs px-2.5 py-1 bg-white rounded-lg border border-emerald-200/60 shadow-2xs"
-            id="ac-detail-date">-</span>
+      <!-- Modal Body -->
+      <div class="space-y-4 text-xs overflow-y-auto pr-1 py-1 flex-1">
+        <!-- 1. Informasi Unit -->
+        <div>
+          <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">Informasi Unit</span>
+          <div class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-50/80 border border-slate-100">
+            <div class="min-w-0">
+              <h3 class="text-sm sm:text-base font-bold font-mono text-slate-900 truncate" id="ac-detail-title">UNIT</h3>
+              <p class="text-xs text-slate-600 font-medium truncate mt-0.5" id="ac-detail-subtitle">Type Unit</p>
+            </div>
+            <div class="text-right shrink-0 flex flex-col items-end gap-1">
+              <div id="ac-detail-status-badge"></div>
+            </div>
+          </div>
         </div>
 
         <!-- Peringatan Interval Jangka Pendek (<= 1 Hari dari Semprotan Sebelumnya) -->
         <div id="ac-detail-interval-container"
-          class="p-2.5 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-between hidden">
-          <span class="text-amber-900 font-semibold text-[11px] flex items-center gap-1.5">
+          class="p-2.5 rounded-xl bg-amber-50/90 border border-amber-200/80 flex items-center justify-between hidden">
+          <span class="text-amber-800 font-semibold text-[11px] flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
               </path>
             </svg>
-            <span>Interval Semprot:</span>
+            <span>Interval Semprot</span>
           </span>
-          <span
-            class="font-bold text-xs px-2.5 py-1 bg-white rounded-lg border border-amber-300 text-amber-900 shadow-2xs"
-            id="ac-detail-interval-badge">-</span>
+          <span class="font-bold text-[11px] text-amber-900" id="ac-detail-interval-badge">-</span>
         </div>
 
-        <!-- Type Job (SCH / Breakdown / Service) -->
-        <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-          <span class="text-slate-500 font-semibold text-[11px]">Type Job:</span>
-          <span
-            class="font-bold text-xs px-2.5 py-1 bg-white rounded-lg border border-slate-200/80 shadow-2xs text-slate-800"
-            id="ac-detail-job-type">-</span>
-        </div>
-
-        <!-- Nama Armada (Lubetruck / Watertruck) -->
-        <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-          <span class="text-slate-500 font-semibold text-[11px]">Nama Armada:</span>
-          <span
-            class="font-bold text-xs px-2.5 py-1 bg-white rounded-lg border border-slate-200/80 shadow-2xs text-slate-800"
-            id="ac-detail-armada">-</span>
-        </div>
-
-        <!-- Keterangan yang diisi oleh Oilman (Polosan Netral) -->
-        <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1.5">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-slate-700 flex items-center space-x-1.5">
-              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                </path>
-              </svg>
-              <span>Keterangan Oilman:</span>
-            </span>
-            <span class="text-[10px] text-slate-600 font-semibold" id="ac-detail-oilman"></span>
+        <!-- 2. Daftar 2 Kolom Rata Kiri & Simetris Persis Menu Riwayat -->
+        <div class="space-y-2.5 pt-2 border-t border-slate-100">
+          <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
+            <span class="text-slate-400 font-medium text-left">Tanggal &amp; Waktu</span>
+            <span class="text-xs font-semibold text-slate-900 text-left" id="ac-detail-date">-</span>
           </div>
-          <p class="text-xs text-slate-700 font-medium leading-relaxed bg-white p-2.5 rounded-xl border border-slate-200/80 min-h-[45px] whitespace-pre-wrap shadow-2xs"
-            id="ac-detail-notes">-</p>
+          <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
+            <span class="text-slate-400 font-medium text-left">Lokasi &amp; Cluster</span>
+            <span class="text-xs font-semibold text-slate-900 text-left" id="ac-detail-lokasi">-</span>
+          </div>
+          <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
+            <span class="text-slate-400 font-medium text-left">Penugasan Armada</span>
+            <span class="text-xs font-semibold text-slate-900 text-left" id="ac-detail-armada">-</span>
+          </div>
+          <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
+            <span class="text-slate-400 font-medium text-left">Operator Pelaksana</span>
+            <span class="text-xs font-semibold text-slate-900 text-left" id="ac-detail-opt">-</span>
+          </div>
+          <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
+            <span class="text-slate-400 font-medium text-left">Manpower (MP)</span>
+            <span class="text-xs font-semibold text-slate-900 text-left" id="ac-detail-oilman">-</span>
+          </div>
+          <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
+            <span class="text-slate-400 font-medium text-left">Realisasi Jam</span>
+            <div class="font-mono font-medium text-slate-900 flex flex-col items-start gap-1 text-left">
+              <div>
+                <span id="ac-detail-real-tgl" class="text-slate-900 font-semibold text-xs mr-1"></span>
+                <span id="ac-detail-real-jam">-</span>
+              </div>
+              <span id="ac-detail-real-durasi" class="inline-block"></span>
+            </div>
+          </div>
+          <div id="ac-detail-hm-row"
+            class="hidden grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
+            <span class="text-slate-400 font-medium text-left">Hour Meter (HM)</span>
+            <span class="text-xs font-semibold text-slate-900 font-mono text-left" id="ac-detail-hm">-</span>
+          </div>
+          <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
+            <span class="text-slate-400 font-medium text-left">Catatan / Kendala</span>
+            <span class="text-xs font-semibold text-slate-800 text-left whitespace-pre-line leading-relaxed"
+              id="ac-detail-notes">-</span>
+          </div>
         </div>
 
-        <!-- Dokumentasi Foto Evidence -->
-        <div id="ac-detail-photo-container" class="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2.5">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-slate-800 flex items-center space-x-1.5">
-              <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
-                </path>
-              </svg>
-              <span>Dokumentasi Foto Eviden</span>
-            </span>
-            <span id="ac-detail-photo-count"
-              class="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 shadow-2xs">0
-              Foto</span>
+        <!-- 3. Dokumentasi Foto (Eviden) -->
+        <div id="ac-detail-photo-container" class="pt-2 border-t border-slate-100">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Dokumentasi Foto (Eviden)</span>
+            <span id="ac-detail-photo-count" class="hidden text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">0 Foto</span>
           </div>
 
           <!-- Container Grid Foto Eviden -->
-          <div id="ac-detail-photos" class="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1 pb-1 hidden">
+          <div id="ac-detail-photos" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1 pb-1 hidden">
             <!-- Foto dynamically rendered di sini -->
           </div>
 
           <!-- Empty State jika belum ada foto -->
           <div id="ac-detail-photo-empty"
-            class="p-4 text-center border border-dashed border-slate-200 rounded-xl bg-white">
-            <svg class="w-7 h-7 mx-auto text-slate-300 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
-              </path>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            </svg>
-            <div class="text-[11.5px] font-bold text-slate-500">Belum ada foto eviden pengerjaan</div>
+            class="p-3 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50/50 hidden">
+            <div class="text-[11.5px] font-medium text-slate-400">Belum ada foto eviden pengerjaan</div>
           </div>
         </div>
       </div>
 
-      <div class="pt-2.5 border-t border-slate-100 shrink-0 flex items-center gap-2">
-        <!-- Tombol Hapus Tindakan (Hanya Akses Admin) -->
-        <button type="button" id="btn-delete-ac-entry" onclick="deleteAirCleanerActionEntry()"
-          class="hidden py-2.5 px-3.5 rounded-xl bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-600 hover:text-rose-700 border border-rose-200/90 font-bold text-xs transition shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
-          title="Hapus riwayat tindakan ini (Akses Admin)">
-          <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-            </path>
-          </svg>
-          <span>Hapus</span>
-        </button>
-        <button type="button" onclick="toggleModal('modal-ac-detail', false)"
-          class="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition shadow-xs cursor-pointer text-center">
-          Tutup
-        </button>
+      <!-- Modal Footer (Persis Menu Riwayat) -->
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-between shrink-0">
+        <div>
+          <!-- Tombol Hapus Tindakan (Hanya Akses Admin) -->
+          <button type="button" id="btn-delete-ac-entry" onclick="deleteAirCleanerActionEntry()"
+            class="hidden px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-xs border border-rose-200 transition cursor-pointer flex items-center gap-1.5"
+            title="Hapus Data Riwayat Air Cleaner Ini (Akses Admin)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+              </path>
+            </svg>
+            <span>Hapus Riwayat</span>
+          </button>
+        </div>
+        <div class="flex items-center gap-2 ml-auto">
+          <button type="button" onclick="copyAirCleanerDetailReport()"
+            class="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold text-xs transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+            <svg class="w-3.5 h-3.5 text-amber-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+              </path>
+            </svg>
+            <span>Salin Job</span>
+          </button>
+          <button type="button" onclick="toggleModal('modal-ac-detail', false)"
+            class="px-4 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition cursor-pointer">
+            Tutup
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -39604,24 +39612,33 @@ Keterangan : ${keterangan}`;
       }
 
       if (!oilmanNotes || oilmanNotes === '-' || oilmanNotes.startsWith('PHOTOS_ATTACHED') || oilmanNotes.startsWith('PHOTOS:')) {
-        oilmanNotes = 'Pembersihan filter air cleaner selesai sesuai SOP.';
+        oilmanNotes = 'Nihil / Lancar sesuai SOP';
       }
 
-      // Isi ke modal-ac-detail
+      // Isi ke modal-ac-detail (Format Identik dengan Modal Detail Menu Riwayat)
       const titleEl = document.getElementById('ac-detail-title');
       const subtitleEl = document.getElementById('ac-detail-subtitle');
+      const categoryEl = document.getElementById('ac-detail-category');
+      const statusBadgeEl = document.getElementById('ac-detail-status-badge');
       const dateEl = document.getElementById('ac-detail-date');
-      const notesEl = document.getElementById('ac-detail-notes');
+      const lokasiEl = document.getElementById('ac-detail-lokasi');
+      const armadaEl = document.getElementById('ac-detail-armada');
+      const optEl = document.getElementById('ac-detail-opt');
       const oilmanEl = document.getElementById('ac-detail-oilman');
+      const realTglEl = document.getElementById('ac-detail-real-tgl');
+      const realJamEl = document.getElementById('ac-detail-real-jam');
+      const realDurasiEl = document.getElementById('ac-detail-real-durasi');
+      const hmRowEl = document.getElementById('ac-detail-hm-row');
+      const hmEl = document.getElementById('ac-detail-hm');
+      const notesEl = document.getElementById('ac-detail-notes');
       const jobTagEl = document.getElementById('ac-detail-job-tag');
 
-      // Tampilkan ID Unik Pekerjaan di Header Modal (Sesuai SOP Monitoring Air Cleaner)
+      // 1. Header ID Unik Pekerjaan
       let initialJobId = (preResolvedRecord && preResolvedRecord.jobId) ? preResolvedRecord.jobId : (targetJob ? (targetJob.id || targetJob.job_id || targetJob.no_id || targetJob.noId || '') : '');
       if (!initialJobId && targetJob) {
         initialJobId = (typeof getJobNoId === 'function') ? getJobNoId(targetJob) : '';
       }
       if (initialJobId && (initialJobId.includes('-GRS-') || initialJobId.includes('-TUO-') || initialJobId.startsWith('WT'))) {
-        // Proteksi mutlak: Cegah ID greasing/washing lolos ke modal monitoring air cleaner
         initialJobId = initialJobId.replace('-GRS-', '-CAC-').replace('-TUO-', '-CAC-');
       }
       if (jobTagEl) {
@@ -39639,68 +39656,42 @@ Keterangan : ${keterangan}`;
         }
       }
 
-      // Deteksi Type Job (Schedule / Breakdown Request / Service)
-      let jobTypeLabel = 'Schedule (SCH)';
-      let jobTypeBadgeClass = 'bg-teal-50 text-teal-800 border-teal-200';
+      // 2. Subtitle Kategori & Urutan Semprot Ke-N
+      const shiftNum = targetJob ? (targetJob.shift || targetJob.shift_rencana || '1') : '1';
+      const isCoal = (typeof isAirCleanerUnitCoal === 'function') ? isAirCleanerUnitCoal(noLambung, item.type) : false;
+      const limitCleans = isCoal ? 3 : 6;
+      const currentCleanNum = Number(cleanIdx) + 1;
+      const isJobReq = targetJob && ((typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(targetJob)) || String(targetJob.id || '').includes('-REQ-') || targetJob.cat === 'unscheduled');
+      const catLabel = isJobReq ? `Job Request (${isServiceEntry ? 'Service' : 'Air Cleaner'})` : 'Clean Air Cleaner';
 
-      if (targetJob) {
-        const s = String(targetJob.status || targetJob.status_final || '').toLowerCase();
-        const cond = String(targetJob.kondisi || targetJob.keadaan_unit || targetJob.unitCondition || '').toLowerCase();
-        const reqStr = String(targetJob.requestedJob || '').toLowerCase();
-        const descStr = String(targetJob.deskripsi || '').toLowerCase();
-        const ketStr = String(targetJob.keterangan || '').toLowerCase();
-
-        const isService = (s === 'service' || cond === 'service' || cond.includes('service') || reqStr.includes('service') || descStr.includes('service') || ketStr.includes('service'));
-        const isAcCat = (targetJob.cat === 'aircleaner' || targetJob.cat === 'air_cleaner');
-        const isBd = (cond === 'breakdown' || targetJob.kondisi === 'BREAKDOWN');
-
-        if (isService) {
-          jobTypeLabel = 'Service / Maintenance';
-          jobTypeBadgeClass = 'bg-purple-50 text-purple-800 border-purple-200';
-        } else if (isBd || (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(targetJob))) {
-          jobTypeLabel = 'Request Breakdown (Air Cleaner)';
-          jobTypeBadgeClass = 'bg-amber-50 text-amber-800 border-amber-200';
-        } else if (isAcCat) {
-          jobTypeLabel = 'Schedule (SCH)';
-          jobTypeBadgeClass = 'bg-teal-50 text-teal-800 border-teal-200';
-        }
-      } else if (isRawService) {
-        jobTypeLabel = 'Service / Maintenance';
-        jobTypeBadgeClass = 'bg-purple-50 text-purple-800 border-purple-200';
-      }
-
-      const jobTypeEl = document.getElementById('ac-detail-job-type');
-      if (jobTypeEl) {
-        jobTypeEl.textContent = jobTypeLabel;
-        jobTypeEl.className = `font-bold text-xs px-2.5 py-1 rounded-lg border shadow-2xs ${jobTypeBadgeClass}`;
-      }
-
-      if (titleEl) {
-        const isCoal = (typeof isAirCleanerUnitCoal === 'function') ? isAirCleanerUnitCoal(noLambung, item.type) : false;
-        const limitCleans = isCoal ? 3 : 6;
-        const currentCleanNum = Number(cleanIdx) + 1;
+      if (categoryEl) {
         if (currentCleanNum > limitCleans) {
           const over = currentCleanNum - limitCleans;
-          titleEl.innerHTML = `Ke ${currentCleanNum} <span class="ml-1.5 px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-mono font-black border border-rose-300 shadow-2xs">+${over} Melebihi Batas</span>`;
+          categoryEl.innerHTML = `${catLabel} &bull; Shift ${shiftNum} &bull; <span class="font-bold text-slate-700">Ke ${currentCleanNum}</span> <span class="ml-1 px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[9.5px] font-mono font-bold">+${over} Melebihi Batas</span>`;
         } else {
-          titleEl.textContent = `Ke ${currentCleanNum}`;
+          categoryEl.innerHTML = `${catLabel} &bull; Shift ${shiftNum} &bull; <span class="font-semibold text-slate-700">Ke ${currentCleanNum}</span>`;
         }
       }
-      if (subtitleEl) subtitleEl.textContent = `No Unit: ${noLambung} (${item.unitModel || item.model || item.type || 'Unit'})`;
-      if (dateEl) dateEl.textContent = actionDate || '-';
-      if (notesEl) notesEl.textContent = oilmanNotes;
-      if (oilmanEl) {
-        oilmanEl.textContent = oilmanName ? `Oilman: ${oilmanName}` : '';
+
+      // 3. Informasi Unit & Status Badge (Persis Menu Riwayat)
+      if (titleEl) titleEl.textContent = noLambung || 'UNIT';
+      const resolvedModel = item.unitModel || item.model || item.type || (targetJob && (targetJob.typeUnit || targetJob.type_unit)) || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(noLambung, 'Unit') : 'Unit');
+      if (subtitleEl) subtitleEl.textContent = resolvedModel;
+
+      if (statusBadgeEl) {
+        if (isServiceEntry) {
+          statusBadgeEl.innerHTML = '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 border border-blue-300">SERVICE</span>';
+        } else {
+          statusBadgeEl.innerHTML = '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-300">ACHIEVED</span>';
+        }
       }
 
-      // Cek apakah tindakan ini berjarak jangka pendek (<= 1 hari dari semprotan sebelumnya)
+      // 4. Cek Peringatan Interval Semprot (<= 1 hari dari semprotan sebelumnya)
       const intervalInfo = (typeof getAirCleanerCleanInterval === 'function')
         ? getAirCleanerCleanInterval(item, Number(cleanIdx))
         : { isShortInterval: false, diffDays: null };
       const intervalContainer = document.getElementById('ac-detail-interval-container');
       const intervalBadge = document.getElementById('ac-detail-interval-badge');
-      const headerIconContainer = document.getElementById('ac-detail-icon-container');
-
       if (intervalContainer && intervalBadge) {
         if (intervalInfo.isShortInterval) {
           const diffD = intervalInfo.diffDays;
@@ -39712,39 +39703,157 @@ Keterangan : ${keterangan}`;
         }
       }
 
-      if (headerIconContainer) {
-        if (intervalInfo.isShortInterval) {
-          headerIconContainer.className = 'w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0 ring-2 ring-amber-300/60';
-        } else {
-          headerIconContainer.className = 'w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0';
+      // 5. Helper pengisi baris 2 kolom dari objek job / row
+      const applyJobDetailsToModal = (jobObj) => {
+        // Tanggal & Waktu
+        let waktuPlan = '08:00 s/d 09:00';
+        for (const j of (jobObj ? [jobObj, ...jobsToSearch] : jobsToSearch)) {
+          const w = j.waktu || j.waktu_rencana;
+          if (w && w !== '-') { waktuPlan = w; break; }
         }
-      }
-
-      // Ekstrak Nama Armada yang mengerjakan
-      let armadaName = '-';
-      for (const j of jobsToSearch) {
-        const arm = (typeof resolveJobArmada === 'function') ? resolveJobArmada(j) : (j.armada || j.armada_unit || j.ltUnit || j.wtUnit);
-        if (arm && arm !== '-' && arm !== '') {
-          armadaName = arm;
-          break;
+        if (dateEl) {
+          dateEl.textContent = `${actionDate || '-'} \u2022 ${waktuPlan}`;
         }
-      }
-      if ((!armadaName || armadaName === '-') && item) {
-        armadaName = item.armada || item.truck || item.ltUnit || '-';
-      }
-      const armadaEl = document.getElementById('ac-detail-armada');
-      if (armadaEl) {
-        armadaEl.textContent = armadaName || '-';
-      }
 
-      // Simpan konteks aksi untuk fitur delete
+        // Lokasi & Cluster
+        let locVal = '';
+        let clusVal = '';
+        for (const j of (jobObj ? [jobObj, ...jobsToSearch] : jobsToSearch)) {
+          if (!locVal && j.lokasi && j.lokasi !== '-') locVal = j.lokasi;
+          if (!clusVal && j.cluster && j.cluster !== '-') clusVal = j.cluster;
+        }
+        if ((!locVal || !clusVal) && Array.isArray(state.masterUnits)) {
+          const mUnit = state.masterUnits.find(u => String(u.noLambung || u.lambung || '').trim().toUpperCase() === cleanTargetLambung);
+          if (mUnit) {
+            if (!locVal) locVal = mUnit.lokasi || mUnit.location || '-';
+            if (!clusVal) clusVal = mUnit.cluster || 'Selatan';
+          }
+        }
+        const cleanCluster = String(clusVal || 'Selatan').replace(/^KGU\s+/i, '').trim() || 'Selatan';
+        if (lokasiEl) {
+          lokasiEl.textContent = `${locVal || '-'} (${cleanCluster})`;
+        }
+
+        // Penugasan Armada
+        let armVal = '-';
+        for (const j of (jobObj ? [jobObj, ...jobsToSearch] : jobsToSearch)) {
+          const arm = (typeof resolveJobArmada === 'function') ? resolveJobArmada(j) : (j.armada || j.armada_unit || j.ltUnit || j.wtUnit);
+          if (arm && arm !== '-' && arm !== '') {
+            armVal = String(arm).replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
+            break;
+          }
+        }
+        if ((!armVal || armVal === '-') && item) {
+          armVal = item.armada || item.truck || item.ltUnit || '-';
+        }
+        if (armadaEl) armadaEl.textContent = armVal || '-';
+
+        // Operator Pelaksana & Manpower (MP)
+        let optVal = '-';
+        let mp1Val = '';
+        let mp2Val = '';
+        for (const j of (jobObj ? [jobObj, ...jobsToSearch] : jobsToSearch)) {
+          const candOpt = j.opt || j.opt_name || j.nama_opt || j.operator || '';
+          if (candOpt && candOpt !== '-' && (typeof isDummyPersonnelName !== 'function' || !isDummyPersonnelName(candOpt))) {
+            optVal = candOpt;
+            break;
+          }
+        }
+        for (const j of (jobObj ? [jobObj, ...jobsToSearch] : jobsToSearch)) {
+          if (j.mp1 && j.mp1 !== '-') mp1Val = j.mp1;
+          if (j.mp2 && j.mp2 !== '-') mp2Val = j.mp2;
+          if (mp1Val || mp2Val) break;
+        }
+        if ((optVal === '-' || (!mp1Val && !mp2Val)) && armVal && armVal !== '-' && typeof getPersonnelForArmada === 'function') {
+          const cFallback = getPersonnelForArmada(armVal, cleanCluster, shiftNum, stdActionDate || actionDate);
+          if (cFallback) {
+            if (optVal === '-' && cFallback.opt && cFallback.opt !== '-') optVal = cFallback.opt;
+            if (!mp1Val && cFallback.mp1 && cFallback.mp1 !== '-') mp1Val = cFallback.mp1;
+            if (!mp2Val && cFallback.mp2 && cFallback.mp2 !== '-') mp2Val = cFallback.mp2;
+          }
+        }
+        if (optEl) optEl.textContent = optVal || '-';
+
+        const mpList = [mp1Val, mp2Val].filter(m => m && m !== '-' && m.trim() !== '');
+        const mpDisplay = mpList.length > 0 ? mpList.join(', ') : (oilmanName ? oilmanName.replace(/\s*&\s*/g, ', ') : '-');
+        if (oilmanEl) oilmanEl.textContent = mpDisplay || '-';
+
+        // Realisasi Jam & Durasi
+        let jStart = '';
+        let jEnd = '';
+        let jDur = '';
+        let jExecDate = '';
+        for (const j of (jobObj ? [jobObj, ...jobsToSearch] : jobsToSearch)) {
+          if (!jStart && (j.jamStart || j.jam_start)) jStart = j.jamStart || j.jam_start;
+          if (!jEnd && (j.jamEnd || j.jam_end)) jEnd = j.jamEnd || j.jam_end;
+          if (!jDur && j.durasi) jDur = j.durasi;
+          if (!jExecDate && (j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || j.tanggal_rencana)) {
+            jExecDate = j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || j.tanggal_rencana;
+          }
+        }
+        let execDateDisplay = actionDate || '';
+        if (jExecDate) {
+          const parts = String(jExecDate).split('T')[0].split('-');
+          execDateDisplay = (parts.length === 3) ? `${parts[2]}/${parts[1]}/${parts[0]}` : jExecDate;
+        }
+        if (realTglEl) {
+          realTglEl.textContent = execDateDisplay || '';
+        }
+        if (realJamEl) {
+          if (jStart && jEnd && jStart !== '-' && jEnd !== '-') {
+            realJamEl.textContent = `${jStart} s/d ${jEnd}`;
+          } else if (jStart && jStart !== '-') {
+            realJamEl.textContent = `${jStart} s/d -`;
+          } else {
+            realJamEl.textContent = '- s/d -';
+          }
+        }
+        if (realDurasiEl) {
+          let durHtml = '';
+          if (jStart && jEnd && jStart !== '-' && jEnd !== '-' && typeof calculateDuration === 'function') {
+            durHtml = calculateDuration(jStart, jEnd, jDur);
+          } else if (jDur && typeof formatDurationBadge === 'function') {
+            durHtml = formatDurationBadge(jDur);
+          }
+          realDurasiEl.innerHTML = (durHtml && durHtml !== '-') ? durHtml : '';
+        }
+
+        // Hour Meter (HM) jika ada
+        let hmS = null;
+        let hmE = null;
+        for (const j of (jobObj ? [jobObj, ...jobsToSearch] : jobsToSearch)) {
+          if (hmS === null && (j.hmStart ?? j.hm_start ?? j.hmStop ?? j.hm_stop)) hmS = j.hmStart ?? j.hm_start ?? j.hmStop ?? j.hm_stop;
+          if (hmE === null && (j.hmEnd ?? j.hm_end ?? j.hmReady ?? j.hm_ready)) hmE = j.hmEnd ?? j.hm_end ?? j.hmReady ?? j.hm_ready;
+        }
+        const hasValidHm = (hmS !== null && hmS !== undefined && hmS !== '' && hmS !== '-') || (hmE !== null && hmE !== undefined && hmE !== '' && hmE !== '-');
+        if (hmRowEl && hmEl) {
+          if (hasValidHm) {
+            hmRowEl.classList.remove('hidden');
+            hmEl.textContent = `${hmS || '-'} s/d ${hmE || '-'}`;
+          } else {
+            hmRowEl.classList.add('hidden');
+          }
+        }
+
+        // Catatan / Kendala
+        if (notesEl) {
+          const formattedKet = (typeof formatKendalaText === 'function') ? formatKendalaText(oilmanNotes) : oilmanNotes;
+          notesEl.textContent = formattedKet || 'Nihil / Lancar sesuai SOP';
+        }
+      };
+
+      applyJobDetailsToModal(targetJob);
+
+      // Simpan konteks aksi untuk fitur delete & salin job
       window.__currentAcDetailTarget = {
         noLambung: item.noLambung || noLambung,
         cleanIdx: Number(cleanIdx),
         actionDate: actionDate || '',
         stdActionDate: stdActionDate || '',
         rawClean: rawClean || '',
-        jobId: initialJobId || ''
+        jobId: initialJobId || '',
+        job: targetJob || null,
+        isService: isServiceEntry
       };
 
       // Simpan & render foto evidence ke UI modal
@@ -39752,17 +39861,16 @@ Keterangan : ${keterangan}`;
       const isInitialPhotosEmpty = (foundPhotos.length === 0);
       renderAirCleanerDetailPhotosUI(foundPhotos, noLambung, cleanIdx, isInitialPhotosEmpty && Boolean(state.supabaseClient) && !isServiceEntry, isServiceEntry);
 
-      // Jika bukan status Service dan di memori foto masih belum lengkap, cari secara asinkron dari Supabase (job_history_lt)
-      // KHUSUS STATUS SERVICE: DILARANG fetch foto dari Supabase karena sesuai SOP tidak ada foto!
-      if (state.supabaseClient && !isServiceEntry) {
+      // Jika di memori data atau foto masih belum lengkap, tarik secara asinkron dari Supabase (job_history_lt)
+      if (state.supabaseClient) {
         const fetchSupaPhotos = async () => {
           try {
-            // 1. Coba dari job_history_lt (tabel riwayat LT / Air Cleaner) dengan filter ketat HANYA Air Cleaner
+            const AC_HIST_SELECT = 'id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,fotos,created_at';
             let q = state.supabaseClient
               .from('job_history_lt')
-              .select('id,no_lambung,fotos,tanggal_eksekusi,tanggal_rencana,keterangan,mp1,mp2,nama_opt,armada_unit,status_final,cat,created_at')
+              .select(AC_HIST_SELECT)
               .ilike('no_lambung', `%${cleanTargetLambung}%`)
-              .or('cat.eq.aircleaner,cat.eq.cac,cat.eq.air_cleaner,id.ilike.%CAC%');
+              .or('cat.eq.aircleaner,cat.eq.cac,cat.eq.air_cleaner,cat.eq.unscheduled,id.ilike.%CAC%,id.ilike.%REQ%');
 
             if (stdActionDate) {
               q = q.or(`tanggal_eksekusi.eq.${stdActionDate},tanggal_rencana.eq.${stdActionDate}`);
@@ -39771,12 +39879,11 @@ Keterangan : ${keterangan}`;
             let res = await q.order('created_at', { ascending: false }).limit(25);
 
             if ((!res.data || res.data.length === 0) && stdActionDate) {
-              // Fallback tanpa filter tanggal jika belum ketemu, TETAP hanya kategori Air Cleaner
               res = await state.supabaseClient
                 .from('job_history_lt')
-                .select('id,no_lambung,fotos,tanggal_eksekusi,tanggal_rencana,keterangan,mp1,mp2,nama_opt,armada_unit,status_final,cat,created_at')
+                .select(AC_HIST_SELECT)
                 .ilike('no_lambung', `%${cleanTargetLambung}%`)
-                .or('cat.eq.aircleaner,cat.eq.cac,cat.eq.air_cleaner,id.ilike.%CAC%')
+                .or('cat.eq.aircleaner,cat.eq.cac,cat.eq.air_cleaner,cat.eq.unscheduled,id.ilike.%CAC%,id.ilike.%REQ%')
                 .order('created_at', { ascending: false })
                 .limit(25);
             }
@@ -39785,7 +39892,6 @@ Keterangan : ${keterangan}`;
             if (Array.isArray(res.data) && res.data.length > 0) {
               for (const row of res.data) {
                 const rowId = String(row.id || '');
-                // Tolak mutlak jika teridentifikasi Greasing / Top Up Oil / Water Truck
                 if (rowId.includes('-GRS-') || rowId.includes('-TUO-') || rowId.startsWith('WT') || ['small', 'big', 'topup', 'top_up', 'coal', 'rom', 'non_coal'].includes(row.cat)) {
                   continue;
                 }
@@ -39802,76 +39908,66 @@ Keterangan : ${keterangan}`;
 
                 if (isDateMatched) {
                   matchedHistoryRow = row;
-                  // Perbarui ID unik di header kartu modal HANYA jika valid Air Cleaner
-                  if (row.id && jobTagEl && (rowId.includes('-CAC-') || row.cat === 'aircleaner')) {
+                  if (row.id && jobTagEl && (rowId.includes('-CAC-') || rowId.includes('-REQ-') || row.cat === 'aircleaner')) {
                     jobTagEl.textContent = '#' + row.id;
                     jobTagEl.classList.remove('hidden');
-                    if (window.__currentAcDetailTarget) window.__currentAcDetailTarget.jobId = row.id;
+                    if (window.__currentAcDetailTarget) {
+                      window.__currentAcDetailTarget.jobId = row.id;
+                      window.__currentAcDetailTarget.job = row;
+                    }
                   }
-                  // Perbarui keterangan dari Riwayat Selesai
-                  if (notesEl) {
+                  if (row.keterangan && row.keterangan !== '-') {
                     const cleanKet = String(row.keterangan || '')
                       .replace(/^\[(SERVICE|BREAKDOWN|PARKIR|NON_ACH|ACH)\]:\s*/i, '')
                       .replace(/\bPS\s*1000\b/gi, '')
                       .replace(/\s*\(?PS\s*\d*\)?/gi, '')
                       .trim();
                     if (cleanKet && cleanKet !== '-') {
-                      notesEl.textContent = cleanKet;
+                      oilmanNotes = cleanKet;
                     }
                   }
-                  // Perbarui personil / oilman dari Riwayat Selesai
-                  if (oilmanEl) {
-                    const rowMps = [row.mp1, row.mp2].filter(m => m && m !== '-' && m !== '');
-                    if (rowMps.length > 0) {
-                      oilmanEl.textContent = 'Oilman: ' + rowMps.join(' & ');
-                    } else if (row.nama_opt && row.nama_opt !== '-') {
-                      oilmanEl.textContent = 'Oilman: ' + row.nama_opt;
-                    }
-                  }
-                  // Perbarui armada dari Riwayat Selesai
-                  const curArmadaEl = document.getElementById('ac-detail-armada');
-                  if (curArmadaEl && row.armada_unit && row.armada_unit !== '-') {
-                    curArmadaEl.textContent = row.armada_unit;
-                  }
+                  applyJobDetailsToModal(row);
 
-                  // Ambil foto eviden
-                  const snapPhotos = Array.isArray(row.fotos) ? row.fotos : [];
-                  const valid = snapPhotos.filter(p => p && typeof p === 'string' && p.trim() !== '');
-                  if (valid.length > 0) {
-                    const combined = Array.from(new Set([...(window.__currentAcDetailPhotos || []), ...valid]));
-                    window.__currentAcDetailPhotos = combined;
-                    renderAirCleanerDetailPhotosUI(combined, noLambung, cleanIdx, false, false);
-                    // Cache ke lokal
-                    if (row.id) {
-                      try {
-                        safeStorage.setItem('SE_JOB_FOTOS_' + row.id, JSON.stringify(valid));
-                        const cleanBase = String(row.id).replace(/-\d{4}$/, '');
-                        if (cleanBase !== row.id) safeStorage.setItem('SE_JOB_FOTOS_' + cleanBase, JSON.stringify(valid));
-                      } catch (e) { }
-                      // Sinkronkan ke jobHistory memori
-                      if (Array.isArray(state.jobHistory)) {
-                        state.jobHistory.forEach(h => {
-                          const hId = String(h.id || h.job_id || '');
-                          if (hId === String(row.id) || hId.startsWith(row.id.replace(/-\d{4}$/, ''))) {
-                            h.fotos = valid;
-                          }
-                        });
+                  if (!isServiceEntry) {
+                    const snapPhotos = Array.isArray(row.fotos) ? row.fotos : [];
+                    const valid = snapPhotos.filter(p => p && typeof p === 'string' && p.trim() !== '');
+                    if (valid.length > 0) {
+                      const combined = Array.from(new Set([...(window.__currentAcDetailPhotos || []), ...valid]));
+                      window.__currentAcDetailPhotos = combined;
+                      renderAirCleanerDetailPhotosUI(combined, noLambung, cleanIdx, false, false);
+                      if (row.id) {
+                        try {
+                          safeStorage.setItem('SE_JOB_FOTOS_' + row.id, JSON.stringify(valid));
+                          const cleanBase = String(row.id).replace(/-\d{4}$/, '');
+                          if (cleanBase !== row.id) safeStorage.setItem('SE_JOB_FOTOS_' + cleanBase, JSON.stringify(valid));
+                        } catch (e) { }
+                        if (Array.isArray(state.jobHistory)) {
+                          state.jobHistory.forEach(h => {
+                            const hId = String(h.id || h.job_id || '');
+                            if (hId === String(row.id) || hId.startsWith(row.id.replace(/-\d{4}$/, ''))) {
+                              h.fotos = valid;
+                            }
+                          });
+                        }
                       }
+                      try { safeStorage.setItem('SE_AC_CLEAN_PHOTOS_' + noLambung + '_' + cleanIdx, JSON.stringify(combined)); } catch (e) { }
+                      break;
                     }
-                    try { safeStorage.setItem('SE_AC_CLEAN_PHOTOS_' + noLambung + '_' + cleanIdx, JSON.stringify(combined)); } catch (e) { }
+                  } else {
                     break;
                   }
                 }
               }
             }
 
-            // Jika foto tetap kosong setelah sinkronisasi, matikan indikator loading
-            if (!matchedHistoryRow || !Array.isArray(window.__currentAcDetailPhotos) || window.__currentAcDetailPhotos.length === 0) {
+            if (!isServiceEntry && (!matchedHistoryRow || !Array.isArray(window.__currentAcDetailPhotos) || window.__currentAcDetailPhotos.length === 0)) {
               renderAirCleanerDetailPhotosUI(window.__currentAcDetailPhotos || [], noLambung, cleanIdx, false, false);
             }
           } catch (supaErr) {
             console.warn('[Supabase Air Cleaner Photo Fetch Warn]', supaErr);
-            renderAirCleanerDetailPhotosUI(window.__currentAcDetailPhotos || [], noLambung, cleanIdx, false, false);
+            if (!isServiceEntry) {
+              renderAirCleanerDetailPhotosUI(window.__currentAcDetailPhotos || [], noLambung, cleanIdx, false, false);
+            }
           }
         };
         fetchSupaPhotos();
@@ -39891,6 +39987,42 @@ Keterangan : ${keterangan}`;
     }
     window.showAirCleanerActionDetail = showAirCleanerActionDetail;
 
+    function copyAirCleanerDetailReport() {
+      const target = window.__currentAcDetailTarget || {};
+      const jobId = target.jobId;
+      if (jobId && typeof findJobById === 'function' && findJobById(jobId)) {
+        state.currentDetailJobId = jobId;
+        if (typeof copyJobDetailReport === 'function') {
+          copyJobDetailReport();
+          return;
+        }
+      }
+      const kodeUnit = document.getElementById('ac-detail-title')?.textContent?.trim() || target.noLambung || '-';
+      const deskripsi = target.isService ? 'Service / Maintenance' : 'Clean Air Cleaner';
+      const hmVal = document.getElementById('ac-detail-hm-row')?.classList.contains('hidden')
+        ? '-'
+        : (document.getElementById('ac-detail-hm')?.textContent?.trim() || '-');
+      const jamVal = document.getElementById('ac-detail-real-jam')?.textContent?.trim() || '-';
+      const statusStr = target.isService ? 'SERVICE' : 'ACH';
+      const armada = document.getElementById('ac-detail-armada')?.textContent?.trim() || '-';
+      const operator = document.getElementById('ac-detail-opt')?.textContent?.trim() || '-';
+      const mpRaw = document.getElementById('ac-detail-oilman')?.textContent?.trim() || '-';
+      const teamMps = mpRaw.replace(/,\s*/g, ' & ');
+      const keterangan = document.getElementById('ac-detail-notes')?.textContent?.trim() || '-';
+
+      const textToCopy = `*PELAPORAN JOB*\nKode Unit : ${kodeUnit}\nDeskripsi : ${deskripsi}\nHm Start & Finish : ${hmVal}\nJam Start & Finish : ${jamVal}\nStatus : ${statusStr}\nArmada : ${armada}\nOperator : ${operator}\nMp 1 & 2 : ${teamMps}\nKeterangan : ${keterangan}`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          if (typeof showToast === 'function') showToast('Format laporan berhasil disalin ke clipboard!', 'success');
+        }).catch(() => {
+          if (typeof fallbackCopyText === 'function') fallbackCopyText(textToCopy);
+        });
+      } else if (typeof fallbackCopyText === 'function') {
+        fallbackCopyText(textToCopy);
+      }
+    }
+    window.copyAirCleanerDetailReport = copyAirCleanerDetailReport;
+
     function renderAirCleanerDetailPhotosUI(photos, noLambung, cleanIdx, isLoading = false, isService = false) {
       const photoContainer = document.getElementById('ac-detail-photo-container');
       const photoGrid = document.getElementById('ac-detail-photos');
@@ -39898,58 +40030,36 @@ Keterangan : ${keterangan}`;
       const photoEmpty = document.getElementById('ac-detail-photo-empty');
       if (!photoContainer || !photoGrid) return;
 
-      photoContainer.classList.remove('hidden');
-
       const isAdmin = (state.currentUser?.role === 'admin');
 
-      // 1. KONDISI KHUSUS UNIT SERVICE: SOP MENYATAKAN TIDAK ADA FOTO
+      // 1. KONDISI KHUSUS UNIT SERVICE: Sesuai tampilan menu Riwayat, sembunyikan bagian foto eviden untuk status SERVICE
       if (isService) {
-        if (photoCount) {
-          photoCount.textContent = 'Service (0 Foto)';
-          photoCount.className = 'text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 shadow-2xs';
-        }
+        photoContainer.classList.add('hidden');
         photoGrid.innerHTML = '';
         photoGrid.classList.add('hidden');
-        if (photoEmpty) {
-          photoEmpty.classList.remove('hidden');
-          photoEmpty.innerHTML = `
-            <div class="py-2 text-center">
-              <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mx-auto mb-1.5 ring-1 ring-purple-200">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div class="text-[11.5px] font-bold text-slate-700">Unit Status Service / Maintenance</div>
-              <div class="text-[10px] text-slate-500 mt-0.5">Tidak ada dokumentasi foto (sesuai SOP pengerjaan Service)</div>
-            </div>
-          `;
-        }
+        if (photoEmpty) photoEmpty.classList.add('hidden');
         return;
       }
 
+      photoContainer.classList.remove('hidden');
+
       // 2. TAMPILAN SHIMMER SKELETON LAZY LOADING JIKA SEDANG MENGHUBUNGKAN FOTO SUPABASE
       if (isLoading) {
-        if (photoCount) {
-          photoCount.textContent = '';
-          photoCount.className = 'text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 shadow-2xs';
-        }
+        if (photoCount) photoCount.classList.add('hidden');
         if (photoEmpty) photoEmpty.classList.add('hidden');
         photoGrid.classList.remove('hidden');
         photoGrid.innerHTML = `
           <div class="col-span-full py-1 grid grid-cols-2 gap-2 animate-pulse select-none">
-            <div class="h-24 sm:h-28 rounded-xl bg-slate-200"></div>
-            <div class="h-24 sm:h-28 rounded-xl bg-slate-200"></div>
+            <div class="h-28 sm:h-32 rounded-xl bg-slate-200"></div>
+            <div class="h-28 sm:h-32 rounded-xl bg-slate-200"></div>
           </div>
         `;
         return;
       }
 
-      // 3. TAMPILAN FOTO EVIDEN AIR CLEANER (JIKA ADA FOTO)
+      // 3. TAMPILAN FOTO EVIDEN AIR CLEANER (IDENTIK DENGAN DETAIL MENU RIWAYAT)
       if (Array.isArray(photos) && photos.length > 0) {
-        if (photoCount) {
-          photoCount.textContent = `${photos.length} Foto`;
-          photoCount.className = 'text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 shadow-2xs';
-        }
+        if (photoCount) photoCount.classList.add('hidden');
         if (photoEmpty) photoEmpty.classList.add('hidden');
         photoGrid.classList.remove('hidden');
         photoGrid.innerHTML = photos.map((src, i) => {
@@ -39966,49 +40076,35 @@ Keterangan : ${keterangan}`;
           ` : '';
 
           return `
-            <div class="group relative rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-2xs hover:shadow-md transition">
+            <div class="group relative rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-xs hover:shadow-md transition duration-150 select-none transform-gpu">
               <div onclick="if(typeof openPhotoPreview==='function'){openPhotoPreview(window.__currentAcDetailPhotos, 'Foto Clean Air Cleaner - ${noLambung}', ${i}, '')}"
-                class="h-24 sm:h-28 w-full overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer relative">
+                class="h-28 sm:h-32 w-full overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer relative">
                 <div class="absolute inset-0 bg-slate-200 animate-pulse"></div>
-                <img src="${directImgSrc}" alt="${label}" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-300 opacity-0" loading="lazy" onload="this.classList.remove('opacity-0'); this.previousElementSibling?.remove();" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'text-slate-400 text-xs p-2 text-center\\'>Gagal memuat foto</div>';">
+                <img src="${directImgSrc}" alt="${label}" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-300 opacity-0" loading="lazy" onload="this.classList.remove('opacity-0'); this.previousElementSibling?.remove();" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'text-slate-400 text-xs p-3 text-center\\'>Gagal memuat foto</div>';">
               </div>
               <div onclick="if(typeof openPhotoPreview==='function'){openPhotoPreview(window.__currentAcDetailPhotos, 'Foto Clean Air Cleaner - ${noLambung}', ${i}, '')}"
-                class="pointer-events-none select-none absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity duration-150 p-1 text-center">
-                <svg class="w-4 h-4 text-white mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                class="pointer-events-none select-none absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity duration-150 p-1.5 text-center">
+                <svg class="w-5 h-5 text-white mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
                 </svg>
-                <span class="text-[8.5px] text-white font-bold leading-tight">Perbesar</span>
+                <span class="text-[9px] text-white font-bold leading-tight">Klik Perbesar Foto</span>
               </div>
               ${deleteBtnHtml}
               <div class="absolute bottom-0 inset-x-0 bg-slate-950/80 backdrop-blur-xs py-0.5 px-2 flex items-center justify-between pointer-events-none">
-                <span class="text-[8.5px] font-bold text-white truncate">${label}</span>
-                <span class="text-[8px] font-semibold text-emerald-400">Lihat Full</span>
+                <span class="text-[9px] font-bold text-white truncate">${label}</span>
+                <span class="text-[8px] font-medium text-emerald-400">Lihat Full</span>
               </div>
             </div>
           `;
         }).join('');
       } else {
         // 4. EMPTY STATE NON-SERVICE (TIDAK ADA FOTO)
-        if (photoCount) {
-          photoCount.textContent = '0 Foto';
-          photoCount.className = 'text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 shadow-2xs';
-        }
+        if (photoCount) photoCount.classList.add('hidden');
         photoGrid.innerHTML = '';
         photoGrid.classList.add('hidden');
         if (photoEmpty) {
           photoEmpty.classList.remove('hidden');
-          photoEmpty.innerHTML = `
-            <div class="py-2 text-center">
-              <svg class="w-7 h-7 mx-auto text-slate-300 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
-                </path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-              </svg>
-              <div class="text-[11.5px] font-bold text-slate-500">Belum ada foto eviden pengerjaan</div>
-            </div>
-          `;
+          photoEmpty.innerHTML = `<div class="text-[11.5px] font-medium text-slate-400 py-1">Belum ada foto eviden pengerjaan</div>`;
         }
       }
     }
@@ -43476,9 +43572,9 @@ Keterangan : ${keterangan}`;
 
     async function loadAirCleanerFromSupabase(force = false) {
       if (!state.supabaseClient) return;
-      // Master Data TTL Cache (12 Jam) - Versi 9 untuk Single Source of Truth murni dari Riwayat Selesai (job_history_lt)
+      // Master Data TTL Cache (12 Jam) - Versi 10 untuk Single Source of Truth murni dari Riwayat Selesai (job_history_lt)
       const savedAcTs = Number(safeStorage.getItem('SE_AIR_CLEANER_TS') || 0);
-      const isAcFresh = (Date.now() - savedAcTs) < MASTER_DATA_TTL_MS && safeStorage.getItem('SE_AIR_CLEANER_VER') === '9';
+      const isAcFresh = (Date.now() - savedAcTs) < MASTER_DATA_TTL_MS && safeStorage.getItem('SE_AIR_CLEANER_VER') === '10';
       if (!force && isAcFresh && Array.isArray(state.airCleanerMonitor) && state.airCleanerMonitor.length > 0) {
         console.log('[Supabase Cache TTL] Air Cleaner fresh dari cache lokal (TTL 12 Jam):', state.airCleanerMonitor.length, 'unit');
         return;
@@ -43502,7 +43598,7 @@ Keterangan : ${keterangan}`;
         try {
           const { data: acJobsData, error: acJobsErr } = await state.supabaseClient
             .from('job_history_lt')
-            .select('id,no_lambung,type_unit,cat,job_type,fotos,status_final,tanggal_eksekusi,tanggal_rencana,keterangan,mp1,mp2,nama_opt,armada_unit,jam_start,jam_end,shift,created_at')
+            .select('id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,fotos,created_at')
             .or('cat.eq.aircleaner,cat.eq.cac,cat.eq.air_cleaner,cat.eq.unscheduled,id.like.*CAC*,id.like.*REQ*')
             .order('tanggal_rencana', { ascending: true });
           if (!acJobsErr && Array.isArray(acJobsData)) {
@@ -43600,14 +43696,23 @@ Keterangan : ${keterangan}`;
             status_final: h.status_final,
             tanggalRealisasi: h.tanggal_eksekusi,
             tanggal: h.tanggal_rencana,
+            shift: h.shift_rencana || h.shift || '1',
+            waktu: h.waktu_rencana || h.waktu || '08:00 s/d 09:00',
+            cluster: h.cluster || '',
+            lokasi: h.lokasi || '',
             keterangan: h.keterangan,
             mp1: h.mp1,
             mp2: h.mp2,
-            nama_opt: h.nama_opt,
+            opt_name: h.opt_name || h.nama_opt || h.opt || '',
+            opt: h.opt_name || h.nama_opt || h.opt || '',
             armada_unit: h.armada_unit,
             fotos: h.fotos,
             serviceType: h.job_type === 'water' ? 'watertruck' : 'lubetruck',
             jamStart: h.jam_start || '',
+            jamEnd: h.jam_end || '',
+            durasi: h.durasi || '',
+            hmStart: h.hm_start ?? h.hm_stop ?? null,
+            hmEnd: h.hm_end ?? h.hm_ready ?? null,
             fromHistoryTable: true
           };
         });
@@ -43624,14 +43729,23 @@ Keterangan : ${keterangan}`;
               status_final: h.status_final,
               tanggalRealisasi: h.tanggal_eksekusi,
               tanggal: h.tanggal_rencana,
+              shift: h.shift_rencana || h.shift || '1',
+              waktu: h.waktu_rencana || h.waktu || '08:00 s/d 09:00',
+              cluster: h.cluster || '',
+              lokasi: h.lokasi || '',
               keterangan: h.keterangan,
               mp1: h.mp1,
               mp2: h.mp2,
-              nama_opt: h.nama_opt,
+              opt_name: h.opt_name || h.nama_opt || h.opt || '',
+              opt: h.opt_name || h.nama_opt || h.opt || '',
               armada_unit: h.armada_unit,
               fotos: h.fotos,
               serviceType: 'lubetruck',
               jamStart: h.jam_start || '',
+              jamEnd: h.jam_end || '',
+              durasi: h.durasi || '',
+              hmStart: h.hm_start ?? h.hm_stop ?? null,
+              hmEnd: h.hm_end ?? h.hm_ready ?? null,
               fromHistoryTable: true
             };
           }),
@@ -43919,7 +44033,7 @@ Keterangan : ${keterangan}`;
           });
           safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(slimMonitorForStorage));
           safeStorage.setItem('SE_AIR_CLEANER_TS', String(Date.now()));
-          safeStorage.setItem('SE_AIR_CLEANER_VER', '9');
+          safeStorage.setItem('SE_AIR_CLEANER_VER', '10');
         } catch (eStore) { }
 
         if (typeof renderAirCleanerMonitorTable === 'function') {
