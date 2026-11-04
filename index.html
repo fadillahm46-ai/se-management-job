@@ -9522,7 +9522,10 @@
           </div>
           <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
             <span class="text-slate-400 font-medium text-left">Realisasi Jam</span>
-            <span class="font-mono font-medium text-slate-900 text-left" id="repdetail-jam-realisasi">-</span>
+            <span class="font-mono font-medium text-slate-900 flex items-center gap-1.5 flex-wrap text-left">
+              <span id="repdetail-tgl" class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 text-[10.5px]">-</span>
+              <span id="repdetail-jam-realisasi">-</span>
+            </span>
           </div>
         </div>
 
@@ -9819,6 +9822,7 @@
           <div class="grid grid-cols-[135px_1fr] sm:grid-cols-[145px_1fr] items-baseline gap-2 py-0.5 text-xs">
             <span class="text-slate-400 font-medium text-left">Realisasi Jam</span>
             <span class="font-mono font-medium text-slate-900 flex items-center gap-1.5 flex-wrap text-left">
+              <span id="detail-modal-tgl" class="hidden px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 text-[10.5px]"></span>
               <span id="detail-modal-start">-</span> s/d <span id="detail-modal-end">-</span>
               <span id="detail-modal-durasi" class="inline-block"></span>
             </span>
@@ -14323,13 +14327,12 @@
     function classifyNonAchProblem(j) {
       const prob = String(j.problemCategory || j.non_ach_category || j.problem_category || '').toUpperCase();
       const ket = String(j.keterangan || j.alasanNonAch || j.non_ach_reason || j.problem_description || '').toUpperCase();
-      const st = String(j.status_final || j.status || '').toUpperCase();
 
       if (prob === 'RAIN' || prob.includes('RAIN') || ket.includes('RAIN') || ket.includes('LICIN') || ket.includes('SLIPPERY') || ket.includes('HUJAN') || ket.includes('BECEK') || ket.includes('BADAI')) {
         return 'RAIN';
       } else if (prob === 'CROWDED' || prob.includes('CROWD') || ket.includes('CROWD') || ket.includes('PADAT') || ket.includes('ANTRI') || ket.includes('ANTRE')) {
         return 'CROWDED';
-      } else if (prob.includes('BD') || prob.includes('SERVICE') || ket.includes('BREAKDOWN') || ket.includes('SERVICE') || ket.includes('SERVIS') || st === 'SERVICE' || st === 'BD' || st === 'BREAKDOWN') {
+      } else if (prob.includes('ARMADA') || prob.includes('LT') || prob.includes('WT') || prob.includes('BD') || ket.includes('ARMADA') || ket.includes('LUBETRUCK') || ket.includes('WATERTRUCK') || ket.includes('MOBIL') || ket.includes('TRUK') || ket.includes('LT BD') || ket.includes('WT BD')) {
         return 'LT_WT_BD';
       } else if (prob === 'UNSAFE ACCESS' || prob.includes('UNSAFE') || ket.includes('UNSAFE') || ket.includes('AKSES') || ket.includes('BLASTING') || ket.includes('LEDAKAN') || ket.includes('TERTUTUP') || ket.includes('LONGSOR')) {
         return 'UNSAFE_ACCESS';
@@ -14345,7 +14348,15 @@
       if (isUnsch) return false;
 
       const st = String(j.status_final || j.status || '').toLowerCase().trim();
-      if (['non_ach', 'non-ach', 'bd', 'breakdown', 'service'].includes(st) || idStr.includes('NON-ACH') || idStr.includes('NON_ACH')) {
+      const cond = String(j.kondisi || j.unitCondition || j.keadaan_unit || '').toLowerCase().trim();
+
+      // ATURAN PENGGUNA: Unit produksi yang SERVICE atau di-backup saat service masuknya ACH, BUKAN NON-ACH!
+      if (st === 'service' || cond === 'service') {
+        return false;
+      }
+
+      // HANYA schedule yang benar-benar berstatus Non-ACH yang masuk hitungan
+      if (st === 'non_ach' || st === 'non-ach' || idStr.includes('NON-ACH') || idStr.includes('NON_ACH')) {
         return true;
       }
       return false;
@@ -27319,6 +27330,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       toggleModal('modal-action-decision', false);
       const job = findJobById(state.currentActionJobId);
       if (!job) return;
+      if (typeof isSmallGreasingNonAchLockedShift1 === 'function' && isSmallGreasingNonAchLockedShift1(job)) {
+        showToast('Unit PC200 / D85 di Shift 1 tidak dapat di-Non-ACH karena masih dapat dikerjakan di Shift 2.', 'warning');
+        return;
+      }
       if (!job.noLambung) {
         job.noLambung = job.no_lambung || job.lambung || (typeof extractLambungFromId === 'function' ? extractLambungFromId(state.currentActionJobId) : '');
         job.no_lambung = job.noLambung;
@@ -29026,7 +29041,23 @@ Keterangan : ${keterangan}`;
       const mp2El = document.getElementById('detail-modal-mp2');
       if (mp2El) mp2El.textContent = modalMp2;
 
-      // 7. Pelaksanaan: Jam Start, Jam End, Durasi
+      // 7. Pelaksanaan: Jam Start, Jam End, Durasi, Tanggal Realisasi
+      const tglRealEl = document.getElementById('detail-modal-tgl');
+      const rawDate = job.tanggalRealisasi || job.tanggal_eksekusi || job.actionDate || job.tanggal || '';
+      let displayDate = '';
+      if (rawDate) {
+        const parts = String(rawDate).split('T')[0].split('-');
+        displayDate = (parts.length === 3) ? `${parts[2]}/${parts[1]}/${parts[0]}` : rawDate;
+      }
+      if (tglRealEl) {
+        if (displayDate && (job.jamStart || job.jamEnd || ['ach', 'achieved', 'done', 'service'].includes(String(job.status || '').toLowerCase()))) {
+          tglRealEl.textContent = displayDate;
+          tglRealEl.classList.remove('hidden');
+        } else {
+          tglRealEl.classList.add('hidden');
+        }
+      }
+
       const startEl = document.getElementById('detail-modal-start');
       if (startEl) startEl.textContent = job.jamStart || '-';
 
@@ -34053,6 +34084,10 @@ Keterangan : ${keterangan}`;
       toggleModal('modal-action-decision', false);
       const job = findJobById(state.currentActionJobId);
       if (!job) return;
+      if (typeof isSmallGreasingNonAchLockedShift1 === 'function' && isSmallGreasingNonAchLockedShift1(job)) {
+        showToast('Unit PC200 / D85 di Shift 1 tidak dapat di-Non-ACH karena masih dapat dikerjakan di Shift 2.', 'warning');
+        return;
+      }
       if (!job.noLambung) {
         job.noLambung = job.no_lambung || job.lambung || (typeof extractLambungFromId === 'function' ? extractLambungFromId(state.currentActionJobId) : '');
         job.no_lambung = job.noLambung;
@@ -34599,6 +34634,36 @@ Keterangan : ${keterangan}`;
     }
     window.isJobEligibleForNonAch = isJobEligibleForNonAch;
 
+    /**
+     * Deteksi SCH Greasing Small Track untuk unit PC200 dan D85.
+     */
+    function isSmallGreasingPc200OrD85(job) {
+      if (!job) return false;
+      const normCat = (typeof getJobNormalizedCategory === 'function') ? getJobNormalizedCategory(job) : String(job.cat || '').toLowerCase();
+      if (normCat !== 'small') return false;
+      const unitType = String(job.typeUnit || job.type_unit || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(job.noLambung || job.no_lambung, '') : '')).toUpperCase().replace(/\s+/g, '');
+      const lambung = String(job.noLambung || job.no_lambung || '').toUpperCase().trim();
+      return unitType.includes('PC200') || unitType.includes('PC210') || unitType.includes('D85') || lambung.startsWith('D85') || lambung.startsWith('PC200') || lambung.startsWith('PC210');
+    }
+    window.isSmallGreasingPc200OrD85 = isSmallGreasingPc200OrD85;
+
+    /**
+     * Aturan Greasing Small PC200 & D85:
+     * - Shift 1 (hari jadwal): opsi NON-ACH dikunci, klik ACTION langsung form penyelesaian ACH.
+     * - Setelah masuk Shift 2 (atau jadwal sudah lewat hari): opsi ACH & NON-ACH muncul.
+     */
+    function isSmallGreasingNonAchLockedShift1(job) {
+      if (!isSmallGreasingPc200OrD85(job)) return false;
+      const realShift = (typeof getEffectiveShift === 'function') ? getEffectiveShift(new Date()) : ((new Date().getHours() >= 5 && new Date().getHours() < 17) ? 1 : 2);
+      if (realShift !== 1) return false;
+      const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().slice(0, 10);
+      const jobDate = String(job.tanggal || job.tanggal_rencana || '').slice(0, 10);
+      // Jadwal hari sebelumnya yang belum selesai tetap boleh NON-ACH
+      if (jobDate && jobDate < today) return false;
+      return true;
+    }
+    window.isSmallGreasingNonAchLockedShift1 = isSmallGreasingNonAchLockedShift1;
+
     async function openActionDecision(jobId) {
       const curUserRole = String(state.currentUser?.role || '').toLowerCase();
       const canExecuteAction = (curUserRole === 'admin' || curUserRole === 'oilman' || curUserRole === 'washingman' || curUserRole === 'mp_lt' || curUserRole === 'mp_wt');
@@ -34663,6 +34728,14 @@ Keterangan : ${keterangan}`;
         return;
       }
 
+      // [Aturan Pengguna]: Greasing Small PC200 & D85 di Shift 1 tidak ada NON-ACH -> langsung form penyelesaian ACH
+      if (isSmallGreasingNonAchLockedShift1(job)) {
+        if (typeof closeJobDetailModal === 'function') closeJobDetailModal();
+        if (typeof toggleModal === 'function') toggleModal('modal-action-decision', false);
+        openAchForm();
+        return;
+      }
+
       const titleEl = document.getElementById('decision-modal-title');
       const subEl = document.getElementById('decision-modal-subtitle');
       const leftLabel = document.getElementById('decision-left-label');
@@ -34678,11 +34751,13 @@ Keterangan : ${keterangan}`;
       if (rightLabel) rightLabel.textContent = 'NON-ACH';
 
       // Pengamanan tampilan tombol kanan
+      const isLockedShift1Greasing = (typeof isSmallGreasingNonAchLockedShift1 === 'function') && isSmallGreasingNonAchLockedShift1(job);
+      const canShowNonAch = canNonAch && !isLockedShift1Greasing;
       if (rightContainer) {
-        rightContainer.style.display = canNonAch ? '' : 'none';
+        rightContainer.style.display = canShowNonAch ? '' : 'none';
       }
       if (buttonsGrid) {
-        if (canNonAch) {
+        if (canShowNonAch) {
           buttonsGrid.className = 'grid grid-cols-2 gap-3.5 sm:gap-4 w-full px-1';
         } else {
           buttonsGrid.className = 'flex justify-center w-full px-1';
@@ -34701,6 +34776,10 @@ Keterangan : ${keterangan}`;
     function handleDecisionRightClick() {
       const job = (typeof findJobById === 'function') ? findJobById(state.currentActionJobId) : null;
       if (job) {
+        if (typeof isSmallGreasingNonAchLockedShift1 === 'function' && isSmallGreasingNonAchLockedShift1(job)) {
+          showToast('Unit PC200 / D85 di Shift 1 tidak dapat di-Non-ACH karena masih dapat dikerjakan di Shift 2.', 'warning');
+          return;
+        }
         const intervalDays = (typeof getScheduleIntervalDays === 'function') ? getScheduleIntervalDays(job) : 1;
         const canNonAch = (intervalDays <= 1) || ((typeof isJobEligibleForNonAch === 'function') ? isJobEligibleForNonAch(job) : true);
         if (intervalDays > 1 && !canNonAch) {
@@ -38074,6 +38153,9 @@ Keterangan : ${keterangan}`;
       const jamRealEl = document.getElementById('repdetail-jam-realisasi');
       if (jamRealEl) jamRealEl.textContent = `${jamVal} WITA`;
 
+      const tglRealEl = document.getElementById('repdetail-tgl');
+      if (tglRealEl) tglRealEl.textContent = displayDate || '-';
+
       const ketEl = document.getElementById('repdetail-keterangan');
       if (ketEl) ketEl.textContent = item.keterangan || 'Nihil / Tidak ada keterangan';
 
@@ -38349,8 +38431,8 @@ Keterangan : ${keterangan}`;
       if (!clean) return null;
 
       // 1. Tipe Unit & Kategori Coal / Non-Coal
-      const unitType = (typeof getUnitTypeFromMaster === 'function') 
-        ? getUnitTypeFromMaster(clean, '') 
+      const unitType = (typeof getUnitTypeFromMaster === 'function')
+        ? getUnitTypeFromMaster(clean, '')
         : '';
       const isCoal = (typeof isAirCleanerUnitCoal === 'function')
         ? isAirCleanerUnitCoal(clean, unitType)
@@ -38375,7 +38457,7 @@ Keterangan : ${keterangan}`;
       const latestRep = reps[0] || null;
 
       // 3. Cari data di state.airCleanerMonitor
-      const acItem = (Array.isArray(state.airCleanerMonitor) ? state.airCleanerMonitor : []).find(m => 
+      const acItem = (Array.isArray(state.airCleanerMonitor) ? state.airCleanerMonitor : []).find(m =>
         String(m.noLambung || '').trim().toUpperCase() === clean
       );
 
@@ -38483,8 +38565,9 @@ Keterangan : ${keterangan}`;
       const cleansCount = (info.cleansCount !== undefined) ? info.cleansCount : 0;
 
       return `
-        <div class="py-1 px-0.5 text-xs text-slate-700 font-medium select-none">
-          <span>tanggal ganti : <strong class="font-mono text-slate-900">${escapeHtml(tglGantiStr)}</strong> &nbsp;dan&nbsp; cleaning : <strong class="font-mono text-slate-900">${cleansCount}x</strong></span>
+        <div class="py-1 px-0.5 text-xs text-slate-700 font-medium select-none leading-relaxed">
+          <div>tanggal ganti : <strong class="font-mono text-slate-900">${escapeHtml(tglGantiStr)}</strong></div>
+          <div>cleaning : <strong class="font-mono text-slate-900">${cleansCount}x</strong></div>
         </div>
       `;
     }
@@ -38561,11 +38644,11 @@ Keterangan : ${keterangan}`;
       const jId = String(job.id || job.job_id || '').toUpperCase();
       const jReq = String(job.requestedJob || '').toLowerCase();
       const isAirCleaner = (
-        jCat === 'aircleaner' || 
-        jCat === 'air_cleaner' || 
-        jCat === 'cac' || 
-        jId.includes('-CAC-') || 
-        jId.startsWith('LT-CAC') || 
+        jCat === 'aircleaner' ||
+        jCat === 'air_cleaner' ||
+        jCat === 'cac' ||
+        jId.includes('-CAC-') ||
+        jId.startsWith('LT-CAC') ||
         jTypeJob === 'CAC' ||
         jReq.includes('air cleaner')
       );
