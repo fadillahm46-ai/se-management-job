@@ -11958,6 +11958,7 @@
         };
       }
       if (window.globalDataCache.jobs) {
+        job.actionTimestamp = Date.now();
         window.globalDataCache.jobs.set(String(job.id), job);
       }
       if (job.tanggal && window.globalDataCache.loadedDates) {
@@ -18271,6 +18272,53 @@
     window.repairSpecificSugengHistoryJobs = repairSpecificSugengHistoryJobs;
 
     /**
+     * Koreksi otomatis shift rencana pada riwayat pekerjaan
+     * Menjamin shift di kolom Riwayat Selesai selalu mengikuti jadwal (SCH) saat ditetapkan,
+     * bukan shift ketika dikerjakan/realisasi di lapangan.
+     */
+    function repairHistoryPlannedShift() {
+      if (!Array.isArray(state.jobHistory) || state.jobHistory.length === 0) return;
+      let touched = false;
+      const ltIdsToFix = [];
+      const wtIdsToFix = [];
+
+      state.jobHistory.forEach(h => {
+        if (!h) return;
+        const waktuStr = String(h.waktu_rencana || h.waktu || '').trim();
+        if (waktuStr && typeof detectShiftFromTimeString === 'function') {
+          const correctShift = detectShiftFromTimeString(waktuStr);
+          if (correctShift && Number(h.shift_rencana) !== correctShift) {
+            h.shift_rencana = correctShift;
+            h.shift = correctShift;
+            h.originalShift = correctShift;
+            touched = true;
+            const isWt = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(h) : false;
+            if (isWt) wtIdsToFix.push(h.id || h.job_id);
+            else ltIdsToFix.push(h.id || h.job_id);
+          }
+        }
+      });
+
+      if (touched && state.supabaseClient && window._supabaseHasJobHistory !== false) {
+        try {
+          if (ltIdsToFix.length > 0) {
+            state.supabaseClient.from('job_history_lt')
+              .update({ shift_rencana: 1 })
+              .in('id', ltIdsToFix)
+              .catch(() => {});
+          }
+          if (wtIdsToFix.length > 0) {
+            state.supabaseClient.from('job_history_wt')
+              .update({ shift_rencana: 1 })
+              .in('id', wtIdsToFix)
+              .catch(() => {});
+          }
+        } catch (e) {}
+      }
+    }
+    window.repairHistoryPlannedShift = repairHistoryPlannedShift;
+
+    /**
      * Mengunci snapshot histori pekerjaan secara permanen (Snapshot Table)
      */
     async function lockJobHistorySnapshot(job, finalStatus, reason = '') {
@@ -18289,9 +18337,13 @@
 
       let cleanBaseId = originalJobId;
       if (!cleanBaseId || cleanBaseId.startsWith('JOB-') || cleanBaseId.startsWith('TMP-') || !cleanBaseId.includes('-')) {
+        const planDate = job.tanggal_rencana || job.originalDate || job.planDate || job.tanggal;
+        const planShift = (typeof getCompletedJobPlannedShift === 'function')
+          ? getCompletedJobPlannedShift(job)
+          : parseInt(job.originalShift || job.shift_rencana || job.shift || 1, 10);
         cleanBaseId = (typeof generateScheduleJobId === 'function')
-          ? generateScheduleJobId(job, job.tanggalRealisasi || job.tanggal, job.shift, job.washingRound)
-          : `${isWt ? 'WT-GRS-' : 'LT-GRS-'}${String(job.tanggal || getEffectiveTodayString()).replace(/-/g, '')}-1-${String(job.noLambung || 'UNIT').trim().toUpperCase()}`;
+          ? generateScheduleJobId(job, planDate, planShift, job.washingRound)
+          : `${isWt ? 'WT-GRS-' : 'LT-GRS-'}${String(planDate || getEffectiveTodayString()).replace(/-/g, '')}-${planShift}-${String(job.noLambung || 'UNIT').trim().toUpperCase()}`;
       }
 
       // Tentukan suffix waktu eksekusi -HHMM
@@ -18442,8 +18494,12 @@
         washing_round: jWashingRound,
         washingRound: jWashingRound,
         job_type: (isWt || cleanId.includes('WT') || cleanBaseId.includes('WT') || job.targetType === 'WT') ? 'water' : 'lube',
-        tanggal_rencana: job.originalDate || job.original_date || job.tanggal,
-        shift_rencana: parseInt(bgSnapshot?.executedShift || job.executedShift || job.shift || 1, 10),
+        tanggal_rencana: job.originalDate || job.original_date || job.tanggal_rencana || job.planDate || job.tanggal,
+        shift_rencana: (typeof getCompletedJobPlannedShift === 'function')
+          ? getCompletedJobPlannedShift(job)
+          : parseInt(job.originalShift || job.shift_rencana || job.shift || 1, 10),
+        executed_shift: parseInt(bgSnapshot?.executedShift || job.executedShift || 1, 10),
+        shift_eksekusi: parseInt(bgSnapshot?.executedShift || job.executedShift || 1, 10),
         waktu_rencana: job.waktu || job.waktu_rencana || '07:00 s/d 07:15',
         cluster: job.cluster || 'Selatan',
         lokasi: job.lokasi || 'Pit Area',
@@ -18451,7 +18507,7 @@
         opt_name: finalOpt,
         mp1: finalMp1,
         mp2: finalMp2,
-        tanggal_eksekusi: job.tanggalRealisasi || job.tanggal || getEffectiveTodayString(),
+        tanggal_eksekusi: job.tanggalRealisasi || job.tanggal_eksekusi || job.tanggal || getEffectiveTodayString(),
         jam_start: finalJamStart,
         jam_end: finalJamEnd,
         durasi: (typeof calculateDurationRaw === 'function') ? (calculateDurationRaw(finalJamStart, finalJamEnd) || job.durasi || null) : (job.durasi || null),
@@ -18806,8 +18862,14 @@
       const lok = String(job.lokasi || job.cluster || '').toLowerCase();
       const arm = String(job.armada || job.wtUnit || job.armada_unit || '').toUpperCase();
       if (isWt) {
-        // Washing ROM masuk kategori WSC (Washing Coal)
-        typeCode = (c === 'coal' || c === 'rom' || c.includes('coal') || c.includes('rom') || lok.includes('rom') || arm === 'WT2620') ? 'WSC' : 'WNC';
+        // Bedakan ID Washing Coal (WSC) dan Washing ROM (WSR) agar tidak bertabrakan saat no lambung sama
+        if (c === 'rom' || c.includes('rom') || lok.includes('rom')) {
+          typeCode = 'WSR';
+        } else if (c === 'coal' || c.includes('coal')) {
+          typeCode = 'WSC';
+        } else {
+          typeCode = 'WNC';
+        }
       } else {
         if (c === 'aircleaner' || c === 'clean air cleaner' || c === 'air cleaner') typeCode = 'CAC';
         else if (c === 'topup' || c === 'top up oil' || c === 'topup_oil') typeCode = 'TUO';
@@ -21182,6 +21244,9 @@
         };
         newJobs.push(job);
         state.watertruckState.jobs.push(job);
+        if (typeof registerJobToGlobalCache === 'function') {
+          registerJobToGlobalCache(job);
+        }
       });
 
       saveDatabaseSync();
@@ -21315,6 +21380,9 @@
         };
         newJobs.push(job);
         state.watertruckState.jobs.push(job);
+        if (typeof registerJobToGlobalCache === 'function') {
+          registerJobToGlobalCache(job);
+        }
       });
 
       saveDatabaseSync();
@@ -21489,6 +21557,9 @@
         };
         newJobs.push(job);
         state.watertruckState.jobs.push(job);
+        if (typeof registerJobToGlobalCache === 'function') {
+          registerJobToGlobalCache(job);
+        }
       });
 
       saveDatabaseSync();
@@ -21777,6 +21848,9 @@
             };
             newJobs.push(job);
             state.watertruckState.jobs.push(job);
+            if (typeof registerJobToGlobalCache === 'function') {
+              registerJobToGlobalCache(job);
+            }
           });
         } else if (mode === 's1_to_s2') {
           const existingS2 = new Set(
@@ -21842,6 +21916,9 @@
             };
             newJobs.push(job);
             state.watertruckState.jobs.push(job);
+            if (typeof registerJobToGlobalCache === 'function') {
+              registerJobToGlobalCache(job);
+            }
           });
         } else {
           // Mode Yesterday
@@ -21909,6 +21986,9 @@
             };
             newJobs.push(job);
             state.watertruckState.jobs.push(job);
+            if (typeof registerJobToGlobalCache === 'function') {
+              registerJobToGlobalCache(job);
+            }
           });
         }
 
@@ -23454,12 +23534,13 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         const cleanJobId = String(j.id || '');
         const jUnit = String(j.noLambung || '').trim().toUpperCase();
         const jDate = j.tanggal || '';
-        const jShift = String(j.shift || 1);
+        const jShiftNum = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (parseInt(j.shift, 10) || 1);
         const jCat = String(j.cat || '').toLowerCase().trim();
-        const isWashingCoalRom = (jCat === 'coal' || jCat === 'rom');
         const jRound = (typeof getJobWashingRound === 'function')
           ? getJobWashingRound(j)
           : (String(j.id || '').includes('-W2') ? 2 : (parseInt(j.washingRound || j.washing_round || 1, 10) || 1));
+        const jBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(cleanJobId) : cleanJobId.replace(/-\d{4}$/, '');
+        const jHasW2 = cleanJobId.includes('-W2') || jBaseId.includes('-W2') || jRound === 2;
 
         const inHistory = Array.isArray(state.jobHistory) && state.jobHistory.some(h => {
           if (!h) return false;
@@ -23469,18 +23550,31 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           const isRealDone = ['ACHIEVED', 'ACH', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR'].includes(hFinal) || Boolean(h.is_achieved);
           if (!isRealDone) return false;
 
+          // 1. KATEGORI HARUS SAMA: Kategori Coal tidak boleh disembunyikan oleh riwayat ROM, begitu pula sebaliknya!
+          const hCat = String(h.cat || '').toLowerCase().trim();
+          if (hCat && jCat && hCat !== jCat) return false;
+
+          // 2. SHIFT HARUS SAMA: Shift 1 tidak boleh disembunyikan oleh Shift 2 atau sebaliknya!
+          const hShiftNum = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(h) : (parseInt(h.shift_rencana || h.shift, 10) || 1);
+          if (hShiftNum !== jShiftNum) return false;
+
+          // 3. PUTARAN WASHING HARUS SAMA: Washing 1 tidak boleh disembunyikan oleh Washing 2 atau sebaliknya!
+          const hRound = (typeof getJobWashingRound === 'function')
+            ? getJobWashingRound(h)
+            : (parseInt(h.washing_round || h.washingRound || (String(h.id || '').includes('-W2') ? 2 : 1), 10) || 1);
+          if (hRound !== jRound) return false;
+
           const hId = String(h.id || '').trim();
           const hJobId = String(h.job_id || '').trim();
           const hBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(hJobId || hId) : (hJobId || hId).replace(/-\d{4}$/, '');
-          const jBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(cleanJobId) : cleanJobId.replace(/-\d{4}$/, '');
+          const hHasW2 = hId.includes('-W2') || hJobId.includes('-W2') || hBaseId.includes('-W2') || hRound === 2;
+          if (jHasW2 !== hHasW2) return false;
 
           // ATURAN KERAS PENGGUNA: ID masing-masing SCH adalah penentu mutlak (ID No 1)!
-          // Dilarang keras mencocokkan riwayat selesai selain menggunakan ID.
-          if (cleanJobId && (hJobId === cleanJobId || hId === cleanJobId || hBaseId === jBaseId)) {
-            if (isWashingCoalRom) {
-              const hRound = (typeof extractRoundFromJob === 'function') ? extractRoundFromJob(h) : (String(h.id || '').includes('-W2') ? 2 : 1);
-              return hRound === jRound;
-            }
+          if (cleanJobId && (hJobId === cleanJobId || hId === cleanJobId || (jBaseId && hBaseId && jBaseId === hBaseId))) {
+            return true;
+          }
+          if (jBaseId && hId.startsWith(jBaseId + '-') && /^-\d{4}$/.test(hId.slice(jBaseId.length))) {
             return true;
           }
           return false;
@@ -31933,8 +32027,11 @@ Keterangan : ${keterangan}`;
       if (cat === 'aircleaner' || cat.includes('aircleaner') || cat.includes('air_cleaner') || cat.includes('air cleaner')) return 'CAC';
       if (cat === 'topup' || cat.includes('topup') || cat.includes('top_up') || cat.includes('top up')) return 'TUO';
 
-      // Washing ROM & Coal masuk kategori WSC (Washing Coal)
-      if (cat === 'coal' || cat === 'rom' || (cat.includes('coal') && !cat.includes('non')) || cat.includes('rom') || lok.includes('rom') || arm === 'WT2620') {
+      // Washing ROM memiliki kode WSR, Washing Coal memiliki kode WSC
+      if (cat === 'rom' || cat.includes('rom') || lok.includes('rom') || idStr.includes('-WSR-')) {
+        return 'WSR';
+      }
+      if (cat === 'coal' || (cat.includes('coal') && !cat.includes('non')) || idStr.includes('-WSC-')) {
         return 'WSC';
       }
 
@@ -32663,12 +32760,34 @@ Keterangan : ${keterangan}`;
     }
     window.renderCompletedTimestampHtml = renderCompletedTimestampHtml;
 
-    function renderCompletedShiftHtml(job) {
-      const s = parseInt(job.shift || job.shift_rencana || 1, 10);
-      if (s === 2) {
-        return `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-[8px] font-medium bg-purple-50 text-purple-700 border border-purple-200/80 whitespace-nowrap shadow-2xs">Shift 2</span>`;
+    function getCompletedJobPlannedShift(job) {
+      if (!job) return 1;
+      // 1. Verifikasi waktu rencana (Golden Source penetapan jadwal SCH)
+      const waktuStr = String(job.waktu || job.waktu_rencana || '').trim();
+      if (waktuStr && typeof detectShiftFromTimeString === 'function') {
+        const sTime = detectShiftFromTimeString(waktuStr);
+        if (sTime) return sTime;
       }
-      return `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-[8px] font-medium bg-blue-50 text-blue-700 border border-blue-200/80 whitespace-nowrap shadow-2xs">Shift 1</span>`;
+      // 2. Format ID jadwal baku
+      const rawId = String(job.id || job.job_id || job.no_id || job.noId || '').trim();
+      const m = rawId.match(/^[A-Z]{2}-[A-Z0-9]+-\d{8}-([12])-/i);
+      if (m) return parseInt(m[1], 10);
+      const m2 = rawId.match(/[-_]S([12])[-_]/i);
+      if (m2) return parseInt(m2[1], 10);
+      // 3. Properti shift rencana / shift asli
+      if (job.originalShift) return parseInt(job.originalShift, 10);
+      if (job.shift_rencana) return parseInt(job.shift_rencana, 10);
+      if (job.shift) return parseInt(job.shift, 10);
+      return 1;
+    }
+    window.getCompletedJobPlannedShift = getCompletedJobPlannedShift;
+
+    function renderCompletedShiftHtml(job) {
+      const s = (typeof getCompletedJobPlannedShift === 'function')
+        ? getCompletedJobPlannedShift(job)
+        : parseInt(job.shift_rencana || job.shift || 1, 10);
+      // Sesuai instruksi pengguna: teks shift polosan tanpa background warna / badge
+      return `<span class="font-medium text-slate-700 text-[8.5px] whitespace-nowrap">Shift ${s}</span>`;
     }
     window.renderCompletedShiftHtml = renderCompletedShiftHtml;
 
@@ -32712,6 +32831,11 @@ Keterangan : ${keterangan}`;
       // Koreksi otomatis riwayat job eksekusi Sugeng Hariyanto (WT2644)
       if (typeof repairSpecificSugengHistoryJobs === 'function') {
         repairSpecificSugengHistoryJobs();
+      }
+
+      // Koreksi otomatis shift rencana pada riwayat pekerjaan
+      if (typeof repairHistoryPlannedShift === 'function') {
+        repairHistoryPlannedShift();
       }
 
       const isAdmin = (state.currentUser?.role === 'admin');
@@ -32831,7 +32955,8 @@ Keterangan : ${keterangan}`;
           const isWtHist = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(h) : false;
           const hRound = isWtHist ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(h) : (parseInt(h.washing_round || h.washingRound || 1, 10))) : 0;
           const hRoundSuffix = (isWtHist && hRound) ? `_W${hRound}` : '';
-          const hUnitKey = `${String(h.no_lambung || '').trim().toUpperCase()}_${h.tanggal_eksekusi || h.tanggal_rencana || ''}_${h.shift_rencana || 1}_${String(h.cat || '').toLowerCase().trim()}${hRoundSuffix}`;
+          const hPlannedShift = (typeof getCompletedJobPlannedShift === 'function') ? getCompletedJobPlannedShift(h) : parseInt(h.shift_rencana || h.shift || 1, 10);
+          const hUnitKey = `${String(h.no_lambung || '').trim().toUpperCase()}_${h.tanggal_eksekusi || h.tanggal_rencana || ''}_${hPlannedShift}_${String(h.cat || '').toLowerCase().trim()}${hRoundSuffix}`;
           let ex = existingJobMap.get(hid) || existingJobMap.get(String(h.no_id || '')) || existingJobMap.get(String(h.job_id || '')) || existingJobMap.get(hUnitKey);
 
           // PENGAMAN MUTLAK: Jika record Water Truck memiliki putaran cuci (round) berbeda, JANGAN campur aduk ex dengan h!
@@ -32843,7 +32968,8 @@ Keterangan : ${keterangan}`;
           }
 
           // PENGAMAN MUTLAK: Pencocokan hanya boleh jika shift-nya selaras (Shift 2 DILARANG menimpa Shift 1!)
-          const isShiftMatched = !ex || !h.shift_rencana || !ex.shift || String(ex.shift) === String(h.shift_rencana);
+          const exPlannedShift = ex ? ((typeof getCompletedJobPlannedShift === 'function') ? getCompletedJobPlannedShift(ex) : parseInt(ex.shift || ex.shift_rencana || 1, 10)) : null;
+          const isShiftMatched = !ex || !hPlannedShift || !exPlannedShift || String(exPlannedShift) === String(hPlannedShift);
 
           if (ex && isShiftMatched) {
             const isExAch = ['achieved', 'done', 'service', 'breakdown', 'parkir'].includes(String(ex.status_final || ex.status || '').toLowerCase());
@@ -32902,7 +33028,9 @@ Keterangan : ${keterangan}`;
               washing_round: hRound || 1,
               tanggal: h.tanggal_rencana,
               tanggalRealisasi: h.tanggal_eksekusi,
-              shift: h.shift_rencana,
+              shift: hPlannedShift,
+              shift_rencana: hPlannedShift,
+              originalShift: hPlannedShift,
               waktu: h.waktu_rencana,
               cluster: h.cluster,
               lokasi: h.lokasi,
@@ -32952,14 +33080,15 @@ Keterangan : ${keterangan}`;
         return getRank(b) - getRank(a);
       });
 
-      // Deduplikasi Mutlak: Pastikan setiap unit per shift, kategori, dan putaran cuci muncul tepat 1 baris
+      // Deduplikasi Mutlak: Pastikan setiap unit per shift rencana, kategori, dan putaran cuci muncul tepat 1 baris
       const seenCompletedKeys = new Set();
       allCompleted = allCompleted.filter(j => {
         const isWtJob = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(j) : false;
         const round = isWtJob ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(j) : (parseInt(j.washingRound || j.washing_round || 1, 10))) : 0;
         const roundSuffix = (isWtJob && round) ? `_W${round}` : '';
         const rawDateForDedup = j.tanggal || j.tanggal_rencana || j.planDate || j.tanggalRealisasi || '';
-        const uKey = `${String(j.noLambung || j.no_lambung || '').trim().toUpperCase()}_${rawDateForDedup}_${j.shift || 1}_${String(j.cat || '').toLowerCase().trim()}${roundSuffix}`;
+        const jPlannedShift = (typeof getCompletedJobPlannedShift === 'function') ? getCompletedJobPlannedShift(j) : parseInt(j.shift || j.shift_rencana || 1, 10);
+        const uKey = `${String(j.noLambung || j.no_lambung || '').trim().toUpperCase()}_${rawDateForDedup}_${jPlannedShift}_${String(j.cat || '').toLowerCase().trim()}${roundSuffix}`;
         if (seenCompletedKeys.has(uKey)) return false;
         seenCompletedKeys.add(uKey);
         return true;
@@ -33069,7 +33198,10 @@ Keterangan : ${keterangan}`;
       }
 
       if (shiftFilter !== 'ALL') {
-        filtered = filtered.filter(j => String(j.shift || j.shift_rencana || '') === String(shiftFilter));
+        filtered = filtered.filter(j => {
+          const s = (typeof getCompletedJobPlannedShift === 'function') ? getCompletedJobPlannedShift(j) : parseInt(j.shift || j.shift_rencana || 1, 10);
+          return String(s) === String(shiftFilter);
+        });
       }
       if (clusterFilter !== 'ALL') {
         filtered = filtered.filter(j => isClusterMatchFilter(j.cluster, clusterFilter));
@@ -33134,8 +33266,8 @@ Keterangan : ${keterangan}`;
               break;
             }
             case 'shift': {
-              const valA = parseInt(a.shift || a.shift_rencana || 1, 10);
-              const valB = parseInt(b.shift || b.shift_rencana || 1, 10);
+              const valA = (typeof getCompletedJobPlannedShift === 'function') ? getCompletedJobPlannedShift(a) : parseInt(a.shift || a.shift_rencana || 1, 10);
+              const valB = (typeof getCompletedJobPlannedShift === 'function') ? getCompletedJobPlannedShift(b) : parseInt(b.shift || b.shift_rencana || 1, 10);
               cmp = sortDir * (valA - valB);
               break;
             }
@@ -33888,6 +34020,8 @@ Keterangan : ${keterangan}`;
         const hId = String(h.id || h.job_id || '');
         if (jobId && (hId === jobId || hId.startsWith(jobId + '-'))) {
           if (isWt) {
+            const hCat = String(h.cat || '').toLowerCase().trim();
+            if (hCat && jobCat && hCat !== jobCat) return false;
             const hRound = (typeof getJobWashingRound === 'function')
               ? getJobWashingRound(h)
               : (parseInt(h.washingRound || h.washing_round || (hId.includes('-W2') ? 2 : 1), 10) || 1);
@@ -34003,6 +34137,8 @@ Keterangan : ${keterangan}`;
             const rId = String(r.id || r.job_id || r.no_id || '');
             if (jobId && (rId === jobId || rId.startsWith(jobId + '-'))) {
               if (isWt) {
+                const rCat = String(r.cat || '').toLowerCase().trim();
+                if (rCat && jobCat && rCat !== jobCat) return false;
                 const jRound = (typeof extractRoundFromJob === 'function') ? extractRoundFromJob(job) : (parseInt(job.washingRound || (jobId.includes('-W2') ? 2 : 1), 10) || 1);
                 const rRound = (typeof extractRoundFromJob === 'function') ? extractRoundFromJob(r) : (parseInt(r.washing_round || (rId.includes('-W2') ? 2 : 1), 10) || 1);
                 if (jRound !== rRound) return false;
@@ -36732,8 +36868,15 @@ Keterangan : ${keterangan}`;
         job.unitCondition = 'service';
         job.isPending = false;
         job.isLocked = true;
-        job.shift = execShift;
         job.executedShift = execShift;
+        job.shift_eksekusi = execShift;
+        if (isJobRequest) {
+          job.shift = execShift;
+        } else {
+          job.originalShift = job.originalShift || job.shift_rencana || (typeof getCompletedJobPlannedShift === 'function' ? getCompletedJobPlannedShift(job) : job.shift) || 1;
+          job.shift_rencana = job.originalShift;
+          job.shift = job.originalShift;
+        }
         job.ltUnit = isWashing ? '-' : ltValue;
         job.wtUnit = isWashing ? ltValue : '-';
         job.armada = ltValue;
@@ -36780,8 +36923,15 @@ Keterangan : ${keterangan}`;
         job.unitCondition = 'breakdown';
         job.isPending = false;
         job.isLocked = true;
-        job.shift = execShift;
         job.executedShift = execShift;
+        job.shift_eksekusi = execShift;
+        if (isJobRequest) {
+          job.shift = execShift;
+        } else {
+          job.originalShift = job.originalShift || job.shift_rencana || (typeof getCompletedJobPlannedShift === 'function' ? getCompletedJobPlannedShift(job) : job.shift) || 1;
+          job.shift_rencana = job.originalShift;
+          job.shift = job.originalShift;
+        }
         if (resolved.armada && resolved.armada !== '-') {
           job.armada = resolved.armada;
           job.armada_unit = resolved.armada;
@@ -36825,8 +36975,15 @@ Keterangan : ${keterangan}`;
         job.unitCondition = 'parkir';
         job.isPending = false;
         job.isLocked = true;
-        job.shift = execShift;
         job.executedShift = execShift;
+        job.shift_eksekusi = execShift;
+        if (isJobRequest) {
+          job.shift = execShift;
+        } else {
+          job.originalShift = job.originalShift || job.shift_rencana || (typeof getCompletedJobPlannedShift === 'function' ? getCompletedJobPlannedShift(job) : job.shift) || 1;
+          job.shift_rencana = job.originalShift;
+          job.shift = job.originalShift;
+        }
         if (resolved.armada && resolved.armada !== '-') {
           job.armada = resolved.armada;
           job.armada_unit = resolved.armada;
@@ -37005,8 +37162,15 @@ Keterangan : ${keterangan}`;
         const mp1Val = (document.getElementById('ach-mp1-name')?.value || document.getElementById('search-ach-mp1-name')?.value || '').trim() || job.mp1 || '-';
         const mp2Val = (document.getElementById('ach-mp2-name')?.value || document.getElementById('search-ach-mp2-name')?.value || '').trim() || job.mp2 || '-';
         const execShift = parseInt(document.getElementById('ach-execution-shift')?.value || job.shift || 1, 10);
-        job.shift = execShift;
         job.executedShift = execShift;
+        job.shift_eksekusi = execShift;
+        if (isJobRequest) {
+          job.shift = execShift;
+        } else {
+          job.originalShift = job.originalShift || job.shift_rencana || (typeof getCompletedJobPlannedShift === 'function' ? getCompletedJobPlannedShift(job) : job.shift) || 1;
+          job.shift_rencana = job.originalShift;
+          job.shift = job.originalShift;
+        }
         const ket = (isSchTopUp && unitCondition === 'normal')
           ? (topUpBuiltKeterangan || buildTopUpKeteranganText())
           : ((document.getElementById('ach-keterangan')?.value || '').trim() || (isJobRequest ? 'Selesai sesuai SOP' : 'Nihil / Lancar sesuai SOP'));
@@ -37256,9 +37420,13 @@ Keterangan : ${keterangan}`;
         let cleanBaseId = String(job.id || job.noId || job.no_id || '').trim();
         if (cleanBaseId.startsWith('JOB-') || cleanBaseId.startsWith('TMP-') || !cleanBaseId.includes('-')) {
           const isWt = isJobWaterTruck(job);
+          const planDate = job.tanggal_rencana || job.originalDate || job.planDate || job.tanggal;
+          const planShift = (typeof getCompletedJobPlannedShift === 'function')
+            ? getCompletedJobPlannedShift(job)
+            : parseInt(job.originalShift || job.shift_rencana || job.shift || 1, 10);
           cleanBaseId = (typeof generateScheduleJobId === 'function')
-            ? generateScheduleJobId(job, job.tanggalRealisasi || job.tanggal, qItem.executedShift || job.shift, job.washingRound)
-            : `${isWt ? 'WT-GRS-' : 'LT-GRS-'}${String(job.tanggal || getEffectiveTodayString()).replace(/-/g, '')}-${qItem.executedShift || job.shift || 1}-${String(job.noLambung || 'UNIT').trim().toUpperCase()}`;
+            ? generateScheduleJobId(job, planDate, planShift, job.washingRound)
+            : `${isWt ? 'WT-GRS-' : 'LT-GRS-'}${String(planDate || getEffectiveTodayString()).replace(/-/g, '')}-${planShift}-${String(job.noLambung || 'UNIT').trim().toUpperCase()}`;
         }
         let targetHistId = cleanBaseId;
         if (!/\-\d{4}$/.test(targetHistId)) {
@@ -37311,8 +37479,9 @@ Keterangan : ${keterangan}`;
           job.tanggal_eksekusi = qItem.executedDate;
         }
         if (qItem.executedShift) {
-          job.shift = qItem.executedShift;
           job.executedShift = qItem.executedShift;
+          job.shift_eksekusi = qItem.executedShift;
+          if (isJobRequest) job.shift = qItem.executedShift;
         }
         if (qItem.executedArmada) {
           const isWt = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(job) : false;
@@ -44100,17 +44269,42 @@ Keterangan : ${keterangan}`;
             });
           }
           if (unitNo && state.watertruckState?.jobs) {
+            const histIdStr = String(newHist.id || newHist.job_id || '').trim();
+            const histBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(histIdStr) : histIdStr.replace(/-\d{4}$/, '');
+            const histHasW2 = histIdStr.includes('-W2') || histBaseId.includes('-W2') || histRound === 2;
+
             state.watertruckState.jobs = state.watertruckState.jobs.filter(j => {
+              const jId = String(j.id || '');
+              const jBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(jId) : jId.replace(/-\d{4}$/, '');
+              const jRound = (typeof getJobWashingRound === 'function') ? getJobWashingRound(j) : (parseInt(j.washingRound || (jId.includes('-W2') ? 2 : 1), 10) || 1);
+              const jHasW2 = jId.includes('-W2') || jBaseId.includes('-W2') || jRound === 2;
+              const jS = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (parseInt(j.shift || 1, 10) || 1);
+              const jCat = String(j.cat || '').toLowerCase().trim();
+
+              // ATURAN KERAS PENGGUNA: ID & Shift & Putaran adalah penentu mutlak!
+              // Shift harus sama, Putaran (W1 vs W2) harus sama, Kategori harus sama!
+              if (jS !== shift || jRound !== histRound || jHasW2 !== histHasW2) return true;
+              if (histCat && jCat && histCat !== jCat) return true;
+
+              // 1. Pencocokan ID Langsung
+              if (jId && (jId === histIdStr || jId === histBaseId || (jBaseId && jBaseId === histBaseId))) {
+                if (window.globalDataCache?.jobs) window.globalDataCache.jobs.delete(jId);
+                return false;
+              }
+              if (jBaseId && histIdStr.startsWith(jBaseId + '-') && /^-\d{4}$/.test(histIdStr.slice(jBaseId.length))) {
+                if (window.globalDataCache?.jobs) window.globalDataCache.jobs.delete(jId);
+                return false;
+              }
+
+              // 2. Pencocokan fallback: No Lambung + Tanggal + Shift + Putaran + Kategori sama persis
               const jU = String(j.noLambung || '').toUpperCase().trim();
               const jD = String(j.tanggal || '').split('T')[0];
-              const jS = parseInt(j.shift || 1, 10);
-              const jCat = String(j.cat || '').toLowerCase().trim();
-              const jTypeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(j) : '';
-              const jRound = (typeof getJobWashingRound === 'function')
-                ? getJobWashingRound(j)
-                : (parseInt(j.washingRound || (String(j.id || '').includes('-W2') ? 2 : 1), 10) || 1);
-              const isSameCat = (histTypeCode && jTypeCode) ? (histTypeCode === jTypeCode) : (histCat === jCat);
-              return !(jU === unitNo && jD === rawDate && jS === shift && isSameCat && jRound === histRound);
+              const isMatch = (jU === unitNo && jD === rawDate);
+              if (isMatch) {
+                if (window.globalDataCache?.jobs) window.globalDataCache.jobs.delete(jId);
+                return false;
+              }
+              return true;
             });
           }
 
@@ -47551,7 +47745,8 @@ Keterangan : ${keterangan}`;
       if (/(?:^|[-_])W1(?:[-_]|$)/i.test(rawId)) return 1;
       const r = parseInt(job.washing_round !== undefined ? job.washing_round : job.washingRound, 10);
       if (!isNaN(r) && (r === 1 || r === 2)) return r;
-      const waktuStr = String(job.waktu || job.waktu_rencana || job.jamStart || job.jam_start || '');
+      // Jangan gunakan jamStart eksekusi aktual untuk menebak round karena jadwal W2 bisa saja dikerjakan pagi hari
+      const waktuStr = String(job.waktu || job.waktu_rencana || '');
       if (/(?:11:[2-5]\d|12:\d\d|13:\d\d|14:\d\d|23:[3-5]\d|00:\d\d|01:\d\d|02:\d\d)/.test(waktuStr)) return 2;
       return 1;
     }
@@ -47563,6 +47758,12 @@ Keterangan : ${keterangan}`;
       if (!rawId) return false;
       const baseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(rawId) : rawId.replace(/-\d{4}$/, '');
 
+      const isWt = (rawId.startsWith('WT') || job.targetType === 'WT' || ['coal', 'rom', 'non_coal', 'noncoal'].includes(String(job.cat || '').toLowerCase()));
+      const jShift = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(job) : (parseInt(job.shift || job.shift_rencana, 10) || 1);
+      const jRound = isWt ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(job) : extractRoundFromJob(job)) : 1;
+      const jCat = String(job.cat || '').toLowerCase().trim();
+      const jHasW2 = rawId.includes('-W2') || baseId.includes('-W2') || jRound === 2;
+
       return historyList.some(h => {
         if (!h) return false;
         const hFinal = String(h.status_final || h.status || '').toUpperCase().trim();
@@ -47573,8 +47774,23 @@ Keterangan : ${keterangan}`;
         const hJobId = String(h.job_id || '').trim();
         const hBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(hJobId || hId) : (hJobId || hId).replace(/-\d{4}$/, '');
 
-        // ATURAN KERAS DARI PENGGUNA: HANYA MENCOCOKKAN BERDASARKAN ID SAJA (ID NO 1)
-        // DILARANG KERAS MENCOCOKKAN BERDASARKAN NOMOR UNIT / TANGGAL / WAKTU REALISASI!
+        // ATURAN KERAS PENGGUNA: ID adalah penentu mutlak!
+        // DILARANG KERAS menganggap unit selesai jika Shift, Putaran Washing (W1 vs W2), atau Kategori berbeda!
+        if (isWt) {
+          const hCat = String(h.cat || '').toLowerCase().trim();
+          if (hCat && jCat && hCat !== jCat) return false;
+
+          const hShift = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(h) : (parseInt(h.shift_rencana || h.shift, 10) || 1);
+          if (hShift !== jShift) return false;
+
+          const hRound = (typeof getJobWashingRound === 'function') ? getJobWashingRound(h) : extractRoundFromJob(h);
+          if (hRound !== jRound) return false;
+
+          const hHasW2 = hId.includes('-W2') || hJobId.includes('-W2') || hBaseId.includes('-W2') || hRound === 2;
+          if (jHasW2 !== hHasW2) return false;
+        }
+
+        // Pencocokan ID Presisi:
         if (hId === rawId || hJobId === rawId) return true;
         if (baseId && hBaseId && baseId === hBaseId) return true;
         if (baseId && hId.startsWith(baseId + '-') && /^-\d{4}$/.test(hId.slice(baseId.length))) return true;
@@ -47626,17 +47842,8 @@ Keterangan : ${keterangan}`;
         if (typeof safeSaveTrimmedJobsToStorage === 'function') {
           safeSaveTrimmedJobsToStorage();
         }
-        if (deleteFromCloud && state.supabaseClient) {
-          const idsArr = Array.from(zombieIdsToDelete);
-          const ltIds = idsArr.filter(id => !id.startsWith('WT-'));
-          const wtIds = idsArr.filter(id => id.startsWith('WT-'));
-          try {
-            const delTasks = [];
-            if (ltIds.length > 0) delTasks.push(state.supabaseClient.from('jobs_lt').delete().in('id', ltIds));
-            if (wtIds.length > 0) delTasks.push(state.supabaseClient.from('jobs_wt').delete().in('id', wtIds));
-            if (delTasks.length > 0) await Promise.allSettled(delTasks);
-          } catch (e) { }
-        }
+        // PROTEKSI DATA: Dilarang keras melakukan DELETE massal otomatis ke Supabase dari rekonsiliasi background!
+        // Penghapusan cloud hanya boleh dilakukan saat job di-action secara langsung di UI.
       }
       return zombieIdsToDelete.size;
     }
@@ -49474,6 +49681,11 @@ Keterangan : ${keterangan}`;
         repairSpecificSugengHistoryJobs();
       }
 
+      // Koreksi otomatis shift rencana pada riwayat pekerjaan
+      if (typeof repairHistoryPlannedShift === 'function') {
+        repairHistoryPlannedShift();
+      }
+
       const compStartDateInput = document.getElementById('comp-filter-start-date');
       const compEndDateInput = document.getElementById('comp-filter-end-date');
       const startDate = compStartDateInput ? (compStartDateInput.value || '') : (state.completedFilterStartDate || '');
@@ -49546,7 +49758,8 @@ Keterangan : ${keterangan}`;
           const isWtHist = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(h) : false;
           const hRound = isWtHist ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(h) : (parseInt(h.washing_round || h.washingRound || 1, 10))) : 0;
           const hRoundSuffix = (isWtHist && hRound) ? `_W${hRound}` : '';
-          const hUnitKey = `${String(h.no_lambung || '').trim().toUpperCase()}_${h.tanggal_eksekusi || h.tanggal_rencana || ''}_${h.shift_rencana || 1}_${String(h.cat || '').toLowerCase().trim()}${hRoundSuffix}`;
+          const hPlannedShift = (typeof getCompletedJobPlannedShift === 'function') ? getCompletedJobPlannedShift(h) : parseInt(h.shift_rencana || h.shift || 1, 10);
+          const hUnitKey = `${String(h.no_lambung || '').trim().toUpperCase()}_${h.tanggal_eksekusi || h.tanggal_rencana || ''}_${hPlannedShift}_${String(h.cat || '').toLowerCase().trim()}${hRoundSuffix}`;
           let ex = existingJobMap.get(hid) || existingJobMap.get(String(h.no_id || '')) || existingJobMap.get(String(h.job_id || '')) || existingJobMap.get(hUnitKey);
 
           // PENGAMAN MUTLAK: Jika record Water Truck memiliki putaran cuci (round) berbeda, JANGAN campur aduk ex dengan h!
@@ -49557,7 +49770,8 @@ Keterangan : ${keterangan}`;
             }
           }
 
-          const isShiftMatched = !ex || !h.shift_rencana || !ex.shift || String(ex.shift) === String(h.shift_rencana);
+          const exPlannedShift = ex ? ((typeof getCompletedJobPlannedShift === 'function') ? getCompletedJobPlannedShift(ex) : parseInt(ex.shift || ex.shift_rencana || 1, 10)) : null;
+          const isShiftMatched = !ex || !hPlannedShift || !exPlannedShift || String(exPlannedShift) === String(hPlannedShift);
 
           if (ex && isShiftMatched) {
             const isExAch = ['achieved', 'done', 'service', 'breakdown', 'parkir'].includes(String(ex.status_final || ex.status || '').toLowerCase());
@@ -49602,7 +49816,9 @@ Keterangan : ${keterangan}`;
               washing_round: hRound || 1,
               tanggal: h.tanggal_rencana,
               tanggalRealisasi: h.tanggal_eksekusi,
-              shift: h.shift_rencana,
+              shift: hPlannedShift,
+              shift_rencana: hPlannedShift,
+              originalShift: hPlannedShift,
               waktu: h.waktu_rencana,
               cluster: h.cluster,
               lokasi: h.lokasi,
@@ -49655,7 +49871,9 @@ Keterangan : ${keterangan}`;
         const isWtJob = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(j) : false;
         const round = isWtJob ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(j) : (parseInt(j.washingRound || j.washing_round || 1, 10))) : 0;
         const roundSuffix = (isWtJob && round) ? `_W${round}` : '';
-        const uKey = `${String(j.noLambung || j.no_lambung || '').trim().toUpperCase()}_${j.tanggalRealisasi || j.tanggal || ''}_${j.shift || 1}_${String(j.cat || '').toLowerCase().trim()}${roundSuffix}`;
+        const rawDateForDedup = j.tanggal || j.tanggal_rencana || j.planDate || j.tanggalRealisasi || '';
+        const jPlannedShift = (typeof getCompletedJobPlannedShift === 'function') ? getCompletedJobPlannedShift(j) : parseInt(j.shift || j.shift_rencana || 1, 10);
+        const uKey = `${String(j.noLambung || j.no_lambung || '').trim().toUpperCase()}_${rawDateForDedup}_${jPlannedShift}_${String(j.cat || '').toLowerCase().trim()}${roundSuffix}`;
         if (seenCompletedKeys.has(uKey)) return false;
         seenCompletedKeys.add(uKey);
         return true;
@@ -49731,7 +49949,10 @@ Keterangan : ${keterangan}`;
       }
 
       if (shiftFilter !== 'ALL') {
-        filtered = filtered.filter(j => String(j.shift) === String(shiftFilter));
+        filtered = filtered.filter(j => {
+          const s = (typeof getCompletedJobPlannedShift === 'function') ? getCompletedJobPlannedShift(j) : parseInt(j.shift || j.shift_rencana || 1, 10);
+          return String(s) === String(shiftFilter);
+        });
       }
       if (clusterFilter !== 'ALL') {
         filtered = filtered.filter(j => isClusterMatchFilter(j.cluster, clusterFilter));
