@@ -4643,6 +4643,7 @@
                   <option value="Selatan">KGU Selatan</option>
                   <option value="Tengah">KGU Tengah</option>
                   <option value="Utara">KGU Utara</option>
+                  <option value="ROM">ROM Area</option>
                 </optgroup>
                 <optgroup label="Cluster Tambahan">
                   <option value="Outpit Selatan">Outpit Selatan</option>
@@ -5870,6 +5871,7 @@
                   <option value="Selatan">KGU Selatan</option>
                   <option value="Tengah">KGU Tengah</option>
                   <option value="Utara">KGU Utara</option>
+                  <option value="ROM">ROM Area</option>
                 </optgroup>
                 <optgroup label="Cluster Tambahan">
                   <option value="Outpit Selatan">Outpit Selatan</option>
@@ -5889,7 +5891,6 @@
                 <option value="aircleaner">Air Cleaner</option>
                 <option value="topup">Top Up Oil</option>
                 <option value="coal">Washing Coal</option>
-                <option value="rom">Washing ROM</option>
                 <option value="non_coal">Washing Non-Coal</option>
                 <option value="unscheduled">Job Request</option>
               </select>
@@ -9937,7 +9938,7 @@
 
               <div class="flex items-center justify-between pt-1">
                 <span id="detail-modal-save-feedback"
-                  class="hidden text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                  class="hidden !hidden text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg items-center gap-1">
                   <svg class="w-3 h-3 text-emerald-600 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
                   </svg>
@@ -12828,19 +12829,25 @@
     }
     window.getCurrentUserAssignedUnitAndCluster = getCurrentUserAssignedUnitAndCluster;
 
-    function isClusterMatchFilter(itemCluster, filterVal) {
+    function isClusterMatchFilter(itemCluster, filterVal, itemLokasi = '') {
       if (!filterVal || filterVal === 'ALL') return true;
       const itemC = (itemCluster || '').trim().toLowerCase();
+      const itemL = (itemLokasi || '').trim().toLowerCase();
       const filterC = filterVal.trim().toLowerCase();
       const parentC = getParentCluster(itemCluster).toLowerCase();
 
-      // Jika memfilter cluster utama (Selatan, Tengah, Utara, ROM)
-      if (['selatan', 'tengah', 'utara', 'rom'].includes(filterC)) {
-        return parentC === filterC || itemC === filterC;
+      // Khusus ROM / ROM Area
+      if (filterC === 'rom' || filterC.includes('rom')) {
+        return parentC === 'rom' || itemC.includes('rom') || itemL.includes('rom');
+      }
+
+      // Jika memfilter cluster utama (Selatan, Tengah, Utara)
+      if (['selatan', 'tengah', 'utara'].includes(filterC)) {
+        return parentC === filterC || itemC === filterC || (itemC.includes(filterC) && !itemC.includes('outpit') && !itemC.includes('hrm'));
       }
 
       // Jika memfilter sub-cluster spesifik (misal 'Outpit Selatan', 'HRM Utara', 'Workshop')
-      return itemC === filterC || itemC.includes(filterC);
+      return itemC === filterC || itemC.includes(filterC) || itemL.includes(filterC);
     }
     window.isClusterMatchFilter = isClusterMatchFilter;
 
@@ -18889,10 +18896,8 @@
       const lok = String(job.lokasi || job.cluster || '').toLowerCase();
       const arm = String(job.armada || job.wtUnit || job.armada_unit || '').toUpperCase();
       if (isWt) {
-        // Bedakan ID Washing Coal (WSC) dan Washing ROM (WSR) agar tidak bertabrakan saat no lambung sama
-        if (c === 'rom' || c.includes('rom') || lok.includes('rom')) {
-          typeCode = 'WSR';
-        } else if (c === 'coal' || c.includes('coal')) {
+        // Unit Coal dan Unit ROM keduanya resmi menggunakan kode ID WSC sesuai instruksi pengguna
+        if (c === 'rom' || c.includes('rom') || lok.includes('rom') || c === 'coal' || c.includes('coal')) {
           typeCode = 'WSC';
         } else {
           typeCode = 'WNC';
@@ -27266,7 +27271,6 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           { id: 'aircleaner', label: 'Air Cleaner' },
           { id: 'topup', label: 'Top Up Oil' },
           { id: 'coal', label: 'Washing Coal' },
-          { id: 'rom', label: 'Washing ROM' },
           { id: 'non_coal', label: 'Washing Non-Coal' },
           { id: 'unscheduled', label: 'Job Request' }
         ];
@@ -27274,7 +27278,6 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         categories = [
           { id: 'all', label: 'Semua Riwayat' },
           { id: 'coal', label: 'Washing Coal' },
-          { id: 'rom', label: 'Washing ROM' },
           { id: 'non_coal', label: 'Washing Non-Coal' },
           { id: 'unscheduled', label: 'Job Request' }
         ];
@@ -29852,13 +29855,9 @@ Keterangan : ${keterangan}`;
           waktuSchEl.textContent = newWaktu ? `${newWaktu} (${dateStr})` : '-';
         }
 
-        // Tampilkan badge feedback inline di sebelah tombol
+        // Sesuai instruksi pengguna: Keterangan ganda di sebelah kiri dihilangkan, cukup tombol di kanan ("Berhasil Diterapkan")
         if (feedback) {
-          feedback.innerHTML = '<svg class="w-3 h-3 text-emerald-600 inline shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg><span>Lokasi & Waktu Diterapkan!</span>';
-          feedback.classList.remove('hidden');
-          setTimeout(() => {
-            if (feedback) feedback.classList.add('hidden');
-          }, 4000);
+          feedback.classList.add('hidden');
         }
 
         // 3. Sinkronkan waktu & lokasi penugasan khusus job ini ke tabel fisik jobs_lt / jobs_wt di Supabase
@@ -32126,9 +32125,9 @@ Keterangan : ${keterangan}`;
           return 'non_coal';
         }
 
-        // 5b. Washing ROM (HANYA jika Water Truck dan memang cuci area ROM / armada WT2620)
+        // 5b. Washing ROM (HANYA jika memang kategori ROM / WSR / lokasi ROM, dan bukan washing coal)
         const isRomWashing = cat === 'rom' || cat === 'wsr' || rawId.includes('-WSR-') || rawId.includes('-ROM-') ||
-          armada === 'WT2620' || jobType === 'WSR' || jobType.includes('ROM') ||
+          jobType === 'WSR' || jobType.includes('ROM') ||
           (lok.includes('rom') && !rawId.includes('-WSC-') && cat !== 'coal');
         if (isRomWashing) {
           return 'rom';
@@ -32208,7 +32207,6 @@ Keterangan : ${keterangan}`;
         case 'digger':
           return 'GRS';
         case 'rom':
-          return 'WSR';
         case 'coal':
           return 'WSC';
         case 'non_coal':
@@ -32426,6 +32424,21 @@ Keterangan : ${keterangan}`;
         curId = curId.replace(/^PWT-/i, 'WT-');
       }
 
+      // ======================================================================
+      // ATURAN KERAS PRIORITAS ID NO 1 DARI DATABASE (SINGLE SOURCE OF TRUTH)
+      // DILARANG KERAS MEREKONSTRUKSI ATAU MENGUBAH TYPECODE (MISAL WSC JADI WSR).
+      // JIKA curId SUDAH LENGKAP DENGAN JAM (REALISASI/SELESAI), GUNAKAN LANGSUNG!
+      // ======================================================================
+      const isCompleteActionedId = /^(?:LT|WT)-[A-Z0-9]+-\d{8}-\d-(?:REQ-)?[A-Z0-9]+(?:-W\d)?-\d{2,4}$/i.test(curId);
+      if (isCompleteActionedId) {
+        if (j && typeof j === 'object') {
+          j.job_id = curId;
+          j.noId = curId;
+          j.no_id = curId;
+        }
+        return curId;
+      }
+
       const isWt = isJobWaterTruck(j);
       const prefix = isWt ? 'WT' : 'LT';
       const tglStr = j.tanggal || j.tanggal_rencana || j.tanggalRealisasi || j.tanggal_eksekusi || '';
@@ -32451,7 +32464,6 @@ Keterangan : ${keterangan}`;
       // ----------------------------------------------------------------------
       const isReq = isJobAnOrderRequest(j);
       if (isReq) {
-        // Cek apakah curId sudah memiliki akhiran sequence order repeat (misal -02, -03)
         let seqPart = '';
         const mSeq = curId.match(/-REQ-\d-[A-Z0-9]+-(\d{2})(?:-\d{2,4})?$/i);
         if (mSeq) {
@@ -32463,7 +32475,6 @@ Keterangan : ${keterangan}`;
         const baseReqId = `${prefix}-${datePart}-REQ-${shiftPart}-${cleanLambung}${seqPart}`;
 
         if (isActioned || hasRealizationTime) {
-          // Format waktu hhmm (contoh 1440) sesuai instruksi pengguna
           const mTime = curId.match(new RegExp(`^${prefix}-${datePart}-REQ-${shiftPart}-${cleanLambung}${seqPart}-(\\d{2})[.:]?(\\d{2})$`, 'i')) || curId.match(/-(\d{4})$/);
           let timePart = '';
           if (mTime) {
@@ -32491,7 +32502,16 @@ Keterangan : ${keterangan}`;
       // ----------------------------------------------------------------------
       // CABANG 2: KHUSUS SCHEDULE REGULER (Lubetruck & Water Truck)
       // ----------------------------------------------------------------------
-      const typeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(j) : (isWt ? 'WSC' : 'GRS');
+      // PRIORITAS NO ID ASLI: Jika curId sudah memiliki kode tipe resmi (WSC, WSR, WNC, GRS, DIG, TUO, CAC),
+      // PERTAHANKAN KODE ASLI TERSEBUT! DILARANG KERAS MENGGANTINYA!
+      let typeCode = '';
+      const mExistingType = curId.match(/^(?:LT|WT)-([A-Z0-9]+)-\d{8}-\d/i);
+      if (mExistingType && mExistingType[1] !== 'REQ') {
+        typeCode = mExistingType[1].toUpperCase();
+      } else {
+        typeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(j) : (isWt ? 'WSC' : 'GRS');
+      }
+
       let isRound2 = false;
       if (isWt) {
         const curUpper = curId.toUpperCase();
@@ -32508,7 +32528,6 @@ Keterangan : ${keterangan}`;
       const baseNoId = `${prefix}-${typeCode}-${datePart}-${shiftPart}-${cleanLambung}${roundPart}`;
 
       if (isActioned || hasRealizationTime) {
-        // Jika curId sudah berformat lengkap dengan jam menit (mendukung opsional -W2)
         const mFull = curId.match(new RegExp(`^${prefix}-[A-Z0-9]+-\\d{8}-\\d-${cleanLambung}(?:-W2)?-(\\d{2})[.:]?(\\d{2})$`, 'i'));
         let timePart = '';
         if (mFull) {
@@ -33327,6 +33346,10 @@ Keterangan : ${keterangan}`;
       if (cat && cat !== 'all') {
         filtered = filtered.filter(j => {
           const normCat = (typeof getJobNormalizedCategory === 'function') ? getJobNormalizedCategory(j) : (j.cat || '');
+          // Penggabungan Washing ROM ke Washing Coal di Main Filter sesuai instruksi pengguna
+          if (cat === 'coal') {
+            return normCat === 'coal' || normCat === 'rom';
+          }
           return normCat === cat;
         });
       }
@@ -33338,7 +33361,7 @@ Keterangan : ${keterangan}`;
         });
       }
       if (clusterFilter !== 'ALL') {
-        filtered = filtered.filter(j => isClusterMatchFilter(j.cluster, clusterFilter));
+        filtered = filtered.filter(j => isClusterMatchFilter(j.cluster, clusterFilter, j.lokasi));
       }
 
       if (searchVal) {
