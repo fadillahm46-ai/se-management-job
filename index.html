@@ -6575,7 +6575,7 @@
             </div>
             <div class="flex flex-wrap items-center gap-2 text-xs">
               <!-- Dropdown Filter Type Unit Clean Air Cleaner -->
-              <select id="filter-aircleaner-type" onchange="renderAirCleanerMonitorTable()"
+              <select id="filter-aircleaner-type" onchange="handleAirCleanerSearchInput()"
                 class="px-3 py-1.5 rounded-xl border border-slate-200 font-bold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-xs cursor-pointer transition shadow-2xs"
                 title="Filter Berdasarkan Type Unit">
                 <option value="ALL">All Type Unit</option>
@@ -6588,7 +6588,7 @@
                       d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                   </svg>
                 </span>
-                <input type="text" id="search-aircleaner-input" oninput="renderAirCleanerMonitorTable()"
+                <input type="text" id="search-aircleaner-input" oninput="handleAirCleanerSearchInput()"
                   placeholder="Cari nomor unit / tipe..."
                   class="w-full pl-8 pr-8 py-1.5 rounded-xl border border-slate-200 text-xs font-medium bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 transition">
                 <button type="button" onclick="clearSearchInput('search-aircleaner-input')"
@@ -9408,19 +9408,66 @@
               class="text-[9.5px] font-medium text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded-md border border-teal-200/60">Upload</span>
           </label>
 
-          <input type="file" id="replace-ac-photo-file" accept="image/*" capture="environment"
+          <!-- Input File: Desktop / Umum -->
+          <input type="file" id="replace-ac-photo-file" accept="image/*"
+            onchange="handleReplaceAcPhotoSelect(event)" class="hidden">
+          <!-- Input File: Khusus HP Foto Langsung (Kamera Belakang) -->
+          <input type="file" id="replace-ac-photo-camera" accept="image/*" capture="environment"
+            onchange="handleReplaceAcPhotoSelect(event)" class="hidden">
+          <!-- Input File: Khusus HP Ambil dari Galeri (Tanpa capture) -->
+          <input type="file" id="replace-ac-photo-gallery" accept="image/*"
             onchange="handleReplaceAcPhotoSelect(event)" class="hidden">
 
           <!-- Tombol Ambil / Pilih Foto -->
-          <div id="replace-ac-upload-box" onclick="document.getElementById('replace-ac-photo-file').click()"
-            class="border-2 border-dashed border-teal-300 hover:border-teal-500 bg-teal-50/50 hover:bg-teal-50 rounded-2xl p-3.5 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1 text-slate-600">
-            <div class="w-9 h-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-              </svg>
+          <div id="replace-ac-upload-box">
+            <!-- TAMPILAN KHUSUS MODE HP: 2 OPSI (FOTO LANGSUNG / KAMERA vs DARI GALERI) -->
+            <div class="grid grid-cols-2 gap-2.5 sm:hidden">
+              <!-- Opsi 1: Foto Langsung (Kamera HP) -->
+              <button type="button" onclick="document.getElementById('replace-ac-photo-camera').click()"
+                class="border-2 border-dashed border-teal-300 hover:border-teal-500 bg-teal-50/70 active:bg-teal-100/90 rounded-2xl p-3 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 text-slate-700 shadow-2xs">
+                <div class="w-10 h-10 rounded-2xl bg-teal-600 text-white flex items-center justify-center shadow-xs">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+                    </path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                </div>
+                <div class="text-center">
+                  <span class="text-xs font-black text-teal-900 block leading-tight">Foto Langsung</span>
+                  <span class="text-[9.5px] text-teal-700/90 font-semibold block mt-0.5">Buka Kamera HP</span>
+                </div>
+              </button>
+
+              <!-- Opsi 2: Mengambil dari Galeri -->
+              <button type="button" onclick="document.getElementById('replace-ac-photo-gallery').click()"
+                class="border-2 border-dashed border-teal-300 hover:border-teal-500 bg-teal-50/70 active:bg-teal-100/90 rounded-2xl p-3 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 text-slate-700 shadow-2xs">
+                <div class="w-10 h-10 rounded-2xl bg-teal-700 text-white flex items-center justify-center shadow-xs">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                    </path>
+                  </svg>
+                </div>
+                <div class="text-center">
+                  <span class="text-xs font-black text-teal-900 block leading-tight">Dari Galeri</span>
+                  <span class="text-[9.5px] text-teal-700/90 font-semibold block mt-0.5">Pilih Berkas Foto</span>
+                </div>
+              </button>
             </div>
-            <span class="text-xs font-bold text-teal-900">Ambil Foto / Pilih Berkas Eviden</span>
-            <span class="text-[10px] text-slate-400">Format JPG/PNG</span>
+
+            <!-- TAMPILAN KHUSUS MODE DESKTOP: 1 KOTAK UPLOAD ELEGAN -->
+            <div onclick="document.getElementById('replace-ac-photo-file').click()"
+              class="hidden sm:flex border-2 border-dashed border-teal-300 hover:border-teal-500 bg-teal-50/50 hover:bg-teal-50 rounded-2xl p-3.5 text-center cursor-pointer transition flex-col items-center justify-center gap-1 text-slate-600">
+              <div class="w-9 h-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+              </div>
+              <span class="text-xs font-bold text-teal-900">Ambil Foto / Pilih Berkas Eviden</span>
+              <span class="text-[10px] text-slate-400">Format JPG/PNG</span>
+            </div>
           </div>
 
           <!-- Area Preview Foto yang Dipilih -->
@@ -11612,8 +11659,9 @@
           renderMasterArmadaTable();
         } else if (input.id === 'search-mp-kontak-input' && typeof handleMpKontakSearchChange === 'function') {
           handleMpKontakSearchChange();
-        } else if (input.id === 'search-aircleaner-input' && typeof renderAirCleanerMonitorTable === 'function') {
-          renderAirCleanerMonitorTable();
+        } else if (input.id === 'search-aircleaner-input') {
+          if (typeof handleAirCleanerSearchInput === 'function') handleAirCleanerSearchInput();
+          else if (typeof renderAirCleanerMonitorTable === 'function') renderAirCleanerMonitorTable();
         } else if (input.id === 'add-job-unit-search' && typeof filterAddJobUnitOptions === 'function') {
           filterAddJobUnitOptions();
         } else if (input.id === 'add-job-armada-search') {
@@ -39368,6 +39416,10 @@ Keterangan : ${keterangan}`;
       currentReplaceAcPhotoBase64 = '';
       const fileInp = document.getElementById('replace-ac-photo-file');
       if (fileInp) fileInp.value = '';
+      const camInp = document.getElementById('replace-ac-photo-camera');
+      if (camInp) camInp.value = '';
+      const galInp = document.getElementById('replace-ac-photo-gallery');
+      if (galInp) galInp.value = '';
       const previewBox = document.getElementById('replace-ac-preview-container');
       const uploadBox = document.getElementById('replace-ac-upload-box');
       const previewImg = document.getElementById('replace-ac-preview-img');
@@ -40798,7 +40850,28 @@ Keterangan : ${keterangan}`;
     }
     window.renderCleanCell = renderCleanCell;
 
+    function handleAirCleanerSearchInput() {
+      if (state.airCleanerCategoryTab === 'replace') {
+        if (typeof renderAirCleanerReplacementsTable === 'function') {
+          renderAirCleanerReplacementsTable();
+        }
+      } else {
+        if (typeof renderAirCleanerMonitorTable === 'function') {
+          renderAirCleanerMonitorTable();
+        }
+      }
+    }
+    window.handleAirCleanerSearchInput = handleAirCleanerSearchInput;
+
     function renderAirCleanerMonitorTable() {
+      // Jika saat ini subtab yang aktif adalah 'replace', alihkan proses filter dan render ke tabel replace
+      if (state.airCleanerCategoryTab === 'replace') {
+        if (typeof renderAirCleanerReplacementsTable === 'function') {
+          renderAirCleanerReplacementsTable();
+        }
+        return;
+      }
+
       const tbody = document.getElementById('aircleaner-monitor-tbody');
       if (!tbody) return;
 
