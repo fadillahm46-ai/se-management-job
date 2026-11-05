@@ -7846,31 +7846,14 @@
                   class="text-rose-500">*</span></label>
             </div>
 
-            <!-- Notice: Armada Wajib Dipilih Terlebih Dahulu Sebelum Foto Bisa Diambil -->
+            <!-- Notice Ringkas: Opsi ambil foto akan aktif ketika armada telah dipilih -->
             <div id="ach-photo-armada-required-notice"
-              class="p-3 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-amber-900 flex items-start space-x-2.5 text-xs shadow-2xs">
-              <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="font-bold text-amber-950 text-xs">Pilih Armada Terlebih Dahulu</div>
-                <div class="text-[11px] text-amber-800/90 font-medium mt-0.5 leading-snug">
-                  Opsi ambil foto eviden akan aktif otomatis setelah Anda memilih Armada di atas, untuk generate watermark nama armada &amp; timestamp pada foto.
-                </div>
-              </div>
-            </div>
-
-            <!-- Badge Status Armada Aktif untuk Watermark Foto -->
-            <div id="ach-photo-armada-active-badge"
-              class="hidden flex items-center justify-between px-3 py-1.5 bg-emerald-50 rounded-xl border border-emerald-200 text-[11px] shadow-2xs">
-              <span class="font-bold text-emerald-900 flex items-center gap-1.5 truncate">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-                <span class="truncate">Armada: <strong id="ach-photo-watermark-armada-name" class="font-black font-mono text-emerald-800 uppercase">-</strong></span>
-              </span>
-              <span class="text-[9.5px] text-emerald-700 font-bold shrink-0 bg-white px-2 py-0.5 rounded-md border border-emerald-200">Watermark Footer Putih</span>
+              class="p-2.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-amber-900 text-xs font-semibold flex items-center gap-2 shadow-2xs">
+              <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span>Opsi ambil foto akan aktif ketika armada telah dipilih</span>
             </div>
 
             <!-- Input File Hidden -->
@@ -35376,25 +35359,22 @@ Keterangan : ${keterangan}`;
             const ctx = canvas.getContext('2d');
 
             if (watermarkOptions && watermarkOptions.enabled) {
-              // Ukuran Footer Putih Proporsional (Tinggi ~48px - 62px)
-              const footerHeight = Math.max(46, Math.min(68, Math.round(width * 0.055)));
+              // Ukuran Footer Putih Proporsional (Tinggi ditambah 10% sesuai instruksi user, panjang normal, tanpa garis hijau)
+              const baseFooterHeight = Math.max(48, Math.min(70, Math.round(width * 0.055)));
+              const footerHeight = Math.round(baseFooterHeight * 1.10);
               canvas.width = width;
               canvas.height = height + footerHeight;
 
               // 1. Gambar foto asli di bagian atas kanvas (0, 0, width, height)
               ctx.drawImage(img, 0, 0, width, height);
 
-              // 2. Gambar background footer putih solid di bagian bawah
+              // 2. Gambar background footer putih bersih solid (panjang normal, tanpa garis hijau emerald)
               const footerY = height;
               ctx.fillStyle = '#FFFFFF';
               ctx.fillRect(0, footerY, width, footerHeight);
 
-              // 3. Garis aksen pemisah atas footer (Emerald-600 tebal 2.5px)
-              ctx.fillStyle = '#059669';
-              ctx.fillRect(0, footerY, width, 2.5);
-
-              // 4. Pengaturan Teks Footer
-              let fontSize = Math.max(13, Math.min(19, Math.round(footerHeight * 0.36)));
+              // 3. Pengaturan Teks Footer di Tengah Vertikal
+              let fontSize = Math.max(13, Math.min(20, Math.round(footerHeight * 0.35)));
               const textBaselineY = footerY + Math.round(footerHeight / 2) + Math.round(fontSize * 0.35);
               const paddingX = Math.max(12, Math.round(width * 0.02));
 
@@ -35443,7 +35423,7 @@ Keterangan : ${keterangan}`;
       const hasArmada = Boolean(armadaRaw && armadaRaw !== '-' && !armadaRaw.startsWith('--'));
       if (!hasArmada) {
         if (typeof showToast === 'function') {
-          showToast('Silakan pilih Armada terlebih dahulu sebelum mengambil foto eviden!', 'warning');
+          showToast('Opsi ambil foto akan aktif ketika armada telah dipilih!', 'warning');
         }
         const searchInp = document.getElementById('search-ach-lt-custom');
         if (searchInp) {
@@ -35457,7 +35437,7 @@ Keterangan : ${keterangan}`;
     }
     window.triggerAchPhotoCamera = triggerAchPhotoCamera;
 
-    // Aturan Baru: Eviden foto tidak akan muncul dlu sebelum memilih armada (untuk generate watermark)
+    // Aturan Baru: Eviden foto tidak akan muncul dulu sebelum memilih armada (untuk generate watermark)
     function updateAchPhotoVisibility() {
       const container = document.getElementById('ach-photo-container');
       if (!container) return;
@@ -35483,27 +35463,19 @@ Keterangan : ${keterangan}`;
       const uploadBox = document.getElementById('ach-photo-upload-box');
       const statusMsg = document.getElementById('ach-photo-status-msg');
       const photoSlots = document.getElementById('ach-photo-slots');
-      const badgeInfo = document.getElementById('ach-photo-armada-active-badge');
-      const badgeArmadaName = document.getElementById('ach-photo-watermark-armada-name');
 
       if (!hasArmada) {
-        // Armada belum terisi -> SEMBUNYIKAN pengisian eviden/foto
+        // Armada belum terisi -> SEMBUNYIKAN pengisian eviden/foto & tampilkan notice
         if (noticeBox) noticeBox.classList.remove('hidden');
         if (uploadBox) uploadBox.classList.add('hidden');
         if (statusMsg) statusMsg.classList.add('hidden');
         if (photoSlots) photoSlots.classList.add('hidden');
-        if (badgeInfo) badgeInfo.classList.add('hidden');
       } else {
-        // Armada sudah terisi -> MUNCULKAN pengisian eviden/foto
+        // Armada sudah terisi -> MUNCULKAN pengisian eviden/foto & sembunyikan notice
         if (noticeBox) noticeBox.classList.add('hidden');
         if (uploadBox) uploadBox.classList.remove('hidden');
         if (statusMsg) statusMsg.classList.remove('hidden');
         if (photoSlots) photoSlots.classList.remove('hidden');
-        if (badgeInfo) {
-          badgeInfo.classList.remove('hidden');
-          const cleanName = (armadaSearchVal || armadaSelectVal).replace(/\s*\(.*?\)/g, '').trim().toUpperCase();
-          if (badgeArmadaName) badgeArmadaName.textContent = cleanName || activeArmada;
-        }
       }
     }
     window.updateAchPhotoVisibility = updateAchPhotoVisibility;
