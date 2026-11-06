@@ -29072,84 +29072,41 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             // B. PARSING FORMAT FLAT VERTIKAL (CADANGAN/LEGACY)
             // ========================================================
             for (let r = headerRowIdx + 1; r < rawRows.length; r++) {
-        const row = rawRows[r] || [];
-        const rawCn = String(row[colCn] || '').trim().toUpperCase();
-        if (!rawCn) continue;
+              const row = rawRows[r] || [];
+              const nik = (colNik !== -1 && row[colNik]) ? String(row[colNik]).trim() : '';
+              const nama = (colNama !== -1 && row[colNama]) ? String(row[colNama]).trim() : '';
+              if (!nik && !nama) continue;
 
-        // Parse tanggal
-        let parsedDate = '';
-        const rawDate = row[colDate];
-        if (typeof rawDate === 'number' && rawDate > 30000) {
-          const jsDate = new Date(Math.round((rawDate - 25569) * 86400 * 1000));
-          parsedDate = jsDate.toISOString().split('T')[0];
-        } else if (rawDate) {
-          const strDate = String(rawDate).trim();
-          if (/^\d{4}-\d{2}-\d{2}$/.test(strDate)) {
-            parsedDate = strDate;
-          } else if (/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/.test(strDate)) {
-            const parts = strDate.split(/[\/\-]/);
-            const d = String(parts[0]).padStart(2, '0');
-            const m = String(parts[1]).padStart(2, '0');
-            const y = parts[2];
-            parsedDate = `${y}-${m}-${d}`;
-          } else {
-            parsedDate = strDate;
-          }
-        }
-        if (!parsedDate) {
-          parsedDate = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
-        }
+              let unit = (colUnit !== -1 && row[colUnit]) ? String(row[colUnit]).trim().toUpperCase() : '-';
+              let cluster = (colCluster !== -1 && row[colCluster]) ? String(row[colCluster]).trim() : 'Utara';
+              let jenis = defaultJenis;
+              if (colJenis !== -1 && row[colJenis]) {
+                const jRaw = String(row[colJenis]).trim().toUpperCase();
+                if (jRaw.includes('OPERATOR') || jRaw.includes('OPT')) jenis = 'OPT';
+                else if (jRaw.includes('MECHANIC') || jRaw.includes('MEKANIK') || jRaw.includes('MECH')) jenis = 'MEKANIK';
+                else if (jRaw.includes('WASHING') || jRaw.includes('WASH')) jenis = 'WASHINGMAN';
+              }
 
-        // Parse waktu start & end DULU agar jam tersedia untuk penentuan shift tambang
-        let startStr = '';
-        const rawStart = row[colStart];
-        if (typeof rawStart === 'number' && rawStart >= 0 && rawStart < 1) {
-          const totalMinutes = Math.round(rawStart * 24 * 60);
-          const h = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
-          const m = String(totalMinutes % 60).padStart(2, '0');
-          startStr = `${h}:${m}`;
-        } else if (rawStart) {
-          startStr = String(rawStart).trim().substring(0, 5);
-        }
+              let tgl = (colTgl !== -1 && row[colTgl]) ? String(row[colTgl]).trim() : '';
+              let shift = 1;
+              const rawShift = (colShift !== -1 && row[colShift]) ? String(row[colShift]).trim() : '';
+              if (rawShift.includes('2') || rawShift.toUpperCase().includes('NIGHT')) shift = 2;
 
-        let endStr = '';
-        const rawEnd = row[colEnd];
-        if (typeof rawEnd === 'number' && rawEnd >= 0 && rawEnd < 1) {
-          const totalMinutes = Math.round(rawEnd * 24 * 60);
-          const h = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
-          const m = String(totalMinutes % 60).padStart(2, '0');
-          endStr = `${h}:${m}`;
-        } else if (rawEnd) {
-          endStr = String(rawEnd).trim().substring(0, 5);
-        }
+              let kodeShift = (colKode !== -1 && row[colKode]) ? String(row[colKode]).trim().toUpperCase() : (shift === 2 ? 'N' : 'D');
 
-        // Parse Shift: DAY -> Shift 1, NIGHT / NIGH -> Shift 2
-        // Didukung fallback jam operasional tambang (05:00-16:59 -> Shift 1, 17:00-04:59 -> Shift 2)
-        const rawShift = (colShift !== -1 && row[colShift] !== undefined) ? String(row[colShift]).trim() : '';
-        const shiftNum = determineShiftFromRawAndStartTime(rawShift, startStr);
-
-        const hmVal = (colHm !== -1 && row[colHm] !== undefined) ? String(row[colHm]).trim() : '';
-        const wtVal = (colWt !== -1 && row[colWt] !== undefined) ? String(row[colWt]).trim().toUpperCase() : '';
-        const remarkVal = (colRemark !== -1 && row[colRemark] !== undefined) ? String(row[colRemark]).trim().toLowerCase() : 'daily';
-
-        // Hitung estimasi washing round berdasarkan jam mulai dan shift yang benar:
-        // - Shift 1: < 11:00 -> W1, >= 11:00 s/d 16:59 -> W2
-        // - Shift 2: 17:00 s/d 22:59 -> W1, >= 23:00 atau subuh 00:00 s/d 04:59 -> W2
-        const estRound = determineWashingRoundFromStartTime(startStr, shiftNum);
-
-        parsedData.push({
+              parsedData.push({
                 id: `ROSTER-${Date.now()}-${r}`,
                 jenis,
-                nrp: nrp || `NRP-${r}`,
-                nik: nrp || `NRP-${r}`,
+                nrp: nik || `NRP-${r}`,
+                nik: nik || `NRP-${r}`,
                 nama: nama || `Pegawai ${r}`,
                 unit,
-                cluster: 'Utara',
-                unitEfektif,
+                cluster,
+                unitEfektif: unit,
                 tanggal: tgl,
                 shift,
                 kodeShift,
-                isSpare
+                isSpare: false
               });
             }
           }
@@ -53725,23 +53682,34 @@ window.formatWashDateDDMMYYYY = formatWashDateDDMMYYYY;
 function determineShiftFromRawAndStartTime(rawShiftStr, startTimeStr) {
   const raw = String(rawShiftStr || '').trim().toUpperCase();
 
-  // 1. Evaluasi dari teks kolom SHIFT Excel web ceklist (DAY vs NIGHT)
+  let h = -1;
+  let m = 0;
+  if (startTimeStr) {
+    const parts = String(startTimeStr).trim().split(':');
+    if (parts.length >= 1) {
+      h = parseInt(parts[0], 10);
+      if (isNaN(h)) h = -1;
+      if (parts.length >= 2) m = parseInt(parts[1], 10) || 0;
+    }
+  }
+
+  // 1. Evaluasi eksplisit dari teks kolom SHIFT Excel web ceklist (DAY vs NIGHT)
   if (raw.includes('NIGHT') || raw.includes('NIGH') || raw.includes('MALAM') || raw === '2' || raw.includes('SHIFT 2') || raw.includes('S2')) {
     return 2;
   }
   if (raw.includes('DAY') || raw.includes('SIANG') || raw === '1' || raw.includes('SHIFT 1') || raw.includes('S1')) {
+    // Koreksi cerdas jam operasional tambang: jika tertulis DAY tapi jam kerjanya adalah subuh (00:00 s/d 04:59) atau malam (>= 17:00),
+    // di dunia tambang pekerjaan subuh/malam mutlak adalah Shift 2 (Night).
+    if (h >= 0 && (h < 5 || h >= 17)) {
+      return 2;
+    }
     return 1;
   }
 
   // 2. Fallback cerdas jam operasional tambang jika kolom shift kosong/ambigu:
-  // - Shift 1 (Day): Jam 05:00 s/d 16:59
-  // - Shift 2 (Night): Jam 17:00 s/d 04:59 (termasuk subuh 00:00 s/d 04:59)
-  if (startTimeStr) {
-    let h = 0;
-    const parts = String(startTimeStr).trim().split(':');
-    if (parts.length >= 1) {
-      h = parseInt(parts[0], 10) || 0;
-    }
+  // - Shift 1 (Day: 05:00 s/d 16:59): h >= 5 && h < 17
+  // - Shift 2 (Night: 17:00 s/d 04:59): h >= 17 || h < 5 (termasuk jam subuh 00:00 s/d 04:59)
+  if (h >= 0) {
     if (h >= 5 && h < 17) return 1;
     return 2;
   }
@@ -53750,26 +53718,40 @@ function determineShiftFromRawAndStartTime(rawShiftStr, startTimeStr) {
 }
 window.determineShiftFromRawAndStartTime = determineShiftFromRawAndStartTime;
 
-function determineWashingRoundFromStartTime(startTimeStr, shift = 1) {
+function determineWashingRoundFromStartTime(startTimeStr, shift = null) {
   if (!startTimeStr) return 1;
+
   let h = 0;
+  let m = 0;
   const parts = String(startTimeStr).trim().split(':');
   if (parts.length >= 1) {
-    h = parseInt(parts[0], 10) || 0;
+    h = parseInt(parts[0], 10);
+    if (isNaN(h)) h = 0;
+    if (parts.length >= 2) m = parseInt(parts[1], 10) || 0;
   }
-  const s = parseInt(shift, 10) || 1;
+  const totalMinutes = h * 60 + m;
+
+  // Jika shift belum ditentukan, tentukan otomatis dari jam
+  let s = parseInt(shift, 10);
+  if (isNaN(s) || (s !== 1 && s !== 2)) {
+    s = (totalMinutes >= 300 && totalMinutes < 1020) ? 1 : 2;
+  }
 
   if (s === 1) {
     // Shift 1 (Day: 05:00 s/d 16:59):
-    // - Washing 1 (W1): di bawah jam 11:00 (< 11:00)
-    // - Washing 2 (W2): di atas jam 11:00 sampai akhir shift 1 (>= 11:00 s/d < 17:00)
-    if (h >= 11) return 2;
+    // - Washing 1 (W1): Jam mulai di bawah jam 11:00 (< 11:00 atau < 660 menit)
+    // - Washing 2 (W2): Jam mulai di atas jam 11:00 sampai akhir Shift 1 (>= 11:00 s/d < 17:00 atau >= 660 menit)
+    if (totalMinutes >= 660) {
+      return 2;
+    }
     return 1;
   } else {
     // Shift 2 (Night: 17:00 s/d 04:59):
-    // - Washing 1 (W1): di bawah jam 23:00 (>= 17:00 s/d < 23:00)
-    // - Washing 2 (W2): di atas jam 23:00 sampai akhir shift 2 jam 04:59 (>= 23:00 s/d 23:59 DAN 00:00 s/d 04:59 subuh)
-    if (h >= 23 || h < 5) return 2;
+    // - Washing 1 (W1): Jam mulai di bawah jam 23:00 (>= 17:00 s/d < 23:00 atau 1020 s/d < 1380 menit)
+    // - Washing 2 (W2): Jam mulai di atas jam 23:00 sampai akhir Shift 2 jam 04:59 (>= 23:00 s/d 23:59 atau subuh 00:00 s/d 04:59)
+    if (totalMinutes >= 1380 || totalMinutes < 300) {
+      return 2;
+    }
     return 1;
   }
 }
@@ -54267,11 +54249,7 @@ function handleWashChecklistExcelUpload(event) {
           parsedDate = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
         }
 
-        let shiftNum = 1;
-        const rawShift = String(row[colShift] || '').trim();
-        if (rawShift.includes('2')) shiftNum = 2;
-        else if (rawShift.includes('1')) shiftNum = 1;
-
+        // Parse waktu start & end DAHULU agar jam mulai tersedia untuk penentuan Shift & Washing Round
         let startStr = '';
         const rawStart = row[colStart];
         if (typeof rawStart === 'number' && rawStart >= 0 && rawStart < 1) {
@@ -54294,10 +54272,20 @@ function handleWashChecklistExcelUpload(event) {
           endStr = String(rawEnd).trim().substring(0, 5);
         }
 
+        // Tentukan Shift: DAY -> Shift 1, NIGHT -> Shift 2
+        // Didukung aturan jam tambang:
+        // - Shift 1 (Day: 05:00 s/d 16:59)
+        // - Shift 2 (Night: 17:00 s/d 04:59, termasuk subuh 00:00 s/d 04:59)
+        const rawShift = (colShift !== -1 && row[colShift] !== undefined) ? String(row[colShift]).trim() : '';
+        const shiftNum = determineShiftFromRawAndStartTime(rawShift, startStr);
+
         const hmVal = (colHm !== -1 && row[colHm] !== undefined) ? String(row[colHm]).trim() : '';
         const wtVal = (colWt !== -1 && row[colWt] !== undefined) ? String(row[colWt]).trim().toUpperCase() : '';
         const remarkVal = (colRemark !== -1 && row[colRemark] !== undefined) ? String(row[colRemark]).trim().toLowerCase() : 'daily';
 
+        // Tentukan Washing Round:
+        // - Shift 1: W1 jika < 11:00, W2 jika >= 11:00 s/d 16:59
+        // - Shift 2: W1 jika >= 17:00 s/d < 23:00, W2 jika >= 23:00 atau subuh 00:00 s/d 04:59
         const estRound = determineWashingRoundFromStartTime(startStr, shiftNum);
 
         parsedData.push({
@@ -54398,14 +54386,17 @@ function renderWashChecklistPreviewTable() {
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-slate-50/80 transition text-slate-800 text-xs';
 
-    const isReq = r.remark.includes('req');
+    const effectiveShift = determineShiftFromRawAndStartTime(r.shift, r.start_time);
+    const isReq = String(r.remark || '').toLowerCase().includes('req');
+    const estRound = isReq ? 0 : determineWashingRoundFromStartTime(r.start_time, effectiveShift);
+
     const remarkBadge = isReq
       ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">Request</span>'
       : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">Daily / Schedule</span>';
 
     const roundBadge = isReq
       ? '<span class="text-slate-400 text-[11px]">-</span>'
-      : `<span class="px-2 py-0.5 rounded text-[10.5px] font-bold ${r.estRound === 2 ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}">W${r.estRound}</span>`;
+      : `<span class="px-2 py-0.5 rounded text-[10.5px] font-bold ${estRound === 2 ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}">W${estRound}</span>`;
 
     tr.innerHTML = `
       <td class="py-2.5 px-3 text-center">
@@ -54416,7 +54407,7 @@ function renderWashChecklistPreviewTable() {
       <td class="py-2.5 px-3.5 font-mono text-xs font-semibold">${formatWashDateDDMMYYYY(r.date)}</td>
       <td class="py-2.5 px-3.5 font-mono text-xs font-bold text-slate-900">${r.cn}</td>
       <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600">${r.hm || '-'}</td>
-      <td class="py-2.5 px-3 text-center font-bold text-xs ${r.shift === 2 ? 'text-purple-700' : 'text-blue-700'}">Shift ${r.shift}</td>
+      <td class="py-2.5 px-3 text-center font-bold text-xs ${effectiveShift === 2 ? 'text-purple-700' : 'text-blue-700'}">Shift ${effectiveShift}</td>
       <td class="py-2.5 px-3.5 font-mono text-xs font-semibold text-slate-800">${r.wt || '-'}</td>
       <td class="py-2.5 px-3.5">${remarkBadge}</td>
       <td class="py-2.5 px-3 font-mono text-xs text-slate-700">${r.start_time || '-'}</td>
@@ -54557,12 +54548,12 @@ async function saveWashChecklistToSupabase() {
       }
     }
 
-    // 2. Siapkan baris insert
+    // 2. Siapkan baris insert dengan validasi shift yang akurat
     const rowsToInsert = list.map(r => ({
       date: r.date,
       cn: r.cn,
       hm: r.hm || null,
-      shift: r.shift || 1,
+      shift: determineShiftFromRawAndStartTime(r.shift, r.start_time),
       wt: r.wt || null,
       remark: r.remark || 'daily',
       start_time: r.start_time || null,
@@ -55378,7 +55369,8 @@ function renderWashChecklistDataTable() {
     if (endDate && rowDate > endDate) return false;
 
     if (shiftFilter !== 'ALL') {
-      if (String(r.shift || 1) !== shiftFilter) return false;
+      const rowShift = determineShiftFromRawAndStartTime(r.shift, r.start_time);
+      if (String(rowShift) !== shiftFilter) return false;
     }
 
     if (remarkFilter !== 'ALL') {
@@ -55438,8 +55430,9 @@ function renderWashChecklistDataTable() {
 
   pageItems.forEach((r, idx) => {
     const isSelected = state.selectedWashChecklistDataIds?.has(String(r.id));
+    const effectiveShift = determineShiftFromRawAndStartTime(r.shift, r.start_time);
     const isReq = String(r.remark || '').toLowerCase().includes('req');
-    const estRound = isReq ? 0 : determineWashingRoundFromStartTime(r.start_time, r.shift);
+    const estRound = isReq ? 0 : determineWashingRoundFromStartTime(r.start_time, effectiveShift);
 
     const remarkBadge = isReq
       ? '<span class="px-1.5 py-0.5 rounded text-[8px] font-medium bg-purple-50 text-purple-700 border border-purple-200">Request</span>'
@@ -55460,7 +55453,7 @@ function renderWashChecklistDataTable() {
       <td class="py-2 px-2 font-mono text-[8.5px] font-medium text-slate-800 whitespace-nowrap">${formatWashDateDDMMYYYY(r.date)}</td>
       <td class="py-2 px-2 font-mono text-[8.5px] font-medium text-slate-900 whitespace-nowrap">${r.cn || '-'}</td>
       <td class="py-2 px-2 font-mono text-[8.5px] font-medium text-slate-600 whitespace-nowrap">${r.hm || '-'}</td>
-      <td class="py-2 px-1.5 text-center font-medium text-[8px] md:text-[8.5px] ${r.shift === 2 ? 'text-purple-700' : 'text-blue-700'} whitespace-nowrap">Shift ${r.shift}</td>
+      <td class="py-2 px-1.5 text-center font-medium text-[8px] md:text-[8.5px] ${effectiveShift === 2 ? 'text-purple-700' : 'text-blue-700'} whitespace-nowrap">Shift ${effectiveShift}</td>
       <td class="py-2 px-2 font-mono text-[8.5px] font-medium text-slate-700 whitespace-nowrap">${r.wt || '-'}</td>
       <td class="py-2 px-2 whitespace-nowrap">${remarkBadge}</td>
       <td class="py-2 px-2 font-mono text-[8px] md:text-[8.5px] text-slate-600 whitespace-nowrap">${r.start_time || '-'}</td>
@@ -55579,18 +55572,21 @@ function exportWashingChecklistsToExcel() {
   }
 
   triggerHaptic(8);
-  const rows = list.map((r, i) => ({
-    'NO': i + 1,
-    'DATE': r.date || '',
-    'CN': r.cn || '',
-    'HM': r.hm || '',
-    'SHIFT': r.shift || 1,
-    'WT': r.wt || '',
-    'REMARK': r.remark || '',
-    'START': r.start_time || '',
-    'END': r.end_time || '',
-    'ROUND': determineWashingRoundFromStartTime(r.start_time, r.shift)
-  }));
+  const rows = list.map((r, i) => {
+    const s = determineShiftFromRawAndStartTime(r.shift, r.start_time);
+    return {
+      'NO': i + 1,
+      'DATE': r.date || '',
+      'CN': r.cn || '',
+      'HM': r.hm || '',
+      'SHIFT': s,
+      'WT': r.wt || '',
+      'REMARK': r.remark || '',
+      'START': r.start_time || '',
+      'END': r.end_time || '',
+      'ROUND': determineWashingRoundFromStartTime(r.start_time, s)
+    };
+  });
 
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
