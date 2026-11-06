@@ -22977,6 +22977,12 @@
             diff = stA.localeCompare(stB);
             break;
           }
+          case 'cleaning': {
+            const countA = (typeof getAirCleanerUnitStatusInfo === 'function') ? (getAirCleanerUnitStatusInfo(a.noLambung)?.cleansCount || 0) : 0;
+            const countB = (typeof getAirCleanerUnitStatusInfo === 'function') ? (getAirCleanerUnitStatusInfo(b.noLambung)?.cleansCount || 0) : 0;
+            diff = countA - countB;
+            break;
+          }
           default:
             diff = 0;
         }
@@ -23676,6 +23682,32 @@
       }
 
 
+      // Helper visual kolom Cleaning pada Schedule Air Cleaner
+      function getAirCleanerCleaningBadgeHtml(noLambung) {
+        if (!noLambung) return '<span class="text-slate-300 font-mono text-[9px]">-</span>';
+        const info = (typeof getAirCleanerUnitStatusInfo === 'function')
+          ? getAirCleanerUnitStatusInfo(noLambung)
+          : null;
+
+        const count = info ? (info.cleansCount !== undefined ? info.cleansCount : 0) : 0;
+        const status = info ? (info.quotaStatus || 'safe') : 'safe';
+
+        // Warna angka: kalau masih jauh hijau, mendekati kuning, saatnya ganti warna merah
+        let colorClass = 'text-emerald-600';
+        let titleText = `Sudah ${count}x penyemprotan (Kondisi Baik - Masih Jauh)`;
+
+        if (status === 'danger') {
+          colorClass = 'text-rose-600';
+          titleText = `Sudah ${count}x penyemprotan (Saatnya Ganti Filter!)`;
+        } else if (status === 'warning') {
+          colorClass = 'text-amber-500';
+          titleText = `Sudah ${count}x penyemprotan (Mendekati Masa Ganti)`;
+        }
+
+        return `<span class="font-black font-mono text-[11px] md:text-[12px] ${colorClass} cursor-pointer hover:underline" onclick="event.stopPropagation(); if (typeof openAirCleanerCardDetailModal === 'function') openAirCleanerCardDetailModal('${escapeHtml(noLambung)}');" title="${titleText}">${count}x</span>`;
+      }
+      window.getAirCleanerCleaningBadgeHtml = getAirCleanerCleaningBadgeHtml;
+
       // Kategori Non-Small Track (Big Digger, Air Cleaner, Top Up Oil) - SISTEM HARI (TANPA FILTER SHIFT)
       if (!isSmallTrack) {
         // Sistem hari: abaikan filter shift! Seluruh unit aktif pada hari tersebut ditampilkan dalam satu antrean harian.
@@ -23728,6 +23760,8 @@
         clusters.forEach(clusterName => {
           let clusterJobs = jobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
           sortSchedJobsList(clusterJobs, state.ltSchedSort);
+          const showCleaningCol = (isAdmin && activeCat === 'aircleaner');
+          const emptyColspan = (state.isLtSchedSelectMode ? 1 : 0) + (showCleaningCol ? 7 : 6);
           const clusterSection = document.createElement('div');
           clusterSection.className = 'border-b border-slate-100 last:border-b-0';
 
@@ -23755,37 +23789,45 @@
             <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold select-none">
               <tr>
                 ${state.isLtSchedSelectMode ? `<th class="py-1.5 px-1.5 ${isMp ? 'w-[8%] md:w-[4%]' : 'w-[5%] md:w-[4%]'} text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'LT')" title="Pilih Semua di Cluster Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
-                <th onclick="sortLtSchedBy('waktu')" class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[15%] md:w-[15%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
+                <th onclick="sortLtSchedBy('waktu')" class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : (showCleaningCol ? 'w-[14%] md:w-[13%]' : 'w-[15%] md:w-[15%]'))} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
                   <div class="flex items-center space-x-0.5">
                     <span>WAKTU</span>
                     ${renderSchedSortIcon('waktu', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('unit')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[22%] md:w-[22%]' : 'w-[22%] md:w-[22%]') : (!isAdmin ? 'w-[26%] md:w-[20%]' : 'w-[24%] md:w-[23%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
+                <th onclick="sortLtSchedBy('unit')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[22%] md:w-[22%]' : 'w-[22%] md:w-[22%]') : (!isAdmin ? 'w-[26%] md:w-[20%]' : (showCleaningCol ? 'w-[22%] md:w-[20%]' : 'w-[24%] md:w-[23%]'))} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
                   <div class="flex items-center space-x-0.5">
                     <span>${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
                     ${renderSchedSortIcon('unit', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[28%] md:w-[24%]' : 'w-[24%] md:w-[24%]') : (!isAdmin ? 'w-[32%] md:w-[23%]' : 'w-[27%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Lokasi Pit">
+                <th onclick="sortLtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[28%] md:w-[24%]' : 'w-[24%] md:w-[24%]') : (!isAdmin ? 'w-[32%] md:w-[23%]' : (showCleaningCol ? 'w-[20%] md:w-[20%]' : 'w-[27%] md:w-[25%]'))} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Lokasi Pit">
                   <div class="flex items-center space-x-0.5">
                     <span>LOKASI</span>
                     ${renderSchedSortIcon('lokasi', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('armada')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[18%] md:w-[16%]' : 'w-[16%] md:w-[16%]') : (!isAdmin ? 'w-[18%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada LT">
+                ${showCleaningCol ? `
+                  <th onclick="sortLtSchedBy('cleaning')" class="py-1.5 px-1 md:px-1.5 w-[14%] md:w-[12%] text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Jumlah Cleaning">
+                    <div class="flex items-center justify-center space-x-0.5">
+                      <span>CLEANING</span>
+                      ${renderSchedSortIcon('cleaning', 'LT')}
+                    </div>
+                  </th>
+                ` : ''}
+                <th onclick="sortLtSchedBy('armada')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[18%] md:w-[16%]' : 'w-[16%] md:w-[16%]') : (!isAdmin ? 'w-[18%] md:w-[15%]' : (showCleaningCol ? 'w-[15%] md:w-[15%]' : 'w-[17%] md:w-[17%]'))} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada LT">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>ARMADA</span>
                     ${renderSchedSortIcon('armada', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('personil')" class="hidden md:table-cell py-1.5 px-2 ${state.isLtSchedSelectMode ? 'md:w-[20%]' : (!isAdmin ? 'md:w-[18%]' : 'md:w-[20%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
+                <th onclick="sortLtSchedBy('personil')" class="hidden md:table-cell py-1.5 px-2 ${state.isLtSchedSelectMode ? 'md:w-[20%]' : (!isAdmin ? 'md:w-[18%]' : (showCleaningCol ? 'md:w-[18%]' : 'md:w-[20%]'))} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
                   <div class="flex items-center space-x-0.5">
                     <span>PERSONIL</span>
                     ${renderSchedSortIcon('personil', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('status')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[10%]' : (!isAdmin ? 'w-[24%] md:w-[12%]' : 'w-[17%] md:w-[12%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi">
+                <th onclick="sortLtSchedBy('status')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[10%]' : (!isAdmin ? 'w-[24%] md:w-[12%]' : (showCleaningCol ? 'w-[15%] md:w-[10%]' : 'w-[17%] md:w-[12%]'))} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>AKSI</span>
                     ${renderSchedSortIcon('status', 'LT')}
@@ -23798,7 +23840,7 @@
 
           const tbody = table.querySelector('tbody');
           if (clusterJobs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${state.isLtSchedSelectMode ? 7 : 6}" class="py-5 text-center text-slate-400 italic text-[11px]">
+            tbody.innerHTML = `<tr><td colspan="${emptyColspan}" class="py-5 text-center text-slate-400 italic text-[11px]">
               <div>${(activeCat === "digger" && (typeof parseDateString === "function" ? parseDateString(selectedDate).getDay() : new Date(selectedDate).getDay()) === 5) ? "Hari Jumat adalah Hari Libur Operasi Big Digger. Seluruh unit Big Digger libur operasional hari ini." : (isAdmin ? `Belum ada unit yang dijadwalkan untuk tanggal ${selectedDate}.` : `Tidak ada jadwal unit untuk tanggal ${selectedDate}`)}</div>
 ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahkan jadwal.</span>` : ''}
             </td></tr>`;
@@ -23882,6 +23924,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                 <td class="py-1 px-1 md:py-1.5 md:px-1.5 break-words">
                   <span class="text-[9px] md:text-[9.5px] text-slate-950 font-bold uppercase leading-tight block">${job.lokasi || '-'}</span>
                 </td>
+                ${showCleaningCol ? `
+                  <td class="py-1 px-1 md:py-1.5 md:px-1.5 text-center align-middle whitespace-nowrap">
+                    ${getAirCleanerCleaningBadgeHtml(job.noLambung)}
+                  </td>
+                ` : ''}
                 <td class="py-1 px-1 md:px-1.5 text-center font-mono font-bold text-emerald-800 text-[9px] align-middle">
                   ${renderArmadaOnlyCell(job, false)}
                 </td>
