@@ -1947,6 +1947,14 @@
               </svg>
               <span>Clean Air Cleaner</span>
             </button>
+            <button onclick="navigateTab('wash-checklist-monitor')" id="nav-btn-mp-wash-checklist-monitor"
+              class="w-full flex items-center justify-start space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer hidden text-left">
+              <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              <span class="text-left font-semibold">Monitoring Ceklist</span>
+            </button>
           </div>
 
           <!-- Menu Monitoring Khusus Admin -->
@@ -1966,6 +1974,14 @@
                   d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
               <span>Clean Air Cleaner</span>
+            </button>
+            <button onclick="navigateTab('wash-checklist-monitor')" id="nav-btn-admin-wash-checklist-monitor"
+              class="w-full flex items-center justify-start space-x-3 px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer text-left">
+              <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              <span class="text-left font-semibold">Monitoring Ceklist</span>
             </button>
           </div>
         </div>
@@ -4785,10 +4801,10 @@
                       </div>
                     </th>
                     <th onclick="sortPicaBy('typeJob')"
-                      class="py-2.5 px-1.5 w-[16%] md:w-[6%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition whitespace-nowrap"
+                      class="py-2.5 px-1.5 w-[16%] md:w-[6%] text-left align-middle cursor-pointer group hover:bg-slate-100 transition"
                       title="Urutkan berdasarkan Type Job (Klik 3x untuk reset)">
-                      <div class="flex items-center justify-start space-x-1 whitespace-nowrap">
-                        <span class="whitespace-nowrap">TYPE JOB</span>
+                      <div class="flex items-center justify-start space-x-0.5 leading-tight">
+                        <span class="leading-tight">TYPE<br class="md:hidden">JOB</span>
                         <span id="pica-sort-icon-typeJob"
                           class="inline-block ml-0.5 text-slate-300 group-hover:text-slate-600 font-mono text-[9px] leading-none transition">&#8597;</span>
                       </div>
@@ -6406,7 +6422,22 @@
                 </h4>
               </div>
             </a>
-          </div>
+          
+            <!-- Monitoring Ceklist Washing (Akses Admin Mode HP) -->
+            <div onclick="navigateTab('wash-checklist-monitor')"
+              class="bg-white hover:bg-slate-50 border border-slate-200/80 active:scale-[0.98] transition rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer space-y-3">
+              <div
+                class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100/80 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-xs font-black text-slate-900 leading-tight">Monitoring Ceklist</h4>
+              </div>
+            </div>
+</div>
 
           <!-- Grid Menu Kartu 2 Kolom untuk Manpower (MP: Oilman & Washingman) -->
           <div id="more-full-mp-grid" class="hidden grid grid-cols-2 gap-3">
@@ -6502,6 +6533,21 @@
                 </h4>
               </div>
             </a>
+
+            <!-- Monitoring Ceklist Washing (Khusus Washingman - Bersebelahan dengan Link Ceklis) -->
+            <div id="more-mp-full-wash-checklist-monitor" onclick="navigateTab('wash-checklist-monitor')"
+              class="bg-white hover:bg-slate-50 border border-slate-200/80 active:scale-[0.98] transition rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer space-y-3">
+              <div
+                class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100/80 shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+              </div>
+              <div>
+                <h4 class="text-xs font-black text-slate-900 leading-tight">Monitoring Ceklist</h4>
+              </div>
+            </div>
           </div>
 
           <!-- SECTION: LAINNYA (SESUAI FOTO PENGGUNA) -->
@@ -6790,6 +6836,608 @@
             </div>
           </div>
         </div>
+
+        <!-- ======================== TAB 15: MONITORING CEKLIST WASHING ======================== -->
+        <div id="tab-wash-checklist-monitor" class="tab-pane hidden space-y-3">
+          <!-- Header Card & Sub-tab Switcher (Khusus Admin) -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="p-1.5 rounded-lg bg-emerald-100 text-emerald-700">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                </span>
+                <h3 class="text-sm font-extrabold text-slate-900 tracking-tight">Monitoring Ceklist</h3>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5 font-medium">update setiap jam 04:00 atau 16:00</p>
+            </div>
+
+            <!-- Subtab Bar Khusus Admin (Monitoring vs Upload Ceklist) -->
+            <div id="wash-check-admin-subtabs" class="flex items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200/70">
+              <button type="button" id="wash-check-subtab-monitor-btn" onclick="switchWashChecklistSubtab('monitor')"
+                class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-white text-emerald-800 shadow-2xs">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span>Monitoring</span>
+              </button>
+              <button type="button" id="wash-check-subtab-upload-btn" onclick="switchWashChecklistSubtab('upload')"
+                class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Upload &amp; Data Ceklist</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ==================== SUB-PANE 1: MONITORING KOMPARASI ==================== -->
+          <div id="wash-check-pane-monitor" class="space-y-3">
+            <!-- Filter & Controls -->
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div class="flex flex-wrap items-center gap-2">
+                <!-- Rentang Tanggal: Dari -->
+                <div class="flex items-center space-x-1.5 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200">
+                  <span class="text-[11px] font-bold text-slate-500">Dari:</span>
+                  <input type="date" id="wash-check-filter-start-date" onchange="handleWashChecklistFilterChange()"
+                    class="bg-transparent text-slate-800 font-semibold focus:outline-none text-xs cursor-pointer">
+                </div>
+                <!-- Rentang Tanggal: Ke -->
+                <div class="flex items-center space-x-1.5 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200">
+                  <span class="text-[11px] font-bold text-slate-500">Ke:</span>
+                  <input type="date" id="wash-check-filter-end-date" onchange="handleWashChecklistFilterChange()"
+                    class="bg-transparent text-slate-800 font-semibold focus:outline-none text-xs cursor-pointer">
+                </div>
+                <!-- Tombol Hari Ini -->
+                <button type="button" onclick="setWashChecklistFilterToday()"
+                  class="px-2.5 py-1.5 rounded-xl border border-slate-200 text-slate-700 bg-slate-50 hover:bg-slate-100 font-bold transition text-xs cursor-pointer shadow-2xs">
+                  Hari Ini
+                </button>
+
+                <!-- Filter Shift -->
+                <select id="wash-check-filter-shift" onchange="handleWashChecklistFilterChange()"
+                  class="px-3 py-1.5 rounded-xl border border-slate-200 font-bold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none text-xs cursor-pointer shadow-2xs">
+                  <option value="ALL">All Shift</option>
+                  <option value="1">Shift 1</option>
+                  <option value="2">Shift 2</option>
+                </select>
+
+                <!-- Filter Cluster -->
+                <select id="wash-check-filter-cluster" onchange="handleWashChecklistFilterChange()"
+                  class="px-3 py-1.5 rounded-xl border border-slate-200 font-bold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none text-xs cursor-pointer shadow-2xs">
+                  <option value="ALL">All Cluster</option>
+                  <option value="Utara">KGU UTARA</option>
+                  <option value="Tengah">KGU TENGAH</option>
+                  <option value="Selatan">KGU SELATAN</option>
+                  <option value="ROM">ROM Area</option>
+                </select>
+
+                <!-- Filter Status Ceklist (Sudah / Belum) -->
+                <select id="wash-check-filter-status" onchange="handleWashChecklistFilterChange()"
+                  class="px-3 py-1.5 rounded-xl border border-slate-200 font-bold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none text-xs cursor-pointer shadow-2xs">
+                  <option value="ALL">Semua Ceklist</option>
+                  <option value="sudah">Sudah Ceklist (Hijau)</option>
+                  <option value="belum">Belum Ceklist (Merah)</option>
+                </select>
+              </div>
+
+              <!-- Search Bar & Refresh -->
+              <div class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="relative flex-1 sm:w-56">
+                  <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                  </span>
+                  <input type="text" id="wash-check-search-input" oninput="handleWashChecklistSearchInput()"
+                    placeholder="Cari unit / lokasi / armada..."
+                    class="w-full pl-8 pr-7 py-1.5 rounded-xl border border-slate-200 text-xs font-medium bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 transition">
+                  <button type="button" onclick="clearWashChecklistSearch()" id="wash-check-search-clear-btn"
+                    class="hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                </div>
+                <button type="button" onclick="refreshWashChecklistData()" title="Muat Ulang Data"
+                  class="p-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition cursor-pointer shadow-2xs">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Summary KPI Badge Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-2xs">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Job Selesai</span>
+                <span id="wash-kpi-total-jobs" class="text-lg font-black text-slate-900 mt-0.5 block">0</span>
+                <span class="text-[10px] text-slate-400">Achieved &amp; Request</span>
+              </div>
+              <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-200/80 shadow-2xs">
+                <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">Sudah Ceklist</span>
+                <span id="wash-kpi-done-count" class="text-lg font-black text-emerald-800 mt-0.5 block">0</span>
+                <span class="text-[10px] text-emerald-600 font-semibold">Tercatat di Web Ceklist</span>
+              </div>
+              <div class="bg-rose-50/50 p-3 rounded-2xl border border-rose-200/80 shadow-2xs">
+                <span class="text-[10px] font-bold text-rose-700 uppercase tracking-wider block">Belum Ceklist</span>
+                <span id="wash-kpi-pending-count" class="text-lg font-black text-rose-800 mt-0.5 block">0</span>
+                <span class="text-[10px] text-rose-600 font-semibold">Perlu Segera Diinput</span>
+              </div>
+              <div class="bg-blue-50/50 p-3 rounded-2xl border border-blue-200/80 shadow-2xs">
+                <span class="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">Kepatuhan</span>
+                <span id="wash-kpi-compliance-rate" class="text-lg font-black text-blue-800 mt-0.5 block">0%</span>
+                <span class="text-[10px] text-blue-600 font-semibold">Tingkat Input Ceklist</span>
+              </div>
+            </div>
+
+            <!-- Container Tabel Monitoring Compare -->
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+              <!-- Mode Desktop (10 Kolom) -->
+              <div class="hidden md:block overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr class="bg-slate-100 text-slate-700 uppercase text-[8.5px] md:text-[9.5px] tracking-wider border-b border-slate-200 font-semibold select-none">
+                      <th onclick="sortWashChecklistBy('noId')" class="py-2 px-1.5 text-left align-middle cursor-pointer group hover:bg-slate-200/70 transition" title="Urutkan berdasarkan No ID">
+                        <div class="flex items-center justify-start space-x-1">
+                          <span>NO ID</span>
+                          <span id="wash-sort-icon-noId"></span>
+                        </div>
+                      </th>
+                      <th onclick="sortWashChecklistBy('type')" class="py-2 px-1 text-left align-middle cursor-pointer group hover:bg-slate-200/70 transition" title="Urutkan berdasarkan Type Job">
+                        <div class="flex items-center justify-start space-x-0.5 leading-tight">
+                          <span>TYPE JOB</span>
+                          <span id="wash-sort-icon-type"></span>
+                        </div>
+                      </th>
+                      <th onclick="sortWashChecklistBy('shift')" class="py-2 px-1 text-center align-middle cursor-pointer group hover:bg-slate-200/70 transition whitespace-nowrap" title="Urutkan berdasarkan Shift">
+                        <div class="flex items-center justify-center space-x-1">
+                          <span>SHIFT</span>
+                          <span id="wash-sort-icon-shift"></span>
+                        </div>
+                      </th>
+                      <th onclick="sortWashChecklistBy('unit')" class="py-2 px-1.5 text-left align-middle cursor-pointer group hover:bg-slate-200/70 transition" title="Urutkan berdasarkan No Lambung Unit">
+                        <div class="flex items-center justify-start space-x-1">
+                          <span>NO UNIT</span>
+                          <span id="wash-sort-icon-unit"></span>
+                        </div>
+                      </th>
+                      <th onclick="sortWashChecklistBy('cluster')" class="py-2 px-1.5 text-left align-middle cursor-pointer group hover:bg-slate-200/70 transition" title="Urutkan berdasarkan Cluster & Lokasi Pit">
+                        <div class="flex items-center justify-start space-x-1">
+                          <span>CLUSTER &amp; LOKASI</span>
+                          <span id="wash-sort-icon-cluster"></span>
+                        </div>
+                      </th>
+                      <th onclick="sortWashChecklistBy('armada')" class="py-2 px-1.5 text-left align-middle cursor-pointer group hover:bg-slate-200/70 transition" title="Urutkan berdasarkan Armada">
+                        <div class="flex items-center justify-start space-x-1">
+                          <span>ARMADA</span>
+                          <span id="wash-sort-icon-armada"></span>
+                        </div>
+                      </th>
+                      <th onclick="sortWashChecklistBy('personil')" class="py-2 px-1.5 text-left align-middle cursor-pointer group hover:bg-slate-200/70 transition" title="Urutkan berdasarkan Personil (MP 1 & MP 2)">
+                        <div class="flex items-center justify-start space-x-1">
+                          <span>PERSONIL</span>
+                          <span id="wash-sort-icon-personil"></span>
+                        </div>
+                      </th>
+                      <th onclick="sortWashChecklistBy('hm')" class="py-2 px-1.5 text-left align-middle cursor-pointer group hover:bg-slate-200/70 transition" title="Urutkan berdasarkan HM Unit (Start & End)">
+                        <div class="flex items-center justify-start space-x-1">
+                          <span>HM</span>
+                          <span id="wash-sort-icon-hm"></span>
+                        </div>
+                      </th>
+                      <th onclick="sortWashChecklistBy('realisasi')" class="py-2 px-1.5 text-left align-middle cursor-pointer group hover:bg-slate-200/70 transition" title="Urutkan berdasarkan Realisasi">
+                        <div class="flex items-center justify-start space-x-1">
+                          <span>REALISASI</span>
+                          <span id="wash-sort-icon-realisasi"></span>
+                        </div>
+                      </th>
+                      <th onclick="sortWashChecklistBy('ceklist')" class="py-2 px-1.5 text-center align-middle cursor-pointer group hover:bg-slate-200/70 transition" title="Urutkan berdasarkan Status Ceklist">
+                        <div class="flex items-center justify-center space-x-1">
+                          <span>CEKLIST</span>
+                          <span id="wash-sort-icon-ceklist"></span>
+                        </div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="wash-checklist-monitor-desktop-tbody" class="divide-y divide-slate-100">
+                    <tr>
+                      <td colspan="10" class="py-8 text-center text-slate-400 italic">Memuat data monitoring komparasi...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Mode HP (6 Kolom Card View) -->
+              <div class="block md:hidden overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr class="bg-slate-100 text-slate-700 uppercase text-[8.5px] tracking-wider border-b border-slate-200 font-semibold select-none">
+                      <th onclick="sortWashChecklistBy('type')" class="py-2 px-1 text-left align-middle cursor-pointer group hover:bg-slate-200/70 transition" title="Urutkan berdasarkan Type Job">
+                        <div class="flex items-center justify-start space-x-0.5 leading-tight">
+                          <span>TYPE<br>JOB</span>
+                          <span id="wash-sort-mob-icon-type"></span>
+                        </div>
+                      </th>
+                      <th onclick="sortWashChecklistBy('unit')" class="py-2 px-1.5 text-left align-middle cursor-pointer group hover:bg-slate-200/70 transition" title="Urutkan berdasarkan No Lambung Unit">
+                        <div class="flex items-center justify-start space-x-0.5 leading-tight">
+                          <span>NO UNIT</span>
+                          <span id="wash-sort-mob-icon-unit"></span>
+                        </div>
+                      </th>
+                      <th onclick="sortWashChecklistBy('cluster')" class="py-2 px-1 text-left align-middle cursor-pointer group hover:bg-slate-200/70 transition" title="Urutkan berdasarkan Kluster & Lokasi">
+                        <div class="flex items-center justify-start space-x-0.5 leading-tight">
+                          <span>KLUSTER &amp; LOKASI</span>
+                          <span id="wash-sort-mob-icon-cluster"></span>
+                        </div>
+                      </th>
+                      <th onclick="sortWashChecklistBy('armada')" class="py-2 px-1 text-left align-middle cursor-pointer group hover:bg-slate-200/70 transition" title="Urutkan berdasarkan Armada">
+                        <div class="flex items-center justify-start space-x-0.5">
+                          <span>ARMADA</span>
+                          <span id="wash-sort-mob-icon-armada"></span>
+                        </div>
+                      </th>
+                      <th onclick="sortWashChecklistBy('realisasi')" class="py-2 px-1 text-left align-middle cursor-pointer group hover:bg-slate-200/70 transition" title="Urutkan berdasarkan Realisasi">
+                        <div class="flex items-center justify-start space-x-0.5">
+                          <span>REALISASI</span>
+                          <span id="wash-sort-mob-icon-realisasi"></span>
+                        </div>
+                      </th>
+                      <th onclick="sortWashChecklistBy('ceklist')" class="py-2 px-1 text-center align-middle cursor-pointer group hover:bg-slate-200/70 transition" title="Urutkan berdasarkan Status Ceklist">
+                        <div class="flex items-center justify-center space-x-0.5">
+                          <span>CEKLIST</span>
+                          <span id="wash-sort-mob-icon-ceklist"></span>
+                        </div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="wash-checklist-monitor-mobile-tbody" class="divide-y divide-slate-100">
+                    <tr>
+                      <td colspan="6" class="py-8 text-center text-slate-400 italic">Memuat data monitoring komparasi...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Docked Footer Pagination Monitoring -->
+              <div class="bg-slate-50/80 border-t border-slate-200/80 p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div class="flex items-center space-x-2">
+                  <span id="wash-check-pagination-info" class="font-medium text-slate-600">Menampilkan 0 - 0 dari 0 data</span>
+                  <span class="text-slate-300">|</span>
+                  <label class="flex items-center space-x-1.5 text-slate-600">
+                    <span>Per halaman:</span>
+                    <select id="wash-check-page-size" onchange="changeWashChecklistPageSize(this.value)"
+                      class="px-2 py-1 rounded-lg border border-slate-200 bg-white text-xs font-semibold focus:outline-none">
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                      <option value="100" selected>100 (Rekomendasi)</option>
+                      <option value="250">250</option>
+                      <option value="ALL">Semua</option>
+                    </select>
+                  </label>
+                </div>
+                <div id="wash-check-pagination-controls" class="flex items-center space-x-1">
+                  <!-- Pagination buttons injected via JS -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ==================== SUB-PANE 2: UPLOAD DATA CEKLIST (KHUSUS ADMIN) ==================== -->
+          <div id="wash-check-pane-upload" class="hidden space-y-3">
+            <!-- Nested Subtab Bar: Upload vs Data Ceklist -->
+            <div class="bg-white p-2.5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs select-none">
+              <div class="flex items-center space-x-1.5 bg-slate-100/90 p-1 rounded-xl border border-slate-200/70">
+                <button type="button" id="wash-nested-subtab-upload-btn" onclick="switchWashChecklistNestedTab('upload')"
+                  class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-white text-emerald-800 shadow-2xs cursor-pointer">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  <span>Upload</span>
+                </button>
+                <button type="button" id="wash-nested-subtab-data-btn" onclick="switchWashChecklistNestedTab('data')"
+                  class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 cursor-pointer">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>Data Ceklist</span>
+                </button>
+              </div>
+
+              <div class="flex items-center space-x-2 text-[11px] text-slate-500 font-medium">
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>Terhubung ke Database Supabase</span>
+              </div>
+            </div>
+
+            <!-- 1. PANE UPLOAD EXCEL & PRATINJAU -->
+            <div id="wash-check-nested-pane-upload" class="space-y-3">
+              <!-- Box Upload Excel & Opsi -->
+              <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h4 class="text-xs font-extrabold text-slate-900 tracking-tight">Upload File Excel Web Ceklist</h4>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Format kolom yang didukung: <span class="font-mono font-bold text-slate-700">NO | DATE | CN | HM | SHIFT | WT | REMARK | START | END</span></p>
+                  </div>
+                  <!-- Opsi Mode Simpan (Timpa vs Tambah) -->
+                  <div class="flex items-center space-x-3 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 text-xs">
+                    <span class="font-bold text-slate-600">Mode Upload:</span>
+                    <label class="inline-flex items-center space-x-1.5 cursor-pointer">
+                      <input type="radio" name="wash-check-upload-mode" value="replace" checked onchange="state.washChecklistUploadMode = this.value"
+                        class="text-brand-600 focus:ring-brand-500">
+                      <span class="font-semibold text-slate-800">Timpa tanggal yang sama</span>
+                    </label>
+                    <label class="inline-flex items-center space-x-1.5 cursor-pointer">
+                      <input type="radio" name="wash-check-upload-mode" value="append" onchange="state.washChecklistUploadMode = this.value"
+                        class="text-brand-600 focus:ring-brand-500">
+                      <span class="font-semibold text-slate-800">Tambahkan data baru</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Drag and drop dropzone -->
+                <div class="relative border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50/60 hover:bg-emerald-50/20 rounded-2xl p-6 text-center transition cursor-pointer"
+                  onclick="document.getElementById('wash-check-excel-file-input').click()">
+                  <input type="file" id="wash-check-excel-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleWashChecklistExcelUpload(event)">
+                  <div class="flex flex-col items-center justify-center space-y-2 pointer-events-none">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-2xs">
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span class="font-bold text-slate-800 text-xs block">Pilih file Excel (.xlsx / .xls) dari perangkat</span>
+                      <span class="text-[11px] text-slate-400">File yang diunduh dari web ceklist (load3.php)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Toolbar Aksi Preview & Tabel Pratinjau -->
+              <div id="wash-check-preview-section" class="hidden space-y-3">
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" onclick="bulkDeleteWashChecklistPreviewRows()" id="wash-check-btn-bulk-delete"
+                      class="px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-2xs opacity-50 cursor-not-allowed" disabled>
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <span>Hapus Terpilih (<span id="wash-check-selected-count">0</span>)</span>
+                    </button>
+
+                    <button type="button" onclick="clearWashChecklistPreview()"
+                      class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-2xs">
+                      <span>Kosongkan Preview</span>
+                    </button>
+
+                    <span class="text-slate-300">|</span>
+                    <span id="wash-check-preview-summary-text" class="font-bold text-slate-700 text-xs">0 baris data terbaca</span>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <!-- Search di preview -->
+                    <div class="relative w-44 sm:w-52">
+                      <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                      </span>
+                      <input type="text" id="wash-check-preview-search-input" oninput="handleWashChecklistPreviewSearch()"
+                        placeholder="Cari CN / WT / shift..."
+                        class="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium bg-slate-50 focus:bg-white focus:outline-none transition">
+                    </div>
+
+                    <!-- Tombol Simpan ke Database -->
+                    <button type="button" onclick="saveWashChecklistToSupabase()" id="wash-check-btn-save-db"
+                      class="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold transition flex items-center space-x-1.5 cursor-pointer shadow-xs">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                      </svg>
+                      <span>Simpan ke Database</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Tabel Preview -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200/80 text-slate-600 font-bold uppercase tracking-wider text-[10.5px]">
+                          <th class="py-3 px-3 text-center w-10">
+                            <input type="checkbox" id="wash-check-select-all-preview" onchange="toggleSelectAllWashChecklistPreview(this.checked)"
+                              class="rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
+                          </th>
+                          <th class="py-3 px-3 w-12 text-center">NO</th>
+                          <th class="py-3 px-3.5">DATE</th>
+                          <th class="py-3 px-3.5">CN (UNIT)</th>
+                          <th class="py-3 px-3">HM</th>
+                          <th class="py-3 px-3 text-center">SHIFT</th>
+                          <th class="py-3 px-3.5">WT (ARMADA)</th>
+                          <th class="py-3 px-3.5">REMARK</th>
+                          <th class="py-3 px-3">START</th>
+                          <th class="py-3 px-3">END</th>
+                          <th class="py-3 px-3.5">EST. ROUND</th>
+                          <th class="py-3 px-3 text-center w-16">AKSI</th>
+                        </tr>
+                      </thead>
+                      <tbody id="wash-checklist-preview-tbody" class="divide-y divide-slate-100 font-medium">
+                        <tr>
+                          <td colspan="12" class="py-8 text-center text-slate-400 italic">Belum ada file yang diunggah</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <!-- Docked Footer Pagination Preview -->
+                  <div class="bg-slate-50/80 border-t border-slate-200/80 p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div class="flex items-center space-x-2">
+                      <span id="wash-check-preview-page-info" class="font-medium text-slate-600">Menampilkan 0 - 0 dari 0 baris</span>
+                    </div>
+                    <div id="wash-check-preview-pagination-controls" class="flex items-center space-x-1"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. PANE DATA CEKLIST (DATABASE SUPABASE ARCHIVE) -->
+            <div id="wash-check-nested-pane-data" class="hidden space-y-3">
+              <!-- Filter Toolbar Data Ceklist -->
+              <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2.5 text-xs">
+                  <!-- Filter Tanggal -->
+                  <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+                    <span class="font-bold text-slate-600 text-xs">Periode:</span>
+                    <input type="date" id="wash-data-filter-start-date" onchange="handleWashChecklistDataFilterChange()"
+                      class="px-2.5 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none text-xs cursor-pointer shadow-2xs">
+                    <span class="text-slate-400 font-bold">s/d</span>
+                    <input type="date" id="wash-data-filter-end-date" onchange="handleWashChecklistDataFilterChange()"
+                      class="px-2.5 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none text-xs cursor-pointer shadow-2xs">
+                    <button type="button" onclick="setWashChecklistDataFilterToday()"
+                      class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition text-xs shadow-2xs cursor-pointer">
+                      Hari Ini
+                    </button>
+                    <button type="button" onclick="setWashChecklistDataFilterThisMonth()"
+                      class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition text-xs shadow-2xs cursor-pointer">
+                      Bulan Ini
+                    </button>
+                    <button type="button" onclick="setWashChecklistDataFilterAll()"
+                      class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition text-xs shadow-2xs cursor-pointer">
+                      Semua Data
+                    </button>
+                  </div>
+
+                  <!-- Aksi: Unduh Excel & Refresh -->
+                  <div class="flex items-center space-x-2">
+                    <button type="button" onclick="exportWashingChecklistsToExcel()"
+                      class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition flex items-center space-x-1.5 shadow-2xs cursor-pointer">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span>Unduh Excel</span>
+                    </button>
+
+                    <button type="button" onclick="refreshWashChecklistDataArchive()" title="Muat ulang dari Supabase"
+                      class="p-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition shadow-2xs cursor-pointer">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Secondary Filter & Search -->
+                <div class="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-slate-100 text-xs">
+                  <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+                    <!-- Filter Shift -->
+                    <select id="wash-data-filter-shift" onchange="handleWashChecklistDataFilterChange()"
+                      class="px-2.5 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none text-xs cursor-pointer shadow-2xs">
+                      <option value="ALL">All Shift</option>
+                      <option value="1">Shift 1</option>
+                      <option value="2">Shift 2</option>
+                    </select>
+
+                    <!-- Filter Remark / Kategori -->
+                    <select id="wash-data-filter-remark" onchange="handleWashChecklistDataFilterChange()"
+                      class="px-2.5 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none text-xs cursor-pointer shadow-2xs">
+                      <option value="ALL">Semua Kategori</option>
+                      <option value="daily">Daily / Schedule</option>
+                      <option value="request">Request</option>
+                    </select>
+
+                    <!-- Tombol Hapus Terpilih (Khusus Admin) -->
+                    <button type="button" id="wash-data-btn-bulk-delete" onclick="bulkDeleteWashingChecklistData()"
+                      class="px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-2xs opacity-50 cursor-not-allowed hidden" disabled>
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <span>Hapus Terpilih (<span id="wash-data-selected-count">0</span>)</span>
+                    </button>
+                  </div>
+
+                  <!-- Input Cari -->
+                  <div class="relative w-full sm:w-60">
+                    <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                      </svg>
+                    </span>
+                    <input type="text" id="wash-data-search-input" oninput="handleWashChecklistDataSearch()"
+                      placeholder="Cari CN / WT / HM / Jam..."
+                      class="w-full pl-8 pr-7 py-1.5 rounded-xl border border-slate-200 text-xs font-medium bg-slate-50 focus:bg-white focus:outline-none transition">
+                    <button type="button" id="wash-data-search-clear-btn" onclick="clearWashChecklistDataSearch()"
+                      class="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-slate-600 hidden cursor-pointer">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tabel Data Ceklist Supabase (Simetris dengan Riwayat Selesai: Font Kecil & Non-Bold) -->
+              <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-100 text-slate-700 uppercase text-[8.5px] md:text-[9.5px] tracking-wider border-b border-slate-200 font-semibold select-none">
+                      <tr>
+                        <th class="py-2 px-2 text-center w-8">
+                          <input type="checkbox" id="wash-data-select-all" onchange="toggleSelectAllWashChecklistData(this.checked)"
+                            class="rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
+                        </th>
+                        <th class="py-2 px-2 text-center w-10">NO</th>
+                        <th class="py-2 px-2">DATE</th>
+                        <th class="py-2 px-2">CN</th>
+                        <th class="py-2 px-2">HM</th>
+                        <th class="py-2 px-1.5 text-center">SHIFT</th>
+                        <th class="py-2 px-2">WT</th>
+                        <th class="py-2 px-2">REMARK</th>
+                        <th class="py-2 px-2">START</th>
+                        <th class="py-2 px-2">END</th>
+                        <th class="py-2 px-2 text-center">ROUND</th>
+                        <th class="py-2 px-2 text-center w-12">AKSI</th>
+                      </tr>
+                    </thead>
+                    <tbody id="wash-checklist-data-tbody" class="divide-y divide-slate-100 text-slate-700">
+                      <tr>
+                        <td colspan="12" class="py-8 text-center text-slate-400 italic text-[8.5px]">Memuat data ceklist dari database...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Footer Pagination Data Ceklist -->
+                <div class="px-3.5 py-2.5 bg-slate-50 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs text-slate-600 select-none">
+                  <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+                    <span id="wash-data-pagination-info" class="font-medium text-slate-500 text-[8.5px] md:text-xs">Menampilkan 0 - 0 dari 0 data ceklist</span>
+                    <span class="text-slate-300">|</span>
+                    <label class="flex items-center space-x-1.5 text-slate-600 text-[8.5px] md:text-xs">
+                      <span>Per halaman:</span>
+                      <select id="wash-data-page-size" onchange="changeWashChecklistDataPageSize(this.value)"
+                        class="px-2 py-1 rounded-lg border border-slate-200 bg-white font-semibold text-slate-700 focus:outline-none cursor-pointer text-xs">
+                        <option value="50">50</option>
+                        <option value="100" selected>100</option>
+                        <option value="200">200</option>
+                        <option value="ALL">Semua Data</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div id="wash-data-pagination-controls" class="flex items-center space-x-1.5"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+</div>
+        </div>
+
 
       </div>
     </main>
@@ -7104,7 +7752,20 @@
             </svg>
           </span>
         </a>
-      </div>
+      
+        <!-- Monitoring Ceklist Washing (Khusus Admin) -->
+        <button type="button" onclick="selectMoreMenuTab('wash-checklist-monitor')"
+          class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-slate-50 hover:bg-emerald-50/70 border border-slate-200/70 hover:border-emerald-300 transition active:scale-95 cursor-pointer text-center group shadow-2xs">
+          <div
+            class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-1 group-hover:scale-105 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+          </div>
+          <span class="font-extrabold text-slate-900 text-xs">Monitoring Ceklist</span>
+        </button>
+</div>
 
       <!-- Container More Khusus Manpower (MP: Oilman & Washingman) -->
       <div id="more-modal-mp" class="hidden grid grid-cols-2 gap-2.5 text-xs">
@@ -7171,7 +7832,7 @@
         <!-- Input Ceklist Washing (Khusus Washingman) -->
         <a href="https://plant.ppabib.com/pems/wash/load3.php" target="_blank" rel="noopener noreferrer"
           id="more-mp-wash-checklist"
-          class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50/70 border border-slate-200/70 hover:border-blue-300 transition active:scale-95 cursor-pointer text-center group shadow-2xs col-span-2">
+          class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50/70 border border-slate-200/70 hover:border-blue-300 transition active:scale-95 cursor-pointer text-center group shadow-2xs col-span-1">
           <div
             class="w-10 h-10 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mb-1 group-hover:scale-105 transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -7188,6 +7849,19 @@
             </svg>
           </span>
         </a>
+
+        <!-- Monitoring Ceklist (Khusus Washingman) -->
+        <button type="button" id="more-mp-modal-wash-checklist-monitor" onclick="selectMoreMenuTab('wash-checklist-monitor')"
+          class="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-slate-50 hover:bg-emerald-50/70 border border-slate-200/70 hover:border-emerald-300 transition active:scale-95 cursor-pointer text-center group shadow-2xs col-span-1">
+          <div
+            class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-1 group-hover:scale-105 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+          </div>
+          <span class="font-extrabold text-slate-900 text-xs">Monitoring Ceklist</span>
+        </button>
       </div>
 
       <div class="pt-2 border-t border-slate-100">
@@ -12468,6 +13142,23 @@
       completedCategory: 'all',
       picaCategory: 'ALL',
       airCleanerMonitor: [],
+      // State Monitoring Ceklist Washing
+      washingChecklists: [],
+      washChecklistSubtab: 'monitor',
+      parsedWashChecklistData: [],
+      selectedWashChecklistPreviewIds: new Set(),
+      washChecklistFilterStartDate: '',
+      washChecklistFilterEndDate: '',
+      washChecklistFilterShift: 'ALL',
+      washChecklistFilterCluster: 'ALL',
+      washChecklistFilterStatus: 'ALL',
+      washChecklistSearchTerm: '',
+      washChecklistPage: 1,
+      washChecklistPageSize: 100,
+      washChecklistUploadPage: 1,
+      washChecklistUploadPageSize: 50,
+      washChecklistUploadSearchTerm: '',
+      washChecklistUploadMode: 'replace',
       clusterLtAssigned: {},
       clusterWtAssigned: {},
       masterArmada: [...DEFAULT_MASTER_ARMADA],
@@ -15510,15 +16201,24 @@
 
         const mpFlowMeterSidebar = document.getElementById('nav-btn-mp-flowmeter');
         const mpWashChecklistSidebar = document.getElementById('nav-btn-mp-wash-checklist');
+        const mpWashChecklistMonitorSidebar = document.getElementById('nav-btn-mp-wash-checklist-monitor');
+        const moreMpFullWashChecklistMonitor = document.getElementById('more-mp-full-wash-checklist-monitor');
+        const moreMpModalWashChecklistMonitor = document.getElementById('more-mp-modal-wash-checklist-monitor');
         if (user.role === 'mp_lt' || user.role === 'oilman') {
           if (mpFlowMeterSidebar) mpFlowMeterSidebar.classList.remove('hidden');
           if (mpWashChecklistSidebar) mpWashChecklistSidebar.classList.add('hidden');
+          if (mpWashChecklistMonitorSidebar) mpWashChecklistMonitorSidebar.classList.add('hidden');
+          if (moreMpFullWashChecklistMonitor) moreMpFullWashChecklistMonitor.classList.add('hidden');
+          if (moreMpModalWashChecklistMonitor) moreMpModalWashChecklistMonitor.classList.add('hidden');
           if (navMpAir) navMpAir.classList.remove('hidden');
           if (moreMpAir) moreMpAir.classList.remove('hidden');
         } else {
-          // Akses Washingman (mp_wt): tampilkan menu Input Ceklist Washing di sidebar
+          // Akses Washingman (mp_wt): tampilkan menu Input Ceklist Washing & Monitoring Ceklist Washing
           if (mpFlowMeterSidebar) mpFlowMeterSidebar.classList.add('hidden');
           if (mpWashChecklistSidebar) mpWashChecklistSidebar.classList.remove('hidden');
+          if (mpWashChecklistMonitorSidebar) mpWashChecklistMonitorSidebar.classList.remove('hidden');
+          if (moreMpFullWashChecklistMonitor) moreMpFullWashChecklistMonitor.classList.remove('hidden');
+          if (moreMpModalWashChecklistMonitor) moreMpModalWashChecklistMonitor.classList.remove('hidden');
           if (navMpAir) navMpAir.classList.add('hidden');
           if (moreMpAir) moreMpAir.classList.add('hidden');
         }
@@ -16870,6 +17570,7 @@
         'orders': 'nav-group-order',
         'completed': 'nav-btn-admin-completed',
         'air-cleaner-monitor': 'nav-btn-admin-aircleaner',
+        'wash-checklist-monitor': (isMp ? 'nav-btn-mp-wash-checklist-monitor' : 'nav-btn-admin-wash-checklist-monitor'),
         'mp-kontak-pro': 'nav-btn-admin-kontak',
         'pica': 'nav-group-pica',
         'master-data': 'nav-group-master',
@@ -16889,6 +17590,8 @@
           targetBtnId = 'nav-group-completed';
         } else if (tabKey === 'air-cleaner-monitor') {
           targetBtnId = 'nav-btn-mp-aircleaner';
+        } else if (tabKey === 'wash-checklist-monitor') {
+          targetBtnId = 'nav-btn-mp-wash-checklist-monitor';
         } else if (tabKey === 'mp-kontak-pro') {
           targetBtnId = 'nav-btn-mp-kontak';
         } else if (tabKey === 'profile') {
@@ -16943,6 +17646,11 @@
           if (tb) showTableLazyLoading(tb, 'Memuat data monitoring filter Air Cleaner...', 'teal', 10);
           const repTb = document.getElementById('ac-replace-tbody');
           if (repTb) showTableLazyLoading(repTb, 'Memuat riwayat penggantian filter...', 'teal', 8);
+        } else if (tabKey === 'wash-checklist-monitor') {
+          const tbDesktop = document.getElementById('wash-checklist-monitor-desktop-tbody');
+          const tbMobile = document.getElementById('wash-checklist-monitor-mobile-tbody');
+          if (tbDesktop) showTableLazyLoading(tbDesktop, 'Memuat komparasi Ceklist Washing...', 'emerald', 10);
+          if (tbMobile) showTableLazyLoading(tbMobile, 'Memuat komparasi Ceklist Washing...', 'emerald', 6);
         } else if (tabKey === 'pica') {
           const tb = document.getElementById('pica-logs-tbody');
           if (tb) showTableLazyLoading(tb, 'Memuat catatan kendala PICA...', 'amber', 8);
@@ -17075,7 +17783,14 @@
         if (tabKey === 'job-requests' || tabKey === 'orders' || tabKey === 'master-data' || tabKey === 'mp-kontak-pro') {
           tabKey = 'dashboard';
         }
-      } else if (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'mp_wt' || state.currentUser?.role === 'oilman' || state.currentUser?.role === 'washingman') {
+      } else if (state.currentUser?.role === 'mp_lt' || state.currentUser?.role === 'oilman') {
+        // Oilman TIDAK memiliki akses ke Monitoring Ceklist Washing (khusus Washingman & Admin)
+        if (tabKey === 'wash-checklist-monitor' || tabKey === 'master-data') {
+          tabKey = 'dashboard';
+        } else if (tabKey === 'job-requests' || tabKey === 'lt-unschedule' || tabKey === 'wt-unschedule') {
+          tabKey = 'orders';
+        }
+      } else if (state.currentUser?.role === 'mp_wt' || state.currentUser?.role === 'washingman') {
         if (tabKey === 'master-data') {
           tabKey = 'dashboard';
         } else if (tabKey === 'job-requests' || tabKey === 'lt-unschedule' || tabKey === 'wt-unschedule') {
@@ -17266,6 +17981,13 @@
           }
           if (typeof loadAirCleanerReplacementsFromSupabase === 'function') {
             loadAirCleanerReplacementsFromSupabase(false);
+          }
+        } else if (tabKey === 'wash-checklist-monitor') {
+          if (typeof renderWashChecklistTab === 'function') {
+            renderWashChecklistTab();
+          }
+          if ((!Array.isArray(state.washingChecklists) || state.washingChecklists.length === 0) && typeof loadWashingChecklistsFromSupabase === 'function') {
+            loadWashingChecklistsFromSupabase(false);
           }
         } else if (tabKey === 'orders') {
           if (typeof populateOrderUnitsDatalist === 'function') populateOrderUnitsDatalist();
@@ -20220,9 +20942,9 @@
           </td>
 
           <!-- KOLOM 1: TYPE JOB (RATA KIRI TENGAH) -->
-          <td class="py-2.5 px-1.5 text-left align-middle whitespace-nowrap">
-            <span class="md:hidden flex items-center justify-start cursor-pointer" onclick="openJobDetailModal('${job.id}')" title="Klik untuk lihat detail">${(typeof getJobSchPlainHtml === 'function') ? getJobSchPlainHtml(job) : (job.cat || 'JOB')}</span>
-            <span class="hidden md:inline font-medium text-slate-700 text-[8.5px] md:text-[9.5px] leading-tight text-left">${(typeof getJobSchPlainHtml === 'function') ? getJobSchPlainHtml(job) : (job.cat || 'JOB')}</span>
+          <td class="py-2.5 px-1.5 text-left align-middle break-words leading-tight">
+            <span class="md:hidden flex items-center justify-start cursor-pointer break-words" onclick="openJobDetailModal('${job.id}')" title="Klik untuk lihat detail">${(typeof getJobSchPlainHtml === 'function') ? getJobSchPlainHtml(job) : (job.cat || 'JOB')}</span>
+            <span class="hidden md:inline font-medium text-slate-700 text-[8.5px] md:text-[9.5px] leading-tight text-left break-words">${(typeof getJobSchPlainHtml === 'function') ? getJobSchPlainHtml(job) : (job.cat || 'JOB')}</span>
           </td>
 
           <!-- KOLOM 2: WAKTU KENDALA (RATA KIRI TENGAH) -->
@@ -22255,12 +22977,6 @@
             diff = stA.localeCompare(stB);
             break;
           }
-          case 'cleaning': {
-            const countA = (typeof getAirCleanerUnitStatusInfo === 'function') ? (getAirCleanerUnitStatusInfo(a.noLambung)?.cleansCount || 0) : 0;
-            const countB = (typeof getAirCleanerUnitStatusInfo === 'function') ? (getAirCleanerUnitStatusInfo(b.noLambung)?.cleansCount || 0) : 0;
-            diff = countA - countB;
-            break;
-          }
           default:
             diff = 0;
         }
@@ -22278,7 +22994,7 @@
     window.sortSchedJobsList = sortSchedJobsList;
 
     function sortLtSchedBy(col) {
-      const defaultDescCols = ['status', 'cleaning'];
+      const defaultDescCols = ['status'];
       const initialDirection = defaultDescCols.includes(col) ? 'desc' : 'asc';
       const oppositeDirection = (initialDirection === 'asc' ? 'desc' : 'asc');
 
@@ -22747,31 +23463,6 @@
       const today = getEffectiveTodayString();
       const activeCat = state.lubetruckState.activeCategory;
       const isTopUp = (activeCat === 'topup');
-      const isAcAdmin = isAdmin && (activeCat === 'aircleaner' || activeCat === 'air_cleaner');
-      if (isAcAdmin && state.supabaseClient) {
-        if ((!Array.isArray(state.airCleanerMonitor) || state.airCleanerMonitor.length === 0) && !state._loadingAcMonitor) {
-          state._loadingAcMonitor = true;
-          if (typeof loadAirCleanerFromSupabase === 'function') {
-            loadAirCleanerFromSupabase(false).finally(() => {
-              state._loadingAcMonitor = false;
-              if (state.activeTab === 'lt-schedule' && (state.lubetruckState?.activeCategory === 'aircleaner' || state.lubetruckState?.activeCategory === 'air_cleaner')) {
-                renderLtScheduleTable();
-              }
-            });
-          }
-        }
-        if ((!Array.isArray(state.airCleanerReplacements) || state.airCleanerReplacements.length === 0) && !state._loadingAcReplacements) {
-          state._loadingAcReplacements = true;
-          if (typeof loadAirCleanerReplacementsFromSupabase === 'function') {
-            loadAirCleanerReplacementsFromSupabase(false).finally(() => {
-              state._loadingAcReplacements = false;
-              if (state.activeTab === 'lt-schedule' && (state.lubetruckState?.activeCategory === 'aircleaner' || state.lubetruckState?.activeCategory === 'air_cleaner')) {
-                renderLtScheduleTable();
-              }
-            });
-          }
-        }
-      }
       const tomorrow = (typeof getTomorrowDateStr === 'function') ? getTomorrowDateStr(today) : today;
 
       // Khusus SCH Top Up Oil di akses Oilman:
@@ -23064,45 +23755,37 @@
             <thead class="bg-slate-50/90 text-slate-500 uppercase text-[10.5px] md:text-[11px] tracking-wider border-b border-slate-100 font-extrabold select-none">
               <tr>
                 ${state.isLtSchedSelectMode ? `<th class="py-1.5 px-1.5 ${isMp ? 'w-[8%] md:w-[4%]' : 'w-[5%] md:w-[4%]'} text-center"><input type="checkbox" onchange="toggleSelectAllClusterSchedJobs(this.checked, '${clusterName}', 'LT')" title="Pilih Semua di Cluster Ini" class="rounded border-slate-300 text-brand-600 cursor-pointer"></th>` : ''}
-                <th onclick="sortLtSchedBy('waktu')" class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : (isAcAdmin ? 'w-[13%] md:w-[13%]' : 'w-[15%] md:w-[15%]'))} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
+                <th onclick="sortLtSchedBy('waktu')" class="${isMp ? 'hidden md:table-cell' : ''} py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[14%] md:w-[14%]' : (!isAdmin ? 'w-[14%] md:w-[12%]' : 'w-[15%] md:w-[15%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Waktu">
                   <div class="flex items-center space-x-0.5">
                     <span>WAKTU</span>
                     ${renderSchedSortIcon('waktu', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('unit')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[22%] md:w-[22%]' : 'w-[22%] md:w-[22%]') : (!isAdmin ? 'w-[26%] md:w-[20%]' : (isAcAdmin ? 'w-[21%] md:w-[20%]' : 'w-[24%] md:w-[23%]'))} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
+                <th onclick="sortLtSchedBy('unit')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[22%] md:w-[22%]' : 'w-[22%] md:w-[22%]') : (!isAdmin ? 'w-[26%] md:w-[20%]' : 'w-[24%] md:w-[23%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan No & Type Unit">
                   <div class="flex items-center space-x-0.5">
                     <span>${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
                     ${renderSchedSortIcon('unit', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[28%] md:w-[24%]' : 'w-[24%] md:w-[24%]') : (!isAdmin ? 'w-[32%] md:w-[23%]' : (isAcAdmin ? 'w-[21%] md:w-[19%]' : 'w-[27%] md:w-[25%]'))} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Lokasi Pit">
+                <th onclick="sortLtSchedBy('lokasi')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[28%] md:w-[24%]' : 'w-[24%] md:w-[24%]') : (!isAdmin ? 'w-[32%] md:w-[23%]' : 'w-[27%] md:w-[25%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Lokasi Pit">
                   <div class="flex items-center space-x-0.5">
                     <span>LOKASI</span>
                     ${renderSchedSortIcon('lokasi', 'LT')}
                   </div>
                 </th>
-                ${isAcAdmin ? `
-                  <th onclick="sortLtSchedBy('cleaning')" class="py-1.5 px-1.5 w-[14%] md:w-[11%] text-center cursor-pointer group hover:bg-slate-100 transition select-none whitespace-nowrap" title="Urutkan berdasarkan Frekuensi Cleaning Air Cleaner (Klik untuk mengurutkan)">
-                    <div class="flex items-center justify-center space-x-0.5 whitespace-nowrap">
-                      <span>CLEANING</span>
-                      ${renderSchedSortIcon('cleaning', 'LT')}
-                    </div>
-                  </th>
-                ` : ''}
-                <th onclick="sortLtSchedBy('armada')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[18%] md:w-[16%]' : 'w-[16%] md:w-[16%]') : (!isAdmin ? 'w-[18%] md:w-[15%]' : (isAcAdmin ? 'w-[14%] md:w-[14%]' : 'w-[17%] md:w-[17%]'))} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada LT">
+                <th onclick="sortLtSchedBy('armada')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? (isMp ? 'w-[18%] md:w-[16%]' : 'w-[16%] md:w-[16%]') : (!isAdmin ? 'w-[18%] md:w-[15%]' : 'w-[17%] md:w-[17%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Armada LT">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>ARMADA</span>
                     ${renderSchedSortIcon('armada', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('personil')" class="hidden md:table-cell py-1.5 px-2 ${state.isLtSchedSelectMode ? 'md:w-[20%]' : (!isAdmin ? 'md:w-[18%]' : (isAcAdmin ? 'md:w-[13%]' : 'md:w-[20%]'))} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
+                <th onclick="sortLtSchedBy('personil')" class="hidden md:table-cell py-1.5 px-2 ${state.isLtSchedSelectMode ? 'md:w-[20%]' : (!isAdmin ? 'md:w-[18%]' : 'md:w-[20%]')} cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Personil Petugas">
                   <div class="flex items-center space-x-0.5">
                     <span>PERSONIL</span>
                     ${renderSchedSortIcon('personil', 'LT')}
                   </div>
                 </th>
-                <th onclick="sortLtSchedBy('status')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[10%]' : (!isAdmin ? 'w-[24%] md:w-[12%]' : (isAcAdmin ? 'w-[17%] md:w-[10%]' : 'w-[17%] md:w-[12%]'))} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi">
+                <th onclick="sortLtSchedBy('status')" class="py-1.5 px-2 ${state.isLtSchedSelectMode ? 'w-[24%] md:w-[10%]' : (!isAdmin ? 'w-[24%] md:w-[12%]' : 'w-[17%] md:w-[12%]')} text-center cursor-pointer group hover:bg-slate-100 transition select-none" title="Urutkan berdasarkan Aksi">
                   <div class="flex items-center justify-center space-x-0.5">
                     <span>AKSI</span>
                     ${renderSchedSortIcon('status', 'LT')}
@@ -23115,7 +23798,7 @@
 
           const tbody = table.querySelector('tbody');
           if (clusterJobs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${(state.isLtSchedSelectMode ? 1 : 0) + 6 + (isAcAdmin ? 1 : 0)}" class="py-5 text-center text-slate-400 italic text-[11px]">
+            tbody.innerHTML = `<tr><td colspan="${state.isLtSchedSelectMode ? 7 : 6}" class="py-5 text-center text-slate-400 italic text-[11px]">
               <div>${(activeCat === "digger" && (typeof parseDateString === "function" ? parseDateString(selectedDate).getDay() : new Date(selectedDate).getDay()) === 5) ? "Hari Jumat adalah Hari Libur Operasi Big Digger. Seluruh unit Big Digger libur operasional hari ini." : (isAdmin ? `Belum ada unit yang dijadwalkan untuk tanggal ${selectedDate}.` : `Tidak ada jadwal unit untuk tanggal ${selectedDate}`)}</div>
 ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahkan jadwal.</span>` : ''}
             </td></tr>`;
@@ -23199,11 +23882,6 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                 <td class="py-1 px-1 md:py-1.5 md:px-1.5 break-words">
                   <span class="text-[9px] md:text-[9.5px] text-slate-950 font-bold uppercase leading-tight block">${job.lokasi || '-'}</span>
                 </td>
-                ${isAcAdmin ? `
-                  <td class="py-1 px-1 md:py-1.5 md:px-1.5 text-center align-middle whitespace-nowrap">
-                    ${getAirCleanerCleaningBadgeHtml(job.noLambung, job.typeUnit)}
-                  </td>
-                ` : ''}
                 <td class="py-1 px-1 md:px-1.5 text-center font-mono font-bold text-emerald-800 text-[9px] align-middle">
                   ${renderArmadaOnlyCell(job, false)}
                 </td>
@@ -28394,28 +29072,72 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             // B. PARSING FORMAT FLAT VERTIKAL (CADANGAN/LEGACY)
             // ========================================================
             for (let r = headerRowIdx + 1; r < rawRows.length; r++) {
-              const row = rawRows[r];
-              if (!row || row.length === 0) continue;
-              const nrp = String(row[colNik] || '').trim();
-              const nama = String(row[colNama] || '').trim();
-              if (!nrp && !nama) continue;
+        const row = rawRows[r] || [];
+        const rawCn = String(row[colCn] || '').trim().toUpperCase();
+        if (!rawCn) continue;
 
-              let jenis = (colJenis !== -1 && row[colJenis]) ? String(row[colJenis]).trim().toUpperCase() : defaultJenis;
-              if (!['OPT', 'OM', 'WM'].includes(jenis)) jenis = defaultJenis;
+        // Parse tanggal
+        let parsedDate = '';
+        const rawDate = row[colDate];
+        if (typeof rawDate === 'number' && rawDate > 30000) {
+          const jsDate = new Date(Math.round((rawDate - 25569) * 86400 * 1000));
+          parsedDate = jsDate.toISOString().split('T')[0];
+        } else if (rawDate) {
+          const strDate = String(rawDate).trim();
+          if (/^\d{4}-\d{2}-\d{2}$/.test(strDate)) {
+            parsedDate = strDate;
+          } else if (/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/.test(strDate)) {
+            const parts = strDate.split(/[\/\-]/);
+            const d = String(parts[0]).padStart(2, '0');
+            const m = String(parts[1]).padStart(2, '0');
+            const y = parts[2];
+            parsedDate = `${y}-${m}-${d}`;
+          } else {
+            parsedDate = strDate;
+          }
+        }
+        if (!parsedDate) {
+          parsedDate = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+        }
 
-              let unit = (colUnit !== -1 && row[colUnit]) ? String(row[colUnit]).trim().toUpperCase() : '-';
-              let tgl = (colTgl !== -1 && row[colTgl]) ? String(row[colTgl]).trim() : `${periodVal}-01`;
-              let shift = (colShift !== -1 && row[colShift]) ? parseInt(row[colShift], 10) || 1 : 1;
-              let kodeShift = (colKode !== -1 && row[colKode]) ? String(row[colKode]).trim().toUpperCase() : 'DWS';
+        // Parse waktu start & end DULU agar jam tersedia untuk penentuan shift tambang
+        let startStr = '';
+        const rawStart = row[colStart];
+        if (typeof rawStart === 'number' && rawStart >= 0 && rawStart < 1) {
+          const totalMinutes = Math.round(rawStart * 24 * 60);
+          const h = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+          const m = String(totalMinutes % 60).padStart(2, '0');
+          startStr = `${h}:${m}`;
+        } else if (rawStart) {
+          startStr = String(rawStart).trim().substring(0, 5);
+        }
 
-              let isSpare = false;
-              let unitEfektif = unit;
-              if (/^[DN]\d{2,5}$/i.test(kodeShift)) {
-                isSpare = true;
-                unitEfektif = resolveArmadaFromShiftCode(kodeShift, unit, jenis);
-              }
+        let endStr = '';
+        const rawEnd = row[colEnd];
+        if (typeof rawEnd === 'number' && rawEnd >= 0 && rawEnd < 1) {
+          const totalMinutes = Math.round(rawEnd * 24 * 60);
+          const h = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+          const m = String(totalMinutes % 60).padStart(2, '0');
+          endStr = `${h}:${m}`;
+        } else if (rawEnd) {
+          endStr = String(rawEnd).trim().substring(0, 5);
+        }
 
-              parsedData.push({
+        // Parse Shift: DAY -> Shift 1, NIGHT / NIGH -> Shift 2
+        // Didukung fallback jam operasional tambang (05:00-16:59 -> Shift 1, 17:00-04:59 -> Shift 2)
+        const rawShift = (colShift !== -1 && row[colShift] !== undefined) ? String(row[colShift]).trim() : '';
+        const shiftNum = determineShiftFromRawAndStartTime(rawShift, startStr);
+
+        const hmVal = (colHm !== -1 && row[colHm] !== undefined) ? String(row[colHm]).trim() : '';
+        const wtVal = (colWt !== -1 && row[colWt] !== undefined) ? String(row[colWt]).trim().toUpperCase() : '';
+        const remarkVal = (colRemark !== -1 && row[colRemark] !== undefined) ? String(row[colRemark]).trim().toLowerCase() : 'daily';
+
+        // Hitung estimasi washing round berdasarkan jam mulai dan shift yang benar:
+        // - Shift 1: < 11:00 -> W1, >= 11:00 s/d 16:59 -> W2
+        // - Shift 2: 17:00 s/d 22:59 -> W1, >= 23:00 atau subuh 00:00 s/d 04:59 -> W2
+        const estRound = determineWashingRoundFromStartTime(startStr, shiftNum);
+
+        parsedData.push({
                 id: `ROSTER-${Date.now()}-${r}`,
                 jenis,
                 nrp: nrp || `NRP-${r}`,
@@ -32628,7 +33350,7 @@ Keterangan : ${keterangan}`;
     function getJobSchPlainHtml(j) {
       const code = getJobTypeCode(j);
       const fullLabel = getJobSchLabel(j);
-      return `<span class="font-bold text-[10px] text-slate-800 tracking-wider inline-block select-none" title="${fullLabel}">${code}</span>`;
+      return `<span class="font-bold text-[9.5px] md:text-[10px] text-slate-800 tracking-wider inline-block break-words leading-tight select-none" title="${fullLabel}">${code}</span>`;
     }
     window.getJobSchPlainHtml = getJobSchPlainHtml;
 
@@ -33923,10 +34645,10 @@ Keterangan : ${keterangan}`;
                     ${renderCompletedSortIcon('timestamp')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('sch')" class="py-2 px-1 ${state.isCompSelectMode ? (isWt ? 'w-[11%] md:w-[5%]' : 'w-[13%] md:w-[5%]') : (isWt ? 'w-[11%] md:w-[5%]' : 'w-[13%] md:w-[5%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition whitespace-nowrap" title="Urutkan berdasarkan Type Job">
-                  <div class="flex items-center justify-start space-x-1 whitespace-nowrap">
-                    <span class="whitespace-nowrap">TYPE JOB</span>
-                    ${renderCompletedSortIcon('sch')}
+                <th onclick="sortCompletedBy('sch')" class="py-2 px-1.5 sm:px-2 ${state.isCompSelectMode ? (isWt ? 'w-[14%] md:w-[5%]' : 'w-[15%] md:w-[5%]') : (isWt ? 'w-[14%] md:w-[5%]' : 'w-[15%] md:w-[5%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition border-r border-slate-200/50 md:border-r-0" title="Urutkan berdasarkan Type Job">
+                  <div class="flex items-center justify-between sm:justify-start space-x-1 leading-tight">
+                    <span class="leading-tight text-[8px] md:text-[9.5px] font-bold">TYPE<br class="md:hidden">JOB</span>
+                    <span class="shrink-0">${renderCompletedSortIcon('sch')}</span>
                   </div>
                 </th>
                 <th onclick="sortCompletedBy('waktu')" class="hidden md:table-cell py-2 px-1.5 ${state.isCompSelectMode ? (isWt ? 'md:w-[7%]' : 'md:w-[7%]') : (isWt ? 'md:w-[7%]' : 'md:w-[7.5%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Waktu Rencana">
@@ -33941,11 +34663,11 @@ Keterangan : ${keterangan}`;
                     ${renderCompletedSortIcon('shift')}
                   </div>
                 </th>
-                <th onclick="sortCompletedBy('unit')" class="py-2 px-1.5 ${state.isCompSelectMode ? (isWt ? 'w-[18%] md:w-[9%]' : 'w-[20%] md:w-[9.5%]') : (isWt ? 'w-[18%] md:w-[9%]' : 'w-[20%] md:w-[10%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan No Lambung Unit">
-                  <div class="flex items-center justify-start space-x-1">
-                    <span class="md:hidden">NO UNIT</span>
-                    <span class="hidden md:inline">${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
-                    ${renderCompletedSortIcon('unit')}
+                <th onclick="sortCompletedBy('unit')" class="py-2 px-1.5 sm:px-2 ${state.isCompSelectMode ? (isWt ? 'w-[18%] md:w-[9%]' : 'w-[20%] md:w-[9.5%]') : (isWt ? 'w-[18%] md:w-[9%]' : 'w-[20%] md:w-[10%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan No Lambung Unit">
+                  <div class="flex items-center justify-between sm:justify-start space-x-1 leading-tight">
+                    <span class="md:hidden leading-tight text-[8px] md:text-[9.5px] font-bold">NO UNIT</span>
+                    <span class="hidden md:inline leading-tight font-semibold">${isAdmin ? 'NO & TYPE UNIT' : 'NO UNIT'}</span>
+                    <span class="shrink-0">${renderCompletedSortIcon('unit')}</span>
                   </div>
                 </th>
                 <th onclick="sortCompletedBy('cluster')" class="py-2 px-1.5 ${state.isCompSelectMode ? (isWt ? 'w-[21%] md:w-[10.5%]' : 'w-[24%] md:w-[11.5%]') : (isWt ? 'w-[22%] md:w-[11%]' : 'w-[25%] md:w-[12%]')} text-left align-middle cursor-pointer group hover:bg-slate-100 transition" title="Urutkan berdasarkan Cluster & Lokasi Pit">
@@ -34102,10 +34824,10 @@ Keterangan : ${keterangan}`;
             ${renderCompletedTimestampHtml(job)}
           </td>
 
-          <!-- KOLOM 2: TYPE JOB (RATA KIRI TENGAH) -->
-          <td class="py-2 px-1 text-left align-middle whitespace-nowrap">
-            <span class="md:hidden font-medium text-slate-700 text-[8.5px] leading-tight text-left cursor-pointer" onclick="openJobDetailModal('${job.id}')" title="Klik untuk lihat detail">${getJobSchPlainHtml(job)}</span>
-            <span class="hidden md:inline font-medium text-slate-700 text-[8.5px] leading-tight text-left">${getJobSchPlainHtml(job)}</span>
+          <!-- KOLOM 2: TYPE JOB (RATA KIRI TENGAH - WRAP TEXT KE BAWAH) -->
+          <td class="py-2 px-1.5 text-left align-middle break-words leading-tight whitespace-normal">
+            <span class="md:hidden font-bold text-slate-700 text-[8.5px] leading-tight text-left cursor-pointer break-words block whitespace-normal" onclick="openJobDetailModal('${job.id}')" title="Klik untuk lihat detail">${getJobSchPlainHtml(job)}</span>
+            <span class="hidden md:inline font-medium text-slate-700 text-[8.5px] leading-tight text-left break-words whitespace-normal">${getJobSchPlainHtml(job)}</span>
           </td>
 
           <!-- KOLOM 3: WAKTU (RATA KIRI TENGAH) -->
@@ -39141,47 +39863,6 @@ Keterangan : ${keterangan}`;
       `;
     }
     window.renderAirCleanerUnitInfoCardHtml = renderAirCleanerUnitInfoCardHtml;
-
-    /**
-     * Render badge angka frekuensi cleaning untuk kolom "Cleaning" di Jadwal Clean Air Cleaner
-     * Sesuai aturan pengguna:
-     * - Hijau: Masih jauh dari batas siklus (kondisi normal)
-     * - Kuning: Mendekati batas siklus (sisa 1x lagi sebelum wajib ganti)
-     * - Merah: Saatnya ganti / kuota habis (mencapai atau melampaui kuota maksimal)
-     */
-    function getAirCleanerCleaningBadgeHtml(noLambung, unitType) {
-      if (!noLambung) return '<span class="text-slate-400 font-mono text-[10px]">-</span>';
-      const cleanLambung = String(noLambung).trim().toUpperCase();
-      const resolvedType = unitType || ((typeof getUnitTypeFromMaster === 'function') ? getUnitTypeFromMaster(cleanLambung, 'Unit') : 'Unit');
-      const isCoal = (typeof isAirCleanerUnitCoal === 'function') ? isAirCleanerUnitCoal(cleanLambung, resolvedType) : false;
-      const maxCleans = isCoal ? 3 : 6;
-
-      const info = (typeof getAirCleanerUnitStatusInfo === 'function')
-        ? getAirCleanerUnitStatusInfo(cleanLambung)
-        : null;
-
-      const cleansCount = (info && info.cleansCount !== undefined) ? info.cleansCount : 0;
-
-      let colorClass = '';
-      let statusDesc = '';
-
-      if (cleansCount >= maxCleans) {
-        // Saatnya ganti -> MERAH
-        colorClass = 'bg-rose-100 text-rose-800 border-rose-300 font-black animate-pulse';
-        statusDesc = `Saatnya Ganti Filter! (Sudah ${cleansCount}x dari batas maks ${maxCleans}x ${isCoal ? 'COAL' : 'NON-COAL'})`;
-      } else if (cleansCount === maxCleans - 1) {
-        // Mendekati -> KUNING
-        colorClass = 'bg-amber-100 text-amber-900 border-amber-300 font-black';
-        statusDesc = `Peringatan: Mendekati Penggantian! (Sudah ${cleansCount}x, sisa 1x lagi dari maks ${maxCleans}x ${isCoal ? 'COAL' : 'NON-COAL'})`;
-      } else {
-        // Masih jauh -> HIJAU
-        colorClass = 'bg-emerald-100 text-emerald-800 border-emerald-300 font-extrabold';
-        statusDesc = `Kondisi Normal (Sudah ${cleansCount}x dari batas maks ${maxCleans}x ${isCoal ? 'COAL' : 'NON-COAL'})`;
-      }
-
-      return `<span class="inline-flex items-center justify-center min-w-[28px] sm:min-w-[32px] px-1.5 py-0.5 rounded-lg border text-[10px] sm:text-[10.5px] font-mono tracking-tight shadow-2xs ${colorClass} cursor-default select-none" title="${escapeHtml(statusDesc)}">${cleansCount}x</span>`;
-    }
-    window.getAirCleanerCleaningBadgeHtml = getAirCleanerCleaningBadgeHtml;
 
     /**
      * Menampilkan status Air Cleaner pada Modal Tambah Unit ke Jadwal (Foto 1)
@@ -45746,6 +46427,7 @@ Keterangan : ${keterangan}`;
         // Master data terisolasi (jarang berubah, bebas dari loop mutasi transaksi harian)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_armada' }, handleRealtimeArmadaChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'air_cleaner_monitoring' }, handleRealtimeAirCleanerChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'washing_checklists' }, (payload) => handleRealtimeWashingChecklistChange(payload))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'air_cleaner_replacements' }, (payload) => {
           console.log('[Realtime AC Replacement Event]', payload);
           if (typeof loadAirCleanerReplacementsFromSupabase === 'function') {
@@ -53019,7 +53701,1932 @@ Keterangan : ${keterangan}`;
           });
       });
     }
-  </script>
+  
+
+// ============================================================================
+// MODUL MONITORING CEKLIST WASHING (KOMPARASI JOB WT VS CEKLIST EKSTERNAL)
+// ============================================================================
+
+function formatWashDateDDMMYYYY(dStr) {
+  if (!dStr || dStr === '-') return '-';
+  const str = String(dStr).trim();
+  if (str.includes('/')) return str;
+  const parts = str.split('-');
+  if (parts.length === 3) {
+    if (parts[0].length === 4) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+  }
+  return (typeof formatDisplayDate === 'function') ? formatDisplayDate(str) : str;
+}
+window.formatWashDateDDMMYYYY = formatWashDateDDMMYYYY;
+// ============================================================================
+
+function determineShiftFromRawAndStartTime(rawShiftStr, startTimeStr) {
+  const raw = String(rawShiftStr || '').trim().toUpperCase();
+
+  // 1. Evaluasi dari teks kolom SHIFT Excel web ceklist (DAY vs NIGHT)
+  if (raw.includes('NIGHT') || raw.includes('NIGH') || raw.includes('MALAM') || raw === '2' || raw.includes('SHIFT 2') || raw.includes('S2')) {
+    return 2;
+  }
+  if (raw.includes('DAY') || raw.includes('SIANG') || raw === '1' || raw.includes('SHIFT 1') || raw.includes('S1')) {
+    return 1;
+  }
+
+  // 2. Fallback cerdas jam operasional tambang jika kolom shift kosong/ambigu:
+  // - Shift 1 (Day): Jam 05:00 s/d 16:59
+  // - Shift 2 (Night): Jam 17:00 s/d 04:59 (termasuk subuh 00:00 s/d 04:59)
+  if (startTimeStr) {
+    let h = 0;
+    const parts = String(startTimeStr).trim().split(':');
+    if (parts.length >= 1) {
+      h = parseInt(parts[0], 10) || 0;
+    }
+    if (h >= 5 && h < 17) return 1;
+    return 2;
+  }
+
+  return 1;
+}
+window.determineShiftFromRawAndStartTime = determineShiftFromRawAndStartTime;
+
+function determineWashingRoundFromStartTime(startTimeStr, shift = 1) {
+  if (!startTimeStr) return 1;
+  let h = 0;
+  const parts = String(startTimeStr).trim().split(':');
+  if (parts.length >= 1) {
+    h = parseInt(parts[0], 10) || 0;
+  }
+  const s = parseInt(shift, 10) || 1;
+
+  if (s === 1) {
+    // Shift 1 (Day: 05:00 s/d 16:59):
+    // - Washing 1 (W1): di bawah jam 11:00 (< 11:00)
+    // - Washing 2 (W2): di atas jam 11:00 sampai akhir shift 1 (>= 11:00 s/d < 17:00)
+    if (h >= 11) return 2;
+    return 1;
+  } else {
+    // Shift 2 (Night: 17:00 s/d 04:59):
+    // - Washing 1 (W1): di bawah jam 23:00 (>= 17:00 s/d < 23:00)
+    // - Washing 2 (W2): di atas jam 23:00 sampai akhir shift 2 jam 04:59 (>= 23:00 s/d 23:59 DAN 00:00 s/d 04:59 subuh)
+    if (h >= 23 || h < 5) return 2;
+    return 1;
+  }
+}
+window.determineWashingRoundFromStartTime = determineWashingRoundFromStartTime;
+
+
+function normalizeUnitCodeForMatching(unitStr) {
+  if (!unitStr) return '';
+  return String(unitStr).trim().toUpperCase().replace(/[\s\-_]/g, '');
+}
+
+function checkUnitsMatch(unitA, unitB) {
+  const a = normalizeUnitCodeForMatching(unitA);
+  const b = normalizeUnitCodeForMatching(unitB);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  // Contoh: EX8501 vs E8501
+  const cleanA = a.replace(/^EX/, 'E');
+  const cleanB = b.replace(/^EX/, 'E');
+  if (cleanA === cleanB) return true;
+  // Jika panjang cukup spesifik, cek substring
+  if (a.length >= 5 && b.length >= 5) {
+    if (a.includes(b) || b.includes(a)) return true;
+  }
+  return false;
+}
+
+function initWashChecklistModule() {
+  if (!Array.isArray(state.washingChecklists)) {
+    try {
+      const cached = JSON.parse(safeStorage.getItem('SE_WASHING_CHECKLISTS') || '[]');
+      state.washingChecklists = Array.isArray(cached) ? cached : [];
+      if (window.globalDataCache) {
+        window.globalDataCache.washingChecklists = state.washingChecklists;
+      }
+    } catch (e) {
+      state.washingChecklists = [];
+    }
+  }
+
+  if (!state.washChecklistSort) {
+    state.washChecklistSort = { column: 'realisasi', direction: 'desc' };
+  }
+
+  const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+  if (!state.washChecklistFilterStartDate) state.washChecklistFilterStartDate = today;
+  if (!state.washChecklistFilterEndDate) state.washChecklistFilterEndDate = today;
+
+  const startInp = document.getElementById('wash-check-filter-start-date');
+  const endInp = document.getElementById('wash-check-filter-end-date');
+  if (startInp && !startInp.value) startInp.value = state.washChecklistFilterStartDate;
+  if (endInp && !endInp.value) endInp.value = state.washChecklistFilterEndDate;
+}
+
+function switchWashChecklistSubtab(subtabKey) {
+  triggerHaptic(8);
+  const isAdmin = (state.currentUser?.role === 'admin');
+  if (subtabKey === 'upload' && !isAdmin) {
+    showToast('Menu ceklist hanya dapat diakses oleh Admin.', 'warning');
+    subtabKey = 'monitor';
+  }
+
+  state.washChecklistSubtab = subtabKey;
+
+  const btnMonitor = document.getElementById('wash-check-subtab-monitor-btn');
+  const btnUpload = document.getElementById('wash-check-subtab-upload-btn');
+  const paneMonitor = document.getElementById('wash-check-pane-monitor');
+  const paneUpload = document.getElementById('wash-check-pane-upload');
+
+  if (subtabKey === 'monitor') {
+    if (btnMonitor) {
+      btnMonitor.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-white text-emerald-800 shadow-2xs cursor-pointer';
+    }
+    if (btnUpload) {
+      btnUpload.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 cursor-pointer';
+    }
+    if (paneMonitor) paneMonitor.classList.remove('hidden');
+    if (paneUpload) paneUpload.classList.add('hidden');
+    renderWashChecklistMonitorTable();
+  } else {
+    if (btnMonitor) {
+      btnMonitor.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 cursor-pointer';
+    }
+    if (btnUpload) {
+      btnUpload.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-white text-emerald-800 shadow-2xs cursor-pointer';
+    }
+    if (paneMonitor) paneMonitor.classList.add('hidden');
+    if (paneUpload) paneUpload.classList.remove('hidden');
+    switchWashChecklistNestedTab(state.washChecklistNestedTab || 'upload');
+  }
+}
+
+function switchWashChecklistNestedTab(nestedKey) {
+  triggerHaptic(8);
+  state.washChecklistNestedTab = nestedKey;
+
+  const btnUpload = document.getElementById('wash-nested-subtab-upload-btn');
+  const btnData = document.getElementById('wash-nested-subtab-data-btn');
+  const paneUpload = document.getElementById('wash-check-nested-pane-upload');
+  const paneData = document.getElementById('wash-check-nested-pane-data');
+
+  if (nestedKey === 'upload') {
+    if (btnUpload) {
+      btnUpload.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-white text-emerald-800 shadow-2xs cursor-pointer';
+    }
+    if (btnData) {
+      btnData.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 cursor-pointer';
+    }
+    if (paneUpload) paneUpload.classList.remove('hidden');
+    if (paneData) paneData.classList.add('hidden');
+    renderWashChecklistPreviewTable();
+  } else {
+    if (btnUpload) {
+      btnUpload.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 text-slate-600 hover:text-slate-900 cursor-pointer';
+    }
+    if (btnData) {
+      btnData.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-white text-emerald-800 shadow-2xs cursor-pointer';
+    }
+    if (paneUpload) paneUpload.classList.add('hidden');
+    if (paneData) paneData.classList.remove('hidden');
+    initWashChecklistDataFilters();
+    renderWashChecklistDataTable();
+    loadWashingChecklistsFromSupabase().then(() => {
+      renderWashChecklistDataTable();
+    });
+  }
+}
+
+function setWashChecklistFilterToday() {
+  triggerHaptic(8);
+  const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+  state.washChecklistFilterStartDate = today;
+  state.washChecklistFilterEndDate = today;
+  const startInp = document.getElementById('wash-check-filter-start-date');
+  const endInp = document.getElementById('wash-check-filter-end-date');
+  if (startInp) startInp.value = today;
+  if (endInp) endInp.value = today;
+  state.washChecklistPage = 1;
+  loadWashingChecklistsFromSupabase(true).then(() => {
+    renderWashChecklistMonitorTable();
+  });
+}
+
+function handleWashChecklistFilterChange() {
+  const startInp = document.getElementById('wash-check-filter-start-date');
+  const endInp = document.getElementById('wash-check-filter-end-date');
+  const shiftSelect = document.getElementById('wash-check-filter-shift');
+  const clusterSelect = document.getElementById('wash-check-filter-cluster');
+  const statusSelect = document.getElementById('wash-check-filter-status');
+
+  if (startInp) state.washChecklistFilterStartDate = startInp.value;
+  if (endInp) state.washChecklistFilterEndDate = endInp.value;
+  if (shiftSelect) state.washChecklistFilterShift = shiftSelect.value;
+  if (clusterSelect) state.washChecklistFilterCluster = clusterSelect.value;
+  if (statusSelect) state.washChecklistFilterStatus = statusSelect.value;
+
+  state.washChecklistPage = 1;
+
+  // On-demand fetch jika data rentang tanggal belum ada di cache
+  loadWashingChecklistsFromSupabase().then(() => {
+    renderWashChecklistMonitorTable();
+  });
+}
+
+function handleWashChecklistSearchInput() {
+  const inp = document.getElementById('wash-check-search-input');
+  const clearBtn = document.getElementById('wash-check-search-clear-btn');
+  const val = (inp?.value || '').trim();
+  state.washChecklistSearchTerm = val;
+  if (clearBtn) {
+    if (val) clearBtn.classList.remove('hidden');
+    else clearBtn.classList.add('hidden');
+  }
+  state.washChecklistPage = 1;
+  renderWashChecklistMonitorTable();
+}
+
+function clearWashChecklistSearch() {
+  const inp = document.getElementById('wash-check-search-input');
+  const clearBtn = document.getElementById('wash-check-search-clear-btn');
+  if (inp) inp.value = '';
+  if (clearBtn) clearBtn.classList.add('hidden');
+  state.washChecklistSearchTerm = '';
+  state.washChecklistPage = 1;
+  renderWashChecklistMonitorTable();
+}
+
+function refreshWashChecklistData() {
+  triggerHaptic(10);
+  renderWashChecklistSkeleton();
+
+  Promise.all([
+    (typeof loadJobHistoryFromSupabase === 'function') ? loadJobHistoryFromSupabase(true) : Promise.resolve(),
+    loadWashingChecklistsFromSupabase(true)
+  ]).then(() => {
+    showToast('Data Monitoring Ceklist berhasil dimuat ulang!', 'success');
+    renderWashChecklistMonitorTable();
+  }).catch(err => {
+    console.error('[Refresh Wash Checklist Error]', err);
+    showToast('Gagal memuat data: ' + err.message, 'error');
+    renderWashChecklistMonitorTable();
+  });
+}
+
+// ============================================================================
+// SORTING SYSTEM UNTUK MONITORING CEKLIST (10 KOLOM DESKTOP & 6 KOLOM MOBILE)
+// ============================================================================
+
+function sortWashChecklistBy(col) {
+  triggerHaptic(6);
+  if (!state.washChecklistSort) {
+    state.washChecklistSort = { column: col, direction: 'asc' };
+  } else if (state.washChecklistSort.column === col) {
+    state.washChecklistSort.direction = (state.washChecklistSort.direction === 'asc') ? 'desc' : 'asc';
+  } else {
+    state.washChecklistSort.column = col;
+    state.washChecklistSort.direction = (['realisasi', 'noId', 'hm'].includes(col)) ? 'desc' : 'asc';
+  }
+  updateWashChecklistSortIcons();
+  renderWashChecklistMonitorTable();
+}
+
+function updateWashChecklistSortIcons() {
+  const cur = state.washChecklistSort || { column: 'realisasi', direction: 'desc' };
+  const cols = ['noId', 'type', 'shift', 'unit', 'cluster', 'armada', 'personil', 'hm', 'realisasi', 'ceklist'];
+
+  cols.forEach(c => {
+    const iconEl = document.getElementById('wash-sort-icon-' + c);
+    if (iconEl) {
+      if (cur.column === c) {
+        iconEl.innerHTML = (cur.direction === 'asc')
+          ? '<svg class="inline-block w-2.5 h-2.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>'
+          : '<svg class="inline-block w-2.5 h-2.5 text-rose-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>';
+      } else {
+        iconEl.innerHTML = '<span class="text-slate-300 group-hover:text-slate-500 font-mono text-[9px] leading-none transition shrink-0">&#8597;</span>';
+      }
+    }
+
+    const mobIconEl = document.getElementById('wash-sort-mob-icon-' + c);
+    if (mobIconEl) {
+      if (cur.column === c) {
+        mobIconEl.innerHTML = (cur.direction === 'asc')
+          ? '<svg class="inline-block w-2 h-2 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>'
+          : '<svg class="inline-block w-2 h-2 text-rose-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>';
+      } else {
+        mobIconEl.innerHTML = '<span class="text-slate-300 group-hover:text-slate-500 font-mono text-[8px] leading-none transition shrink-0">&#8597;</span>';
+      }
+    }
+  });
+}
+
+function renderWashChecklistSkeleton() {
+  const tbDesktop = document.getElementById('wash-checklist-monitor-desktop-tbody');
+  const tbMobile = document.getElementById('wash-checklist-monitor-mobile-tbody');
+
+  const skelDesktop = `
+    <tr class="animate-pulse">
+      <td class="py-2.5 px-3.5"><div class="h-3 bg-slate-200 rounded w-24"></div></td>
+      <td class="py-2.5 px-2"><div class="h-4 bg-slate-200 rounded w-16"></div></td>
+      <td class="py-2.5 px-2"><div class="h-3 bg-slate-200 rounded w-10"></div></td>
+      <td class="py-2.5 px-2"><div class="h-4 bg-slate-200 rounded w-14"></div></td>
+      <td class="py-2.5 px-2.5"><div class="h-3 bg-slate-200 rounded w-20 mb-1"></div><div class="h-2.5 bg-slate-100 rounded w-16"></div></td>
+      <td class="py-2.5 px-2"><div class="h-3 bg-slate-200 rounded w-12"></div></td>
+      <td class="py-2.5 px-2.5"><div class="h-3 bg-slate-200 rounded w-16 mb-1"></div><div class="h-2.5 bg-slate-100 rounded w-12"></div></td>
+      <td class="py-2.5 px-2"><div class="h-3 bg-slate-200 rounded w-14"></div></td>
+      <td class="py-2.5 px-2"><div class="h-3 bg-slate-200 rounded w-16 mb-1"></div><div class="h-2.5 bg-slate-100 rounded w-12"></div></td>
+      <td class="py-2.5 px-2 text-center"><div class="h-4 bg-slate-200 rounded-full w-12 mx-auto"></div></td>
+    </tr>
+  `.repeat(4);
+
+  const skelMobile = `
+    <tr class="animate-pulse">
+      <td class="py-2.5 px-2"><div class="h-3.5 bg-slate-200 rounded w-8"></div></td>
+      <td class="py-2.5 px-2"><div class="h-3.5 bg-slate-200 rounded w-12"></div></td>
+      <td class="py-2.5 px-2"><div class="h-3 bg-slate-200 rounded w-14 mb-1"></div><div class="h-2 bg-slate-100 rounded w-10"></div></td>
+      <td class="py-2.5 px-1.5"><div class="h-3 bg-slate-200 rounded w-10"></div></td>
+      <td class="py-2.5 px-1.5"><div class="h-3 bg-slate-200 rounded w-12 mb-1"></div><div class="h-2 bg-slate-100 rounded w-10"></div></td>
+      <td class="py-2.5 px-1.5 text-center"><div class="h-3.5 bg-slate-200 rounded-full w-10 mx-auto"></div></td>
+    </tr>
+  `.repeat(4);
+
+  if (tbDesktop) tbDesktop.innerHTML = skelDesktop;
+  if (tbMobile) tbMobile.innerHTML = skelMobile;
+}
+
+// ============================================================================
+// SUPABASE SYNC UNTUK WASHING CHECKLISTS
+// ============================================================================
+
+let _washChecklistLoading = false;
+async function loadWashingChecklistsFromSupabase(force = false, customStart = null, customEnd = null) {
+  if (!state.supabaseClient) return false;
+  if (_washChecklistLoading) return false;
+
+  const isDataTab = (state.washChecklistSubtab === 'upload' && state.washChecklistNestedTab === 'data');
+  const activeStart = isDataTab ? state.washChecklistDataFilterStartDate : state.washChecklistFilterStartDate;
+  const activeEnd = isDataTab ? state.washChecklistDataFilterEndDate : state.washChecklistFilterEndDate;
+
+  const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+  let startDate = (customStart !== null) ? customStart : (activeStart !== undefined ? activeStart : today);
+  let endDate = (customEnd !== null) ? customEnd : (activeEnd !== undefined ? activeEnd : startDate);
+
+  _washChecklistLoading = true;
+  try {
+    const CHUNK_SIZE = 1000;
+    let fromOffset = 0;
+    let hasMore = true;
+    let fetchedRows = [];
+    let iteration = 0;
+
+    while (hasMore && iteration < 20) {
+      iteration++;
+      let query = state.supabaseClient
+        .from('washing_checklists')
+        .select('*')
+        .order('date', { ascending: false })
+        .order('id', { ascending: false })
+        .range(fromOffset, fromOffset + CHUNK_SIZE - 1);
+
+      if (startDate) query = query.gte('date', startDate);
+      if (endDate) query = query.lte('date', endDate);
+
+      const { data, error } = await query;
+      if (error) {
+        console.error('[Supabase washing_checklists Error]', error);
+        break;
+      }
+      if (Array.isArray(data) && data.length > 0) {
+        fetchedRows.push(...data);
+        if (data.length < CHUNK_SIZE) {
+          hasMore = false;
+        } else {
+          fromOffset += CHUNK_SIZE;
+        }
+      } else {
+        hasMore = false;
+      }
+    }
+
+    if (fetchedRows.length > 0 || force) {
+      // Auto-koreksi baris yang shift-nya keliru (misal tertulis shift 1 padahal jam subuh 00:00 - 04:59 atau jam malam >= 17:00)
+      fetchedRows = fetchedRows.map(r => {
+        const correctShift = determineShiftFromRawAndStartTime(r.shift, r.start_time);
+        return {
+          ...r,
+          shift: correctShift
+        };
+      });
+  
+      const existingMap = new Map();
+      (state.washingChecklists || []).forEach(r => {
+        if (r.id) existingMap.set(String(r.id), r);
+      });
+      fetchedRows.forEach(r => {
+        if (r.id) existingMap.set(String(r.id), r);
+      });
+
+      state.washingChecklists = Array.from(existingMap.values());
+      if (window.globalDataCache) {
+        window.globalDataCache.washingChecklists = state.washingChecklists;
+      }
+
+      // Proteksi LocalStorage: Simpan 300 baris terbaru
+      try {
+        const sorted = [...state.washingChecklists].sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+        safeStorage.setItem('SE_WASHING_CHECKLISTS', JSON.stringify(sorted.slice(0, 300)));
+      } catch (e) {
+        console.warn('[LocalStorage Quota] Gagal menyimpan washingChecklists:', e);
+      }
+    }
+    return true;
+  } catch (err) {
+    console.error('[loadWashingChecklistsFromSupabase Error]', err);
+    return false;
+  } finally {
+    _washChecklistLoading = false;
+  }
+}
+
+function handleRealtimeWashingChecklistChange(payload) {
+  if (!payload) return;
+  const { eventType, new: newRow, old: oldRow } = payload;
+  console.log('[Realtime washing_checklists]', eventType, newRow?.id || oldRow?.id);
+
+  if (!Array.isArray(state.washingChecklists)) state.washingChecklists = [];
+
+  if (eventType === 'INSERT' && newRow) {
+    const idx = state.washingChecklists.findIndex(r => String(r.id) === String(newRow.id));
+    if (idx === -1) {
+      state.washingChecklists.unshift(newRow);
+    } else {
+      state.washingChecklists[idx] = newRow;
+    }
+  } else if (eventType === 'UPDATE' && newRow) {
+    const idx = state.washingChecklists.findIndex(r => String(r.id) === String(newRow.id));
+    if (idx !== -1) {
+      state.washingChecklists[idx] = newRow;
+    } else {
+      state.washingChecklists.unshift(newRow);
+    }
+  } else if (eventType === 'DELETE' && oldRow) {
+    state.washingChecklists = state.washingChecklists.filter(r => String(r.id) !== String(oldRow.id));
+  }
+
+  if (window.globalDataCache) {
+    window.globalDataCache.washingChecklists = state.washingChecklists;
+  }
+
+  if (state.activeTab === 'wash-checklist-monitor') {
+    renderWashChecklistMonitorTable();
+  }
+}
+
+// ============================================================================
+// EXCEL PARSER & PREVIEW
+// ============================================================================
+
+function handleWashChecklistExcelUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  if (typeof XLSX === 'undefined') {
+    showToast('Library SheetJS (XLSX) belum siap. Silakan muat ulang halaman.', 'error');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const data = e.target.result;
+      const workbook = XLSX.read(data, { type: 'binary' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+      if (!rawRows || rawRows.length < 2) {
+        showToast('File Excel kosong atau format tidak sesuai!', 'warning');
+        return;
+      }
+
+      // CARI BARIS HEADER: NO | DATE | CN | HM | SHIFT | WT | REMARK | START | END
+      let headerRowIdx = -1;
+      let colNo = -1, colDate = -1, colCn = -1, colHm = -1, colShift = -1, colWt = -1, colRemark = -1, colStart = -1, colEnd = -1;
+
+      for (let r = 0; r < Math.min(rawRows.length, 15); r++) {
+        const row = (rawRows[r] || []).map(c => String(c || '').trim().toUpperCase());
+        const hasCn = row.some(c => c === 'CN' || c.includes('LAMBUNG') || c === 'UNIT' || c.includes('NO UNIT'));
+        const hasDateOrShift = row.some(c => c.includes('DATE') || c.includes('TANGGAL') || c.includes('TGL') || c.includes('SHIFT'));
+        if (hasCn && hasDateOrShift) {
+          headerRowIdx = r;
+          colNo = row.findIndex(c => c === 'NO' || c === 'NO.');
+          colDate = row.findIndex(c => c.includes('DATE') || c.includes('TANGGAL') || c.includes('TGL'));
+          colCn = row.findIndex(c => c === 'CN' || c.includes('LAMBUNG') || c === 'UNIT' || c.includes('NO UNIT'));
+          colHm = row.findIndex(c => c === 'HM' || c.includes('HOUR'));
+          colShift = row.findIndex(c => c.includes('SHIFT'));
+          colWt = row.findIndex(c => c === 'WT' || c.includes('WATER') || c.includes('ARMADA'));
+          colRemark = row.findIndex(c => c.includes('REMARK') || c.includes('STATUS') || c.includes('KET'));
+          colStart = row.findIndex(c => c.includes('START') || c.includes('MULAI') || c.includes('JAM'));
+          colEnd = row.findIndex(c => c.includes('END') || c.includes('SELESAI'));
+          break;
+        }
+      }
+
+      if (headerRowIdx === -1 || colCn === -1) {
+        showToast('Format kolom tidak sesuai! Pastikan terdapat kolom CN, DATE, SHIFT, START.', 'warning');
+        return;
+      }
+
+      const parsedData = [];
+      for (let r = headerRowIdx + 1; r < rawRows.length; r++) {
+        const row = rawRows[r] || [];
+        const rawCn = String(row[colCn] || '').trim().toUpperCase();
+        if (!rawCn) continue;
+
+        let parsedDate = '';
+        const rawDate = row[colDate];
+        if (typeof rawDate === 'number' && rawDate > 30000) {
+          const jsDate = new Date(Math.round((rawDate - 25569) * 86400 * 1000));
+          parsedDate = jsDate.toISOString().split('T')[0];
+        } else if (rawDate) {
+          const strDate = String(rawDate).trim();
+          if (/^\d{4}-\d{2}-\d{2}$/.test(strDate)) {
+            parsedDate = strDate;
+          } else if (/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/.test(strDate)) {
+            const parts = strDate.split(/[\/\-]/);
+            const d = String(parts[0]).padStart(2, '0');
+            const m = String(parts[1]).padStart(2, '0');
+            const y = parts[2];
+            parsedDate = `${y}-${m}-${d}`;
+          } else {
+            parsedDate = strDate;
+          }
+        }
+        if (!parsedDate) {
+          parsedDate = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+        }
+
+        let shiftNum = 1;
+        const rawShift = String(row[colShift] || '').trim();
+        if (rawShift.includes('2')) shiftNum = 2;
+        else if (rawShift.includes('1')) shiftNum = 1;
+
+        let startStr = '';
+        const rawStart = row[colStart];
+        if (typeof rawStart === 'number' && rawStart >= 0 && rawStart < 1) {
+          const totalMinutes = Math.round(rawStart * 24 * 60);
+          const h = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+          const m = String(totalMinutes % 60).padStart(2, '0');
+          startStr = `${h}:${m}`;
+        } else if (rawStart) {
+          startStr = String(rawStart).trim().substring(0, 5);
+        }
+
+        let endStr = '';
+        const rawEnd = row[colEnd];
+        if (typeof rawEnd === 'number' && rawEnd >= 0 && rawEnd < 1) {
+          const totalMinutes = Math.round(rawEnd * 24 * 60);
+          const h = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+          const m = String(totalMinutes % 60).padStart(2, '0');
+          endStr = `${h}:${m}`;
+        } else if (rawEnd) {
+          endStr = String(rawEnd).trim().substring(0, 5);
+        }
+
+        const hmVal = (colHm !== -1 && row[colHm] !== undefined) ? String(row[colHm]).trim() : '';
+        const wtVal = (colWt !== -1 && row[colWt] !== undefined) ? String(row[colWt]).trim().toUpperCase() : '';
+        const remarkVal = (colRemark !== -1 && row[colRemark] !== undefined) ? String(row[colRemark]).trim().toLowerCase() : 'daily';
+
+        const estRound = determineWashingRoundFromStartTime(startStr, shiftNum);
+
+        parsedData.push({
+          tempId: 'wash-chk-' + Date.now() + '-' + r,
+          date: parsedDate,
+          cn: rawCn,
+          hm: hmVal,
+          shift: shiftNum,
+          wt: wtVal,
+          remark: remarkVal,
+          start_time: startStr,
+          end_time: endStr,
+          estRound: estRound
+        });
+      }
+
+      if (parsedData.length === 0) {
+        showToast('Tidak ada data valid yang dapat dibaca dari file Excel!', 'warning');
+        return;
+      }
+
+      state.parsedWashChecklistData = parsedData;
+      state.selectedWashChecklistPreviewIds = new Set();
+      state.washChecklistUploadPage = 1;
+
+      const previewSec = document.getElementById('wash-check-preview-section');
+      if (previewSec) previewSec.classList.remove('hidden');
+
+      showToast(`Berhasil membaca ${parsedData.length} baris data ceklist dari Excel!`, 'success');
+      renderWashChecklistPreviewTable();
+    } catch (err) {
+      console.error('[Parse Wash Checklist Excel Error]', err);
+      showToast('Gagal memproses file Excel: ' + err.message, 'error');
+    } finally {
+      event.target.value = '';
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function renderWashChecklistPreviewTable() {
+  const tbody = document.getElementById('wash-checklist-preview-tbody');
+  const summaryText = document.getElementById('wash-check-preview-summary-text');
+  const btnBulkDelete = document.getElementById('wash-check-btn-bulk-delete');
+  const selCountSpan = document.getElementById('wash-check-selected-count');
+  const pageInfo = document.getElementById('wash-check-preview-page-info');
+  const paginationControls = document.getElementById('wash-check-preview-pagination-controls');
+
+  if (!tbody) return;
+
+  const list = state.parsedWashChecklistData || [];
+  if (summaryText) summaryText.textContent = `${list.length} baris data terbaca`;
+
+  const selCount = state.selectedWashChecklistPreviewIds ? state.selectedWashChecklistPreviewIds.size : 0;
+  if (selCountSpan) selCountSpan.textContent = selCount;
+  if (btnBulkDelete) {
+    if (selCount > 0) {
+      btnBulkDelete.disabled = false;
+      btnBulkDelete.classList.remove('opacity-50', 'cursor-not-allowed');
+    } else {
+      btnBulkDelete.disabled = true;
+      btnBulkDelete.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+  }
+
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="12" class="py-8 text-center text-slate-400 italic">Belum ada file yang diunggah</td></tr>';
+    if (pageInfo) pageInfo.textContent = 'Menampilkan 0 - 0 dari 0 baris';
+    if (paginationControls) paginationControls.innerHTML = '';
+    return;
+  }
+
+  const search = (state.washChecklistUploadSearchTerm || '').toLowerCase().trim();
+  const filtered = list.filter(r => {
+    if (!search) return true;
+    return String(r.cn || '').toLowerCase().includes(search) ||
+      String(r.wt || '').toLowerCase().includes(search) ||
+      String(r.remark || '').toLowerCase().includes(search) ||
+      String(r.date || '').toLowerCase().includes(search);
+  });
+
+  const pageSize = 50;
+  const totalRows = filtered.length;
+  const totalPages = Math.ceil(totalRows / pageSize) || 1;
+  if (state.washChecklistUploadPage > totalPages) state.washChecklistUploadPage = totalPages;
+  if (state.washChecklistUploadPage < 1) state.washChecklistUploadPage = 1;
+
+  const startIdx = (state.washChecklistUploadPage - 1) * pageSize;
+  const pageItems = filtered.slice(startIdx, startIdx + pageSize);
+
+  if (pageInfo) {
+    pageInfo.textContent = `Menampilkan ${totalRows === 0 ? 0 : startIdx + 1} - ${Math.min(startIdx + pageSize, totalRows)} dari ${totalRows} baris`;
+  }
+
+  tbody.innerHTML = '';
+  pageItems.forEach((r, idx) => {
+    const isSelected = state.selectedWashChecklistPreviewIds?.has(r.tempId);
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50/80 transition text-slate-800 text-xs';
+
+    const isReq = r.remark.includes('req');
+    const remarkBadge = isReq
+      ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">Request</span>'
+      : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">Daily / Schedule</span>';
+
+    const roundBadge = isReq
+      ? '<span class="text-slate-400 text-[11px]">-</span>'
+      : `<span class="px-2 py-0.5 rounded text-[10.5px] font-bold ${r.estRound === 2 ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}">W${r.estRound}</span>`;
+
+    tr.innerHTML = `
+      <td class="py-2.5 px-3 text-center">
+        <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelectWashChecklistPreview('${r.tempId}', this.checked)"
+          class="rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
+      </td>
+      <td class="py-2.5 px-3 text-center font-mono text-[11px] text-slate-400">${startIdx + idx + 1}</td>
+      <td class="py-2.5 px-3.5 font-mono text-xs font-semibold">${formatWashDateDDMMYYYY(r.date)}</td>
+      <td class="py-2.5 px-3.5 font-mono text-xs font-bold text-slate-900">${r.cn}</td>
+      <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600">${r.hm || '-'}</td>
+      <td class="py-2.5 px-3 text-center font-bold text-xs ${r.shift === 2 ? 'text-purple-700' : 'text-blue-700'}">Shift ${r.shift}</td>
+      <td class="py-2.5 px-3.5 font-mono text-xs font-semibold text-slate-800">${r.wt || '-'}</td>
+      <td class="py-2.5 px-3.5">${remarkBadge}</td>
+      <td class="py-2.5 px-3 font-mono text-xs text-slate-700">${r.start_time || '-'}</td>
+      <td class="py-2.5 px-3 font-mono text-xs text-slate-700">${r.end_time || '-'}</td>
+      <td class="py-2.5 px-3.5 font-mono">${roundBadge}</td>
+      <td class="py-2.5 px-3 text-center">
+        <button type="button" onclick="deleteWashChecklistPreviewRow('${r.tempId}')" title="Hapus baris ini"
+          class="p-1 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (paginationControls) {
+    paginationControls.innerHTML = `
+      <button type="button" onclick="changeWashChecklistUploadPage(${state.washChecklistUploadPage - 1})" ${state.washChecklistUploadPage <= 1 ? 'disabled' : ''}
+        class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-xs text-slate-600 cursor-pointer">
+        Prev
+      </button>
+      <span class="px-2 font-bold text-slate-700">${state.washChecklistUploadPage} / ${totalPages}</span>
+      <button type="button" onclick="changeWashChecklistUploadPage(${state.washChecklistUploadPage + 1})" ${state.washChecklistUploadPage >= totalPages ? 'disabled' : ''}
+        class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-xs text-slate-600 cursor-pointer">
+        Next
+      </button>
+    `;
+  }
+}
+
+function handleWashChecklistPreviewSearch() {
+  const inp = document.getElementById('wash-check-preview-search-input');
+  state.washChecklistUploadSearchTerm = (inp?.value || '').trim();
+  state.washChecklistUploadPage = 1;
+  renderWashChecklistPreviewTable();
+}
+
+function changeWashChecklistUploadPage(page) {
+  state.washChecklistUploadPage = page;
+  renderWashChecklistPreviewTable();
+}
+
+function toggleSelectWashChecklistPreview(tempId, isChecked) {
+  if (!state.selectedWashChecklistPreviewIds) state.selectedWashChecklistPreviewIds = new Set();
+  if (isChecked) state.selectedWashChecklistPreviewIds.add(tempId);
+  else state.selectedWashChecklistPreviewIds.delete(tempId);
+
+  const selCountSpan = document.getElementById('wash-check-selected-count');
+  const btnBulkDelete = document.getElementById('wash-check-btn-bulk-delete');
+  const count = state.selectedWashChecklistPreviewIds.size;
+  if (selCountSpan) selCountSpan.textContent = count;
+  if (btnBulkDelete) {
+    if (count > 0) {
+      btnBulkDelete.disabled = false;
+      btnBulkDelete.classList.remove('opacity-50', 'cursor-not-allowed');
+    } else {
+      btnBulkDelete.disabled = true;
+      btnBulkDelete.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+  }
+}
+
+function toggleSelectAllWashChecklistPreview(isChecked) {
+  if (!state.selectedWashChecklistPreviewIds) state.selectedWashChecklistPreviewIds = new Set();
+  if (isChecked) {
+    (state.parsedWashChecklistData || []).forEach(r => state.selectedWashChecklistPreviewIds.add(r.tempId));
+  } else {
+    state.selectedWashChecklistPreviewIds.clear();
+  }
+  renderWashChecklistPreviewTable();
+}
+
+function deleteWashChecklistPreviewRow(tempId) {
+  triggerHaptic(8);
+  state.parsedWashChecklistData = (state.parsedWashChecklistData || []).filter(r => r.tempId !== tempId);
+  if (state.selectedWashChecklistPreviewIds) state.selectedWashChecklistPreviewIds.delete(tempId);
+  renderWashChecklistPreviewTable();
+}
+
+function bulkDeleteWashChecklistPreviewRows() {
+  const count = state.selectedWashChecklistPreviewIds ? state.selectedWashChecklistPreviewIds.size : 0;
+  if (count === 0) return;
+  triggerHaptic(10);
+  if (!confirm(`Hapus ${count} baris data terpilih dari daftar pratinjau?`)) return;
+
+  state.parsedWashChecklistData = (state.parsedWashChecklistData || []).filter(r => !state.selectedWashChecklistPreviewIds.has(r.tempId));
+  state.selectedWashChecklistPreviewIds.clear();
+  const selectAll = document.getElementById('wash-check-select-all-preview');
+  if (selectAll) selectAll.checked = false;
+  showToast(`Berhasil menghapus ${count} baris data!`, 'success');
+  renderWashChecklistPreviewTable();
+}
+
+function clearWashChecklistPreview() {
+  triggerHaptic(8);
+  state.parsedWashChecklistData = [];
+  if (state.selectedWashChecklistPreviewIds) state.selectedWashChecklistPreviewIds.clear();
+  const previewSec = document.getElementById('wash-check-preview-section');
+  if (previewSec) previewSec.classList.add('hidden');
+  renderWashChecklistPreviewTable();
+}
+
+async function saveWashChecklistToSupabase() {
+  if (!state.supabaseClient) {
+    showToast('Koneksi Supabase belum siap!', 'warning');
+    return;
+  }
+  const list = state.parsedWashChecklistData || [];
+  if (list.length === 0) {
+    showToast('Tidak ada data pratinjau untuk disimpan!', 'warning');
+    return;
+  }
+
+  const btnSave = document.getElementById('wash-check-btn-save-db');
+  const originalHtml = btnSave ? btnSave.innerHTML : '';
+  if (btnSave) {
+    btnSave.disabled = true;
+    btnSave.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Menyimpan ke Supabase...</span>';
+  }
+
+  try {
+    const isReplace = (state.washChecklistUploadMode !== 'append');
+
+    // 1. Mode REPLACE (TIMPA): hapus data lama pada tanggal-tanggal file upload
+    if (isReplace) {
+      const uniqueDates = Array.from(new Set(list.map(r => r.date).filter(Boolean)));
+      if (uniqueDates.length > 0) {
+        console.log('[Supabase Wash Checklist] Menimpa data tanggal:', uniqueDates);
+        const { error: delErr } = await state.supabaseClient
+          .from('washing_checklists')
+          .delete()
+          .in('date', uniqueDates);
+        if (delErr) {
+          console.error('[Supabase Delete Old Checklist Error]', delErr);
+        }
+      }
+    }
+
+    // 2. Siapkan baris insert
+    const rowsToInsert = list.map(r => ({
+      date: r.date,
+      cn: r.cn,
+      hm: r.hm || null,
+      shift: r.shift || 1,
+      wt: r.wt || null,
+      remark: r.remark || 'daily',
+      start_time: r.start_time || null,
+      end_time: r.end_time || null,
+      uploaded_by: state.currentUser?.nama || 'Admin'
+    }));
+
+    // 3. Batch insert chunk per 200 baris
+    const CHUNK_SIZE = 200;
+    for (let i = 0; i < rowsToInsert.length; i += CHUNK_SIZE) {
+      const chunk = rowsToInsert.slice(i, i + CHUNK_SIZE);
+      const { error: insErr } = await state.supabaseClient
+        .from('washing_checklists')
+        .insert(chunk);
+      if (insErr) {
+        throw new Error(insErr.message || 'Gagal menyimpan batch ke Supabase');
+      }
+    }
+
+    showToast(`Berhasil menyimpan ${rowsToInsert.length} data ceklist ke database Supabase!`, 'success');
+    clearWashChecklistPreview();
+
+    // Deteksi rentang tanggal data yang baru di-upload
+    const uniqueDates = Array.from(new Set(rowsToInsert.map(r => r.date).filter(Boolean))).sort();
+    const minUploadDate = uniqueDates[0];
+    const maxUploadDate = uniqueDates[uniqueDates.length - 1];
+
+    if (minUploadDate && maxUploadDate) {
+      state.washChecklistFilterStartDate = minUploadDate;
+      state.washChecklistFilterEndDate = maxUploadDate;
+      state.washChecklistDataFilterStartDate = minUploadDate;
+      state.washChecklistDataFilterEndDate = maxUploadDate;
+
+      const startInpM = document.getElementById('wash-check-filter-start-date');
+      const endInpM = document.getElementById('wash-check-filter-end-date');
+      if (startInpM) startInpM.value = minUploadDate;
+      if (endInpM) endInpM.value = maxUploadDate;
+
+      const startInpD = document.getElementById('wash-data-filter-start-date');
+      const endInpD = document.getElementById('wash-data-filter-end-date');
+      if (startInpD) startInpD.value = minUploadDate;
+      if (endInpD) endInpD.value = maxUploadDate;
+    }
+
+    // Gabungkan langsung ke state memori agar instan tanpa jeda
+    const existingMap = new Map();
+    (state.washingChecklists || []).forEach(r => {
+      if (r.id) existingMap.set(String(r.id), r);
+    });
+    rowsToInsert.forEach((r, idx) => {
+      const tempId = r.id || `temp_${Date.now()}_${idx}`;
+      existingMap.set(String(tempId), { ...r, id: tempId });
+    });
+    state.washingChecklists = Array.from(existingMap.values());
+    if (window.globalDataCache) {
+      window.globalDataCache.washingChecklists = state.washingChecklists;
+    }
+
+    // Arahkan ke tab Data Ceklist agar admin langsung melihat data yang berhasil di-upload
+    switchWashChecklistNestedTab('data');
+    await loadWashingChecklistsFromSupabase(true, minUploadDate, maxUploadDate);
+    renderWashChecklistDataTable();
+    renderWashChecklistMonitorTable();
+  } catch (err) {
+    console.error('[saveWashChecklistToSupabase Error]', err);
+    showToast('Gagal menyimpan ke database: ' + err.message, 'error');
+  } finally {
+    if (btnSave) {
+      btnSave.disabled = false;
+      btnSave.innerHTML = originalHtml;
+    }
+  }
+}
+
+// ============================================================================
+// TABEL MONITORING KOMPARASI
+// ============================================================================
+
+function changeWashChecklistPageSize(val) {
+  state.washChecklistPageSize = (val === 'ALL') ? 99999 : (parseInt(val, 10) || 100);
+  state.washChecklistPage = 1;
+  renderWashChecklistMonitorTable();
+}
+
+function goToWashChecklistPage(page) {
+  state.washChecklistPage = page;
+  renderWashChecklistMonitorTable();
+}
+
+function renderWashChecklistMonitorTable() {
+  const tbDesktop = document.getElementById('wash-checklist-monitor-desktop-tbody');
+  const tbMobile = document.getElementById('wash-checklist-monitor-mobile-tbody');
+  const infoEl = document.getElementById('wash-check-pagination-info');
+  const paginationControls = document.getElementById('wash-check-pagination-controls');
+
+  if (!tbDesktop && !tbMobile) return;
+
+  initWashChecklistModule();
+  updateWashChecklistSortIcons();
+
+  // Role Protection UI: Jika bukan admin (misal washingman), sembunyikan bar subtab admin
+  const adminSubtabs = document.getElementById('wash-check-admin-subtabs');
+  const isAdmin = (state.currentUser?.role === 'admin');
+  if (adminSubtabs) {
+    if (isAdmin) adminSubtabs.classList.remove('hidden');
+    else adminSubtabs.classList.add('hidden');
+  }
+
+  const startDate = state.washChecklistFilterStartDate;
+  const endDate = state.washChecklistFilterEndDate || startDate;
+  const shiftFilter = state.washChecklistFilterShift || 'ALL';
+  const clusterFilter = state.washChecklistFilterCluster || 'ALL';
+  const statusFilter = state.washChecklistFilterStatus || 'ALL';
+  const searchTerm = (state.washChecklistSearchTerm || '').toLowerCase().trim();
+
+  // Kriteria job Water Truck yang relevan:
+  // 1. Water Truck (isJobWaterTruck)
+  // 2. Schedule: status ACH / ACHIEVED / DONE
+  // 3. Request: status ACH, SERVICE, BD, BREAKDOWN, WASHING request
+  const isTargetJobFilter = j => {
+    if (!j) return false;
+    const isWt = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(j) : true;
+    if (!isWt) return false;
+
+    const s = String(j.status_final || j.status || '').toLowerCase().trim();
+    const isAch = ['ach', 'achieved', 'done'].includes(s);
+    const isReq = (typeof isUnitReqJob === 'function' && isUnitReqJob(j)) ||
+      String(j.id || '').includes('UNS') ||
+      String(j.targetType || '').toUpperCase() === 'UNSCHEDULED';
+
+    if (isReq) {
+      return isAch || ['service', 'bd', 'breakdown', 'washing'].includes(s) || String(j.kondisi || '').toLowerCase().includes('service');
+    }
+    // Schedule wajib achieved
+    return isAch;
+  };
+
+  const pool = [
+    ...(state.watertruckState?.jobs || []).filter(isTargetJobFilter),
+    ...(state.unscheduledWtJobs || []).filter(isTargetJobFilter),
+    ...(state.jobHistory || []).filter(isTargetJobFilter)
+  ];
+
+  // Deduplikasi berdasarkan Primary ID / Job ID
+  const jobMap = new Map();
+  pool.forEach(j => {
+    const key = String(j.job_id || j.id || j.no_id || j.noId || '');
+    if (key && !jobMap.has(key)) {
+      jobMap.set(key, j);
+    }
+  });
+  const allEligibleJobs = Array.from(jobMap.values());
+
+  // Filter tanggal, shift, cluster
+  const filteredJobs = allEligibleJobs.filter(j => {
+    const jobDate = j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || j.tanggal_rencana || '';
+    if (startDate && jobDate < startDate) return false;
+    if (endDate && jobDate > endDate) return false;
+
+    if (shiftFilter !== 'ALL') {
+      const s = String(j.shift || j.shift_rencana || 1);
+      if (s !== shiftFilter) return false;
+    }
+
+    if (clusterFilter !== 'ALL') {
+      const c = String(j.cluster || '').toLowerCase();
+      if (!c.includes(clusterFilter.toLowerCase())) return false;
+    }
+
+    return true;
+  });
+
+  // Komparasi dengan state.washingChecklists
+  const checklists = state.washingChecklists || [];
+  const comparedList = filteredJobs.map(job => {
+    const jobDate = job.tanggalRealisasi || job.tanggal_eksekusi || job.tanggal || job.tanggal_rencana || '';
+    const jobShift = parseInt(job.shift || job.shift_rencana || 1, 10);
+    const jobUnit = String(job.noLambung || job.no_lambung || job.unit || '').trim();
+    const isReq = (typeof isUnitReqJob === 'function' && isUnitReqJob(job)) ||
+      String(job.id || '').includes('UNS') ||
+      String(job.targetType || '').toUpperCase() === 'UNSCHEDULED';
+    const jobRound = isReq ? 0 : ((typeof getJobWashingRound === 'function') ? getJobWashingRound(job) : 1);
+
+    // Cari kecocokan di data checklist Supabase
+    let matchedChecklist = null;
+    for (const c of checklists) {
+      if (c.date !== jobDate) continue;
+      if (parseInt(c.shift, 10) !== jobShift) continue;
+      if (!checkUnitsMatch(c.cn, jobUnit)) continue;
+
+      const cRemark = String(c.remark || '').toLowerCase();
+      if (isReq) {
+        // Job Request cocok jika remark request
+        if (cRemark.includes('req') || cRemark === 'request') {
+          matchedChecklist = c;
+          break;
+        }
+      } else {
+        // Job Schedule cocok jika bukan request dan round cocok
+        if (!cRemark.includes('req')) {
+          const cRound = determineWashingRoundFromStartTime(c.start_time, c.shift);
+          if (cRound === jobRound) {
+            matchedChecklist = c;
+            break;
+          }
+        }
+      }
+    }
+
+    // Fallback jika tidak menemukan round spesifik: ceklist di tanggal & shift & unit yang sama
+    if (!matchedChecklist && !isReq) {
+      matchedChecklist = checklists.find(c =>
+        c.date === jobDate &&
+        parseInt(c.shift, 10) === jobShift &&
+        checkUnitsMatch(c.cn, jobUnit)
+      ) || null;
+    }
+
+    // Ekstrak data HM dan Personil (MP1 & MP2 saja)
+    const effectiveShift = (job.shift && Number(job.shift)) ? Number(job.shift) : ((typeof getEffectiveShiftForJob === 'function') ? getEffectiveShiftForJob(job) : 1);
+    let rawArmada = (job.armada && job.armada !== '-') ? job.armada : ((job.wtUnit && job.wtUnit !== '-') ? job.wtUnit : ((job.armadaUnit && job.armadaUnit !== '-') ? job.armadaUnit : ''));
+    let finalArmada = rawArmada || (typeof resolveJobArmada === 'function' ? resolveJobArmada(job) : '') || '-';
+    if ((finalArmada === '-' || !finalArmada || finalArmada.startsWith('--')) && typeof autoResolveJobArmadaAndCrew === 'function') {
+      const res = autoResolveJobArmadaAndCrew(job);
+      if (res && res.armada && res.armada !== '-') finalArmada = res.armada;
+    }
+
+    const crewFallback = (finalArmada !== '-' && typeof getPersonnelForArmada === 'function')
+      ? getPersonnelForArmada(finalArmada, job.cluster, effectiveShift, jobDate)
+      : { mp1: '-', mp2: '-' };
+
+    let mp1 = job.mp1 || crewFallback.mp1 || '-';
+    let mp2 = job.mp2 || crewFallback.mp2 || '-';
+    if (typeof isDummyPersonnelName === 'function') {
+      if (isDummyPersonnelName(mp1)) mp1 = '-';
+      if (isDummyPersonnelName(mp2)) mp2 = '-';
+    }
+
+    // Ekstrak HM
+    const hmStart = job.hmStart || job.hm_start || job.hmStop || job.hm_stop || job.snapshot_data?.hmStart || '';
+    const hmEnd = job.hmEnd || job.hm_end || job.hmReady || job.hm_ready || job.snapshot_data?.hmEnd || '';
+    let hmDisplay = '-';
+    if (hmStart && hmEnd) {
+      hmDisplay = `${hmStart} - ${hmEnd}`;
+    } else if (hmStart || hmEnd) {
+      hmDisplay = String(hmStart || hmEnd);
+    }
+
+    // Ekstrak jam realisasi
+    const jStart = job.jamStart || job.jam_start || '';
+    const jEnd = job.jamEnd || job.jam_end || '';
+    let jamRealisasi = '-';
+    if (jStart && jEnd) {
+      jamRealisasi = `${jStart} - ${jEnd}`;
+    } else if (jStart || jEnd) {
+      jamRealisasi = String(jStart || jEnd);
+    } else if (job.waktu) {
+      jamRealisasi = String(job.waktu);
+    }
+
+    return {
+      job,
+      jobDate,
+      jobShift,
+      jobUnit,
+      isReq,
+      jobRound,
+      finalArmada,
+      mp1,
+      mp2,
+      hmStart,
+      hmEnd,
+      hmDisplay,
+      jamRealisasi,
+      isChecklistDone: Boolean(matchedChecklist),
+      matchedChecklist
+    };
+  });
+
+  // Filter Status Ceklist (Semua / Sudah / Belum)
+  let statusFiltered = comparedList;
+  if (statusFilter === 'sudah') {
+    statusFiltered = comparedList.filter(item => item.isChecklistDone);
+  } else if (statusFilter === 'belum') {
+    statusFiltered = comparedList.filter(item => !item.isChecklistDone);
+  }
+
+  // Filter Search Input
+  let searchFiltered = statusFiltered;
+  if (searchTerm) {
+    searchFiltered = statusFiltered.filter(item => {
+      const j = item.job;
+      const unit = String(item.jobUnit || '').toLowerCase();
+      const lok = String(j.lokasi || '').toLowerCase();
+      const armada = String(item.finalArmada || '').toLowerCase();
+      const mp1 = String(item.mp1 || '').toLowerCase();
+      const mp2 = String(item.mp2 || '').toLowerCase();
+      const idStr = String(j.id || j.job_id || j.no_id || j.noId || '').toLowerCase();
+      return unit.includes(searchTerm) || lok.includes(searchTerm) || armada.includes(searchTerm) || mp1.includes(searchTerm) || mp2.includes(searchTerm) || idStr.includes(searchTerm);
+    });
+  }
+
+  // SORTING DINAMIS 10 KOLOM
+  const sortCol = state.washChecklistSort?.column || 'realisasi';
+  const sortDir = state.washChecklistSort?.direction || 'desc';
+  const factor = (sortDir === 'asc') ? 1 : -1;
+
+  searchFiltered.sort((a, b) => {
+    let valA = '';
+    let valB = '';
+
+    if (sortCol === 'noId') {
+      const idA = (typeof getStandardJobNoId === 'function') ? getStandardJobNoId(a.job) : (a.job.id || '');
+      const idB = (typeof getStandardJobNoId === 'function') ? getStandardJobNoId(b.job) : (b.job.id || '');
+      return factor * String(idA).localeCompare(String(idB));
+    } else if (sortCol === 'type') {
+      valA = a.isReq ? 'REQ' : ('W' + a.jobRound);
+      valB = b.isReq ? 'REQ' : ('W' + b.jobRound);
+      return factor * valA.localeCompare(valB);
+    } else if (sortCol === 'shift') {
+      return factor * (a.jobShift - b.jobShift);
+    } else if (sortCol === 'unit') {
+      return factor * String(a.jobUnit || '').localeCompare(String(b.jobUnit || ''));
+    } else if (sortCol === 'cluster') {
+      valA = String(a.job.cluster || '') + ' ' + String(a.job.lokasi || '');
+      valB = String(b.job.cluster || '') + ' ' + String(b.job.lokasi || '');
+      return factor * valA.localeCompare(valB);
+    } else if (sortCol === 'armada') {
+      return factor * String(a.finalArmada || '').localeCompare(String(b.finalArmada || ''));
+    } else if (sortCol === 'personil') {
+      valA = String(a.mp1 || '') + ' ' + String(a.mp2 || '');
+      valB = String(b.mp1 || '') + ' ' + String(b.mp2 || '');
+      return factor * valA.localeCompare(valB);
+    } else if (sortCol === 'hm') {
+      const hmA = parseFloat(a.hmStart || a.hmEnd || 0) || 0;
+      const hmB = parseFloat(b.hmStart || b.hmEnd || 0) || 0;
+      return factor * (hmA - hmB);
+    } else if (sortCol === 'realisasi') {
+      const tA = (a.jobDate || '') + ' ' + (a.jamRealisasi || '');
+      const tB = (b.jobDate || '') + ' ' + (b.jamRealisasi || '');
+      return factor * tA.localeCompare(tB);
+    } else if (sortCol === 'ceklist') {
+      const numA = a.isChecklistDone ? 1 : 0;
+      const numB = b.isChecklistDone ? 1 : 0;
+      return factor * (numA - numB);
+    }
+
+    // Default: tanggal & unit
+    if (a.jobDate !== b.jobDate) return factor * String(a.jobDate).localeCompare(String(b.jobDate));
+    return factor * String(a.jobUnit).localeCompare(String(b.jobUnit));
+  });
+
+  // Hitung KPI
+  const totalJobsCount = comparedList.length;
+  const doneCount = comparedList.filter(item => item.isChecklistDone).length;
+  const pendingCount = totalJobsCount - doneCount;
+  const complianceRate = totalJobsCount > 0 ? Math.round((doneCount / totalJobsCount) * 100) : 0;
+
+  const kpiTotal = document.getElementById('wash-kpi-total-jobs');
+  const kpiDone = document.getElementById('wash-kpi-done-count');
+  const kpiPending = document.getElementById('wash-kpi-pending-count');
+  const kpiRate = document.getElementById('wash-kpi-compliance-rate');
+  if (kpiTotal) kpiTotal.textContent = totalJobsCount;
+  if (kpiDone) kpiDone.textContent = doneCount;
+  if (kpiPending) kpiPending.textContent = pendingCount;
+  if (kpiRate) kpiRate.textContent = `${complianceRate}%`;
+
+  // Paginasi
+  const totalRows = searchFiltered.length;
+  const pageSize = state.washChecklistPageSize || 100;
+  const totalPages = Math.ceil(totalRows / pageSize) || 1;
+  if (state.washChecklistPage > totalPages) state.washChecklistPage = totalPages;
+  if (state.washChecklistPage < 1) state.washChecklistPage = 1;
+
+  const startIdx = (state.washChecklistPage - 1) * pageSize;
+  const pageItems = searchFiltered.slice(startIdx, startIdx + pageSize);
+
+  if (infoEl) {
+    infoEl.textContent = `Menampilkan ${totalRows === 0 ? 0 : startIdx + 1} - ${Math.min(startIdx + pageSize, totalRows)} dari ${totalRows} data`;
+  }
+
+  // RENDER DESKTOP (10 KOLOM - SIMETRIS DENGAN RIWAYAT SELESAI: SEMUA UKURAN KECIL, TIDAK ADA BOLD)
+  if (tbDesktop) {
+    tbDesktop.innerHTML = '';
+    if (pageItems.length === 0) {
+      tbDesktop.innerHTML = '<tr><td colspan="10" class="py-8 text-center text-slate-400 italic text-[8.5px] md:text-[9px]">Tidak ada data pekerjaan yang sesuai dengan filter.</td></tr>';
+    } else {
+      pageItems.forEach((item) => {
+        const j = item.job;
+        const jobId = j.id || j.job_id || j.no_id || j.noId || '';
+        const standardNoId = (typeof getStandardJobNoId === 'function') ? getStandardJobNoId(j) : (j.noId || j.no_id || jobId);
+        const unit = item.jobUnit || '-';
+        const isReq = item.isReq;
+        const round = item.jobRound;
+        const shiftNum = item.jobShift;
+        const cluster = j.cluster || '-';
+        const lokasi = j.lokasi || '-';
+        const armada = item.finalArmada || '-';
+        const tglRealisasi = item.jobDate || '-';
+        const jamRealisasi = item.jamRealisasi;
+        const hmDisplay = item.hmDisplay;
+
+        let typeBadge = '';
+        if (isReq) {
+          typeBadge = '<span class="px-1.5 py-0.5 rounded text-[8px] md:text-[8.5px] font-medium bg-purple-50 text-purple-700 border border-purple-200">Request</span>';
+        } else {
+          typeBadge = `<span class="px-1.5 py-0.5 rounded text-[8px] md:text-[8.5px] font-medium ${round === 2 ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}">Schedule W${round}</span>`;
+        }
+
+        const checklistBadge = item.isChecklistDone
+          ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] md:text-[8.5px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+               <svg class="w-2.5 h-2.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+               Sudah
+             </span>`
+          : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] md:text-[8.5px] font-medium bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs">
+               <svg class="w-2.5 h-2.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+               Belum
+             </span>`;
+
+        // Render Personil: MP 1 & MP 2 saja, tanpa opt, font kecil dan tidak bold
+        let personilHtml = '<span class="text-slate-300 text-[8.5px]">-</span>';
+        if (item.mp1 !== '-' && item.mp2 !== '-') {
+          personilHtml = `
+            <div class="font-medium text-slate-700 text-[8px] md:text-[8.5px] leading-tight truncate">${item.mp1}</div>
+            <div class="font-medium text-slate-500 text-[8px] md:text-[8.5px] leading-tight mt-0.5 truncate">${item.mp2}</div>
+          `;
+        } else if (item.mp1 !== '-') {
+          personilHtml = `<div class="font-medium text-slate-700 text-[8px] md:text-[8.5px] leading-tight truncate">${item.mp1}</div>`;
+        } else if (item.mp2 !== '-') {
+          personilHtml = `<div class="font-medium text-slate-700 text-[8px] md:text-[8.5px] leading-tight truncate">${item.mp2}</div>`;
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition align-middle text-slate-700';
+        tr.innerHTML = `
+          <!-- 1. NO ID (Font Kecil Sesuai Riwayat Selesai) -->
+          <td class="py-2 px-1.5 md:py-2.5 md:px-2 text-left align-middle font-mono font-medium text-[8px] lg:text-[8.5px] text-slate-700 select-all tracking-tight leading-tight whitespace-nowrap">
+            <button type="button" onclick="openJobDetailModal('${jobId}')" class="text-left font-mono font-medium text-[8px] lg:text-[8.5px] text-slate-700 select-all tracking-tight leading-tight cursor-pointer hover:text-cyan-700" title="Klik untuk lihat detail">
+              ${(typeof formatJobNoIdDesktopHtml === 'function') ? formatJobNoIdDesktopHtml(standardNoId) : standardNoId}
+            </button>
+          </td>
+
+          <!-- 2. TYPE JOB (Font Kecil, Tidak Bold) -->
+          <td class="py-2 px-1 text-left align-middle whitespace-nowrap">${typeBadge}</td>
+
+          <!-- 3. SHIFT (Font Kecil, Tidak Bold) -->
+          <td class="py-2 px-1 text-center align-middle whitespace-nowrap">
+            <span class="font-medium text-[8px] md:text-[8.5px] ${shiftNum === 2 ? 'text-purple-700' : 'text-blue-700'}">Shift ${shiftNum}</span>
+          </td>
+
+          <!-- 4. NO UNIT (Font Kecil Sesuai Riwayat Selesai, Tidak Bold, Tidak Ada Link Icon) -->
+          <td class="py-2 px-1.5 md:py-2.5 md:px-2 text-left align-middle break-words whitespace-nowrap">
+            <button type="button" onclick="openJobDetailModal('${jobId}')" class="font-medium text-slate-900 font-mono hover:text-cyan-700 text-left cursor-pointer text-[8.5px] md:text-[9px] leading-snug tracking-wide block w-full" title="Klik untuk cek detail unit">
+              ${unit}
+            </button>
+          </td>
+
+          <!-- 5. CLUSTER & LOKASI (Font Kecil, Tidak Bold) -->
+          <td class="py-2 px-1.5 md:py-2.5 md:px-2 text-left align-middle break-words">
+            <div class="font-medium text-slate-800 text-[8.5px] leading-tight text-left">${(typeof formatClusterLabel === 'function') ? formatClusterLabel(cluster) : cluster}</div>
+            <div class="text-[8px] text-slate-400 uppercase mt-0.5 block leading-tight text-left truncate max-w-[130px]">${lokasi}</div>
+          </td>
+
+          <!-- 6. ARMADA (Font Kecil, Tidak Bold) -->
+          <td class="py-2 px-1.5 md:py-2.5 md:px-2 text-left align-middle font-mono font-medium text-[8.5px] text-slate-700 whitespace-nowrap">${armada}</td>
+
+          <!-- 7. PERSONIL (MP 1 & MP 2 Saja, Font Kecil, Tidak Bold) -->
+          <td class="py-2 px-1.5 md:py-2.5 md:px-2 text-left align-middle break-words text-[8.5px]">${personilHtml}</td>
+
+          <!-- 8. HM (Start & End, Font Kecil, Tidak Bold) -->
+          <td class="py-2 px-1.5 md:py-2.5 md:px-2 text-left align-middle font-mono font-medium text-[8px] md:text-[8.5px] text-slate-700 whitespace-nowrap">${hmDisplay}</td>
+
+          <!-- 9. REALISASI (Tanpa Status Achieved, Jam di Bawah Tanggal, Font Kecil, Tidak Bold) -->
+          <td class="py-2 px-1.5 md:py-2.5 md:px-2 text-left align-middle whitespace-nowrap">
+            <div class="font-mono text-[8.5px] font-medium text-slate-800 leading-tight">${formatWashDateDDMMYYYY(tglRealisasi)}</div>
+            <div class="font-mono text-[8px] text-slate-500 mt-0.5 leading-tight">${jamRealisasi}</div>
+          </td>
+
+          <!-- 10. CEKLIST (Badge Kecil, Font Medium) -->
+          <td class="py-2 px-1.5 md:py-2.5 md:px-2 text-center align-middle whitespace-nowrap">${checklistBadge}</td>
+        `;
+        tbDesktop.appendChild(tr);
+      });
+    }
+  }
+
+  // RENDER MOBILE (6 KOLOM - SEMUA UKURAN KECIL, TIDAK ADA BOLD)
+  if (tbMobile) {
+    tbMobile.innerHTML = '';
+    if (pageItems.length === 0) {
+      tbMobile.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-slate-400 italic text-[8.5px]">Tidak ada data.</td></tr>';
+    } else {
+      pageItems.forEach((item) => {
+        const j = item.job;
+        const jobId = j.id || j.job_id || j.no_id || j.noId || '';
+        const unit = item.jobUnit || '-';
+        const isReq = item.isReq;
+        const round = item.jobRound;
+        const cluster = j.cluster || '-';
+        const lokasi = j.lokasi || '-';
+        const armada = item.finalArmada || '-';
+        const tglRealisasi = item.jobDate || '-';
+        const jamRealisasi = item.jamRealisasi;
+
+        let typeBadge = '';
+        if (isReq) {
+          typeBadge = '<span class="px-1.5 py-0.5 rounded text-[8px] font-medium bg-purple-50 text-purple-700 border border-purple-200">REQ</span>';
+        } else {
+          typeBadge = `<span class="px-1.5 py-0.5 rounded text-[8px] font-medium ${round === 2 ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}">W${round}</span>`;
+        }
+
+        const checklistBadge = item.isChecklistDone
+          ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Sudah</span>`
+          : `<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] font-medium bg-rose-50 text-rose-700 border border-rose-200">Belum</span>`;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition align-middle text-slate-700';
+        tr.innerHTML = `
+          <!-- 1. TYPE JOB -->
+          <td class="py-2 px-1 text-left align-middle whitespace-nowrap">${typeBadge}</td>
+
+          <!-- 2. NO UNIT (Font Kecil Sesuai Riwayat Selesai, Tidak Bold) -->
+          <td class="py-2 px-1.5 text-left align-middle whitespace-nowrap">
+            <button type="button" onclick="openJobDetailModal('${jobId}')" class="font-medium text-slate-900 font-mono hover:text-cyan-700 text-left cursor-pointer text-[8.5px] leading-snug">
+              ${unit}
+            </button>
+          </td>
+
+          <!-- 3. CLUSTER & LOKASI -->
+          <td class="py-2 px-1 text-left align-middle break-words">
+            <div class="font-medium text-[8.5px] text-slate-800 leading-tight">${(typeof formatClusterLabel === 'function') ? formatClusterLabel(cluster) : cluster}</div>
+            <div class="text-[8px] text-slate-400 uppercase truncate max-w-[80px] mt-0.5 leading-tight">${lokasi}</div>
+          </td>
+
+          <!-- 4. ARMADA -->
+          <td class="py-2 px-1 font-mono text-[8px] font-medium text-slate-700 whitespace-nowrap text-left align-middle">${armada}</td>
+
+          <!-- 5. REALISASI (Tanpa Status Achieved, Jam di Bawah Tanggal) -->
+          <td class="py-2 px-1 whitespace-nowrap text-left align-middle">
+            <div class="font-mono text-[8.5px] font-medium text-slate-800 leading-tight">${formatWashDateDDMMYYYY(tglRealisasi)}</div>
+            <div class="font-mono text-[8px] text-slate-500 mt-0.5 leading-tight">${jamRealisasi}</div>
+          </td>
+
+          <!-- 6. CEKLIST -->
+          <td class="py-2 px-1 text-center align-middle whitespace-nowrap">${checklistBadge}</td>
+        `;
+        tbMobile.appendChild(tr);
+      });
+    }
+  }
+
+  // Render pagination buttons
+  if (paginationControls) {
+    paginationControls.innerHTML = `
+      <button type="button" onclick="goToWashChecklistPage(${state.washChecklistPage - 1})" ${state.washChecklistPage <= 1 ? 'disabled' : ''}
+        class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-xs text-slate-600 cursor-pointer">
+        Prev
+      </button>
+      <span class="px-2 font-bold text-slate-700">${state.washChecklistPage} / ${totalPages}</span>
+      <button type="button" onclick="goToWashChecklistPage(${state.washChecklistPage + 1})" ${state.washChecklistPage >= totalPages ? 'disabled' : ''}
+        class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-xs text-slate-600 cursor-pointer">
+        Next
+      </button>
+    `;
+  }
+}
+
+function renderWashChecklistTab() {
+  const isAdmin = (state.currentUser?.role === 'admin');
+  if (!isAdmin) {
+    state.washChecklistSubtab = 'monitor';
+  }
+  switchWashChecklistSubtab(state.washChecklistSubtab || 'monitor');
+}
+
+window.determineWashingRoundFromStartTime = determineWashingRoundFromStartTime;
+window.switchWashChecklistSubtab = switchWashChecklistSubtab;
+window.setWashChecklistFilterToday = setWashChecklistFilterToday;
+window.handleWashChecklistFilterChange = handleWashChecklistFilterChange;
+window.handleWashChecklistSearchInput = handleWashChecklistSearchInput;
+window.clearWashChecklistSearch = clearWashChecklistSearch;
+window.refreshWashChecklistData = refreshWashChecklistData;
+window.sortWashChecklistBy = sortWashChecklistBy;
+window.updateWashChecklistSortIcons = updateWashChecklistSortIcons;
+window.renderWashChecklistSkeleton = renderWashChecklistSkeleton;
+window.loadWashingChecklistsFromSupabase = loadWashingChecklistsFromSupabase;
+window.handleRealtimeWashingChecklistChange = handleRealtimeWashingChecklistChange;
+window.handleWashChecklistExcelUpload = handleWashChecklistExcelUpload;
+window.renderWashChecklistPreviewTable = renderWashChecklistPreviewTable;
+window.handleWashChecklistPreviewSearch = handleWashChecklistPreviewSearch;
+window.changeWashChecklistUploadPage = changeWashChecklistUploadPage;
+window.toggleSelectWashChecklistPreview = toggleSelectWashChecklistPreview;
+window.toggleSelectAllWashChecklistPreview = toggleSelectAllWashChecklistPreview;
+window.deleteWashChecklistPreviewRow = deleteWashChecklistPreviewRow;
+window.bulkDeleteWashChecklistPreviewRows = bulkDeleteWashChecklistPreviewRows;
+window.clearWashChecklistPreview = clearWashChecklistPreview;
+window.saveWashChecklistToSupabase = saveWashChecklistToSupabase;
+window.changeWashChecklistPageSize = changeWashChecklistPageSize;
+window.goToWashChecklistPage = goToWashChecklistPage;
+window.renderWashChecklistMonitorTable = renderWashChecklistMonitorTable;
+
+// ============================================================================
+// MODUL DATA CEKLIST WASHING (DATABASE ARCHIVE VIEW & MANAGEMENT)
+// ============================================================================
+
+function initWashChecklistDataFilters() {
+  const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+  if (state.washChecklistDataFilterStartDate === undefined) state.washChecklistDataFilterStartDate = state.washChecklistFilterStartDate || today;
+  if (state.washChecklistDataFilterEndDate === undefined) state.washChecklistDataFilterEndDate = state.washChecklistFilterEndDate || today;
+  if (!state.washChecklistDataPage) state.washChecklistDataPage = 1;
+  if (!state.washChecklistDataPageSize) state.washChecklistDataPageSize = 100;
+
+  const startInp = document.getElementById('wash-data-filter-start-date');
+  const endInp = document.getElementById('wash-data-filter-end-date');
+  const shiftSel = document.getElementById('wash-data-filter-shift');
+  const remarkSel = document.getElementById('wash-data-filter-remark');
+
+  if (startInp && state.washChecklistDataFilterStartDate !== undefined) startInp.value = state.washChecklistDataFilterStartDate;
+  if (endInp && state.washChecklistDataFilterEndDate !== undefined) endInp.value = state.washChecklistDataFilterEndDate;
+  if (shiftSel && state.washChecklistDataFilterShift) shiftSel.value = state.washChecklistDataFilterShift;
+  if (remarkSel && state.washChecklistDataFilterRemark) remarkSel.value = state.washChecklistDataFilterRemark;
+}
+
+function handleWashChecklistDataFilterChange() {
+  const startInp = document.getElementById('wash-data-filter-start-date');
+  const endInp = document.getElementById('wash-data-filter-end-date');
+  const shiftSel = document.getElementById('wash-data-filter-shift');
+  const remarkSel = document.getElementById('wash-data-filter-remark');
+
+  if (startInp) state.washChecklistDataFilterStartDate = startInp.value;
+  if (endInp) state.washChecklistDataFilterEndDate = endInp.value;
+  if (shiftSel) state.washChecklistDataFilterShift = shiftSel.value;
+  if (remarkSel) state.washChecklistDataFilterRemark = remarkSel.value;
+
+  state.washChecklistDataPage = 1;
+
+  // On-demand fetch sesuai rentang tanggal yang dipilih
+  loadWashingChecklistsFromSupabase(true, state.washChecklistDataFilterStartDate, state.washChecklistDataFilterEndDate).then(() => {
+    renderWashChecklistDataTable();
+  });
+}
+
+function setWashChecklistDataFilterToday() {
+  triggerHaptic(8);
+  const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+  state.washChecklistDataFilterStartDate = today;
+  state.washChecklistDataFilterEndDate = today;
+
+  const startInp = document.getElementById('wash-data-filter-start-date');
+  const endInp = document.getElementById('wash-data-filter-end-date');
+  if (startInp) startInp.value = today;
+  if (endInp) endInp.value = today;
+
+  state.washChecklistDataPage = 1;
+  loadWashingChecklistsFromSupabase(true, today, today).then(() => {
+    renderWashChecklistDataTable();
+  });
+}
+
+function setWashChecklistDataFilterThisMonth() {
+  triggerHaptic(8);
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const firstDay = `${year}-${month}-01`;
+  const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : now.toISOString().split('T')[0];
+
+  state.washChecklistDataFilterStartDate = firstDay;
+  state.washChecklistDataFilterEndDate = today;
+
+  const startInp = document.getElementById('wash-data-filter-start-date');
+  const endInp = document.getElementById('wash-data-filter-end-date');
+  if (startInp) startInp.value = firstDay;
+  if (endInp) endInp.value = today;
+
+  state.washChecklistDataPage = 1;
+  loadWashingChecklistsFromSupabase(true, firstDay, today).then(() => {
+    renderWashChecklistDataTable();
+  });
+}
+
+function setWashChecklistDataFilterAll() {
+  triggerHaptic(8);
+  state.washChecklistDataFilterStartDate = '';
+  state.washChecklistDataFilterEndDate = '';
+
+  const startInp = document.getElementById('wash-data-filter-start-date');
+  const endInp = document.getElementById('wash-data-filter-end-date');
+  if (startInp) startInp.value = '';
+  if (endInp) endInp.value = '';
+
+  state.washChecklistDataPage = 1;
+  loadWashingChecklistsFromSupabase(true, '', '').then(() => {
+    renderWashChecklistDataTable();
+  });
+}
+
+function handleWashChecklistDataSearch() {
+  const inp = document.getElementById('wash-data-search-input');
+  const clearBtn = document.getElementById('wash-data-search-clear-btn');
+  const val = (inp?.value || '').trim();
+  state.washChecklistDataSearchTerm = val;
+  if (clearBtn) {
+    if (val) clearBtn.classList.remove('hidden');
+    else clearBtn.classList.add('hidden');
+  }
+  state.washChecklistDataPage = 1;
+  renderWashChecklistDataTable();
+}
+
+function clearWashChecklistDataSearch() {
+  const inp = document.getElementById('wash-data-search-input');
+  const clearBtn = document.getElementById('wash-data-search-clear-btn');
+  if (inp) inp.value = '';
+  if (clearBtn) clearBtn.classList.add('hidden');
+  state.washChecklistDataSearchTerm = '';
+  state.washChecklistDataPage = 1;
+  renderWashChecklistDataTable();
+}
+
+function changeWashChecklistDataPageSize(val) {
+  state.washChecklistDataPageSize = (val === 'ALL') ? 99999 : (parseInt(val, 10) || 100);
+  state.washChecklistDataPage = 1;
+  renderWashChecklistDataTable();
+}
+
+function goToWashChecklistDataPage(page) {
+  state.washChecklistDataPage = page;
+  renderWashChecklistDataTable();
+}
+
+function toggleSelectWashChecklistData(id, isChecked) {
+  if (!state.selectedWashChecklistDataIds) state.selectedWashChecklistDataIds = new Set();
+  if (isChecked) state.selectedWashChecklistDataIds.add(String(id));
+  else state.selectedWashChecklistDataIds.delete(String(id));
+
+  const selCountSpan = document.getElementById('wash-data-selected-count');
+  const btnBulkDelete = document.getElementById('wash-data-btn-bulk-delete');
+  const count = state.selectedWashChecklistDataIds.size;
+  if (selCountSpan) selCountSpan.textContent = count;
+  if (btnBulkDelete) {
+    if (count > 0) {
+      btnBulkDelete.disabled = false;
+      btnBulkDelete.classList.remove('opacity-50', 'cursor-not-allowed', 'hidden');
+    } else {
+      btnBulkDelete.disabled = true;
+      btnBulkDelete.classList.add('opacity-50', 'cursor-not-allowed', 'hidden');
+    }
+  }
+}
+
+function toggleSelectAllWashChecklistData(isChecked) {
+  if (!state.selectedWashChecklistDataIds) state.selectedWashChecklistDataIds = new Set();
+  const list = state._lastFilteredWashChecklistData || [];
+  if (isChecked) {
+    list.forEach(r => state.selectedWashChecklistDataIds.add(String(r.id)));
+  } else {
+    state.selectedWashChecklistDataIds.clear();
+  }
+
+  const selCountSpan = document.getElementById('wash-data-selected-count');
+  const btnBulkDelete = document.getElementById('wash-data-btn-bulk-delete');
+  const count = state.selectedWashChecklistDataIds.size;
+  if (selCountSpan) selCountSpan.textContent = count;
+  if (btnBulkDelete) {
+    if (count > 0) {
+      btnBulkDelete.disabled = false;
+      btnBulkDelete.classList.remove('opacity-50', 'cursor-not-allowed', 'hidden');
+    } else {
+      btnBulkDelete.disabled = true;
+      btnBulkDelete.classList.add('opacity-50', 'cursor-not-allowed', 'hidden');
+    }
+  }
+  renderWashChecklistDataTable();
+}
+
+function refreshWashChecklistDataArchive() {
+  triggerHaptic(10);
+  const tbody = document.getElementById('wash-checklist-data-tbody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="12" class="py-8 text-center text-slate-400 italic text-[8.5px]">Memuat data ceklist dari database Supabase...</td></tr>';
+
+  loadWashingChecklistsFromSupabase(true).then(() => {
+    showToast('Data ceklist berhasil dimuat ulang dari Supabase!', 'success');
+    renderWashChecklistDataTable();
+  }).catch(err => {
+    console.error('[Refresh Wash Checklist Archive Error]', err);
+    showToast('Gagal memuat data: ' + err.message, 'error');
+    renderWashChecklistDataTable();
+  });
+}
+
+function renderWashChecklistDataTable() {
+  const tbody = document.getElementById('wash-checklist-data-tbody');
+  const infoEl = document.getElementById('wash-data-pagination-info');
+  const paginationControls = document.getElementById('wash-data-pagination-controls');
+
+  if (!tbody) return;
+
+  initWashChecklistDataFilters();
+
+  const startDate = state.washChecklistDataFilterStartDate;
+  const endDate = state.washChecklistDataFilterEndDate || startDate;
+  const shiftFilter = state.washChecklistDataFilterShift || 'ALL';
+  const remarkFilter = state.washChecklistDataFilterRemark || 'ALL';
+  const searchTerm = (state.washChecklistDataSearchTerm || '').toLowerCase().trim();
+
+  const list = state.washingChecklists || [];
+
+  // 1. Filter Tanggal, Shift, Remark
+  const filtered = list.filter(r => {
+    const rowDate = r.date || '';
+    if (startDate && rowDate < startDate) return false;
+    if (endDate && rowDate > endDate) return false;
+
+    if (shiftFilter !== 'ALL') {
+      if (String(r.shift || 1) !== shiftFilter) return false;
+    }
+
+    if (remarkFilter !== 'ALL') {
+      const rem = String(r.remark || '').toLowerCase();
+      if (remarkFilter === 'request' && !rem.includes('req')) return false;
+      if (remarkFilter === 'daily' && rem.includes('req')) return false;
+    }
+
+    return true;
+  });
+
+  // 2. Filter Search Term
+  let searchFiltered = filtered;
+  if (searchTerm) {
+    searchFiltered = filtered.filter(r => {
+      const cn = String(r.cn || '').toLowerCase();
+      const wt = String(r.wt || '').toLowerCase();
+      const hm = String(r.hm || '').toLowerCase();
+      const rem = String(r.remark || '').toLowerCase();
+      const sTime = String(r.start_time || '').toLowerCase();
+      return cn.includes(searchTerm) || wt.includes(searchTerm) || hm.includes(searchTerm) || rem.includes(searchTerm) || sTime.includes(searchTerm);
+    });
+  }
+
+  // Simpan hasil filter untuk bulk action
+  state._lastFilteredWashChecklistData = searchFiltered;
+
+  // 3. Sort: Tanggal desc, ID desc
+  searchFiltered.sort((a, b) => {
+    if (a.date !== b.date) return String(b.date || '').localeCompare(String(a.date || ''));
+    return Number(b.id || 0) - Number(a.id || 0);
+  });
+
+  // 4. Paginasi
+  state.washChecklistDataPage = Math.max(1, parseInt(state.washChecklistDataPage, 10) || 1);
+  const totalRows = searchFiltered.length;
+  const pageSize = (state.washChecklistDataPageSize === 'ALL') ? 999999 : (parseInt(state.washChecklistDataPageSize, 10) || 100);
+  const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+  if (state.washChecklistDataPage > totalPages) state.washChecklistDataPage = totalPages;
+
+  const startIdx = (state.washChecklistDataPage - 1) * pageSize;
+  const pageItems = searchFiltered.slice(startIdx, startIdx + pageSize);
+
+  if (infoEl) {
+    const endIdx = Math.min(startIdx + pageItems.length, totalRows);
+    infoEl.textContent = `Menampilkan ${totalRows === 0 ? 0 : startIdx + 1} - ${endIdx} dari ${totalRows} data ceklist`;
+  }
+
+  const isAdmin = (state.currentUser?.role === 'admin');
+
+  tbody.innerHTML = '';
+  if (pageItems.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="12" class="py-8 text-center text-slate-400 italic text-[8.5px]">Tidak ada data ceklist untuk periode filter ini.</td></tr>';
+    if (paginationControls) paginationControls.innerHTML = '';
+    return;
+  }
+
+  pageItems.forEach((r, idx) => {
+    const isSelected = state.selectedWashChecklistDataIds?.has(String(r.id));
+    const isReq = String(r.remark || '').toLowerCase().includes('req');
+    const estRound = isReq ? 0 : determineWashingRoundFromStartTime(r.start_time, r.shift);
+
+    const remarkBadge = isReq
+      ? '<span class="px-1.5 py-0.5 rounded text-[8px] font-medium bg-purple-50 text-purple-700 border border-purple-200">Request</span>'
+      : '<span class="px-1.5 py-0.5 rounded text-[8px] font-medium bg-blue-50 text-blue-700 border border-blue-200">Daily</span>';
+
+    const roundBadge = isReq
+      ? '<span class="text-slate-300 text-[8px]">-</span>'
+      : `<span class="px-1.5 py-0.5 rounded text-[8px] font-medium ${estRound === 2 ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}">W${estRound}</span>`;
+
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50/80 transition align-middle text-slate-700 ' + (isSelected ? 'bg-rose-50/50' : '');
+    tr.innerHTML = `
+      <td class="py-2 px-2 text-center align-middle">
+        <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelectWashChecklistData('${r.id}', this.checked)"
+          class="rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
+      </td>
+      <td class="py-2 px-2 text-center font-mono text-[8px] md:text-[8.5px] text-slate-400">${startIdx + idx + 1}</td>
+      <td class="py-2 px-2 font-mono text-[8.5px] font-medium text-slate-800 whitespace-nowrap">${formatWashDateDDMMYYYY(r.date)}</td>
+      <td class="py-2 px-2 font-mono text-[8.5px] font-medium text-slate-900 whitespace-nowrap">${r.cn || '-'}</td>
+      <td class="py-2 px-2 font-mono text-[8.5px] font-medium text-slate-600 whitespace-nowrap">${r.hm || '-'}</td>
+      <td class="py-2 px-1.5 text-center font-medium text-[8px] md:text-[8.5px] ${r.shift === 2 ? 'text-purple-700' : 'text-blue-700'} whitespace-nowrap">Shift ${r.shift}</td>
+      <td class="py-2 px-2 font-mono text-[8.5px] font-medium text-slate-700 whitespace-nowrap">${r.wt || '-'}</td>
+      <td class="py-2 px-2 whitespace-nowrap">${remarkBadge}</td>
+      <td class="py-2 px-2 font-mono text-[8px] md:text-[8.5px] text-slate-600 whitespace-nowrap">${r.start_time || '-'}</td>
+      <td class="py-2 px-2 font-mono text-[8px] md:text-[8.5px] text-slate-600 whitespace-nowrap">${r.end_time || '-'}</td>
+      <td class="py-2 px-2 text-center whitespace-nowrap">${roundBadge}</td>
+      <td class="py-2 px-2 text-center whitespace-nowrap">
+        ${isAdmin ? `
+          <button type="button" onclick="deleteSingleWashingChecklistRow('${r.id}')" title="Hapus data ceklist ini dari Supabase"
+            class="p-1 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition cursor-pointer">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        ` : '<span class="text-slate-300 text-xs">-</span>'}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Render pagination buttons
+  if (paginationControls) {
+    paginationControls.innerHTML = `
+      <button type="button" onclick="goToWashChecklistDataPage(${state.washChecklistDataPage - 1})" ${state.washChecklistDataPage <= 1 ? 'disabled' : ''}
+        class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-xs text-slate-600 cursor-pointer">
+        Prev
+      </button>
+      <span class="px-2 font-bold text-slate-700 text-xs">${state.washChecklistDataPage} / ${totalPages}</span>
+      <button type="button" onclick="goToWashChecklistDataPage(${state.washChecklistDataPage + 1})" ${state.washChecklistDataPage >= totalPages ? 'disabled' : ''}
+        class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed font-medium text-xs text-slate-600 cursor-pointer">
+        Next
+      </button>
+    `;
+  }
+}
+
+async function deleteSingleWashingChecklistRow(id) {
+  if (!id) return;
+  triggerHaptic(10);
+  if (!confirm('Hapus baris data ceklist ini dari database Supabase?')) return;
+
+  try {
+    if (state.supabaseClient) {
+      const { error } = await state.supabaseClient
+        .from('washing_checklists')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    }
+
+    state.washingChecklists = (state.washingChecklists || []).filter(r => String(r.id) !== String(id));
+    if (window.globalDataCache) {
+      window.globalDataCache.washingChecklists = state.washingChecklists;
+    }
+    if (state.selectedWashChecklistDataIds) {
+      state.selectedWashChecklistDataIds.delete(String(id));
+    }
+
+    showToast('Baris data ceklist berhasil dihapus dari database!', 'success');
+    renderWashChecklistDataTable();
+    renderWashChecklistMonitorTable();
+  } catch (err) {
+    console.error('[deleteSingleWashingChecklistRow Error]', err);
+    showToast('Gagal menghapus data: ' + err.message, 'error');
+  }
+}
+
+async function bulkDeleteWashingChecklistData() {
+  const ids = Array.from(state.selectedWashChecklistDataIds || []);
+  if (ids.length === 0) return;
+  triggerHaptic(10);
+  if (!confirm(`Hapus ${ids.length} baris data ceklist terpilih dari database Supabase?`)) return;
+
+  try {
+    if (state.supabaseClient) {
+      const { error } = await state.supabaseClient
+        .from('washing_checklists')
+        .delete()
+        .in('id', ids);
+      if (error) throw error;
+    }
+
+    const setIds = new Set(ids);
+    state.washingChecklists = (state.washingChecklists || []).filter(r => !setIds.has(String(r.id)));
+    if (window.globalDataCache) {
+      window.globalDataCache.washingChecklists = state.washingChecklists;
+    }
+    state.selectedWashChecklistDataIds.clear();
+
+    const selCountSpan = document.getElementById('wash-data-selected-count');
+    const btnBulkDelete = document.getElementById('wash-data-btn-bulk-delete');
+    if (selCountSpan) selCountSpan.textContent = '0';
+    if (btnBulkDelete) btnBulkDelete.classList.add('hidden');
+
+    const selectAll = document.getElementById('wash-data-select-all');
+    if (selectAll) selectAll.checked = false;
+
+    showToast(`Berhasil menghapus ${ids.length} baris data ceklist dari database!`, 'success');
+    renderWashChecklistDataTable();
+    renderWashChecklistMonitorTable();
+  } catch (err) {
+    console.error('[bulkDeleteWashingChecklistData Error]', err);
+    showToast('Gagal menghapus data: ' + err.message, 'error');
+  }
+}
+
+function exportWashingChecklistsToExcel() {
+  const list = state._lastFilteredWashChecklistData || state.washingChecklists || [];
+  if (list.length === 0) {
+    showToast('Tidak ada data ceklist untuk diunduh!', 'warning');
+    return;
+  }
+
+  if (typeof XLSX === 'undefined') {
+    showToast('Library XLSX belum siap!', 'error');
+    return;
+  }
+
+  triggerHaptic(8);
+  const rows = list.map((r, i) => ({
+    'NO': i + 1,
+    'DATE': r.date || '',
+    'CN': r.cn || '',
+    'HM': r.hm || '',
+    'SHIFT': r.shift || 1,
+    'WT': r.wt || '',
+    'REMARK': r.remark || '',
+    'START': r.start_time || '',
+    'END': r.end_time || '',
+    'ROUND': determineWashingRoundFromStartTime(r.start_time, r.shift)
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'DATA_CEKLIST');
+
+  const startDate = state.washChecklistDataFilterStartDate || 'all';
+  const endDate = state.washChecklistDataFilterEndDate || 'all';
+  const filename = `Data_Ceklist_Washing_${startDate}_sd_${endDate}.xlsx`;
+
+  XLSX.writeFile(wb, filename);
+  showToast(`File ${filename} berhasil diunduh!`, 'success');
+}
+
+
+window.switchWashChecklistNestedTab = switchWashChecklistNestedTab;
+window.initWashChecklistDataFilters = initWashChecklistDataFilters;
+window.handleWashChecklistDataFilterChange = handleWashChecklistDataFilterChange;
+window.setWashChecklistDataFilterToday = setWashChecklistDataFilterToday;
+window.setWashChecklistDataFilterThisMonth = setWashChecklistDataFilterThisMonth;
+window.setWashChecklistDataFilterAll = setWashChecklistDataFilterAll;
+window.handleWashChecklistDataSearch = handleWashChecklistDataSearch;
+window.clearWashChecklistDataSearch = clearWashChecklistDataSearch;
+window.changeWashChecklistDataPageSize = changeWashChecklistDataPageSize;
+window.goToWashChecklistDataPage = goToWashChecklistDataPage;
+window.toggleSelectWashChecklistData = toggleSelectWashChecklistData;
+window.toggleSelectAllWashChecklistData = toggleSelectAllWashChecklistData;
+window.refreshWashChecklistDataArchive = refreshWashChecklistDataArchive;
+window.renderWashChecklistDataTable = renderWashChecklistDataTable;
+window.deleteSingleWashingChecklistRow = deleteSingleWashingChecklistRow;
+window.bulkDeleteWashingChecklistData = bulkDeleteWashingChecklistData;
+window.exportWashingChecklistsToExcel = exportWashingChecklistsToExcel;
+
+window.renderWashChecklistTab = renderWashChecklistTab;
+
+
+</script>
 
 </body>
 
