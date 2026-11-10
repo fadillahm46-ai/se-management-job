@@ -320,6 +320,22 @@
       background: #94A3B8;
     }
 
+    /* Hilangkan native dropdown arrow di HP & browser agar tidak double dengan SVG chevron */
+    #dash-filter-shift,
+    #dash-filter-cluster,
+    select.appearance-none {
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      appearance: none !important;
+      background-image: none !important;
+    }
+
+    #dash-filter-shift::-ms-expand,
+    #dash-filter-cluster::-ms-expand,
+    select.appearance-none::-ms-expand {
+      display: none !important;
+    }
+
     /* Custom Symmetrical Font Size Range Slider */
     .custom-font-slider {
       -webkit-appearance: none;
@@ -727,10 +743,22 @@
     }
 
     /* ========================================================================== */
-    /* MODE HP: HAPUS FREEZE / STICKY HEADER TABEL RIWAYAT & PICA                */
-    /* Mencegah header tabel ikut naik menabrak filter bar saat di-scroll di HP  */
+    /* MODE HP: HAPUS STICKY FILTER BAR & THEAD RIWAYAT & PICA (SCROLL ALAMI)     */
+    /* Mencegah filter bar & header tabel saling tumpang-tindih saat di-scroll HP */
     /* ========================================================================== */
     @media (max-width: 767px) {
+      #tab-completed > div:first-child,
+      #tab-pica > div:first-child,
+      #tab-completed [class*="sticky"],
+      #tab-pica [class*="sticky"],
+      #completed-table-container [class*="sticky"],
+      #pica-table-card [class*="sticky"] {
+        position: relative !important;
+        top: auto !important;
+        bottom: auto !important;
+        z-index: 10 !important;
+      }
+
       #tab-completed thead,
       #tab-completed thead th,
       #tab-completed table thead,
@@ -739,12 +767,20 @@
       #completed-table-container thead th,
       #completed-table-container table thead,
       #completed-table-container table thead th,
+      #completed-table-container .table-freeze-container thead,
+      #completed-table-container .table-freeze-container thead th,
+      #completed-table-container .table-freeze-container table thead th,
+      #completed-table-container th,
       #tab-pica thead,
       #tab-pica thead th,
       #tab-pica table thead,
       #tab-pica table thead th,
       #pica-table-card thead,
-      #pica-table-card thead th {
+      #pica-table-card thead th,
+      #pica-table-card .table-freeze-container thead,
+      #pica-table-card .table-freeze-container thead th,
+      #pica-table-card .table-freeze-container table thead th,
+      #pica-table-card th {
         position: static !important;
         top: auto !important;
         bottom: auto !important;
@@ -2272,6 +2308,7 @@
                 <!-- Dropdown Pill: All Shift -->
                 <div class="relative">
                   <select id="dash-filter-shift" onchange="refreshDashboardData()"
+                    style="-webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: none;"
                     class="appearance-none pl-3.5 pr-7 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs text-[11px] font-bold text-slate-700 hover:border-slate-300 focus:outline-none cursor-pointer transition">
                     <option value="ALL">All Shift</option>
                     <option value="1">Shift 1 (DWS)</option>
@@ -2287,6 +2324,7 @@
                 <!-- Dropdown Pill: All Cluster -->
                 <div class="relative">
                   <select id="dash-filter-cluster" onchange="refreshDashboardData()"
+                    style="-webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: none;"
                     class="appearance-none pl-3.5 pr-7 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs text-[11px] font-bold text-slate-700 hover:border-slate-300 focus:outline-none cursor-pointer transition">
                     <option value="ALL">All Cluster</option>
                     <optgroup label="Cluster Utama">
@@ -3175,8 +3213,8 @@
 
                 <div
                   class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
-                  <span>*Semua kategori jadwal melampaui target minimum 95%</span>
-                  <span class="font-black text-[#1E3A8A]">Status: Optimal</span>
+                  <span id="kpi-ach-schedule-footer-desc">*Semua kategori jadwal melampaui target minimum 95%</span>
+                  <span id="kpi-ach-schedule-footer-status" class="font-black text-[#1E3A8A]">Status: Optimal</span>
                 </div>
               </div>
 
@@ -4624,7 +4662,7 @@
 
           <!-- Filter Bar PICA: Search, Tanggal, Shift, Cluster, Dropdown Kategori Kendala & Unduh di Ujung Kanan -->
           <div
-            class="sticky top-11 md:top-12 z-20 flex flex-col md:flex-row md:flex-wrap md:items-center gap-2 bg-white p-2.5 md:p-3 rounded-2xl border border-slate-200/80 shadow-xs backdrop-blur-md mb-3 text-xs">
+            class="relative md:sticky md:top-12 z-20 flex flex-col md:flex-row md:flex-wrap md:items-center gap-2 bg-white p-2.5 md:p-3 rounded-2xl border border-slate-200/80 shadow-xs backdrop-blur-md mb-3 text-xs">
 
             <!-- SEARCH BAR REALTIME PICA -->
             <div class="order-3 md:order-1 relative w-full md:w-48 lg:w-56">
@@ -5894,7 +5932,7 @@
         <div id="tab-completed" class="tab-pane hidden space-y-3.5">
           <!-- Filter Bar Riwayat Pekerjaan Selesai (Header Riwayat Ditiadakan, Tata Letak HP Bersih & Rapi) -->
           <div
-            class="sticky top-11 md:top-12 z-20 flex flex-col md:flex-row md:flex-wrap md:items-center gap-2 bg-white p-2.5 md:p-3 rounded-2xl border border-slate-200/80 shadow-xs backdrop-blur-md mb-3 text-xs">
+            class="relative md:sticky md:top-12 z-20 flex flex-col md:flex-row md:flex-wrap md:items-center gap-2 bg-white p-2.5 md:p-3 rounded-2xl border border-slate-200/80 shadow-xs backdrop-blur-md mb-3 text-xs">
             <!-- BARIS 1 DI HP / ELEMEN 2 DI DESKTOP: FILTER TANGGAL (DARI, KE, RESET) -->
             <div class="order-1 md:order-2 flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
               <!-- Pill Dari: Tanggal Awal -->
@@ -14047,6 +14085,38 @@
     }
 
     /**
+     * Mengambil tanggal rencana jadwal dibuat ("Kolom Waktu") sebagai acuan mutlak Dashboard.
+     * Mengabaikan tanggal realisasi pengerjaan di lapangan agar job yang dikerjakan lebih awal
+     * tetap terhitung sebagai pencapaian ACH di tanggal jadwal aslinya.
+     */
+    function extractPlanDateFromJob(j) {
+      if (!j) return '';
+      // 1. Cek properti tanggal rencana resmi
+      let d = j.tanggal_rencana || j.planDate || j.originalDate || j.original_date || j.tanggal || j.date || '';
+      if (d) {
+        if (typeof normalizeDateStr === 'function') d = normalizeDateStr(d);
+        if (d && typeof d === 'string' && d.includes('-')) return d.split('T')[0];
+      }
+      // 2. Ekstrak dari ID unik job jika ada pola tanggal DDMMYYYY (misal: LT-TUO-08112026-1-E534 atau WT-WSC-05112026-2-...)
+      const id = String(j.id || j.job_id || j.noId || j.no_id || '').toUpperCase();
+      const match = id.match(/-(?:[A-Z0-9]{2,5})-(\d{2})(\d{2})(20\d{2})-/) || id.match(/-(\d{2})(\d{2})(20\d{2})-/);
+      if (match) {
+        const dd = match[1];
+        const mm = match[2];
+        const yyyy = match[3];
+        const dNum = parseInt(dd, 10);
+        const mNum = parseInt(mm, 10);
+        if (dNum >= 1 && dNum <= 31 && mNum >= 1 && mNum <= 12) {
+          return `${yyyy}-${mm}-${dd}`;
+        }
+      }
+      // 3. Fallback jika tanggal rencana tidak ditemukan (misal Order Lapangan / Unscheduled)
+      const fallback = j.tanggalRealisasi || j.tanggal_eksekusi || '';
+      return (typeof normalizeDateStr === 'function') ? normalizeDateStr(fallback) : fallback;
+    }
+    window.extractPlanDateFromJob = extractPlanDateFromJob;
+
+    /**
      * Sumber data terpadu untuk seluruh analitik Dashboard Executive, Chart Ketercapaian,
      * Total Job Armada, dan Event Job.
      * Menggabungkan antrean aktif (LT, WT, Unscheduled) dan riwayat snapshot (jobHistory)
@@ -14061,8 +14131,6 @@
         if (!j) return;
         const jId = String(j.id || j.job_id || j.noId || j.no_id || '');
         const jNo = String(j.noLambung || j.no_lambung || '').trim().toUpperCase();
-        const jDate = j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || j.tanggal_rencana || '';
-        const jShift = String(j.shift || j.shift_rencana || 1);
         let jCat = String(j.cat || '').trim().toLowerCase();
         const rawUpperId = jId.toUpperCase();
         const jClusterUpper = String(j.cluster || '').toUpperCase().trim();
@@ -14087,6 +14155,12 @@
           rawUpperId.includes('-REQ-') || rawUpperId.includes('-DIR-') ||
           jCat === 'unscheduled' || jCat === 'request' || jCat === 'job_request';
 
+        // ATURAN PENGGUNA: Dashboard & seluruh grafik mengacu pada Kolom Waktu (tanggal rencana schedule dibuat).
+        // Tanggal realisasi hanya tanggal pengerjaan lapangan dan TIDAK BOLEH memindahkan tanggal schedule di dashboard!
+        const planDate = extractPlanDateFromJob(j);
+        const jDate = isUnsch ? (j.tanggalRealisasi || j.tanggal_eksekusi || planDate || j.tanggal || '') : (planDate || j.tanggal || j.tanggal_eksekusi || j.tanggalRealisasi || '');
+        const jShift = String(j.shift_rencana || j.originalShift || j.shift || 1);
+
         const baseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(jId) : jId.replace(/-\d{4}$/, '');
         const isWtJob = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(j) : (jCat === 'coal' || jCat === 'rom' || jCat === 'non_coal');
         const round = isWtJob ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(j) : (parseInt(j.washingRound || j.washing_round || 1, 10))) : 0;
@@ -14105,7 +14179,7 @@
         if (ex) {
           if (isFromHistory) {
             const sf = String(j.status_final || j.status || '').toLowerCase().trim();
-            if (['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'washing', 'washing request', 'wash', 'non_ach', 'non-ach', 'cancel'].includes(sf)) {
+            if (['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'washing', 'washing request', 'wash', 'non_ach', 'non-ach', 'cancel', 'parkir'].includes(sf)) {
               ex.status = sf;
               ex.status_final = j.status_final || sf.toUpperCase();
             }
@@ -14157,7 +14231,7 @@
           typeUnit: j.typeUnit || j.type_unit,
           type_unit: j.type_unit || j.typeUnit,
           tanggal: jDate,
-          tanggal_rencana: j.tanggal_rencana || jDate,
+          tanggal_rencana: planDate || jDate,
           tanggalRealisasi: j.tanggalRealisasi || j.tanggal_eksekusi || jDate,
           tanggal_eksekusi: j.tanggal_eksekusi || j.tanggalRealisasi || jDate,
           shift: jShift,
@@ -14166,7 +14240,7 @@
           cluster: j.cluster || 'Selatan',
           lokasi: j.lokasi || '-',
           status: String(j.status_final || j.status || 'scheduled').toLowerCase().trim(),
-          status_final: j.status_final,
+          status_final: j.status_final || (j.status ? j.status.toUpperCase() : 'SCHEDULED'),
           armada: cleanArmada,
           armada_unit: cleanArmada,
           durasi: j.durasi,
@@ -14191,6 +14265,7 @@
         };
 
         if (jId) existingJobMap.set(jId, cleanJob);
+        if (baseId) existingJobMap.set(baseId, cleanJob);
         if (uKey) existingJobMap.set(uKey, cleanJob);
 
         if (isUnsch) {
@@ -14210,10 +14285,13 @@
       (Array.isArray(state.jobHistory) ? state.jobHistory : []).forEach(h => registerJob(h, true));
 
       const filterJob = (job) => {
-        const d = job.tanggalRealisasi || job.tanggal || '';
+        // Aturan Pengguna: Dashboard dan seluruh grafik mengacu pada Kolom Waktu (tanggal rencana schedule dibuat)
+        const d = job.isSch
+          ? (job.tanggal_rencana || job.tanggal || job.date || job.planDate || job.originalDate || '')
+          : (job.tanggalRealisasi || job.tanggal_eksekusi || job.tanggal || job.tanggal_rencana || '');
         if (startDate && d && d < startDate) return false;
         if (endDate && d && d > endDate) return false;
-        if (shiftFilter && shiftFilter !== 'ALL' && String(job.shift) !== String(shiftFilter)) return false;
+        if (shiftFilter && shiftFilter !== 'ALL' && String(job.shift || job.shift_rencana || 1) !== String(shiftFilter)) return false;
         if (clusterFilter && clusterFilter !== 'ALL') {
           if (!isClusterMatchFilter(job.cluster, clusterFilter)) return false;
         }
@@ -14650,16 +14728,24 @@
         const ctxAch = canvasAchSchedule.getContext('2d');
         if (kpiAchScheduleBarChartInstance) kpiAchScheduleBarChartInstance.destroy();
 
+        const achData = [achCoal, achNonCoal, achGreasing, achAir, achTopUp];
+        // Aturan Pengguna: Jika belum mencapai target ( < 95% ) warna merah, jika tercapai ( >= 95% ) warna biru
+        const barColors = achData.map(v => v >= 95 ? '#2563EB' : '#EF4444');
+        const barHoverColors = achData.map(v => v >= 95 ? '#1E3A8A' : '#DC2626');
+
         const barLabelsPlugin = {
           id: 'barLabelsTop',
           afterDatasetsDraw(chart) {
             const { ctx, data } = chart;
             ctx.save();
             ctx.font = 'bold 15px Inter, sans-serif';
-            ctx.fillStyle = document.documentElement.classList.contains('dark-mode') ? '#ffffff' : '#1E3A8A';
             ctx.textAlign = 'center';
             chart.getDatasetMeta(0).data.forEach((bar, index) => {
               const val = data.datasets[0].data[index];
+              const isMet = val >= 95;
+              ctx.fillStyle = isMet
+                ? (document.documentElement.classList.contains('dark-mode') ? '#60A5FA' : '#1E3A8A')
+                : '#DC2626';
               ctx.fillText(`${val}%`, bar.x, Math.max(16, bar.y - 8));
             });
             ctx.restore();
@@ -14674,9 +14760,9 @@
               {
                 type: 'bar',
                 label: 'Realisasi ACH (%)',
-                data: [achCoal, achNonCoal, achGreasing, achAir, achTopUp],
-                backgroundColor: '#2563EB',
-                hoverBackgroundColor: '#1E3A8A',
+                data: achData,
+                backgroundColor: barColors,
+                hoverBackgroundColor: barHoverColors,
                 borderRadius: { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 },
                 borderSkipped: false,
                 barPercentage: 0.52
@@ -14720,6 +14806,25 @@
           },
           plugins: [barLabelsPlugin]
         });
+
+        // Update teks footer status di bawah grafik secara dinamis
+        const footerDescEl = document.getElementById('kpi-ach-schedule-footer-desc');
+        const footerStatusEl = document.getElementById('kpi-ach-schedule-footer-status');
+        const allTargetMet = achData.every(v => v >= 95);
+        if (footerDescEl) {
+          footerDescEl.textContent = allTargetMet
+            ? '*Semua kategori jadwal melampaui target minimum 95%'
+            : '*Kategori berwarna merah belum mencapai target minimum 95%';
+        }
+        if (footerStatusEl) {
+          if (allTargetMet) {
+            footerStatusEl.textContent = 'Status: Optimal';
+            footerStatusEl.className = 'font-black text-[#1E3A8A]';
+          } else {
+            footerStatusEl.textContent = 'Status: Di Bawah Target';
+            footerStatusEl.className = 'font-black text-rose-600';
+          }
+        }
       }
 
       // Render Tabel Performance KPI Schedule (dash-kpi-perf-tbody)
@@ -14827,7 +14932,7 @@
       // Kumpulkan seluruh data kandidat (dari filteredSch dan state.jobHistory sesuai filter rentang tanggal dashboard)
       const allCandidateJobs = [...(filteredSch || [])];
       (Array.isArray(state.jobHistory) ? state.jobHistory : []).forEach(h => {
-        const rawD = h.tanggal_eksekusi || h.tanggalRealisasi || h.tanggal_rencana || h.tanggal || '';
+        const rawD = (typeof extractPlanDateFromJob === 'function') ? extractPlanDateFromJob(h) : (h.tanggal_rencana || h.tanggal || h.tanggal_eksekusi || h.tanggalRealisasi || '');
         const d = (typeof normalizeDateStr === 'function') ? normalizeDateStr(rawD) : (rawD.includes('T') ? rawD.split('T')[0] : rawD);
         const sD = (typeof normalizeDateStr === 'function') ? normalizeDateStr(startDate) : startDate;
         const eD = (typeof normalizeDateStr === 'function') ? normalizeDateStr(endDate) : endDate;
@@ -14845,7 +14950,7 @@
 
         const jId = String(job.id || job.job_id || '');
         const jNo = String(job.noLambung || job.no_lambung || job.unitCoal || '').trim().toUpperCase();
-        const rawDate = job.tanggalRealisasi || job.tanggal_eksekusi || job.tanggal || job.tanggal_rencana || '';
+        const rawDate = (typeof extractPlanDateFromJob === 'function') ? extractPlanDateFromJob(job) : (job.tanggal_rencana || job.tanggal || job.tanggalRealisasi || job.tanggal_eksekusi || '');
         const jDate = (typeof normalizeDateStr === 'function') ? normalizeDateStr(rawDate) : rawDate;
         const jStart = String(job.jamStart || job.jam_start || '').trim();
         const key = jId || `${jDate}_${jNo}_${jStart}`;
@@ -26351,8 +26456,12 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       }
 
       // Helper untuk menyaring penugasan berdasarkan rentang tanggal, shift, dan cluster
+      // Mengacu ke "Kolom Waktu" (tanggal rencana schedule dibuat) untuk job SCH
       const filterJobItem = (job) => {
-        const rawDate = job.tanggalRealisasi || job.tanggal_eksekusi || job.tanggal || job.tanggal_rencana || '';
+        const isUnsch = (typeof isUnscheduledJob === 'function') ? isUnscheduledJob(job) : (job.isUnscheduled || job.type === 'UNSCHEDULED');
+        const rawDate = isUnsch
+          ? (job.tanggalRealisasi || job.tanggal_eksekusi || job.tanggal || '')
+          : (typeof extractPlanDateFromJob === 'function' ? extractPlanDateFromJob(job) : (job.tanggal_rencana || job.tanggal || job.tanggalRealisasi || ''));
         const jobDate = (typeof normalizeDateStr === 'function') ? normalizeDateStr(rawDate) : rawDate;
         const sD = (typeof normalizeDateStr === 'function') ? normalizeDateStr(startDate) : startDate;
         const eD = (typeof normalizeDateStr === 'function') ? normalizeDateStr(endDate) : endDate;
@@ -26360,7 +26469,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         if (eD && jobDate && jobDate > eD) return false;
 
         // Filter Shift
-        if (shiftFilter !== 'ALL' && String(job.shift) !== String(shiftFilter)) return false;
+        if (shiftFilter !== 'ALL' && String(job.shift || job.shift_rencana || 1) !== String(shiftFilter)) return false;
 
         // Filter Cluster
         if (clusterFilter !== 'ALL') {
@@ -26950,7 +27059,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
         const jId = String(j.id || j.job_id || '');
         const jNo = String(j.noLambung || j.no_lambung || '').trim().toUpperCase();
-        const jDate = j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || '';
+        const isUnsch = (typeof isUnscheduledJob === 'function') ? isUnscheduledJob(j) : (j.isUnscheduled || j.type === 'UNSCHEDULED');
+        const jDate = isUnsch
+          ? (j.tanggalRealisasi || j.tanggal_eksekusi || j.tanggal || '')
+          : (typeof extractPlanDateFromJob === 'function' ? extractPlanDateFromJob(j) : (j.tanggal_rencana || j.tanggal || j.tanggalRealisasi || ''));
         const jShift = String(j.shift || j.shift_rencana || 1);
         const jCat = String(j.cat || '').trim().toLowerCase();
         const uKey = (jNo && jDate) ? `${jNo}_${jDate}_${jShift}_${jCat}` : jId;
@@ -50301,6 +50413,9 @@ Keterangan : ${keterangan}`;
               item.no_id = item.id;
               item.noId = item.id;
               item.base_job_id = stripHistoryTimeSuffix(item.id);
+              if (item.tanggal_rencana) {
+                item.tanggal = item.tanggal_rencana;
+              }
               item.washing_round = typeof getJobWashingRound === 'function' ? getJobWashingRound(item) : (parseInt(item.washing_round, 10) || 1);
               item.washingRound = item.washing_round;
               item.adaOperator = item.ada_operator || item.adaOperator || 'Ya';
@@ -50373,7 +50488,7 @@ Keterangan : ${keterangan}`;
           id: picaId,
           job_id: cleanId,
           no_lambung: job.noLambung || job.no_lambung || 'UNIT',
-          tanggal: job.tanggalRealisasi || job.tanggal || getEffectiveTodayString(),
+          tanggal: job.tanggal_rencana || job.tanggal || job.tanggalRealisasi || getEffectiveTodayString(),
           shift: parseInt(job.shift || job.shift_rencana || 1, 10),
           cluster: job.cluster || 'Selatan',
           kategori: kategori || job.nonAchCategory || job.non_ach_category || 'Operasional',
