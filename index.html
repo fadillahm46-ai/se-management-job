@@ -6702,6 +6702,16 @@
                 udara alat berat</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 text-xs">
+              <!-- Dropdown Filter Kluster Clean Air Cleaner (3 Kluster Tanpa ROM Area) -->
+              <select id="filter-aircleaner-cluster" onchange="handleAirCleanerSearchInput()"
+                class="px-3 py-1.5 rounded-xl border border-slate-200 font-bold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-xs cursor-pointer transition shadow-2xs"
+                title="Filter Berdasarkan Kluster (Tanpa ROM Area)">
+                <option value="ALL">All Cluster</option>
+                <option value="Selatan">KGU Selatan</option>
+                <option value="Tengah">KGU Tengah</option>
+                <option value="Utara">KGU Utara</option>
+              </select>
+
               <!-- Dropdown Filter Type Unit Clean Air Cleaner -->
               <select id="filter-aircleaner-type" onchange="handleAirCleanerSearchInput()"
                 class="px-3 py-1.5 rounded-xl border border-slate-200 font-bold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-xs cursor-pointer transition shadow-2xs"
@@ -12505,7 +12515,25 @@
       const isSchWt = !isExplicitUnsch && isWt;
       const isSchLt = !isExplicitUnsch && !isWt;
 
-      const rowCat = String(row.cat || (isWt ? 'coal' : 'small')).toLowerCase().trim();
+      const upperTargetId = targetId.toUpperCase();
+      let resolvedCat = String(row.cat || (isWt ? 'coal' : 'small')).toLowerCase().trim();
+      if (!isExplicitUnsch) {
+        // Utamakan membaca No ID (prefix resmi) sebagai penentu kategori utama
+        if (upperTargetId.startsWith('WT-WNC') || upperTargetId.includes('-WNC-')) {
+          resolvedCat = 'non_coal';
+        } else if (upperTargetId.startsWith('WT-WSC') || upperTargetId.includes('-WSC-')) {
+          const clUpper = String(row.cluster || '').toUpperCase().trim();
+          resolvedCat = (resolvedCat === 'rom' || clUpper === 'ROM') ? 'rom' : 'coal';
+        } else if (upperTargetId.startsWith('LT-CAC') || upperTargetId.includes('-CAC-')) {
+          resolvedCat = 'aircleaner';
+        } else if (upperTargetId.startsWith('LT-TUO') || upperTargetId.includes('-TUO-')) {
+          resolvedCat = 'topup';
+        } else if (upperTargetId.startsWith('LT-GRS') || upperTargetId.includes('-GRS-')) {
+          resolvedCat = (resolvedCat === 'digger') ? 'digger' : 'small';
+        }
+      }
+
+      const rowCat = resolvedCat;
       const isDailyRowCat = ['digger', 'aircleaner', 'air_cleaner', 'topup', 'topup_oil', 'non_coal', 'noncoal'].includes(rowCat);
       const todayMapStr = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : '';
       const rowDateStr = String(row.tanggal || '').trim().split('T')[0];
@@ -12525,7 +12553,7 @@
 
       return {
         id: targetId,
-        cat: row.cat || (isWt ? 'coal' : 'small'),
+        cat: resolvedCat,
         tanggal: row.tanggal || '',
         tanggalRealisasi: row.tanggal || '',
         shift: isTodayDailyRow ? 1 : (parseInt(row.shift, 10) || parsedShiftFromId || 1),
@@ -12868,16 +12896,21 @@
     function loadDatabaseSync() {
       try {
         // FORCE BUILD VERSION UPGRADE: Bersihkan seluruh cache kotor & data zombie di seluruh client
-        const APP_BUILD_VERSION = 'v2026_11_03_fix_comp_date_filter_v2';
+        const APP_BUILD_VERSION = 'v2026_11_11_fix_ac_rom_exclusion_and_cluster_filter_v169';
         if (safeStorage.getItem('SE_APP_BUILD_VERSION') !== APP_BUILD_VERSION) {
           console.log('[Version Upgrade] Memperbarui aplikasi & membersihkan cache lokal ke versi:', APP_BUILD_VERSION);
           safeStorage.setItem('SE_APP_BUILD_VERSION', APP_BUILD_VERSION);
           safeStorage.setItem('SE_DATA_CLEAN_INIT', APP_BUILD_VERSION);
           safeStorage.removeItem('SE_LUBE_JOBS');
           safeStorage.removeItem('SE_WATER_JOBS');
+          safeStorage.removeItem('SE_LT_JOBS');
+          safeStorage.removeItem('SE_WT_JOBS');
+          safeStorage.removeItem('SE_JOB_HISTORY');
           safeStorage.removeItem('SE_UNSCH_LT_JOBS');
           safeStorage.removeItem('SE_UNSCH_WT_JOBS');
           safeStorage.removeItem('SE_AIR_CLEANER');
+          safeStorage.removeItem('SE_AIR_CLEANER_TS');
+          safeStorage.removeItem('SE_AIR_CLEANER_VER');
           safeStorage.removeItem('SE_MASTER_UNITS');
           safeStorage.removeItem('SE_MASTER_UNITS_TS');
           safeStorage.removeItem('SE_MASTER_ARMADA');
@@ -14141,12 +14174,17 @@
           : (rawUpperId.startsWith('WT') || rawUpperId.includes('-WSC-') || rawUpperId.includes('-WNC-') || rawUpperId.includes('-WSR-') || ['coal', 'rom', 'non_coal', 'wsc', 'wsr', 'wnc'].includes(jCat));
 
         if (isWt) {
-          if (jCat === 'rom' || jClusterUpper === 'ROM') {
+          // Utamakan membaca No ID (WT-WNC vs WT-WSC) sebagai acuan utama
+          if (rawUpperId.startsWith('WT-WNC') || rawUpperId.includes('-WNC-')) {
+            jCat = 'non_coal';
+          } else if (rawUpperId.startsWith('WT-WSC') || rawUpperId.includes('-WSC-')) {
+            jCat = (jCat === 'rom' || jClusterUpper === 'ROM') ? 'rom' : 'coal';
+          } else if (jCat === 'rom' || jClusterUpper === 'ROM') {
             jCat = 'rom';
+          } else if (jCat === 'non_coal' || jCat === 'noncoal' || jCat === 'wnc' || jCat.includes('non_coal') || jCat.includes('noncoal')) {
+            jCat = 'non_coal';
           } else if (jCat === 'coal' || jCat === 'wsc') {
             jCat = 'coal';
-          } else if (jCat === 'non_coal' || jCat === 'noncoal' || jCat === 'wnc' || jCat.includes('non_coal') || jCat.includes('noncoal') || ((rawUpperId.includes('-WNC-') || rawUpperId.startsWith('WT-WNC')) && jCat !== 'rom' && jCat !== 'coal')) {
-            jCat = 'non_coal';
           }
         }
         const isUnsch = (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(j)) ||
@@ -14708,12 +14746,17 @@
       };
       const matchCoal = j => {
         const cat = String(j.cat || '').toLowerCase();
-        const id = String(j.id || '').toUpperCase();
-        return cat === 'coal' || cat === 'rom' || cat === 'wsc' || id.includes('-WSC-') || id.startsWith('WT-WSC');
+        const id = String(j.id || j.job_id || j.noId || j.no_id || '').toUpperCase();
+        if (id.startsWith('WT-WNC') || id.includes('-WNC-')) return false;
+        if (id.startsWith('WT-WSC') || id.includes('-WSC-')) return true;
+        return (cat === 'coal' || cat === 'rom' || cat === 'wsc') && cat !== 'non_coal' && cat !== 'noncoal';
       };
       const matchNonCoal = j => {
         const cat = String(j.cat || '').toLowerCase();
+        const id = String(j.id || j.job_id || j.noId || j.no_id || '').toUpperCase();
         const cluster = String(j.cluster || '').toUpperCase().trim();
+        if (id.startsWith('WT-WNC') || id.includes('-WNC-')) return cat !== 'rom' && cluster !== 'ROM';
+        if (id.startsWith('WT-WSC') || id.includes('-WSC-')) return false;
         return (cat === 'non_coal' || cat === 'noncoal' || cat === 'wnc') && cat !== 'rom' && cluster !== 'ROM';
       };
 
@@ -15235,16 +15278,20 @@
           name: 'WASHING COAL (Coal dan ROM)',
           filter: j => {
             const cat = String(j.cat || '').toLowerCase();
-            const id = String(j.id || '').toUpperCase();
-            return (cat === 'coal' || cat === 'rom' || cat === 'wsc' || id.includes('-WSC-') || id.startsWith('WT-WSC')) && !id.includes('-WNC-') && cat !== 'non_coal';
+            const id = String(j.id || j.job_id || j.noId || j.no_id || '').toUpperCase();
+            if (id.startsWith('WT-WNC') || id.includes('-WNC-')) return false;
+            if (id.startsWith('WT-WSC') || id.includes('-WSC-')) return true;
+            return (cat === 'coal' || cat === 'rom' || cat === 'wsc') && cat !== 'non_coal';
           }
         },
         {
           name: 'WASHING NON COAL',
           filter: j => {
             const cat = String(j.cat || '').toLowerCase();
-            const id = String(j.id || '').toUpperCase();
-            return cat === 'non_coal' || cat === 'noncoal' || cat === 'wnc' || id.includes('-WNC-') || id.startsWith('WT-WNC');
+            const id = String(j.id || j.job_id || j.noId || j.no_id || '').toUpperCase();
+            if (id.startsWith('WT-WNC') || id.includes('-WNC-')) return true;
+            if (id.startsWith('WT-WSC') || id.includes('-WSC-')) return false;
+            return cat === 'non_coal' || cat === 'noncoal' || cat === 'wnc';
           }
         }
       ];
@@ -15369,8 +15416,10 @@
           name: 'WASHING COAL (COAL DAN ROM)',
           filter: j => {
             const cat = String(j.cat || '').toLowerCase();
-            const id = String(j.id || '').toUpperCase();
-            return (cat === 'coal' || cat === 'rom' || cat === 'wsc' || id.includes('-WSC-') || id.startsWith('WT-WSC')) && !id.includes('-WNC-') && cat !== 'non_coal';
+            const id = String(j.id || j.job_id || j.noId || j.no_id || '').toUpperCase();
+            if (id.startsWith('WT-WNC') || id.includes('-WNC-')) return false;
+            if (id.startsWith('WT-WSC') || id.includes('-WSC-')) return true;
+            return (cat === 'coal' || cat === 'rom' || cat === 'wsc') && cat !== 'non_coal';
           }
         },
         {
@@ -15378,8 +15427,10 @@
           name: 'WASHING NON COAL',
           filter: j => {
             const cat = String(j.cat || '').toLowerCase();
-            const id = String(j.id || '').toUpperCase();
-            return cat === 'non_coal' || cat === 'noncoal' || cat === 'wnc' || id.includes('-WNC-') || id.startsWith('WT-WNC');
+            const id = String(j.id || j.job_id || j.noId || j.no_id || '').toUpperCase();
+            if (id.startsWith('WT-WNC') || id.includes('-WNC-')) return true;
+            if (id.startsWith('WT-WSC') || id.includes('-WSC-')) return false;
+            return cat === 'non_coal' || cat === 'noncoal' || cat === 'wnc';
           }
         }
       ];
@@ -18484,27 +18535,95 @@
     }
     window.isBigDiggerUnit = isBigDiggerUnit;
 
-    // Helper deteksi Unit Coal vs Non-Coal
+    // Helper deteksi apakah unit berasal dari Cluster ROM Area (Dilarang masuk Monitoring Air Cleaner)
+    function isUnitFromRomCluster(noLambung, jobOrUnit) {
+      const rawNo = String(noLambung || jobOrUnit?.noLambung || jobOrUnit?.unit || jobOrUnit?.no_lambung || '').trim().toUpperCase();
+      if (!rawNo && !jobOrUnit) return false;
+      const cleanNo = rawNo.replace(/[\s\-_]/g, '');
+
+      // Daftar eksplisit unit ROM Area sesuai Master Unit (EB56001AMM-EB56005AMM, EB521001AMM-EB521002AMM, WB596001AMM-WB596004AMM, D5172AMM)
+      if (/^(EB560\d+|EB521\d+|WB596\d+|D5172AMM)$/i.test(cleanNo)) return true;
+
+      const mUnit = rawNo ? findMasterUnitRecord(rawNo) : null;
+      if (mUnit) {
+        const mCluster = String(mUnit.cluster || '').toUpperCase();
+        const mLokasi = String(mUnit.lokasi || '').toUpperCase();
+        const mKat = String(mUnit.kategori || mUnit.cat || mUnit.kategori_unit || '').trim().toLowerCase();
+        if (mCluster.includes('ROM') || /\bROM\b/.test(mLokasi) || mKat === 'rom') return true;
+      }
+
+      if (jobOrUnit) {
+        const jCluster = String(jobOrUnit.cluster || '').toUpperCase();
+        const jLokasi = String(jobOrUnit.lokasi || '').toUpperCase();
+        const jKat = String(jobOrUnit.kategori || jobOrUnit.cat || '').trim().toLowerCase();
+        if (jCluster.includes('ROM') || /\bROM\b/.test(jLokasi) || jKat === 'rom') return true;
+      }
+
+      const inWtRom = (state.watertruckState?.jobs || []).some(wj => {
+        if (!wj) return false;
+        const wNo = String(wj.noLambung || wj.unit || '').trim().toUpperCase().replace(/[\s\-_]/g, '');
+        if (wNo !== cleanNo) return false;
+        const wCluster = String(wj.cluster || '').toUpperCase();
+        const wLokasi = String(wj.lokasi || '').toUpperCase();
+        return wj.cat === 'rom' || wCluster.includes('ROM') || /\bROM\b/.test(wLokasi);
+      });
+      if (inWtRom) return true;
+
+      return false;
+    }
+    window.isUnitFromRomCluster = isUnitFromRomCluster;
+
+    // Helper mendapatkan Parent Cluster unit untuk Monitoring Air Cleaner ('Selatan' | 'Tengah' | 'Utara' | 'ROM')
+    function getAirCleanerUnitCluster(noLambung, item) {
+      const rawNo = String(noLambung || item?.noLambung || item?.no_lambung || '').trim().toUpperCase();
+      if (isUnitFromRomCluster(rawNo, item)) return 'ROM';
+
+      const mUnit = rawNo ? findMasterUnitRecord(rawNo) : null;
+      if (mUnit && mUnit.cluster) {
+        return getParentCluster(mUnit.cluster);
+      }
+      if (item && item.cluster) {
+        return getParentCluster(item.cluster);
+      }
+
+      // Fallback cek jadwal terakhir unit di Lube Truck atau Water Truck
+      const cleanNo = rawNo.replace(/[\s\-_]/g, '');
+      const ltJobs = state.lubetruckState?.jobs || [];
+      for (let i = ltJobs.length - 1; i >= 0; i--) {
+        const j = ltJobs[i];
+        if (!j || !j.cluster) continue;
+        const jNo = String(j.noLambung || j.unit || '').trim().toUpperCase().replace(/[\s\-_]/g, '');
+        if (jNo === cleanNo) return getParentCluster(j.cluster);
+      }
+      return 'Selatan';
+    }
+    window.getAirCleanerUnitCluster = getAirCleanerUnitCluster;
+
+    // Helper deteksi Unit Coal vs Non-Coal (Unit Coal yang BUKAN dari Cluster ROM Area)
     function isCoalUnit(j) {
       if (!j) return false;
       const noUnit = String(j.noLambung || j.unit || j.no_lambung || '').trim().toUpperCase();
       const cleanNo = noUnit.replace(/[\s\-_]/g, '');
+
+      // Unit dari Cluster ROM Area bukan merupakan unit Coal untuk Monitoring Air Cleaner
+      if (isUnitFromRomCluster(noUnit, j)) return false;
+
       const mUnit = findMasterUnitRecord(noUnit);
 
       if (mUnit) {
         const mKat = String(mUnit.kategori || mUnit.cat || mUnit.kategori_unit || '').trim().toLowerCase();
-        if (mKat.includes('non')) return false;
+        if (mKat.includes('non') || mKat === 'rom') return false;
         if (mKat.includes('coal')) return true;
         const masterLokasi = String(mUnit.lokasi || '').toUpperCase();
-        if (/(COAL|BATUBARA|ROM|\bP1\b|PIT\s*1\b)/i.test(masterLokasi)) return true;
+        if (/(COAL|BATUBARA|\bP1\b|PIT\s*1\b)/i.test(masterLokasi)) return true;
       }
 
       const jKat = String(j.kategori || j.cat || '').trim().toLowerCase();
-      if (jKat.includes('non')) return false;
+      if (jKat.includes('non') || jKat === 'rom') return false;
       if (jKat.includes('coal')) return true;
 
       const jobLokasi = String(j.lokasi || '').toUpperCase();
-      if (/(COAL|BATUBARA|ROM|\bP1\b|PIT\s*1\b)/i.test(jobLokasi)) return true;
+      if (/(COAL|BATUBARA|\bP1\b|PIT\s*1\b)/i.test(jobLokasi)) return true;
 
       const ket = `${j.keterangan || ''} ${j.deskripsi || ''}`.toUpperCase();
       if (/(COAL|BATUBARA|\bP1\b)/i.test(ket)) return true;
@@ -19728,16 +19847,19 @@
       const c = String(job.cat || '').toLowerCase().trim();
       const lok = String(job.lokasi || job.cluster || '').toLowerCase();
       const arm = String(job.armada || job.wtUnit || job.armada_unit || '').toUpperCase();
+      const rawExistingId = String(job.id || job.job_id || job.noId || job.no_id || '').toUpperCase();
       if (isWt) {
-        // Unit Coal dan Unit ROM keduanya resmi menggunakan kode ID WSC sesuai instruksi pengguna
-        if (c === 'rom' || c.includes('rom') || lok.includes('rom') || c === 'coal' || c.includes('coal')) {
-          typeCode = 'WSC';
-        } else {
+        // Utamakan membaca No ID (WNC vs WSC) dan pastikan kategori 'non_coal' TIDAK pernah masuk ke kondisi 'coal' (WSC)
+        if (rawExistingId.startsWith('WT-WNC') || rawExistingId.includes('-WNC-') ||
+            c === 'non_coal' || c === 'noncoal' || c === 'wnc' || c.includes('non_coal') || c.includes('noncoal') || c.includes('non coal')) {
           typeCode = 'WNC';
+        } else {
+          // Unit Coal dan Unit ROM keduanya resmi menggunakan kode ID WSC sesuai instruksi pengguna
+          typeCode = 'WSC';
         }
       } else {
-        if (c === 'aircleaner' || c === 'clean air cleaner' || c === 'air cleaner') typeCode = 'CAC';
-        else if (c === 'topup' || c === 'top up oil' || c === 'topup_oil') typeCode = 'TUO';
+        if (rawExistingId.startsWith('LT-CAC') || rawExistingId.includes('-CAC-') || c === 'aircleaner' || c === 'clean air cleaner' || c === 'air cleaner') typeCode = 'CAC';
+        else if (rawExistingId.startsWith('LT-TUO') || rawExistingId.includes('-TUO-') || c === 'topup' || c === 'top up oil' || c === 'topup_oil') typeCode = 'TUO';
         else typeCode = 'GRS';
       }
 
@@ -23276,9 +23398,21 @@
       const isWt = (sourceType === 'WT');
       const cleanCat = String(activeCat || '').toLowerCase().trim();
 
-      function isCatMatched(jobCat) {
-        const jc = String(jobCat || '').toLowerCase().trim();
+      function isCatMatched(jobCat, jobObj) {
         if (!cleanCat || cleanCat === 'all') return true;
+        const jIdUpper = String(jobObj?.id || jobObj?.job_id || jobObj?.noId || jobObj?.no_id || '').toUpperCase();
+        // Utamakan membaca No ID jika memiliki prefix baku
+        if (cleanCat === 'non_coal' || cleanCat === 'noncoal') {
+          if (jIdUpper.startsWith('WT-WNC') || jIdUpper.includes('-WNC-')) return true;
+          if (jIdUpper.startsWith('WT-WSC') || jIdUpper.includes('-WSC-')) return false;
+        } else if (cleanCat === 'coal' || cleanCat === 'rom') {
+          if (jIdUpper.startsWith('WT-WNC') || jIdUpper.includes('-WNC-')) return false;
+        } else if (cleanCat === 'aircleaner' || cleanCat === 'cac' || cleanCat === 'air_cleaner') {
+          if (jIdUpper.startsWith('LT-CAC') || jIdUpper.includes('-CAC-')) return true;
+        } else if (cleanCat === 'topup' || cleanCat === 'top_up') {
+          if (jIdUpper.startsWith('LT-TUO') || jIdUpper.includes('-TUO-')) return true;
+        }
+        const jc = String(jobCat || '').toLowerCase().trim();
         if (jc === cleanCat) return true;
         if ((cleanCat === 'digger' || cleanCat === 'big_digger' || cleanCat === 'small_digger' || cleanCat === 'greasing') &&
           (jc === 'digger' || jc === 'big_digger' || jc === 'small_digger' || jc === 'greasing')) return true;
@@ -23337,7 +23471,7 @@
 
       allJobs.forEach(j => {
         if (!j) return;
-        if (!isCatMatched(j.cat)) return;
+        if (!isCatMatched(j.cat, j)) return;
 
         const jDate = j.tanggal || '';
         // Pendingan HANYA pekerjaan dengan tanggal SEBELUM hari ini (jDate < todayStr)
@@ -24443,19 +24577,28 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       // Filter jobs: Baik Admin maupun MP hanya melihat antrean aktif yang belum di-action.
       // Unit yang sudah di-action otomatis masuk ke menu Riwayat Selesai.
       let jobs = state.watertruckState.jobs.filter(j => {
-        const matchCat = (j.cat === activeCat);
+        const cleanJobId = String(j.id || j.job_id || j.noId || j.no_id || '');
+        const upperJobId = cleanJobId.toUpperCase();
+        // Utamakan membaca No ID untuk penentuan kategori WT (WT-WNC = non_coal, WT-WSC = coal/rom)
+        let effectiveCat = String(j.cat || '').toLowerCase().trim();
+        if (upperJobId.startsWith('WT-WNC') || upperJobId.includes('-WNC-')) {
+          effectiveCat = 'non_coal';
+        } else if (upperJobId.startsWith('WT-WSC') || upperJobId.includes('-WSC-')) {
+          const clUpper = String(j.cluster || '').toUpperCase().trim();
+          effectiveCat = (effectiveCat === 'rom' || clUpper === 'ROM') ? 'rom' : 'coal';
+        }
+        const matchCat = (effectiveCat === activeCat);
         const matchDate = (j.tanggal === selectedDate || (!j.tanggal && selectedDate === '2026-09-27'));
         const s = String(j.status || '').toLowerCase().trim();
-        const cleanJobId = String(j.id || '');
         const jUnit = String(j.noLambung || '').trim().toUpperCase();
         const jDate = j.tanggal || '';
         const jShiftNum = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (parseInt(j.shift, 10) || 1);
-        const jCat = String(j.cat || '').toLowerCase().trim();
+        const jCat = effectiveCat;
         const jRound = (typeof getJobWashingRound === 'function')
           ? getJobWashingRound(j)
-          : (String(j.id || '').includes('-W2') ? 2 : (parseInt(j.washingRound || j.washing_round || 1, 10) || 1));
+          : (upperJobId.includes('-W2') ? 2 : (parseInt(j.washingRound || j.washing_round || 1, 10) || 1));
         const jBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(cleanJobId) : cleanJobId.replace(/-\d{4}$/, '');
-        const jHasW2 = cleanJobId.includes('-W2') || jBaseId.includes('-W2') || jRound === 2;
+        const jHasW2 = upperJobId.includes('-W2') || jBaseId.includes('-W2') || jRound === 2;
 
         const inHistory = Array.isArray(state.jobHistory) && state.jobHistory.some(h => {
           if (!h) return false;
@@ -24465,27 +24608,11 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           const isRealDone = ['ACHIEVED', 'ACH', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR'].includes(hFinal) || Boolean(h.is_achieved);
           if (!isRealDone) return false;
 
-          // 1. KATEGORI HARUS SAMA: Kategori Coal tidak boleh disembunyikan oleh riwayat ROM, begitu pula sebaliknya!
-          const hCat = String(h.cat || '').toLowerCase().trim();
-          if (hCat && jCat && hCat !== jCat) return false;
-
-          // 2. SHIFT HARUS SAMA: Shift 1 tidak boleh disembunyikan oleh Shift 2 atau sebaliknya!
-          const hShiftNum = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(h) : (parseInt(h.shift_rencana || h.shift, 10) || 1);
-          if (hShiftNum !== jShiftNum) return false;
-
-          // 3. PUTARAN WASHING HARUS SAMA: Washing 1 tidak boleh disembunyikan oleh Washing 2 atau sebaliknya!
-          const hRound = (typeof getJobWashingRound === 'function')
-            ? getJobWashingRound(h)
-            : (parseInt(h.washing_round || h.washingRound || (String(h.id || '').includes('-W2') ? 2 : 1), 10) || 1);
-          if (hRound !== jRound) return false;
-
           const hId = String(h.id || '').trim();
           const hJobId = String(h.job_id || '').trim();
           const hBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(hJobId || hId) : (hJobId || hId).replace(/-\d{4}$/, '');
-          const hHasW2 = hId.includes('-W2') || hJobId.includes('-W2') || hBaseId.includes('-W2') || hRound === 2;
-          if (jHasW2 !== hHasW2) return false;
 
-          // ATURAN KERAS PENGGUNA: ID masing-masing SCH adalah penentu mutlak (ID No 1)!
+          // ATURAN KERAS PENGGUNA: Utamakan membaca No ID (ID masing-masing SCH adalah penentu mutlak #1)!
           if (cleanJobId && (hJobId === cleanJobId || hId === cleanJobId || (jBaseId && hBaseId && jBaseId === hBaseId))) {
             return true;
           }
@@ -24494,7 +24621,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           }
           return false;
         });
-        const isActioned = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) || (j.status_final !== undefined && j.status_final !== null && String(j.status_final).trim() !== '') || inHistory;
+        const isActioned = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'parkir', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) || (j.status_final !== undefined && j.status_final !== null && String(j.status_final).trim() !== '') || inHistory;
         const isQueueActive = ((s === 'scheduled') || (s === 'pending') || Boolean(j.isPending)) && !isActioned;
         return matchCat && matchDate && isQueueActive;
       });
@@ -25837,15 +25964,22 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         const rawCat = String(j?.cat || j?.category || '').toLowerCase().trim();
         const rawId = String(j?.id || j?.job_id || j?.noId || j?.no_id || '').toUpperCase().trim();
         if (isWt) {
-          if (rawCat === 'non_coal' || rawCat === 'noncoal' || rawId.includes('-WNC-')) return 'non_coal';
+          // Utamakan membaca No ID (WT-WNC vs WT-WSC)
+          if (rawId.startsWith('WT-WNC') || rawId.includes('-WNC-')) return 'non_coal';
+          if (rawId.startsWith('WT-WSC') || rawId.includes('-WSC-')) {
+            const clUpper = String(j?.cluster || '').toUpperCase();
+            const locUpper = String(j?.lokasi || '').toUpperCase();
+            return (rawCat === 'rom' || clUpper.includes('ROM') || locUpper.includes('ROM')) ? 'rom' : 'coal';
+          }
+          if (rawCat === 'non_coal' || rawCat === 'noncoal') return 'non_coal';
           if (rawCat === 'rom' || rawId.includes('-ROM-')) return 'rom';
           const clUpper = String(j?.cluster || '').toUpperCase();
           const locUpper = String(j?.lokasi || '').toUpperCase();
           if (clUpper.includes('ROM') || locUpper.includes('ROM')) return 'rom';
           return 'coal';
         } else {
-          if (rawCat === 'aircleaner' || rawCat === 'air_cleaner' || rawCat === 'cac' || rawId.includes('-CAC-')) return 'aircleaner';
-          if (rawCat === 'topup' || rawCat === 'top_up' || rawCat === 'top up oil' || rawCat === 'tuo' || rawId.includes('-TUO-') || (typeof isTopUpJobRecord === 'function' && isTopUpJobRecord(j))) return 'topup';
+          if (rawId.startsWith('LT-CAC') || rawId.includes('-CAC-') || rawCat === 'aircleaner' || rawCat === 'air_cleaner' || rawCat === 'cac') return 'aircleaner';
+          if (rawId.startsWith('LT-TUO') || rawId.includes('-TUO-') || rawCat === 'topup' || rawCat === 'top_up' || rawCat === 'top up oil' || rawCat === 'tuo' || (typeof isTopUpJobRecord === 'function' && isTopUpJobRecord(j))) return 'topup';
           if (rawCat === 'digger' || rawCat === 'big' || rawCat === 'big_digger' || rawId.includes('-BIG-')) return 'digger';
           return 'small';
         }
@@ -25973,7 +26107,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         } else if (catKey === 'topup') {
           inCurrentScope = (planDate === normToday || planDate === topUpTargetDate) || (execDate === normToday && planDate >= minDateStr);
         } else if (catKey === 'non_coal') {
-          inCurrentScope = (planDate >= curMiningWeek.startDate && planDate <= normToday) || (execDate === normToday && planDate >= minDateStr);
+          // Skema Pengguna: SCH Non-Coal tetap pada tanggal aslinya tanpa digabung lintas tanggal
+          inCurrentScope = (planDate === normToday);
         }
 
         if (!inCurrentScope) return;
@@ -26056,9 +26191,13 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           // Top Up Oil: Sistem Hari (termasuk H+1 untuk Shift 2) + tanggal kemarin yang belum dikerjakan
           const maxTopUpDate = topUpTargetDate > normToday ? topUpTargetDate : normToday;
           matchDateAndShift = (jDate >= minDateStr && jDate <= maxTopUpDate);
+        } else if (catKey === 'non_coal') {
+          // Skema Pengguna: SCH Non-Coal tetap outstanding di tanggal aslinya tanpa menumpuk di tanggal selanjutnya
+          // (informasi tanggal yang belum dikerjakan ditampilkan melalui banner informasi tanggal)
+          matchDateAndShift = (jDate === normToday);
         } else {
-          // Washing Non-Coal, Greasing Big Digger, Clean Air Cleaner: Sistem Hari / Mingguan (hari ini + tanggal kemarin yang belum dikerjakan)
-          matchDateAndShift = (jDate >= minDateStr && jDate <= normToday);
+          // Greasing Big Digger, Clean Air Cleaner: Sistem Hari
+          matchDateAndShift = (jDate === normToday);
         }
 
         if (!matchDateAndShift) return;
@@ -33333,20 +33472,29 @@ Keterangan : ${keterangan}`;
         : (rawId.startsWith('WT') || rawId.includes('-WT') || armada.startsWith('WT') || ['coal', 'rom', 'non_coal', 'wsc', 'wsr', 'wnc'].includes(cat));
 
       if (isWt) {
-        // 5a. Washing Non-Coal
-        if (cat === 'non_coal' || cat === 'noncoal' || cat === 'wnc' || rawId.includes('-WNC-') || rawId.startsWith('WT-WNC') || jobType === 'WNC' || jobType.includes('NON COAL') || jobType.includes('NON-COAL')) {
+        // 5a. Utamakan membaca No ID terlebih dahulu (WT-WNC vs WT-WSC)
+        if (rawId.startsWith('WT-WNC') || rawId.includes('-WNC-')) {
+          return 'non_coal';
+        }
+        if (rawId.startsWith('WT-WSC') || rawId.includes('-WSC-')) {
+          const isRomByCatOrLoc = cat === 'rom' || cat === 'wsr' || rawId.includes('-ROM-') || lok.includes('rom');
+          return isRomByCatOrLoc ? 'rom' : 'coal';
+        }
+
+        // 5b. Fallback berdasarkan atribut kategori jika No ID belum memiliki prefix baku
+        if (cat === 'non_coal' || cat === 'noncoal' || cat === 'wnc' || jobType === 'WNC' || jobType.includes('NON COAL') || jobType.includes('NON-COAL')) {
           return 'non_coal';
         }
 
-        // 5b. Washing ROM (HANYA jika memang kategori ROM / WSR / lokasi ROM, dan bukan washing coal)
+        // 5c. Washing ROM (HANYA jika memang kategori ROM / WSR / lokasi ROM, dan bukan washing coal)
         const isRomWashing = cat === 'rom' || cat === 'wsr' || rawId.includes('-WSR-') || rawId.includes('-ROM-') ||
           jobType === 'WSR' || jobType.includes('ROM') ||
-          (lok.includes('rom') && !rawId.includes('-WSC-') && cat !== 'coal');
+          (lok.includes('rom') && cat !== 'coal');
         if (isRomWashing) {
           return 'rom';
         }
 
-        // 5c. Washing Coal (default Washing Pit)
+        // 5d. Washing Coal (default Washing Pit)
         return 'coal';
       }
 
@@ -39320,9 +39468,16 @@ Keterangan : ${keterangan}`;
 
       const searchVal = (document.getElementById('search-aircleaner-input')?.value || '').toLowerCase().trim();
       const selectedType = (document.getElementById('filter-aircleaner-type')?.value || 'ALL');
+      const selectedCluster = (document.getElementById('filter-aircleaner-cluster')?.value || 'ALL');
       const rawList = Array.isArray(state.airCleanerReplacements) ? state.airCleanerReplacements : [];
 
-      let list = rawList.slice();
+      // Kecualikan unit dari Kluster ROM Area secara mutlak
+      let list = rawList.filter(m => !isUnitFromRomCluster(m.no_lambung || m.noLambung, m));
+
+      // Filter berdasarkan kluster yang dipilih di dropdown (3 Kluster tanpa ROM Area)
+      if (selectedCluster !== 'ALL') {
+        list = list.filter(m => getAirCleanerUnitCluster(m.no_lambung || m.noLambung, m) === selectedCluster);
+      }
 
       // Filter berdasarkan tipe unit yang dipilih di dropdown
       if (selectedType !== 'ALL') {
@@ -39773,19 +39928,24 @@ Keterangan : ${keterangan}`;
       if (!noLambung) return false;
       const clean = String(noLambung).trim().toUpperCase();
 
+      // 0. Unit dari Kluster ROM Area TIDAK BOLEH masuk sebagai unit Coal Air Cleaner
+      if (typeof isUnitFromRomCluster === 'function' && isUnitFromRomCluster(clean)) {
+        return false;
+      }
+
       // 1. Cek dari masterUnits
       const u = (state.masterUnits || []).find(m => (m.lambung || m.no_lambung || m.noLambung || '').trim().toUpperCase() === clean);
       if (u) {
         const k = String(u.kategori || '').toLowerCase().trim();
-        if (k === 'coal' || k === 'rom') return true;
-        if (k === 'non_coal' || k === 'non-coal' || k === 'ob') return false;
+        if (k === 'coal') return true;
+        if (k === 'rom' || k === 'non_coal' || k === 'non-coal' || k === 'ob') return false;
       }
 
       // 2. Cek dari airCleanerMonitor item
       const acItem = (state.airCleanerMonitor || []).find(m => String(m.noLambung || '').trim().toUpperCase() === clean);
       if (acItem) {
         if (acItem.kategori === 'coal' || acItem.isCoal === true) return true;
-        if (acItem.kategori === 'non_coal' || acItem.kategori === 'non-coal' || acItem.isCoal === false) return false;
+        if (acItem.kategori === 'rom' || acItem.kategori === 'non_coal' || acItem.kategori === 'non-coal' || acItem.isCoal === false) return false;
       }
 
       // 3. Fallback ke isUnitCoal umum jika tersedia
@@ -40094,6 +40254,8 @@ Keterangan : ${keterangan}`;
 
     function updateAirCleanerRecord(noLambung, type, actionType, code, actionDateStr) {
       if (!noLambung) return;
+      // ATURAN BAKU: Unit dari Kluster ROM Area dilarang masuk ke Monitoring Clean Air Cleaner
+      if (typeof isUnitFromRomCluster === 'function' && isUnitFromRomCluster(noLambung)) return;
       const targetDate = actionDateStr || getEffectiveTodayString();
       const parts = targetDate.split('-');
       const formattedDate = (parts.length === 3) ? `${parts[2]}/${parts[1]}/${parts[0]}` : targetDate;
@@ -40560,14 +40722,17 @@ Keterangan : ${keterangan}`;
       const currentVal = select.value || 'ALL';
       const types = new Set();
 
-      // HANYA masukkan tipe unit yang masuk dalam 4 foto spesifikasi
+      // HANYA masukkan tipe unit yang masuk dalam 4 foto spesifikasi dan BUKAN dari Kluster ROM Area
       (state.airCleanerMonitor || []).forEach(m => {
+        if (typeof isUnitFromRomCluster === 'function' && isUnitFromRomCluster(m.noLambung, m)) return;
         const t = (m.type || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(m.noLambung, '') : '')).trim();
         if (t && isAllowedAirCleanerType(t)) types.add(t);
       });
 
       if (Array.isArray(state.masterUnits)) {
         state.masterUnits.forEach(u => {
+          const nl = String(u.noLambung || u.lambung || u.no_lambung || '').trim();
+          if (typeof isUnitFromRomCluster === 'function' && isUnitFromRomCluster(nl, u)) return;
           const t = (u.typeUnit || u.tipe || u.type || u.type_model || '').trim();
           if (t && isAllowedAirCleanerType(t)) types.add(t);
         });
@@ -41880,6 +42045,7 @@ Keterangan : ${keterangan}`;
       // Update opsi tipe unit
       updateAirCleanerTypeOptions();
 
+      const selectedCluster = (document.getElementById('filter-aircleaner-cluster')?.value || 'ALL');
       const selectedType = (document.getElementById('filter-aircleaner-type')?.value || 'ALL');
       const searchVal = (document.getElementById('search-aircleaner-input')?.value || '').toLowerCase().trim();
       let rawList = state.airCleanerMonitor || [];
@@ -41933,11 +42099,17 @@ Keterangan : ${keterangan}`;
         }
       });
 
-      // Filter KHUSUS: HANYA tampilkan tipe unit yang ada di 4 foto spesifikasi pengguna
-      const allowedBaseList = rawList.filter(m => {
+      // Filter KHUSUS: HANYA tampilkan tipe unit yang ada di 4 foto spesifikasi pengguna & BUKAN dari Kluster ROM Area
+      let allowedBaseList = rawList.filter(m => {
+        if (isUnitFromRomCluster(m.noLambung, m)) return false;
         const mType = (m.type || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(m.noLambung, 'Unit') : '')).trim();
         return !isExcludedAirCleanerType(mType) && (isAllowedAirCleanerType(mType) || (Array.isArray(m.cleans) && m.cleans.length > 0));
       });
+
+      // Terapkan filter kluster (3 Kluster: Selatan, Tengah, Utara tanpa ROM Area) sebelum menghitung badge & tabel
+      if (selectedCluster !== 'ALL') {
+        allowedBaseList = allowedBaseList.filter(m => getAirCleanerUnitCluster(m.noLambung, m) === selectedCluster);
+      }
 
       // Hitung total unit NON COAL dan COAL untuk update badge counter di tab sub-menu
       const totalNonCoal = allowedBaseList.filter(m => !isAirCleanerUnitCoal(m.noLambung, m.type)).length;
@@ -44913,6 +45085,8 @@ Keterangan : ${keterangan}`;
 
     async function syncAirCleanerToSupabase(item) {
       if (!state.supabaseClient || !item || !item.noLambung) return;
+      // ATURAN BAKU: Unit dari Kluster ROM Area dilarang disimpan ke air_cleaner_monitoring
+      if (typeof isUnitFromRomCluster === 'function' && isUnitFromRomCluster(item.noLambung, item)) return;
       try {
         await state.supabaseClient.from('air_cleaner_monitoring').upsert({
           id: 'AC-' + item.noLambung.toUpperCase(),
@@ -44973,10 +45147,11 @@ Keterangan : ${keterangan}`;
 
     async function loadAirCleanerFromSupabase(force = false) {
       if (!state.supabaseClient) return;
-      // Master Data TTL Cache (12 Jam) - Versi 10 untuk Single Source of Truth murni dari Riwayat Selesai (job_history_lt)
+      // Master Data TTL Cache (12 Jam) - Versi 12 untuk Single Source of Truth + Eksklusi Kluster ROM Area
       const savedAcTs = Number(safeStorage.getItem('SE_AIR_CLEANER_TS') || 0);
-      const isAcFresh = (Date.now() - savedAcTs) < MASTER_DATA_TTL_MS && safeStorage.getItem('SE_AIR_CLEANER_VER') === '10';
+      const isAcFresh = (Date.now() - savedAcTs) < MASTER_DATA_TTL_MS && safeStorage.getItem('SE_AIR_CLEANER_VER') === '12';
       if (!force && isAcFresh && Array.isArray(state.airCleanerMonitor) && state.airCleanerMonitor.length > 0) {
+        state.airCleanerMonitor = state.airCleanerMonitor.filter(m => !isUnitFromRomCluster(m.noLambung, m));
         console.log('[Supabase Cache TTL] Air Cleaner fresh dari cache lokal (TTL 12 Jam):', state.airCleanerMonitor.length, 'unit');
         return;
       }
@@ -45033,8 +45208,14 @@ Keterangan : ${keterangan}`;
         const hasFullHistorySSOT = acHistoryJobs.length > 0;
         const supaRows = (Array.isArray(data) && data.length > 0) ? data : [];
         const supaMap = new Map();
+        const romUnitsInSupa = [];
         supaRows.forEach(row => {
           const nl = String(row.no_lambung || '').toUpperCase().trim();
+          if (!nl) return;
+          if (isUnitFromRomCluster(nl, row)) {
+            romUnitsInSupa.push(nl);
+            return;
+          }
           if (nl) {
             const dbCleans = (Array.isArray(row.cleans) && row.cleans.length > 0) ? [...row.cleans] : [];
             supaMap.set(nl, {
@@ -45059,10 +45240,20 @@ Keterangan : ${keterangan}`;
           }
         });
 
-        // Kumpulkan unit alat berat dari masterUnits: HANYA tipe yang ada di 4 foto spesifikasi pengguna
+        // Auto-clean: Hapus unit Kluster ROM Area jika ditemukan di tabel air_cleaner_monitoring Supabase
+        if (romUnitsInSupa.length > 0 && state.supabaseClient) {
+          romUnitsInSupa.forEach(romNl => {
+            state.supabaseClient.from('air_cleaner_monitoring').delete().eq('no_lambung', romNl).then(() => {
+              console.log('[Supabase Cleaned ROM Unit from Air Cleaner]', romNl);
+            }).catch(() => { });
+          });
+        }
+
+        // Kumpulkan unit alat berat dari masterUnits: HANYA tipe yang ada di 4 foto spesifikasi pengguna & BUKAN Kluster ROM Area
         const masterUnitList = Array.isArray(state.masterUnits) ? state.masterUnits : [];
         masterUnitList.forEach(u => {
           const nl = String(u.noLambung || u.lambung || '').toUpperCase().trim();
+          if (!nl || isUnitFromRomCluster(nl, u)) return;
           const uType = u.typeUnit || u.tipe || u.type || u.type_model || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(nl, 'Unit') : 'Unit');
           if (nl && isAllowedAirCleanerType(uType) && !supaMap.has(nl)) {
             supaMap.set(nl, {
@@ -45270,12 +45461,13 @@ Keterangan : ${keterangan}`;
         const jobsByUnitMap = new Map();
         actualCompletedJobs.forEach(job => {
           const uLambung = String(job.noLambung || '').toUpperCase().trim();
-          if (!uLambung) return;
+          if (!uLambung || isUnitFromRomCluster(uLambung, job)) return;
           if (!jobsByUnitMap.has(uLambung)) jobsByUnitMap.set(uLambung, []);
           jobsByUnitMap.get(uLambung).push(job);
         });
 
         jobsByUnitMap.forEach((uJobs, uLambung) => {
+          if (isUnitFromRomCluster(uLambung)) return;
           let monItem = supaMap.get(uLambung);
           if (!monItem) {
             const sampleType = uJobs[0]?.typeUnit || 'Unit';
@@ -45413,9 +45605,9 @@ Keterangan : ${keterangan}`;
           });
         }
 
-        // Urutkan daftar monitoring: Unit yang paling mendekati pergantian air cleaner di paling atas
+        // Urutkan daftar monitoring: Unit yang paling mendekati pergantian air cleaner di paling atas (kecualikan Kluster ROM Area)
         state.airCleanerMonitor = Array.from(supaMap.values())
-          .filter(item => !isExcludedAirCleanerType(item.type) && (isAllowedAirCleanerType(item.type) || (Array.isArray(item.cleans) && item.cleans.length > 0)))
+          .filter(item => !isUnitFromRomCluster(item.noLambung, item) && !isExcludedAirCleanerType(item.type) && (isAllowedAirCleanerType(item.type) || (Array.isArray(item.cleans) && item.cleans.length > 0)))
           .sort((a, b) => {
             const scoreA = getAirCleanerUrgencyScore(a);
             const scoreB = getAirCleanerUrgencyScore(b);
@@ -45434,7 +45626,7 @@ Keterangan : ${keterangan}`;
           });
           safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(slimMonitorForStorage));
           safeStorage.setItem('SE_AIR_CLEANER_TS', String(Date.now()));
-          safeStorage.setItem('SE_AIR_CLEANER_VER', '10');
+          safeStorage.setItem('SE_AIR_CLEANER_VER', '12');
         } catch (eStore) { }
 
         if (typeof renderAirCleanerMonitorTable === 'function') {
@@ -50176,23 +50368,7 @@ Keterangan : ${keterangan}`;
         const hJobId = String(h.job_id || '').trim();
         const hBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(hJobId || hId) : (hJobId || hId).replace(/-\d{4}$/, '');
 
-        // ATURAN KERAS PENGGUNA: ID adalah penentu mutlak!
-        // DILARANG KERAS menganggap unit selesai jika Shift, Putaran Washing (W1 vs W2), atau Kategori berbeda!
-        if (isWt) {
-          const hCat = String(h.cat || '').toLowerCase().trim();
-          if (hCat && jCat && hCat !== jCat) return false;
-
-          const hShift = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(h) : (parseInt(h.shift_rencana || h.shift, 10) || 1);
-          if (hShift !== jShift) return false;
-
-          const hRound = (typeof getJobWashingRound === 'function') ? getJobWashingRound(h) : extractRoundFromJob(h);
-          if (hRound !== jRound) return false;
-
-          const hHasW2 = hId.includes('-W2') || hJobId.includes('-W2') || hBaseId.includes('-W2') || hRound === 2;
-          if (jHasW2 !== hHasW2) return false;
-        }
-
-        // Pencocokan ID Presisi:
+        // ATURAN KERAS PENGGUNA: Utamakan membaca No ID (ID adalah penentu mutlak #1)!
         if (hId === rawId || hJobId === rawId) return true;
         if (baseId && hBaseId && baseId === hBaseId) return true;
         if (baseId && hId.startsWith(baseId + '-') && /^-\d{4}$/.test(hId.slice(baseId.length))) return true;
@@ -52644,6 +52820,7 @@ Keterangan : ${keterangan}`;
       } else if (sourceType === 'AIRCLEANER') {
         fileNamePrefix = 'Data_Clean_Air_Cleaner';
         const currentTab = state.airCleanerCategoryTab || 'non_coal';
+        const selectedCluster = (document.getElementById('filter-aircleaner-cluster')?.value || 'ALL');
         const selectedType = (document.getElementById('filter-aircleaner-type')?.value || 'ALL');
         const searchVal = (document.getElementById('search-aircleaner-input')?.value || '').toLowerCase().trim();
 
@@ -52651,12 +52828,15 @@ Keterangan : ${keterangan}`;
           fileNamePrefix = 'Data_Replace_Air_Cleaner';
           const replacements = Array.isArray(state.airCleanerReplacements) ? state.airCleanerReplacements : [];
           let filtered = replacements.filter(r => {
+            const rUnit = r.no_lambung || r.noLambung || '';
+            if (isUnitFromRomCluster(rUnit, r)) return false;
+            if (selectedCluster !== 'ALL' && getAirCleanerUnitCluster(rUnit, r) !== selectedCluster) return false;
             if (searchVal) {
-              const text = `${r.noLambung || ''} ${r.typeUnit || ''} ${r.lokasi || ''} ${r.optPic || ''}`.toLowerCase();
+              const text = `${rUnit} ${r.type_model || r.typeUnit || ''} ${r.lokasi || ''} ${r.pic || r.optPic || ''}`.toLowerCase();
               if (!text.includes(searchVal)) return false;
             }
             if (selectedType !== 'ALL') {
-              const rType = r.typeUnit || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(r.noLambung, '') : '');
+              const rType = r.type_model || r.typeUnit || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(rUnit, '') : '');
               if (rType !== selectedType) return false;
             }
             return true;
@@ -52670,8 +52850,8 @@ Keterangan : ${keterangan}`;
           // Yang terdata hanya unit dan tanggal saja
           const headers = ['No', 'No Unit', 'Type Unit', 'Tanggal'];
           const rows = filtered.map((r, idx) => {
-            const noUnit = r.noLambung || '-';
-            const typeUnit = r.typeUnit || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(noUnit, '-') : '-');
+            const noUnit = r.no_lambung || r.noLambung || '-';
+            const typeUnit = r.type_model || r.typeUnit || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(noUnit, '-') : '-');
             const tgl = r.tanggal || r.tanggalReplace || (typeof getEffectiveTodayString === 'function' ? getEffectiveTodayString() : '-');
             return [idx + 1, noUnit, typeUnit, tgl];
           });
@@ -52683,10 +52863,15 @@ Keterangan : ${keterangan}`;
           fileNamePrefix = isTabCoal ? 'Data_Clean_Air_Cleaner_COAL' : 'Data_Clean_Air_Cleaner_NON_COAL';
 
           let rawList = state.airCleanerMonitor || [];
-          const allowedBaseList = rawList.filter(m => {
+          let allowedBaseList = rawList.filter(m => {
+            if (isUnitFromRomCluster(m.noLambung, m)) return false;
             const mType = (m.type || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(m.noLambung, 'Unit') : '')).trim();
             return !isExcludedAirCleanerType(mType) && (isAllowedAirCleanerType(mType) || (Array.isArray(m.cleans) && m.cleans.length > 0));
           });
+
+          if (selectedCluster !== 'ALL') {
+            allowedBaseList = allowedBaseList.filter(m => getAirCleanerUnitCluster(m.noLambung, m) === selectedCluster);
+          }
 
           let list = allowedBaseList.filter(m => {
             const isCoal = isAirCleanerUnitCoal(m.noLambung, m.type);
