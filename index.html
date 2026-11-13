@@ -12269,6 +12269,9 @@
     const SUPABASE_UNIT_COLS = 'id,no_lambung,type_model,kategori,cluster,lokasi,status,status_aktif';
     const SUPABASE_ROSTER_COLS = 'id,nrp,nama,tanggal,shift,jenis,unit,unit_efektif,kode_shift,periode,is_spare';
     const SUPABASE_AC_COLS = 'id,no_lambung,type_model,cleans,service_code,status,last_cleaned_date,evidence_url,last_replaced_at,last_replaced_by,replace_notes,updated_at';
+    const SUPABASE_AC_REPLACEMENTS_COLS = 'id,no_lambung,type_model,tanggal,jam,pic,pic_nrp,keterangan,evidence_url,created_at';
+    const SUPABASE_PICA_COLS = 'id,job_id,no_lambung,tanggal,shift,cluster,kategori,problem_description,root_cause,corrective_action,preventive_action,pic,status,created_at,updated_at';
+    const SUPABASE_WASH_CHECKLIST_COLS = 'id,date,cn,hm,shift,wt,remark,start_time,end_time,uploaded_by,created_at';
 
     // Safe storage fallback if localStorage is sandboxed in iframe
     const _memoryStorage = {};
@@ -14504,14 +14507,19 @@
       const shiftFilter = document.getElementById('dash-filter-shift')?.value || 'ALL';
 
       // Pastikan data Riwayat Selesai (job_history_lt & job_history_wt) rentang filter sudah ditarik ke RAM (Hot-Window / On-Demand)
+      const chartHistRangeKey = `${startDate}|${endDate}`;
       const isChartHistCovered = (typeof window.isHistoryRangeCovered === 'function')
         ? window.isHistoryRangeCovered(startDate, endDate)
         : Boolean(window._hasLoadedJobHistory);
-      if (state.supabaseClient && !isChartHistCovered && !state._jobHistoryLoading && typeof loadJobHistoryFromSupabase === 'function') {
-        state._jobHistoryLoading = Date.now();
+      const _chartDashLast = state._dashChartLastHistFetch;
+      const _chartDashOnCooldown = Boolean(_chartDashLast && _chartDashLast.key === chartHistRangeKey && (Date.now() - _chartDashLast.ts < 15000));
+      const _chartDashInFlight = Boolean(state._dashChartHistInFlight && state._dashChartHistInFlight.key === chartHistRangeKey && (Date.now() - state._dashChartHistInFlight.ts < 15000));
+      if (state.supabaseClient && !isChartHistCovered && !_chartDashOnCooldown && !_chartDashInFlight && typeof loadJobHistoryFromSupabase === 'function') {
+        state._dashChartHistInFlight = { key: chartHistRangeKey, ts: Date.now() };
+        state._dashChartLastHistFetch = { key: chartHistRangeKey, ts: Date.now() };
         loadJobHistoryFromSupabase(false, startDate, endDate).finally(() => {
-          state._jobHistoryLoading = null;
-          initKpiSchedulePicaCharts();
+          state._dashChartHistInFlight = null;
+          if (state.activeTab === 'dashboard') initKpiSchedulePicaCharts();
         });
       }
 
@@ -15494,14 +15502,19 @@
       const shiftFilter = document.getElementById('dash-filter-shift')?.value || 'ALL';
 
       // Jika riwayat cloud rentang tanggal ini belum ter-load dan sedang tidak fetching, ambil On-Demand tanpa memblokir UI
+      const picaMatrixRangeKey = `${startDate}|${endDate}`;
       const isPicaMatrixHistCovered = (typeof window.isHistoryRangeCovered === 'function')
         ? window.isHistoryRangeCovered(startDate, endDate)
         : Boolean(window._hasLoadedJobHistory);
-      if (state.supabaseClient && !isPicaMatrixHistCovered && !state._jobHistoryLoading && typeof loadJobHistoryFromSupabase === 'function') {
-        state._jobHistoryLoading = Date.now();
+      const _picaDashLast = state._dashPicaLastHistFetch;
+      const _picaDashOnCooldown = Boolean(_picaDashLast && _picaDashLast.key === picaMatrixRangeKey && (Date.now() - _picaDashLast.ts < 15000));
+      const _picaDashInFlight = Boolean(state._dashPicaHistInFlight && state._dashPicaHistInFlight.key === picaMatrixRangeKey && (Date.now() - state._dashPicaHistInFlight.ts < 15000));
+      if (state.supabaseClient && !isPicaMatrixHistCovered && !_picaDashOnCooldown && !_picaDashInFlight && typeof loadJobHistoryFromSupabase === 'function') {
+        state._dashPicaHistInFlight = { key: picaMatrixRangeKey, ts: Date.now() };
+        state._dashPicaLastHistFetch = { key: picaMatrixRangeKey, ts: Date.now() };
         loadJobHistoryFromSupabase(false, startDate, endDate).finally(() => {
-          state._jobHistoryLoading = null;
-          renderDashboardPicaMatrix();
+          state._dashPicaHistInFlight = null;
+          if (state.activeTab === 'dashboard') renderDashboardPicaMatrix();
         });
       }
 
@@ -18279,11 +18292,11 @@
           } else {
             renderAirCleanerMonitorTable();
           }
-          if ((!Array.isArray(state.airCleanerMonitor) || state.airCleanerMonitor.length === 0) && typeof loadAirCleanerFromSupabase === 'function') {
-            loadAirCleanerFromSupabase(false);
+          if ((window._acRealtimeDirty || !Array.isArray(state.airCleanerMonitor) || state.airCleanerMonitor.length === 0) && typeof loadAirCleanerFromSupabase === 'function') {
+            loadAirCleanerFromSupabase(Boolean(window._acRealtimeDirty));
           }
-          if (typeof loadAirCleanerReplacementsFromSupabase === 'function') {
-            loadAirCleanerReplacementsFromSupabase(false);
+          if ((window._acRepRealtimeDirty || !window._hasLoadedAcReplacements || !Array.isArray(state.airCleanerReplacements) || state.airCleanerReplacements.length === 0) && typeof loadAirCleanerReplacementsFromSupabase === 'function') {
+            loadAirCleanerReplacementsFromSupabase(Boolean(window._acRepRealtimeDirty));
           }
         } else if (tabKey === 'wash-checklist-monitor') {
           if (typeof renderWashChecklistTab === 'function') {
@@ -21130,11 +21143,11 @@
 
       if (state.supabaseClient && !isPicaHistCovered && !_picaOnCooldown) {
         showTableLazyLoading(tbody, 'Memuat data catatan kendala PICA dari Supabase...', 'amber');
-        if (!state._jobHistoryLoading || (Date.now() - state._jobHistoryLoading > 5000)) {
-          state._jobHistoryLoading = Date.now();
+        if (!state._picaHistFetchInFlight || state._picaHistFetchInFlight.key !== picaRangeKey || (Date.now() - state._picaHistFetchInFlight.ts > 15000)) {
+          state._picaHistFetchInFlight = { key: picaRangeKey, ts: Date.now() };
           state._picaLastAutoFetch = { key: picaRangeKey, ts: Date.now() };
           loadJobHistoryFromSupabase(false, effPicaStart, effPicaEnd).finally(() => {
-            state._jobHistoryLoading = null;
+            state._picaHistFetchInFlight = null;
             if (state.activeTab === 'pica') renderPicaTable();
           });
         }
@@ -26744,7 +26757,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         let hasMissing = false;
         let cur = new Date(startDate);
         const endD = new Date(endDate);
-        while (cur <= endD) {
+        let dashDayGuard = 0;
+        while (!isNaN(cur.getTime()) && !isNaN(endD.getTime()) && cur <= endD && dashDayGuard < 120) {
+          dashDayGuard++;
           const dStr = cur.toISOString().split('T')[0];
           if (!window.globalDataCache.loadedDates.has(dStr)) {
             hasMissing = true;
@@ -29680,13 +29695,12 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           let hasMore = true;
           let iteration = 0;
           const MAX_ITERATIONS = 100; // Kapasitas hingga 100.000 baris roster
-          let exactTotal = null;
 
           while (hasMore && iteration < MAX_ITERATIONS) {
             iteration++;
             let query = state.supabaseClient
               .from('master_roster')
-              .select(SUPABASE_ROSTER_COLS, { count: 'exact' });
+              .select(SUPABASE_ROSTER_COLS);
 
             if (periodFilter) {
               query = query.eq('periode', periodFilter);
@@ -29697,7 +29711,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
               .order('id', { ascending: true })
               .range(fromOffset, fromOffset + CHUNK_SIZE - 1);
 
-            const { data, count, error } = await query;
+            const { data, error } = await query;
             if (error) {
               console.error('[Supabase Roster Error]', error);
               if (allRosterData.length === 0) {
@@ -29705,10 +29719,6 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                 return false;
               }
               break;
-            }
-
-            if (count !== null && count !== undefined) {
-              exactTotal = count;
             }
 
             if (Array.isArray(data) && data.length > 0) {
@@ -29757,14 +29767,12 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
               if (document.getElementById('db-roster-tbody')) {
                 renderDatabaseRosterTable();
-                if (countLabel && exactTotal) {
-                  countLabel.innerHTML = `Memuat data Cloud: <strong class="text-brand-600">${state.masterRoster.length.toLocaleString('id-ID')}</strong> dari <strong class="text-slate-800">${exactTotal.toLocaleString('id-ID')}</strong> data...`;
+                if (countLabel) {
+                  countLabel.innerHTML = `Memuat data Cloud: <strong class="text-brand-600">${state.masterRoster.length.toLocaleString('id-ID')}</strong> data...`;
                 }
               }
 
-              if (exactTotal !== null && allRosterData.length >= exactTotal) {
-                hasMore = false;
-              } else if (data.length < CHUNK_SIZE) {
+              if (data.length < CHUNK_SIZE) {
                 hasMore = false;
               } else {
                 fromOffset += data.length;
@@ -34244,6 +34252,7 @@ Keterangan : ${keterangan}`;
     window.calculateDurationPlain = calculateDurationPlain;
 
     function resetCompDateFilterToToday() {
+      window._compArchiveSearchBypassKey = '';
       const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
       const startEl = document.getElementById('comp-filter-start-date');
       const endEl = document.getElementById('comp-filter-end-date');
@@ -34284,7 +34293,7 @@ Keterangan : ${keterangan}`;
       let cur = new Date(startDate);
       const endD = new Date(endTarget);
       let guard = 0;
-      while (cur <= endD && guard < 120) {
+      while (!isNaN(cur.getTime()) && !isNaN(endD.getTime()) && cur <= endD && guard < 120) {
         guard++;
         const dStr = cur.toISOString().split('T')[0];
         if (!window.globalDataCache.loadedDates.has(dStr)) return true;
@@ -34294,6 +34303,7 @@ Keterangan : ${keterangan}`;
     }
 
     function handleCompDateRangeChange() {
+      window._compArchiveSearchBypassKey = '';
       const startEl = document.getElementById('comp-filter-start-date');
       const endEl = document.getElementById('comp-filter-end-date');
       const rawStart = startEl ? startEl.value : '';
@@ -34339,8 +34349,9 @@ Keterangan : ${keterangan}`;
 
     async function searchArchivedHistoryFromSupabase(rawKeyword, autoExpandDates = true) {
       const kw = String(rawKeyword || '').trim();
-      if (!kw || kw.length < 3 || !state.supabaseClient) {
-        if (kw.length < 3) showToast('Masukkan minimal 3 karakter kata kunci untuk mencari arsip cloud.', 'info');
+      const safeKw = kw.replace(/[,()%]/g, ' ').trim();
+      if (!kw || kw.length < 3 || safeKw.length < 2 || !state.supabaseClient) {
+        if (kw.length < 3 || safeKw.length < 2) showToast('Masukkan minimal 3 karakter kata kunci (huruf/angka valid) untuk mencari arsip cloud.', 'info');
         return;
       }
       if (window._isSearchingArchiveHistory) return;
@@ -34354,7 +34365,6 @@ Keterangan : ${keterangan}`;
       try {
         const HIST_COLS_LT = 'id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,non_ach_category,non_ach_reason,fotos,created_at';
         const HIST_COLS_WT = 'id,no_lambung,type_unit,cat,job_type,washing_round,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,ada_operator,unit_turun,unit_swing,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,non_ach_category,non_ach_reason,fotos,created_at';
-        const safeKw = kw.replace(/[,()%]/g, ' ').trim();
         const orFilter = `id.ilike.%${safeKw}%,no_lambung.ilike.%${safeKw}%,lokasi.ilike.%${safeKw}%,opt_name.ilike.%${safeKw}%`;
 
         const [resLt, resWt] = await Promise.allSettled([
@@ -34408,13 +34418,20 @@ Keterangan : ${keterangan}`;
             const endEl = document.getElementById('comp-filter-end-date');
             const curStart = startEl?.value || state.completedFilterStartDate || '';
             const curEnd = endEl?.value || state.completedFilterEndDate || '';
+            let nextStart = curStart;
+            let nextEnd = curEnd;
             if (!curStart || minDateFound < curStart) {
+              nextStart = minDateFound;
               if (startEl) startEl.value = minDateFound;
               state.completedFilterStartDate = minDateFound;
             }
             if (maxDateFound && (!curEnd || maxDateFound > curEnd)) {
+              nextEnd = maxDateFound;
               if (endEl) endEl.value = maxDateFound;
               state.completedFilterEndDate = maxDateFound;
+            }
+            if (nextStart) {
+              window._compArchiveSearchBypassKey = `${nextStart}|${nextEnd || nextStart}`;
             }
             if (typeof updateCompDateClearBtn === 'function') updateCompDateClearBtn();
           }
@@ -34441,6 +34458,7 @@ Keterangan : ${keterangan}`;
     window.handleCompSearchEnter = handleCompSearchEnter;
 
     function clearCompDateFilter() {
+      window._compArchiveSearchBypassKey = '';
       const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
       const startEl = document.getElementById('comp-filter-start-date');
       const endEl = document.getElementById('comp-filter-end-date');
@@ -34736,22 +34754,24 @@ Keterangan : ${keterangan}`;
       const endDate = compEndDateInput ? compEndDateInput.value : (state.completedFilterEndDate || startDate);
 
       // LAZY LOADING ON-DEMAND UNTUK RIWAYAT SELESAI (Hot-Window 14 Hari + Arsip On-Demand)
+      const searchVal = (document.getElementById('comp-search-input')?.value || '').toLowerCase().trim();
+      if (!searchVal && window._compArchiveSearchBypassKey) {
+        window._compArchiveSearchBypassKey = '';
+      }
       const compRangeKey = `${startDate}|${endDate}`;
+      const isCompSearchBypass = Boolean(searchVal && window._compArchiveSearchBypassKey === compRangeKey);
       const isCompHistCovered = (typeof window.isHistoryRangeCovered === 'function')
         ? window.isHistoryRangeCovered(startDate, endDate)
         : Boolean(window._hasLoadedJobHistory);
       const _compLastAuto = state._compLastAutoFetch;
       const _compOnCooldown = Boolean(_compLastAuto && _compLastAuto.key === compRangeKey && (Date.now() - _compLastAuto.ts < 15000));
-      if (state.supabaseClient && !isCompHistCovered && !_compOnCooldown) {
+      if (state.supabaseClient && !isCompHistCovered && !isCompSearchBypass && !_compOnCooldown) {
         showTableLazyLoading(container, 'Memuat data Riwayat Selesai dari Cloud Supabase...', 'emerald');
-        if (!state._jobHistoryLoading || (Date.now() - state._jobHistoryLoading > 5000)) {
-          state._jobHistoryLoading = Date.now();
+        if (!state._compHistFetchInFlight || state._compHistFetchInFlight.key !== compRangeKey || (Date.now() - state._compHistFetchInFlight.ts > 15000)) {
+          state._compHistFetchInFlight = { key: compRangeKey, ts: Date.now() };
           state._compLastAutoFetch = { key: compRangeKey, ts: Date.now() };
-          loadJobHistoryFromSupabase(false, startDate, endDate).then(() => {
-            state._jobHistoryLoading = null;
-            if (state.activeTab === 'completed') renderCompletedTable();
-          }).catch(() => {
-            state._jobHistoryLoading = null;
+          loadJobHistoryFromSupabase(false, startDate, endDate).finally(() => {
+            state._compHistFetchInFlight = null;
             if (state.activeTab === 'completed') renderCompletedTable();
           });
         }
@@ -34764,7 +34784,6 @@ Keterangan : ${keterangan}`;
 
       const shiftFilter = document.getElementById('comp-filter-shift')?.value || 'ALL';
       const clusterFilter = document.getElementById('comp-filter-cluster')?.value || 'ALL';
-      const searchVal = (document.getElementById('comp-search-input')?.value || '').toLowerCase().trim();
       const cat = state.completedCategory;
 
       const isCompletedFilter = j => {
@@ -37789,120 +37808,149 @@ Keterangan : ${keterangan}`;
 
       if (alreadyHasFullRoster) return false;
 
-      try {
-        console.log(`[Supabase Hot-Window Roster] Mengambil roster aktif untuk tanggal ${normDate}...`);
-        let query = state.supabaseClient
-          .from('master_roster')
-          .select(SUPABASE_ROSTER_COLS);
-
-        if (targetDate && normDate && targetDate !== normDate) {
-          query = query.or(`tanggal.eq.${normDate},tanggal.eq.${targetDate}`);
-        } else {
-          query = query.eq('tanggal', normDate);
-        }
-
-        const { data, error } = await query;
-
-        const opMap = {};
-        if (Array.isArray(state.masterOperators)) {
-          state.masterOperators.forEach(o => { if (o.nrp) opMap[String(o.nrp).trim()] = o; });
-        }
-
-        const existingRoster = state.masterRoster || [];
-        const existingKeys = new Set(existingRoster.map(r => r.id || `${r.nrp}_${r.tanggal}_${r.shift}`));
-
-        if (!error && Array.isArray(data) && data.length > 0) {
-          const mappedRows = data.map((r, idx) => {
-            const opInfo = opMap[String(r.nrp).trim()] || {};
-            const baseUnit = r.unit || opInfo.unit || '-';
-            let unitEfektif = r.unit_efektif || baseUnit;
-            const shiftCode = String(r.kode_shift || r.shift_code || 'DWS').trim();
-            const matchSpare = shiftCode.match(/^[DN](\d{2,5})$/i);
-            if (matchSpare && typeof resolveArmadaFromShiftCode === 'function') {
-              const resolvedUnit = resolveArmadaFromShiftCode(shiftCode, baseUnit, r.jenis || r.tipe_karyawan);
-              if (resolvedUnit && resolvedUnit !== '-') unitEfektif = resolvedUnit;
-            }
-            const shiftNum = r.shift || ((shiftCode.toUpperCase().startsWith('N')) ? 2 : 1);
-            const armMatch = (state.masterArmada || []).find(a => (a.unit || '').toUpperCase() === (unitEfektif || baseUnit).toUpperCase());
-            const resolvedCluster = armMatch?.cluster || opInfo.cluster || 'Selatan';
-            return {
-              id: r.id || ('ROSTER-HOT-' + normDate + '-' + idx),
-              jenis: r.jenis || r.tipe_karyawan || 'OPT',
-              nrp: r.nrp,
-              nik: r.nrp,
-              nama: r.nama || opInfo.nama || '-',
-              unit: baseUnit,
-              unitEfektif: unitEfektif,
-              cluster: resolvedCluster,
-              periode: r.periode,
-              tanggal: r.tanggal,
-              shift: shiftNum,
-              kodeShift: shiftCode,
-              isSpare: r.is_spare !== undefined ? Boolean(r.is_spare) : !!matchSpare
-            };
-          });
-
-          mappedRows.forEach(row => {
-            const k = row.id || `${row.nrp}_${row.tanggal}_${row.shift}`;
-            if (!existingKeys.has(k)) {
-              existingRoster.push(row);
-              existingKeys.add(k);
-            }
-          });
-        }
-
-        // Jika data Roster OPT Plant masih kosong di HP MP, ambil data master_roster khusus jenis 'OPT'
-        const hasOptPlant = existingRoster.some(r => r.jenis === 'OPT' || r.tipe_karyawan === 'OPT');
-        if (!hasOptPlant) {
-          try {
-            console.log('[Supabase Roster] Mengambil data Master Roster OPT Plant dari tabel master_roster...');
-            const { data: optData } = await state.supabaseClient
-              .from('master_roster')
-              .select(SUPABASE_ROSTER_COLS)
-              .eq('jenis', 'OPT')
-              .limit(1000);
-            if (Array.isArray(optData) && optData.length > 0) {
-              optData.forEach((r, idx) => {
-                const shiftCode = String(r.kode_shift || r.shift_code || 'DWS').trim();
-                const shiftNum = r.shift || ((shiftCode.toUpperCase().startsWith('N')) ? 2 : 1);
-                const optItem = {
-                  id: r.id || ('ROSTER-OPT-INIT-' + idx),
-                  jenis: 'OPT',
-                  nrp: r.nrp,
-                  nik: r.nrp,
-                  nama: r.nama || '-',
-                  unit: r.unit || '-',
-                  unitEfektif: r.unit_efektif || r.unit || '-',
-                  cluster: r.cluster || 'Selatan',
-                  periode: r.periode,
-                  tanggal: r.tanggal,
-                  shift: shiftNum,
-                  kodeShift: shiftCode,
-                  isSpare: Boolean(r.is_spare)
-                };
-                const k = optItem.id || `${optItem.nrp}_${optItem.tanggal}_${optItem.shift}`;
-                if (!existingKeys.has(k)) {
-                  existingRoster.push(optItem);
-                  existingKeys.add(k);
-                }
-              });
-            }
-          } catch (eOpt) { }
-        }
-
-        state.masterRoster = existingRoster;
-        if (typeof saveMasterRosterToCache === 'function') {
-          saveMasterRosterToCache(existingRoster);
-        } else {
-          try { safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(existingRoster.slice(0, 1000))); } catch (e) { }
-        }
-
-        console.log(`[Supabase Hot-Window Roster] Sukses memuat data master_roster aktif: ${existingRoster.length} personil.`);
-        return true;
-      } catch (err) {
-        console.warn('[ensureRosterForDate Warning]', err);
+      window._checkedRosterDates = window._checkedRosterDates || new Map();
+      const prevCheckedTs = window._checkedRosterDates.get(normDate) || 0;
+      if (Date.now() - prevCheckedTs < 15 * 60 * 1000) {
         return false;
       }
+
+      window._inFlightRosterDateChecks = window._inFlightRosterDateChecks || new Map();
+      if (window._inFlightRosterDateChecks.has(normDate)) {
+        return window._inFlightRosterDateChecks.get(normDate);
+      }
+
+      const task = (async () => {
+        try {
+          console.log(`[Supabase Hot-Window Roster] Mengambil roster aktif untuk tanggal ${normDate}...`);
+          let query = state.supabaseClient
+            .from('master_roster')
+            .select(SUPABASE_ROSTER_COLS);
+
+          if (targetDate && normDate && targetDate !== normDate) {
+            query = query.or(`tanggal.eq.${normDate},tanggal.eq.${targetDate}`);
+          } else {
+            query = query.eq('tanggal', normDate);
+          }
+
+          const { data, error } = await query;
+
+          const opMap = {};
+          if (Array.isArray(state.masterOperators)) {
+            state.masterOperators.forEach(o => { if (o.nrp) opMap[String(o.nrp).trim()] = o; });
+          }
+
+          const existingRoster = state.masterRoster || [];
+          const existingKeys = new Set(existingRoster.map(r => r.id || `${r.nrp}_${r.tanggal}_${r.shift}`));
+          let addedCount = 0;
+
+          if (!error && Array.isArray(data) && data.length > 0) {
+            const mappedRows = data.map((r, idx) => {
+              const opInfo = opMap[String(r.nrp).trim()] || {};
+              const baseUnit = r.unit || opInfo.unit || '-';
+              let unitEfektif = r.unit_efektif || baseUnit;
+              const shiftCode = String(r.kode_shift || r.shift_code || 'DWS').trim();
+              const matchSpare = shiftCode.match(/^[DN](\d{2,5})$/i);
+              if (matchSpare && typeof resolveArmadaFromShiftCode === 'function') {
+                const resolvedUnit = resolveArmadaFromShiftCode(shiftCode, baseUnit, r.jenis || r.tipe_karyawan);
+                if (resolvedUnit && resolvedUnit !== '-') unitEfektif = resolvedUnit;
+              }
+              const shiftNum = r.shift || ((shiftCode.toUpperCase().startsWith('N')) ? 2 : 1);
+              const armMatch = (state.masterArmada || []).find(a => (a.unit || '').toUpperCase() === (unitEfektif || baseUnit).toUpperCase());
+              const resolvedCluster = armMatch?.cluster || opInfo.cluster || 'Selatan';
+              return {
+                id: r.id || ('ROSTER-HOT-' + normDate + '-' + idx),
+                jenis: r.jenis || r.tipe_karyawan || 'OPT',
+                nrp: r.nrp,
+                nik: r.nrp,
+                nama: r.nama || opInfo.nama || '-',
+                unit: baseUnit,
+                unitEfektif: unitEfektif,
+                cluster: resolvedCluster,
+                periode: r.periode,
+                tanggal: r.tanggal,
+                shift: shiftNum,
+                kodeShift: shiftCode,
+                isSpare: r.is_spare !== undefined ? Boolean(r.is_spare) : !!matchSpare
+              };
+            });
+
+            mappedRows.forEach(row => {
+              const k = row.id || `${row.nrp}_${row.tanggal}_${row.shift}`;
+              if (!existingKeys.has(k)) {
+                existingRoster.push(row);
+                existingKeys.add(k);
+                addedCount++;
+              }
+            });
+          }
+
+          // Jika data Roster OPT Plant masih kosong di HP MP, ambil data master_roster khusus jenis 'OPT' (cooldown 15 mnt)
+          const hasOptPlant = existingRoster.some(r => r.jenis === 'OPT' || r.tipe_karyawan === 'OPT');
+          const optFallbackReady = !window._lastOptRosterFallbackTs || (Date.now() - window._lastOptRosterFallbackTs >= 15 * 60 * 1000);
+          if (!hasOptPlant && optFallbackReady) {
+            window._lastOptRosterFallbackTs = Date.now();
+            try {
+              console.log('[Supabase Roster] Mengambil data Master Roster OPT Plant dari tabel master_roster...');
+              const { data: optData } = await state.supabaseClient
+                .from('master_roster')
+                .select(SUPABASE_ROSTER_COLS)
+                .eq('jenis', 'OPT')
+                .limit(1000);
+              if (Array.isArray(optData) && optData.length > 0) {
+                optData.forEach((r, idx) => {
+                  const shiftCode = String(r.kode_shift || r.shift_code || 'DWS').trim();
+                  const shiftNum = r.shift || ((shiftCode.toUpperCase().startsWith('N')) ? 2 : 1);
+                  const optItem = {
+                    id: r.id || ('ROSTER-OPT-INIT-' + idx),
+                    jenis: 'OPT',
+                    nrp: r.nrp,
+                    nik: r.nrp,
+                    nama: r.nama || '-',
+                    unit: r.unit || '-',
+                    unitEfektif: r.unit_efektif || r.unit || '-',
+                    cluster: r.cluster || 'Selatan',
+                    periode: r.periode,
+                    tanggal: r.tanggal,
+                    shift: shiftNum,
+                    kodeShift: shiftCode,
+                    isSpare: Boolean(r.is_spare)
+                  };
+                  const k = optItem.id || `${optItem.nrp}_${optItem.tanggal}_${optItem.shift}`;
+                  if (!existingKeys.has(k)) {
+                    existingRoster.push(optItem);
+                    existingKeys.add(k);
+                    addedCount++;
+                  }
+                });
+              }
+            } catch (eOpt) { }
+          }
+
+          if (!error) {
+            window._checkedRosterDates.set(normDate, Date.now());
+          }
+
+          if (addedCount > 0) {
+            state.masterRoster = existingRoster;
+            if (typeof saveMasterRosterToCache === 'function') {
+              saveMasterRosterToCache(existingRoster);
+            } else {
+              try { safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(existingRoster.slice(0, 1000))); } catch (e) { }
+            }
+          }
+
+          console.log(`[Supabase Hot-Window Roster] Selesai cek master_roster (${normDate}): +${addedCount} baru, total ${existingRoster.length} personil.`);
+          return addedCount > 0;
+        } catch (err) {
+          console.warn('[ensureRosterForDate Warning]', err);
+          return false;
+        } finally {
+          window._inFlightRosterDateChecks.delete(normDate);
+        }
+      })();
+
+      window._inFlightRosterDateChecks.set(normDate, task);
+      return task;
     }
     window.ensureRosterForDate = ensureRosterForDate;
 
@@ -44765,9 +44813,9 @@ Keterangan : ${keterangan}`;
 
         while (keepFetching && iteration < 50) {
           iteration++;
-          const { data, error, count } = await state.supabaseClient
+          const { data, error } = await state.supabaseClient
             .from('master_units')
-            .select(SUPABASE_UNIT_COLS, { count: 'exact' })
+            .select(SUPABASE_UNIT_COLS)
             .order('no_lambung', { ascending: true })
             .range(currentOffset, currentOffset + CHUNK_SIZE - 1);
 
@@ -44778,9 +44826,7 @@ Keterangan : ${keterangan}`;
 
           if (Array.isArray(data) && data.length > 0) {
             allUnits = allUnits.concat(data);
-            if (count !== null && allUnits.length >= count) {
-              keepFetching = false;
-            } else if (data.length < CHUNK_SIZE) {
+            if (data.length < CHUNK_SIZE) {
               keepFetching = false;
             } else {
               currentOffset += data.length;
@@ -45435,17 +45481,26 @@ Keterangan : ${keterangan}`;
 
         console.log('[Supabase Outbound Job Deleted OK]', idList);
 
-        // Bersihkan dari airCleanerJobCache dan rekonsiliasi Monitoring Air Cleaner jika job milik unit AC
+        // Bersihkan dari airCleanerJobCache dan rekonsiliasi Monitoring Air Cleaner hanya jika job memang terkait AC/REQ
+        let removedAnyAcCache = false;
         if (state.airCleanerJobCache) {
           state.airCleanerJobCache.forEach((list, k) => {
-            state.airCleanerJobCache.set(k, (list || []).filter(j => !targetIds.has(String(j.id || j.job_id || ''))));
+            const nextList = (list || []).filter(j => !targetIds.has(String(j.id || j.job_id || '')));
+            if (nextList.length !== (list || []).length) removedAnyAcCache = true;
+            state.airCleanerJobCache.set(k, nextList);
           });
         }
-        if (targetLambung && typeof loadAirCleanerFromSupabase === 'function') {
+        const delJobCat = String(job?.cat || '').toLowerCase();
+        const isDeletedJobAcRelated = removedAnyAcCache || idList.some(jid => jid.includes('-CAC-') || jid.includes('-REQ-')) || ['aircleaner', 'air_cleaner', 'cac'].includes(delJobCat) || (delJobCat === 'unscheduled' && /air cleaner|service/i.test(`${job?.requestedJob || ''} ${job?.deskripsi || ''} ${job?.keterangan || ''}`));
+        if (isDeletedJobAcRelated && targetLambung && typeof loadAirCleanerFromSupabase === 'function') {
           const uClean = String(targetLambung).trim().toUpperCase();
           const hasAcUnit = (state.airCleanerMonitor || []).some(m => String(m.noLambung || '').trim().toUpperCase() === uClean);
           if (hasAcUnit) {
-            setTimeout(() => { loadAirCleanerFromSupabase(true).catch(() => { }); }, 150);
+            window._acRealtimeDirty = true;
+            try { safeStorage.setItem('SE_AIR_CLEANER_TS', '0'); } catch (e) { }
+            if (state.activeTab === 'air-cleaner-monitor') {
+              setTimeout(() => { loadAirCleanerFromSupabase(true).catch(() => { }); }, 150);
+            }
           }
         }
 
@@ -45505,7 +45560,7 @@ Keterangan : ${keterangan}`;
         return;
       }
 
-      if (!force && window._hasLoadedAcReplacements && Array.isArray(state.airCleanerReplacements)) {
+      if (!force && !window._acRepRealtimeDirty && window._hasLoadedAcReplacements && Array.isArray(state.airCleanerReplacements)) {
         return;
       }
 
@@ -45517,7 +45572,7 @@ Keterangan : ${keterangan}`;
         for (let page = 0; page < 20; page++) {
           const { data: chunk, error: chunkErr } = await state.supabaseClient
             .from('air_cleaner_replacements')
-            .select('*')
+            .select(SUPABASE_AC_REPLACEMENTS_COLS)
             .order('created_at', { ascending: false })
             .range(offset, offset + CHUNK - 1);
           if (chunkErr) {
@@ -45538,6 +45593,8 @@ Keterangan : ${keterangan}`;
 
         state.airCleanerReplacements = allReplacements;
         window._hasLoadedAcReplacements = true;
+        window._hasLoadedAirCleanerReplacements = true;
+        window._acRepRealtimeDirty = false;
         try {
           safeStorage.setItem('SE_AC_REPLACEMENTS', JSON.stringify(allReplacements));
         } catch (e) {
@@ -45560,7 +45617,7 @@ Keterangan : ${keterangan}`;
       // Master Data TTL Cache (12 Jam) - Versi 12 untuk Single Source of Truth + Eksklusi Kluster ROM Area
       const savedAcTs = Number(safeStorage.getItem('SE_AIR_CLEANER_TS') || 0);
       const isAcFresh = (Date.now() - savedAcTs) < MASTER_DATA_TTL_MS && safeStorage.getItem('SE_AIR_CLEANER_VER') === '12';
-      if (!force && isAcFresh && Array.isArray(state.airCleanerMonitor) && state.airCleanerMonitor.length > 0) {
+      if (!force && !window._acRealtimeDirty && isAcFresh && Array.isArray(state.airCleanerMonitor) && state.airCleanerMonitor.length > 0) {
         state.airCleanerMonitor = state.airCleanerMonitor.filter(m => !isUnitFromRomCluster(m.noLambung, m));
         console.log('[Supabase Cache TTL] Air Cleaner fresh dari cache lokal (TTL 12 Jam):', state.airCleanerMonitor.length, 'unit');
         return;
@@ -46065,6 +46122,7 @@ Keterangan : ${keterangan}`;
           safeStorage.setItem('SE_AIR_CLEANER_TS', String(Date.now()));
           safeStorage.setItem('SE_AIR_CLEANER_VER', '12');
         } catch (eStore) { }
+        window._acRealtimeDirty = false;
 
         if (typeof renderAirCleanerMonitorTable === 'function') {
           renderAirCleanerMonitorTable();
@@ -46083,8 +46141,9 @@ Keterangan : ${keterangan}`;
 
       if (event === 'DELETE' && (oldRow?.id || payload.deletedId)) {
         const id = String(oldRow?.id || payload.deletedId);
-        if (window.globalDataCache?.jobs) {
-          window.globalDataCache.jobs.delete(id);
+        if (window.globalDataCache) {
+          window.globalDataCache.jobs?.delete(id);
+          window.globalDataCache.orderRequests?.delete(id);
         }
         if (state.lubetruckState?.jobs) state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => String(j.id) !== id);
         if (state.watertruckState?.jobs) state.watertruckState.jobs = state.watertruckState.jobs.filter(j => String(j.id) !== id);
@@ -46518,62 +46577,108 @@ Keterangan : ${keterangan}`;
       debouncedRefreshUI();
     }
 
-    function handleRealtimeRosterChange(payload) {
-      const event = payload.eventType;
-      const row = payload.new;
-      const oldRow = payload.old;
-
-      if (event === 'DELETE' && oldRow?.id) {
-        state.masterRoster = state.masterRoster.filter(r => r.id !== oldRow.id);
-        debouncedRefreshUI();
-        return;
-      }
-
-      if (!row || !row.id) return;
-      const idx = state.masterRoster.findIndex(r => r.id === row.id);
-      const formatted = {
-        id: row.id,
-        jenis: row.jenis || 'OPT',
-        nrp: row.nrp,
-        nama: row.nama,
-        unit: row.unit || '-',
-        unitEfektif: row.unit_efektif || row.unit || '-',
-        tanggal: row.tanggal,
-        shift: row.shift || 1,
-        kodeShift: row.kode_shift || 'DWS',
-        isSpare: Boolean(row.is_spare),
-        periode: row.periode
-      };
-
-      if (idx !== -1) {
-        state.masterRoster[idx] = formatted;
-      } else {
-        state.masterRoster.push(formatted);
-      }
-      debouncedRefreshUI();
-    }
-
     function handleRealtimeAirCleanerChange(payload) {
-      const row = payload.new;
+      const row = payload?.new;
       if (!row || !row.no_lambung) return;
-      const lambung = row.no_lambung.toUpperCase();
-      let item = state.airCleanerMonitor.find(m => m.noLambung.toUpperCase() === lambung);
+      const lambung = String(row.no_lambung).toUpperCase().trim();
+      if (typeof isUnitFromRomCluster === 'function' && isUnitFromRomCluster(lambung, row)) return;
+      if (!Array.isArray(state.airCleanerMonitor)) state.airCleanerMonitor = [];
+      let item = state.airCleanerMonitor.find(m => String(m.noLambung || '').toUpperCase() === lambung);
       if (!item) {
         item = {
+          id: row.id || ('AC-' + lambung),
           noLambung: lambung,
-          type: row.type_model || 'Unit',
-          cleans: row.cleans || [],
+          type: row.type_model || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(lambung, 'Unit') : 'Unit'),
+          cleans: Array.isArray(row.cleans) ? row.cleans : [],
+          cleanRecords: [],
           serviceCode: row.service_code || '',
-          status: row.status || 'Baik'
+          status: row.status || 'Baik',
+          lastReplacedAt: row.last_replaced_at || null,
+          evidence_url: row.evidence_url || null,
+          lastEvidenceUrl: row.evidence_url || null,
+          lastReplacedBy: row.last_replaced_by || null,
+          replaceNotes: row.replace_notes || null
         };
         state.airCleanerMonitor.push(item);
       } else {
-        item.cleans = row.cleans || item.cleans;
-        item.serviceCode = row.service_code || item.serviceCode;
-        item.status = row.status || item.status;
+        if (Array.isArray(row.cleans)) item.cleans = row.cleans;
+        if (row.service_code !== undefined) item.serviceCode = row.service_code || '';
+        if (row.status) item.status = row.status;
+        if (row.last_replaced_at !== undefined) item.lastReplacedAt = row.last_replaced_at || null;
+        if (row.evidence_url !== undefined) {
+          item.evidence_url = row.evidence_url || null;
+          item.lastEvidenceUrl = row.evidence_url || null;
+        }
+        if (row.last_replaced_by !== undefined) item.lastReplacedBy = row.last_replaced_by || null;
+        if (row.replace_notes !== undefined) item.replaceNotes = row.replace_notes || null;
       }
-      safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(state.airCleanerMonitor));
-      debouncedRefreshUI();
+      try {
+        const slim = state.airCleanerMonitor.map(m => { const c = { ...m }; delete c.cleanRecords; return c; });
+        safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(slim));
+      } catch (e) { }
+      if (state.activeTab === 'air-cleaner-monitor') {
+        debouncedRefreshUI();
+      }
+    }
+
+    function handleRealtimeAirCleanerReplacementChange(payload) {
+      if (!payload) return;
+      const eventType = payload.eventType || (payload.new ? 'INSERT' : 'DELETE');
+      const newRow = payload.new;
+      const oldRow = payload.old;
+      if (!Array.isArray(state.airCleanerReplacements)) state.airCleanerReplacements = [];
+
+      if (eventType === 'DELETE') {
+        const delId = String(oldRow?.id || '');
+        if (delId) {
+          state.airCleanerReplacements = state.airCleanerReplacements.filter(r => String(r.id) !== delId);
+        }
+        window._acRealtimeDirty = true;
+        try { safeStorage.setItem('SE_AIR_CLEANER_TS', '0'); } catch (e) { }
+      } else if (newRow && newRow.id) {
+        const rid = String(newRow.id);
+        const idx = state.airCleanerReplacements.findIndex(r => String(r.id) === rid);
+        if (idx !== -1) state.airCleanerReplacements[idx] = newRow;
+        else state.airCleanerReplacements.unshift(newRow);
+
+        const rUnit = String(newRow.no_lambung || '').toUpperCase().trim();
+        if (rUnit && Array.isArray(state.airCleanerMonitor)) {
+          const monItem = state.airCleanerMonitor.find(m => String(m.noLambung || '').toUpperCase() === rUnit);
+          if (monItem) {
+            monItem.cleans = [];
+            monItem.cleanRecords = [];
+            monItem.serviceCode = '';
+            monItem.status = 'Baik';
+            monItem.lastReplacedAt = newRow.tanggal || (newRow.created_at ? newRow.created_at.slice(0, 10) : monItem.lastReplacedAt);
+            monItem.evidence_url = newRow.evidence_url || monItem.evidence_url || null;
+            monItem.lastEvidenceUrl = monItem.evidence_url;
+            monItem.lastReplacedBy = newRow.pic || monItem.lastReplacedBy || null;
+            monItem.replaceNotes = newRow.keterangan || monItem.replaceNotes || null;
+            try {
+              const slim = state.airCleanerMonitor.map(m => { const c = { ...m }; delete c.cleanRecords; return c; });
+              safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(slim));
+            } catch (e) { }
+          }
+        }
+      }
+
+      try {
+        safeStorage.setItem('SE_AC_REPLACEMENTS', JSON.stringify(state.airCleanerReplacements));
+      } catch (e) {
+        try { safeStorage.setItem('SE_AC_REPLACEMENTS', JSON.stringify(state.airCleanerReplacements.slice(0, 300))); } catch (e2) { }
+      }
+
+      if (typeof updateAirCleanerTabButtons === 'function') updateAirCleanerTabButtons();
+      if (state.activeTab === 'air-cleaner-monitor') {
+        if (state.airCleanerCategoryTab === 'replace' && typeof renderAirCleanerReplacementsTable === 'function') {
+          renderAirCleanerReplacementsTable();
+        } else if (eventType === 'DELETE' && typeof loadAirCleanerFromSupabase === 'function') {
+          if (window._acRtDeleteTimer) clearTimeout(window._acRtDeleteTimer);
+          window._acRtDeleteTimer = setTimeout(() => loadAirCleanerFromSupabase(true), 800);
+        } else if (typeof renderAirCleanerMonitorTable === 'function') {
+          renderAirCleanerMonitorTable();
+        }
+      }
     }
 
     // C. SINKRONISASI REALTIME SENTRAL DARI CLOUD SUPABASE (SELURUH DATA TANPA BATAS 1.000 & TANPA CACHE LOKAL)
@@ -46905,12 +47010,16 @@ Keterangan : ${keterangan}`;
       if (!state.supabaseClient) return [];
       if (window.globalDataCache?.isFetchingArchive) return [];
 
+      const cleanKw = String(keyword || '').replace(/[,()%]/g, ' ').trim();
+
       // Periksa apakah rentang tanggal sudah ada di RAM cache
-      if (startDate && endDate && !keyword) {
+      if (startDate && endDate && !cleanKw) {
         let allDatesCached = true;
         let cur = new Date(startDate);
         const endD = new Date(endDate);
-        while (cur <= endD) {
+        let guard = 0;
+        while (!isNaN(cur.getTime()) && !isNaN(endD.getTime()) && cur <= endD && guard < 120) {
+          guard++;
           const dStr = cur.toISOString().split('T')[0];
           if (!window.globalDataCache?.loadedDates?.has(dStr)) {
             allDatesCached = false;
@@ -46918,7 +47027,7 @@ Keterangan : ${keterangan}`;
           }
           cur.setDate(cur.getDate() + 1);
         }
-        if (allDatesCached) {
+        if (allDatesCached && guard > 0) {
           console.log(`[Archive Cache Hit] Rentang ${startDate} s/d ${endDate} sudah ada di RAM cache, 0 KB Egress!`);
           return Array.from(window.globalDataCache.jobs.values());
         }
@@ -46929,46 +47038,74 @@ Keterangan : ${keterangan}`;
       if (archiveLoadingIndicator) archiveLoadingIndicator.classList.remove('hidden');
 
       try {
-        console.log(`[On-Demand Archive Fetch] Menarik data arsip: ${startDate || 'all'} s/d ${endDate || 'all'}, keyword: "${keyword}"...`);
+        console.log(`[On-Demand Archive Fetch] Menarik data arsip: ${startDate || 'all'} s/d ${endDate || 'all'}, keyword: "${cleanKw}"...`);
         const CHUNK_SIZE = 1000;
-        let currentOffset = 0;
-        let keepFetching = true;
-        let iteration = 0;
-        let fetchedRows = [];
 
-        while (keepFetching && iteration < 30) {
-          iteration++;
-          // Paginasi & Filter Sisi Database dengan Kolom Minimalis (Aturan 1 & Aturan 5)
-          let query = state.supabaseClient
-            .from('jobs')
-            .select(SUPABASE_JOB_LIST_COLS);
+        async function fetchArchiveFromTable(tblName) {
+          let currentOffset = 0;
+          let keepFetching = true;
+          let iteration = 0;
+          let rows = [];
+          let tableMissing = false;
+          let hadError = false;
 
-          if (startDate) query = query.gte('tanggal', startDate);
-          if (endDate) query = query.lte('tanggal', endDate);
-          if (keyword) {
-            query = query.or(`no_lambung.ilike.%${keyword}%,lokasi.ilike.%${keyword}%,opt_name.ilike.%${keyword}%,pemesan.ilike.%${keyword}%`);
-          }
+          while (keepFetching && iteration < 30) {
+            iteration++;
+            let query = state.supabaseClient
+              .from(tblName)
+              .select(SUPABASE_JOB_LIST_COLS);
 
-          query = query.order('tanggal', { ascending: false }).range(currentOffset, currentOffset + CHUNK_SIZE - 1);
-
-          const { data, error } = await query;
-          if (error) {
-            console.warn('[Archive Fetch Error]', error.message);
-            break;
-          }
-
-          if (Array.isArray(data) && data.length > 0) {
-            fetchedRows = fetchedRows.concat(data);
-            if (data.length < CHUNK_SIZE) {
-              keepFetching = false;
-            } else {
-              currentOffset += data.length;
+            if (startDate) query = query.gte('tanggal', startDate);
+            if (endDate) query = query.lte('tanggal', endDate);
+            if (cleanKw) {
+              query = query.or(`no_lambung.ilike.%${cleanKw}%,lokasi.ilike.%${cleanKw}%,opt_name.ilike.%${cleanKw}%,pemesan.ilike.%${cleanKw}%`);
             }
-          } else {
-            keepFetching = false;
+
+            query = query.order('tanggal', { ascending: false }).range(currentOffset, currentOffset + CHUNK_SIZE - 1);
+
+            const { data, error } = await query;
+            if (error) {
+              const msg = String(error.message || '');
+              if (error.code === 'PGRST205' || error.code === '42P01' || msg.includes('does not exist') || msg.includes('relation')) {
+                tableMissing = true;
+              } else {
+                console.warn(`[Archive Fetch Error] ${tblName}:`, msg);
+              }
+              hadError = true;
+              break;
+            }
+
+            if (Array.isArray(data) && data.length > 0) {
+              rows = rows.concat(data);
+              if (data.length < CHUNK_SIZE) {
+                keepFetching = false;
+              } else {
+                currentOffset += data.length;
+              }
+            } else {
+              keepFetching = false;
+            }
           }
+          return { rows, hadError, tableMissing };
         }
 
+        const [ltRes, wtRes] = await Promise.all([
+          fetchArchiveFromTable('jobs_lt'),
+          fetchArchiveFromTable('jobs_wt')
+        ]);
+
+        let fetchedRows = [];
+        let fetchHadError = false;
+
+        if (ltRes.tableMissing && wtRes.tableMissing) {
+          const fbRes = await fetchArchiveFromTable('jobs');
+          fetchedRows = fbRes.rows;
+          fetchHadError = fbRes.hadError;
+        } else {
+          if (!ltRes.tableMissing) fetchedRows = fetchedRows.concat(ltRes.rows);
+          if (!wtRes.tableMissing) fetchedRows = fetchedRows.concat(wtRes.rows);
+          fetchHadError = (!ltRes.tableMissing && ltRes.hadError) || (!wtRes.tableMissing && wtRes.hadError);
+        }
 
         // Gabungkan ke RAM cache
         fetchedRows.forEach(row => {
@@ -46983,15 +47120,17 @@ Keterangan : ${keterangan}`;
               if (isLockedOrBg) return;
             }
             window.globalDataCache.jobs.set(jId, jobObj);
-            if (jobObj.tanggal) window.globalDataCache.loadedDates.add(jobObj.tanggal);
+            if (!cleanKw && !fetchHadError && jobObj.tanggal) window.globalDataCache.loadedDates.add(jobObj.tanggal);
           }
         });
 
-        // Tandai rentang tanggal sebagai ter-load
-        if (startDate && endDate) {
+        // Tandai rentang tanggal sebagai ter-load HANYA jika fetch utuh (tanpa keyword & tanpa error)
+        if (!cleanKw && !fetchHadError && startDate && endDate) {
           let cur = new Date(startDate);
           const endD = new Date(endDate);
-          while (cur <= endD) {
+          let guard = 0;
+          while (!isNaN(cur.getTime()) && !isNaN(endD.getTime()) && cur <= endD && guard < 120) {
+            guard++;
             window.globalDataCache.loadedDates.add(cur.toISOString().split('T')[0]);
             cur.setDate(cur.getDate() + 1);
           }
@@ -47169,71 +47308,17 @@ Keterangan : ${keterangan}`;
             debouncedRefreshUI();
           }
         })
-        // Master data terisolasi (jarang berubah, bebas dari loop mutasi transaksi harian)
+        // Master data terisolasi (tabel bulk master_roster/master_operators memakai TTL Cache + Sync manual agar bebas ledakan WAL)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_armada' }, handleRealtimeArmadaChange)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'air_cleaner_monitoring' }, handleRealtimeAirCleanerChange)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'washing_checklists' }, (payload) => handleRealtimeWashingChecklistChange(payload))
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'air_cleaner_replacements' }, (payload) => {
-          console.log('[Realtime AC Replacement Event]', payload);
-          if (typeof loadAirCleanerReplacementsFromSupabase === 'function') {
-            loadAirCleanerReplacementsFromSupabase(true);
-          }
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'master_operators' }, handleRealtimeOperatorChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'master_units' }, handleRealtimeUnitChange)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'master_roster' }, handleRealtimeRosterChange)
-        // Listener Postgres Changes Realtime (Zero-Refetch 0 KB Extra Egress) untuk UPDATE/INSERT/DELETE langsung dari jobs_lt & jobs_wt
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'jobs_lt' }, (payload) => handleRealtimeJobChange(payload))
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'jobs_lt' }, (payload) => handleRealtimeJobChange(payload))
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'jobs_wt' }, (payload) => handleRealtimeJobChange(payload))
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'jobs_wt' }, (payload) => handleRealtimeJobChange(payload))
-        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'jobs_lt' }, (payload) => {
-          const delId = String(payload.old?.id || '');
-          if (delId) {
-            console.log('[Realtime Postgres DELETE jobs_lt]', delId);
-            if (window.globalDataCache) {
-              window.globalDataCache.jobs?.delete(delId);
-              window.globalDataCache.orderRequests?.delete(delId);
-            }
-            if (state.lubetruckState?.jobs) state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => String(j.id) !== delId);
-            if (state.unscheduledLtJobs) state.unscheduledLtJobs = state.unscheduledLtJobs.filter(j => String(j.id) !== delId);
-            if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
-            debouncedRefreshUI();
-          }
-        })
-        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'jobs_wt' }, (payload) => {
-          const delId = String(payload.old?.id || '');
-          if (delId) {
-            console.log('[Realtime Postgres DELETE jobs_wt]', delId);
-            if (window.globalDataCache) {
-              window.globalDataCache.jobs?.delete(delId);
-              window.globalDataCache.orderRequests?.delete(delId);
-            }
-            if (state.watertruckState?.jobs) state.watertruckState.jobs = state.watertruckState.jobs.filter(j => String(j.id) !== delId);
-            if (state.unscheduledWtJobs) state.unscheduledWtJobs = state.unscheduledWtJobs.filter(j => String(j.id) !== delId);
-            if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
-            debouncedRefreshUI();
-          }
-        })
-        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'jobs' }, (payload) => {
-          const delId = String(payload.old?.id || '');
-          if (delId) {
-            console.log('[Realtime Postgres DELETE jobs]', delId);
-            if (window.globalDataCache) {
-              window.globalDataCache.jobs?.delete(delId);
-              window.globalDataCache.orderRequests?.delete(delId);
-            }
-            if (state.lubetruckState?.jobs) state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => String(j.id) !== delId);
-            if (state.watertruckState?.jobs) state.watertruckState.jobs = state.watertruckState.jobs.filter(j => String(j.id) !== delId);
-            if (state.unscheduledLtJobs) state.unscheduledLtJobs = state.unscheduledLtJobs.filter(j => String(j.id) !== delId);
-            if (state.unscheduledWtJobs) state.unscheduledWtJobs = state.unscheduledWtJobs.filter(j => String(j.id) !== delId);
-            if (typeof safeSaveTrimmedJobsToStorage === 'function') safeSaveTrimmedJobsToStorage();
-            debouncedRefreshUI();
-          }
-        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'air_cleaner_monitoring' }, handleRealtimeAirCleanerChange)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'air_cleaner_replacements' }, (payload) => handleRealtimeAirCleanerReplacementChange(payload))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'washing_checklists' }, (payload) => handleRealtimeWashingChecklistChange(payload))
+        // Listener Postgres Changes Realtime (Zero-Refetch 0 KB Extra Egress) gabungan event '*' per tabel aktif LT & WT
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs_lt' }, (payload) => handleRealtimeJobChange(payload))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs_wt' }, (payload) => handleRealtimeJobChange(payload))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'job_history_lt' }, (payload) => handleRealtimeHistoryMutated(payload))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'job_history_wt' }, (payload) => handleRealtimeHistoryMutated(payload))
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'job_history' }, (payload) => handleRealtimeHistoryMutated(payload))
         .subscribe((status) => {
           const statusEl = document.getElementById('header-db-status');
           if (status === 'SUBSCRIBED') {
@@ -47273,17 +47358,59 @@ Keterangan : ${keterangan}`;
         if (payload.eventType === 'DELETE') {
           const delHistId = String(payload.old?.job_id || payload.old?.id || '');
           if (delHistId && Array.isArray(state.jobHistory)) {
+            const removedItem = state.jobHistory.find(h => String(h.job_id || h.id) === delHistId);
+            const removedCat = String(removedItem?.cat || payload.old?.cat || '').toLowerCase();
             state.jobHistory = state.jobHistory.filter(h => String(h.job_id || h.id) !== delHistId);
             if (typeof safeSaveJobHistoryToStorage === 'function') safeSaveJobHistoryToStorage();
             if (state.activeTab === 'completed' && typeof renderCompletedTable === 'function') {
               renderCompletedTable();
+            } else if (state.activeTab === 'pica' && typeof renderPicaTable === 'function') {
+              renderPicaTable();
+            } else if (state.activeTab === 'dashboard' && typeof debouncedRefreshUI === 'function') {
+              debouncedRefreshUI();
             }
-            if (typeof loadAirCleanerFromSupabase === 'function') {
-              loadAirCleanerFromSupabase(true);
+
+            // Sinkronisasi 1-entry cache Air Cleaner tanpa memicu reload massal di semua HP
+            let removedFromAcCache = false;
+            if (state.airCleanerJobCache && typeof state.airCleanerJobCache.forEach === 'function') {
+              state.airCleanerJobCache.forEach((arr, uKey) => {
+                if (Array.isArray(arr) && arr.some(r => String(r.id || r.job_id || '') === delHistId)) {
+                  removedFromAcCache = true;
+                  state.airCleanerJobCache.set(uKey, arr.filter(r => String(r.id || r.job_id || '') !== delHistId));
+                }
+              });
+            }
+            const isDelAcRelated = removedFromAcCache || (
+              !delHistId.startsWith('WT') && !delHistId.includes('-GRS-') && !delHistId.includes('-TUO-') &&
+              (delHistId.includes('-CAC-') || delHistId.includes('-REQ-') || ['aircleaner', 'air_cleaner', 'cac', 'unscheduled'].includes(removedCat))
+            );
+            if (isDelAcRelated) {
+              window._acRealtimeDirty = true;
+              try { safeStorage.setItem('SE_AIR_CLEANER_TS', '0'); } catch (e) { }
+              if (state.activeTab === 'air-cleaner-monitor' && typeof loadAirCleanerFromSupabase === 'function') {
+                if (window._acRtDeleteTimer) clearTimeout(window._acRtDeleteTimer);
+                window._acRtDeleteTimer = setTimeout(() => loadAirCleanerFromSupabase(true), 800);
+              }
             }
           }
         } else if (payload.new) {
-          const newHist = payload.new;
+          const newHist = { ...payload.new };
+          if (newHist.id) {
+            newHist.job_id = newHist.job_id || newHist.id;
+            newHist.no_id = newHist.id;
+            newHist.noId = newHist.id;
+            newHist.base_job_id = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(newHist.id) : String(newHist.id).replace(/-\d{4}$/, '');
+          }
+          if (newHist.tanggal_rencana && !newHist.tanggal) newHist.tanggal = newHist.tanggal_rencana;
+          newHist.washing_round = (typeof getJobWashingRound === 'function') ? getJobWashingRound(newHist) : (parseInt(newHist.washing_round, 10) || 1);
+          newHist.washingRound = newHist.washing_round;
+          newHist.adaOperator = newHist.ada_operator || newHist.adaOperator || 'Ya';
+          newHist.unitTurun = newHist.unit_turun || newHist.unitTurun || 'Ya';
+          newHist.unitSwing = newHist.unit_swing || newHist.unitSwing || 'Ya';
+          newHist.hmStart = newHist.hm_start || newHist.hm_stop || null;
+          newHist.hmEnd = newHist.hm_end || newHist.hm_ready || null;
+          newHist.hmStop = newHist.hm_stop || newHist.hm_start || null;
+          newHist.hmReady = newHist.hm_ready || newHist.hm_end || null;
           if (!Array.isArray(state.jobHistory)) state.jobHistory = [];
           const exIdx = state.jobHistory.findIndex(h => String(h.job_id || h.id) === String(newHist.job_id || newHist.id));
           if (exIdx !== -1) {
@@ -47359,10 +47486,50 @@ Keterangan : ${keterangan}`;
           if (typeof refreshActiveTable === 'function') refreshActiveTable();
           if (state.activeTab === 'completed' && typeof renderCompletedTable === 'function') {
             renderCompletedTable();
+          } else if (state.activeTab === 'pica' && typeof renderPicaTable === 'function') {
+            renderPicaTable();
+          } else if (state.activeTab === 'dashboard' && typeof debouncedRefreshUI === 'function') {
+            debouncedRefreshUI();
           }
-          const isAc = (newHist.cat === 'aircleaner' || newHist.cat === 'air_cleaner');
-          if (isAc && typeof loadAirCleanerFromSupabase === 'function') {
-            loadAirCleanerFromSupabase(true);
+          const newHistIdStr = String(newHist.id || newHist.job_id || '');
+          const isExcludedNonAc = newHistIdStr.startsWith('WT') || newHistIdStr.includes('-GRS-') || newHistIdStr.includes('-TUO-') || ['small', 'big', 'topup', 'top_up', 'coal', 'rom', 'non_coal'].includes(histCat);
+          const textPoolAc = `${newHist.status_final || ''} ${newHist.job_type || ''} ${newHist.keterangan || ''}`.toLowerCase();
+          const isAcHist = !isExcludedNonAc && (
+            histCat === 'aircleaner' || histCat === 'air_cleaner' || histCat === 'cac' || newHistIdStr.includes('-CAC-') ||
+            ((histCat === 'unscheduled' || newHistIdStr.includes('-REQ-')) && (textPoolAc.includes('air cleaner') || textPoolAc.includes('service')))
+          );
+          if (isAcHist && unitNo) {
+            // Upsert 1 baris ke airCleanerJobCache di RAM
+            if (!state.airCleanerJobCache) state.airCleanerJobCache = new Map();
+            const unitArr = state.airCleanerJobCache.get(unitNo) || [];
+            const cIdx = unitArr.findIndex(r => String(r.id || r.job_id || '') === newHistIdStr);
+            if (cIdx !== -1) unitArr[cIdx] = newHist;
+            else unitArr.push(newHist);
+            state.airCleanerJobCache.set(unitNo, unitArr);
+
+            const sfUpper = String(newHist.status_final || '').toUpperCase();
+            const isBd = (sfUpper === 'BREAKDOWN' || sfUpper === 'BD');
+            const isSvc = (sfUpper === 'SERVICE');
+            const isDoneAc = (sfUpper === 'ACHIEVED' || sfUpper === 'ACH' || sfUpper === 'DONE' || isSvc);
+            if (payload.eventType !== 'UPDATE' && isDoneAc && !isBd && typeof updateAirCleanerRecord === 'function') {
+              const acPsMatch = String(newHist.keterangan || '').match(/PS\s*(\d+)/i);
+              const acCodeArg = acPsMatch ? ('PS' + acPsMatch[1]) : (isSvc ? 'SERVICE' : 'clean');
+              updateAirCleanerRecord(unitNo, newHist.type_unit || '', isSvc ? 'service' : 'clean', acCodeArg, rawDate || undefined);
+              try {
+                const slimAc = (state.airCleanerMonitor || []).map(m => { const c = { ...m }; delete c.cleanRecords; return c; });
+                safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(slimAc));
+              } catch (e) { }
+              if (state.activeTab === 'air-cleaner-monitor' && typeof renderAirCleanerMonitorTable === 'function') {
+                renderAirCleanerMonitorTable();
+              }
+            } else {
+              window._acRealtimeDirty = true;
+              try { safeStorage.setItem('SE_AIR_CLEANER_TS', '0'); } catch (e) { }
+              if (state.activeTab === 'air-cleaner-monitor' && typeof loadAirCleanerFromSupabase === 'function') {
+                if (window._acRtDeleteTimer) clearTimeout(window._acRtDeleteTimer);
+                window._acRtDeleteTimer = setTimeout(() => loadAirCleanerFromSupabase(true), 800);
+              }
+            }
           }
         }
       }
@@ -49176,7 +49343,7 @@ Keterangan : ${keterangan}`;
       let keepFetching = true;
       let iteration = 0;
       const MAX_ITERATIONS = 100; // Kapasitas hingga 100.000 baris
-      let exactTotal = null;
+      let hadError = false;
 
       while (keepFetching && iteration < MAX_ITERATIONS) {
         iteration++;
@@ -49195,25 +49362,20 @@ Keterangan : ${keterangan}`;
 
         query = query.range(currentOffset, currentOffset + CHUNK_SIZE - 1);
 
-        const { data, count, error } = await query;
+        const { data, error } = await query;
         if (error) {
           // Tangani kode error tabel tidak ditemukan dengan komprehensif
           if (error.code === 'PGRST205' || error.code === '42P01' || (error.message && (error.message.includes('does not exist') || error.message.includes('not find the table') || error.message.includes('relation')))) {
             return null;
           }
           console.warn(`[fetchEntireSupabaseTable Warning] ${tableName} offset ${currentOffset}:`, error.message);
+          hadError = true;
           break;
-        }
-
-        if (count !== null && count !== undefined) {
-          exactTotal = count;
         }
 
         if (Array.isArray(data) && data.length > 0) {
           allResults = allResults.concat(data);
-          if (exactTotal !== null && allResults.length >= exactTotal) {
-            keepFetching = false;
-          } else if (data.length < CHUNK_SIZE) {
+          if (data.length < CHUNK_SIZE) {
             keepFetching = false;
           } else {
             currentOffset += data.length;
@@ -49223,7 +49385,12 @@ Keterangan : ${keterangan}`;
         }
       }
 
-      console.log(`[Supabase Sync] ${tableName}: ${allResults.length} baris dimuat (Total di Supabase: ${exactTotal !== null ? exactTotal : allResults.length})`);
+      if (hadError) {
+        // Jangan kembalikan array kosong/parsial sebagai data valid agar cache lokal tidak terhapus saat jaringan terputus
+        return null;
+      }
+
+      console.log(`[Supabase Sync] ${tableName}: ${allResults.length} baris dimuat.`);
       return allResults;
     }
     window.fetchEntireSupabaseTable = fetchEntireSupabaseTable;
@@ -49287,9 +49454,8 @@ Keterangan : ${keterangan}`;
     }
     window.syncMasterOperatorsManual = syncMasterOperatorsManual;
 
-    // [Audit] Akun Pengguna punya TTL TERPISAH. Sebelumnya users hanya ikut tersinkron jika cache Kontak
-    // (24 jam) sudah kedaluwarsa, sehingga akun yang diisi langsung di Supabase tidak muncul di web.
-    const MASTER_USERS_TTL_MS = 15 * 60 * 1000; // 15 menit (users ~ratusan baris, egress kecil)
+    // [Audit] Akun Pengguna punya TTL TERPISAH (12 Jam). Login & Lupa Password sudah memakai query 1-baris on-demand jika belum di cache.
+    const MASTER_USERS_TTL_MS = 12 * 60 * 60 * 1000; // 12 jam (hemat egress saat buka ulang aplikasi)
     async function refreshMasterUsersFromSupabase(force = false, minIntervalMs = MASTER_USERS_TTL_MS) {
       if (!state.supabaseClient) return false;
       const lastTs = Number(safeStorage.getItem('SE_MASTER_USERS_TS') || 0);
@@ -50874,7 +51040,7 @@ Keterangan : ${keterangan}`;
         const today = getEffectiveTodayString();
         const { data: zombieWt, error: zErr } = await state.supabaseClient
           .from('jobs_wt')
-          .select('*')
+          .select(SUPABASE_JOB_LIST_COLS)
           .lte('tanggal', today)
           .neq('keterangan', '')
           .neq('keterangan', 'EMPTY')
@@ -51000,6 +51166,7 @@ Keterangan : ${keterangan}`;
             let offset = 0;
             let keep = true;
             let allRows = [];
+            let hadError = false;
             while (keep && offset < 50000) {
               let q = applyHistDateFilter(
                 state.supabaseClient
@@ -51022,7 +51189,11 @@ Keterangan : ${keterangan}`;
                   .range(offset, offset + CHUNK - 1);
               }
 
-              if (!res.error && Array.isArray(res.data) && res.data.length > 0) {
+              if (res.error) {
+                console.warn(`[fetchAllHistoryFromTable Error] ${tableName} offset ${offset}:`, res.error.message || res.error);
+                hadError = true;
+                keep = false;
+              } else if (Array.isArray(res.data) && res.data.length > 0) {
                 allRows = allRows.concat(res.data);
                 if (res.data.length < CHUNK) {
                   keep = false;
@@ -51033,14 +51204,21 @@ Keterangan : ${keterangan}`;
                 keep = false;
               }
             }
-            return allRows;
+            return { rows: allRows, hadError };
           }
 
           console.log(`[Supabase History Fetch] Menarik ${hasSpecificRange ? `arsip ${effStart} s/d ${effEnd}` : `Hot-Window >= ${effStart}`}...`);
-          const [listLt, listWt] = await Promise.all([
+          const [resLt, resWt] = await Promise.all([
             fetchAllHistoryFromTable('job_history_lt', HIST_COLS_LT),
             fetchAllHistoryFromTable('job_history_wt', HIST_COLS_WT)
           ]);
+
+          const listLt = resLt?.rows || [];
+          const listWt = resWt?.rows || [];
+          const fetchFullyOk = !resLt?.hadError && !resWt?.hadError;
+          if (!fetchFullyOk) {
+            _lastJobHistoryFetchTs = 0; // Izinkan retry setelah cooldown caller jika jaringan sempat putus
+          }
 
           const data = [...listLt, ...listWt].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
@@ -51086,10 +51264,12 @@ Keterangan : ${keterangan}`;
               }
             });
             state.jobHistory = Array.from(existingMap.values()).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-            window._hasLoadedJobHistory = true;
-            window._loadedHistRanges.add(rangeKey);
-            if (typeof window.markHistoryIntervalLoaded === 'function') {
-              window.markHistoryIntervalLoaded(effStart, hasSpecificRange ? effEnd : '9999-12-31');
+            if (fetchFullyOk) {
+              window._hasLoadedJobHistory = true;
+              window._loadedHistRanges.add(rangeKey);
+              if (typeof window.markHistoryIntervalLoaded === 'function') {
+                window.markHistoryIntervalLoaded(effStart, hasSpecificRange ? effEnd : '9999-12-31');
+              }
             }
             if (typeof safeSaveJobHistoryToStorage === 'function') {
               safeSaveJobHistoryToStorage();
@@ -51097,7 +51277,7 @@ Keterangan : ${keterangan}`;
               try { safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory.slice(0, 300))); } catch (e) { }
             }
             await reconcileActiveJobsAgainstHistory(true);
-            console.log('[Supabase History Sync OK] Total ' + state.jobHistory.length + ' riwayat selesai di RAM (tarikan baru: ' + data.length + ' baris).');
+            console.log(`[Supabase History Sync ${fetchFullyOk ? 'OK' : 'PARTIAL'}] Total ${state.jobHistory.length} riwayat selesai di RAM (tarikan baru: ${data.length} baris).`);
             if (state.activeTab === 'completed' && typeof renderCompletedTable === 'function') renderCompletedTable();
             if (typeof window.renderHistoryTable === 'function') window.renderHistoryTable();
             if (state.activeTab === 'pica' && typeof renderPicaTable === 'function') renderPicaTable();
@@ -51110,6 +51290,7 @@ Keterangan : ${keterangan}`;
           }
           return state.jobHistory;
         } catch (e) {
+          _lastJobHistoryFetchTs = 0;
           console.warn('[loadJobHistoryFromSupabase Error]', e);
           return state.jobHistory;
         } finally {
@@ -51180,7 +51361,7 @@ Keterangan : ${keterangan}`;
       }
       try {
         _lastPicaFetchTs = now;
-        const { data, error } = await state.supabaseClient.from('pica_records').select('*').order('tanggal', { ascending: false }).limit(150);
+        const { data, error } = await state.supabaseClient.from('pica_records').select(SUPABASE_PICA_COLS).order('tanggal', { ascending: false }).limit(150);
         if (!error && Array.isArray(data)) {
           state.picaCloudRecords = data;
           window._hasLoadedPica = true;
@@ -51209,6 +51390,13 @@ Keterangan : ${keterangan}`;
         if (typeof resetHistoryCoverageTracker === 'function') resetHistoryCoverageTracker();
         window._hasSanitizedActiveOnce = false;
         window._hasLoadedAcReplacements = false;
+        window._hasLoadedAirCleanerReplacements = false;
+        window._acRealtimeDirty = true;
+        window._acRepRealtimeDirty = true;
+        if (window._checkedRosterDates && typeof window._checkedRosterDates.clear === 'function') {
+          window._checkedRosterDates.clear();
+        }
+        window._lastOptRosterFallbackTs = 0;
 
         const userRole = state.currentUser?.role || 'user';
         const isFieldOp = (userRole === 'mp_lt' || userRole === 'mp_wt' || userRole === 'oilman' || userRole === 'washingman' || userRole === 'operator' || userRole === 'user');
@@ -54939,7 +55127,7 @@ async function loadWashingChecklistsFromSupabase(force = false, customStart = nu
       iteration++;
       let query = state.supabaseClient
         .from('washing_checklists')
-        .select('*')
+        .select(SUPABASE_WASH_CHECKLIST_COLS)
         .order('date', { ascending: false })
         .order('id', { ascending: false })
         .range(fromOffset, fromOffset + CHUNK_SIZE - 1);
