@@ -743,15 +743,14 @@
     }
 
     /* ========================================================================== */
-    /* MODE HP: HAPUS STICKY FILTER BAR & THEAD RIWAYAT & PICA (SCROLL ALAMI)     */
-    /* Mencegah filter bar & header tabel saling tumpang-tindih saat di-scroll HP */
+    /* MODE HP: RIWAYAT MENGGUNAKAN INTERNAL SCROLL AGAR THEAD TETAP FREEZE/DIAM  */
+    /* SERTA MENGHINDARI TABRAKAN FILTER BAR & HEADER TABEL                       */
     /* ========================================================================== */
     @media (max-width: 767px) {
       #tab-completed > div:first-child,
+      #comp-bulk-action-bar,
       #tab-pica > div:first-child,
-      #tab-completed [class*="sticky"],
       #tab-pica [class*="sticky"],
-      #completed-table-container [class*="sticky"],
       #pica-table-card [class*="sticky"] {
         position: relative !important;
         top: auto !important;
@@ -759,18 +758,54 @@
         z-index: 10 !important;
       }
 
-      #tab-completed thead,
-      #tab-completed thead th,
-      #tab-completed table thead,
-      #tab-completed table thead th,
+      /* Riwayat Selesai di HP: Card tabel terkunci setinggi sisa viewport, internal scroll di .table-freeze-container */
+      #completed-table-card,
+      #completed-table-container > div {
+        display: flex !important;
+        flex-direction: column !important;
+        height: calc(100dvh - 335px);
+        min-height: 290px !important;
+        overflow: hidden !important;
+      }
+
+      #completed-table-container .table-freeze-container {
+        flex: 1 1 0% !important;
+        min-height: 0 !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+        overflow-x: auto !important;
+        padding-top: 0 !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior-y: contain;
+      }
+
       #completed-table-container thead,
-      #completed-table-container thead th,
       #completed-table-container table thead,
-      #completed-table-container table thead th,
       #completed-table-container .table-freeze-container thead,
-      #completed-table-container .table-freeze-container thead th,
-      #completed-table-container .table-freeze-container table thead th,
-      #completed-table-container th,
+      #completed-table-container thead th,
+      #completed-table-container table thead th,
+      #completed-table-container .table-freeze-container thead th {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 20 !important;
+        background-color: #f1f5f9 !important;
+      }
+
+      #completed-table-container thead th,
+      #completed-table-container table thead th,
+      #completed-table-container .table-freeze-container thead th {
+        box-shadow: inset 0 -1.5px 0 rgba(203, 213, 225, 0.95), 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+      }
+
+      html.dark-mode #completed-table-container thead,
+      html.dark-mode #completed-table-container table thead,
+      html.dark-mode #completed-table-container thead th,
+      html.dark-mode #completed-table-container .table-freeze-container thead th {
+        background-color: #1e293b !important;
+        box-shadow: inset 0 -1.5px 0 rgba(71, 85, 105, 0.85), 0 1px 3px 0 rgba(0, 0, 0, 0.3) !important;
+      }
+
       #tab-pica thead,
       #tab-pica thead th,
       #tab-pica table thead,
@@ -12896,7 +12931,7 @@
     function loadDatabaseSync() {
       try {
         // FORCE BUILD VERSION UPGRADE: Bersihkan seluruh cache kotor & data zombie di seluruh client
-        const APP_BUILD_VERSION = 'v2026_11_11_fix_ac_rom_exclusion_and_cluster_filter_v169';
+        const APP_BUILD_VERSION = 'v2026_11_13_fix_completed_mobile_freeze_header_v170';
         if (safeStorage.getItem('SE_APP_BUILD_VERSION') !== APP_BUILD_VERSION) {
           console.log('[Version Upgrade] Memperbarui aplikasi & membersihkan cache lokal ke versi:', APP_BUILD_VERSION);
           safeStorage.setItem('SE_APP_BUILD_VERSION', APP_BUILD_VERSION);
@@ -18095,6 +18130,8 @@
         } else if (tabKey === 'master-data') {
           switchMasterSection(state.masterActiveSection || 'roster');
         } else if (tabKey === 'completed') {
+          const mainEl = document.querySelector('main');
+          if (mainEl) mainEl.scrollTop = 0;
           const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
           const compStartEl = document.getElementById('comp-filter-start-date');
           const compEndEl = document.getElementById('comp-filter-end-date');
@@ -18107,6 +18144,9 @@
             state.completedFilterEndDate = compEndEl.value;
           }
           renderCompletedTable();
+          if (typeof syncCompletedTableMobileHeight === 'function') {
+            requestAnimationFrame(syncCompletedTableMobileHeight);
+          }
           // ON-DEMAND LAZY LOAD: Tarik riwayat hari ini dari Supabase hanya saat tab riwayat dibuka pertama kali
           if (!window._hasLoadedJobHistory && typeof loadJobHistoryFromSupabase === 'function') {
             const curStart = compStartEl?.value || state.completedFilterStartDate || today;
@@ -34376,6 +34416,39 @@ Keterangan : ${keterangan}`;
     }
     window.renderCompletedHmUnitHtml = renderCompletedHmUnitHtml;
 
+    /**
+     * Menyesuaikan tinggi kartu tabel Riwayat Selesai pada mode HP (< 768px)
+     * agar pas mengisi ruang di bawah filter bar dan di atas mobile bottom nav.
+     * Memastikan scroll berjalan di .table-freeze-container sehingga header kolom tetap freeze/diam.
+     */
+    function syncCompletedTableMobileHeight() {
+      const card = document.getElementById('completed-table-card');
+      if (!card) return;
+      if (window.innerWidth >= 768) {
+        card.style.height = '';
+        card.style.maxHeight = '';
+        return;
+      }
+      if (state.activeTab !== 'completed') return;
+
+      const nav = document.getElementById('mobile-bottom-nav');
+      const navRect = nav ? nav.getBoundingClientRect() : null;
+      const bottomLimit = (navRect && navRect.height > 0 && navRect.top > 120)
+        ? navRect.top
+        : (window.innerHeight - 76);
+
+      const mainEl = document.querySelector('main');
+      const mainScrollTop = mainEl ? mainEl.scrollTop : 0;
+      const cardRect = card.getBoundingClientRect();
+      if (cardRect.width === 0 && cardRect.height === 0) return;
+
+      // Hitung posisi top natural kartu tabel relatif terhadap puncak viewport saat mainEl.scrollTop === 0
+      const naturalCardTop = cardRect.top + mainScrollTop;
+      const available = Math.floor(bottomLimit - naturalCardTop - 8);
+      card.style.height = `${Math.max(290, available)}px`;
+    }
+    window.syncCompletedTableMobileHeight = syncCompletedTableMobileHeight;
+
     function renderCompletedTable() {
       const container = document.getElementById('completed-table-container');
       const badge = document.getElementById('completed-total-badge');
@@ -34885,11 +34958,11 @@ Keterangan : ${keterangan}`;
       state._lastPagedCompletedIds = pagedList.map(j => String(j.id));
 
       container.innerHTML = `
-        <div class="bg-white rounded-2xl md:rounded-b-none md:border-b-0 border border-slate-200/80 shadow-2xs flex flex-col overflow-hidden min-h-[calc(100vh-210px)] md:h-[calc(100vh-114px)]">
+        <div id="completed-table-card" class="bg-white rounded-2xl md:rounded-b-none md:border-b-0 border border-slate-200/80 shadow-2xs flex flex-col overflow-hidden h-[calc(100dvh-335px)] min-h-[290px] md:h-[calc(100vh-114px)] md:min-h-[calc(100vh-114px)]">
           <!-- Area Scroll Tabel dengan Sticky Header (Mengisi Penuh Layar Bawah) -->
-          <div class="flex-1 overflow-y-auto overflow-x-auto table-freeze-container" style="max-height: none !important; height: 100% !important; border-radius: 0 !important;">
+          <div class="flex-1 min-h-0 overflow-y-auto overflow-x-auto table-freeze-container" style="max-height: none !important; border-radius: 0 !important;">
             <table class="w-full table-fixed text-left text-xs">
-              <thead class="static md:sticky top-0 bg-slate-100 text-slate-700 uppercase text-[8.5px] md:text-[9.5px] tracking-wider border-b border-slate-200 font-semibold select-none z-20">
+              <thead class="sticky top-0 bg-slate-100 text-slate-700 uppercase text-[8.5px] md:text-[9.5px] tracking-wider border-b border-slate-200 font-semibold select-none z-20">
               <tr>
                 ${state.isCompSelectMode ? `
                   <th class="py-2 px-1 w-[7%] md:w-[3%] text-center align-middle select-none" title="Pilih Semua yang Tampil">
@@ -35032,6 +35105,9 @@ Keterangan : ${keterangan}`;
         const footerCount = container.querySelector('#completed-footer-count');
         if (footerCount) footerCount.textContent = 'Menampilkan 0 riwayat';
         renderCompletedPagination(0, 1);
+        if (typeof syncCompletedTableMobileHeight === 'function') {
+          requestAnimationFrame(syncCompletedTableMobileHeight);
+        }
         return;
       }
 
@@ -35194,6 +35270,9 @@ Keterangan : ${keterangan}`;
         footerCount.textContent = `Menampilkan ${(startIndex + 1).toLocaleString('id-ID')} - ${endIndex.toLocaleString('id-ID')} dari ${filtered.length.toLocaleString('id-ID')} riwayat`;
       }
       renderCompletedPagination(totalPages, state.completedPage);
+      if (typeof syncCompletedTableMobileHeight === 'function') {
+        requestAnimationFrame(syncCompletedTableMobileHeight);
+      }
 
       // Sinkronisasi status master checkbox "Pilih Semua" (berdasarkan baris yang tampil di halaman aktif)
       if (state.isCompSelectMode) {
@@ -53127,6 +53206,9 @@ Keterangan : ${keterangan}`;
         const step = (typeof pendingFontStep !== 'undefined') ? pendingFontStep : activeConfirmedFontStep;
         applyFontStep(step);
       }
+      if (typeof syncCompletedTableMobileHeight === 'function') {
+        requestAnimationFrame(syncCompletedTableMobileHeight);
+      }
     });
 
     // Inisialisasi Aplikasi Terproteksi & Tahan Banting (Anti Macet) - RENDER-FIRST STARTUP
@@ -53979,7 +54061,7 @@ Keterangan : ${keterangan}`;
       });
 
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js', { scope: './' })
+        navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' })
           .then((reg) => {
             console.log('[PWA] Service Worker terdaftar dengan scope:', reg.scope);
             // Paksa periksa update setiap kali aplikasi dibuka

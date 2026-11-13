@@ -1,4 +1,4 @@
-const CACHE_NAME = 'se-mine-ops-v169';
+const CACHE_NAME = 'se-mine-ops-v170';
 const ASSETS_TO_CACHE = [
   './',
   './index.html'
@@ -6,7 +6,15 @@ const ASSETS_TO_CACHE = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE)).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.all(
+        ASSETS_TO_CACHE.map((assetUrl) =>
+          fetch(new Request(assetUrl, { cache: 'no-store' }))
+            .then((res) => (res && res.ok ? cache.put(assetUrl, res) : null))
+            .catch(() => null)
+        )
+      )
+    ).then(() => self.skipWaiting())
   );
 });
 
@@ -35,8 +43,17 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
+  const isHtmlNav = (
+    event.request.mode === 'navigate' ||
+    url.pathname === '/' ||
+    url.pathname.endsWith('/index.html')
+  );
+  const fetchReq = isHtmlNav
+    ? new Request(event.request, { cache: 'no-store' })
+    : event.request;
+
   event.respondWith(
-    fetch(event.request)
+    fetch(fetchReq)
       .then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200) {
           const responseToCache = networkResponse.clone();
