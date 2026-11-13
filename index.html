@@ -6049,6 +6049,7 @@
                 </svg>
               </span>
               <input type="text" id="comp-search-input" oninput="renderCompletedTable()"
+                onkeydown="if(event.key==='Enter' && typeof handleCompSearchEnter === 'function') handleCompSearchEnter()"
                 placeholder="Cari unit / lokasi / OPT..."
                 class="w-full pl-8 pr-8 py-1.5 sm:py-2 rounded-xl border border-slate-200 font-medium text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-500 text-xs transition">
               <button type="button" onclick="clearSearchInput('comp-search-input')" id="clear-comp-search-input"
@@ -12761,6 +12762,92 @@
     }
     window.safeSaveTrimmedJobsToStorage = safeSaveTrimmedJobsToStorage;
 
+    // Proteksi Kapasitas LocalStorage untuk Riwayat Selesai (maks 300 baris terbaru di storage, penuh di RAM)
+    function safeSaveJobHistoryToStorage() {
+      try {
+        const list = Array.isArray(state.jobHistory) ? state.jobHistory : [];
+        const trimmed = list.slice(0, 300);
+        const newJsonStr = JSON.stringify(trimmed);
+        const prevJsonStr = safeStorage.getItem('SE_JOB_HISTORY');
+        if (prevJsonStr === newJsonStr) return;
+        safeStorage.setItem('SE_JOB_HISTORY', newJsonStr);
+      } catch (err) {
+        console.warn('[Storage] QuotaExceededError dicegah saat menyimpan SE_JOB_HISTORY:', err);
+      }
+    }
+    window.safeSaveJobHistoryToStorage = safeSaveJobHistoryToStorage;
+
+    // Pelacak Interval Tanggal Riwayat yang Sudah Dimuat ke RAM (0 KB Extra Egress saat filter dalam 14 hari / arsip yg sudah ditarik)
+    window._loadedHistoryIntervals = window._loadedHistoryIntervals || [];
+    function resetHistoryCoverageTracker() {
+      window._loadedHistoryIntervals = [];
+      if (window._loadedHistRanges && typeof window._loadedHistRanges.clear === 'function') {
+        window._loadedHistRanges.clear();
+      }
+      if (window._dashboardLoadedHistRanges && typeof window._dashboardLoadedHistRanges.clear === 'function') {
+        window._dashboardLoadedHistRanges.clear();
+      }
+      if (window._dashboardAttemptedArchiveRanges && typeof window._dashboardAttemptedArchiveRanges.clear === 'function') {
+        window._dashboardAttemptedArchiveRanges.clear();
+      }
+    }
+    window.resetHistoryCoverageTracker = resetHistoryCoverageTracker;
+
+    function markHistoryIntervalLoaded(startStr, endStr) {
+      if (!startStr) return;
+      const norm = (d) => (typeof normalizeDateStr === 'function' ? normalizeDateStr(d) : String(d || '').split('T')[0]);
+      const s = norm(startStr);
+      const e = endStr === '9999-12-31' ? '9999-12-31' : norm(endStr || startStr);
+      if (!s || !e) return;
+      window._loadedHistoryIntervals = window._loadedHistoryIntervals || [];
+      window._loadedHistoryIntervals.push({ start: s <= e ? s : e, end: s <= e ? e : s });
+      const sorted = window._loadedHistoryIntervals
+        .slice()
+        .sort((a, b) => a.start.localeCompare(b.start));
+      const merged = [];
+      for (const iv of sorted) {
+        if (merged.length === 0) {
+          merged.push({ ...iv });
+          continue;
+        }
+        const prev = merged[merged.length - 1];
+        if (prev.end === '9999-12-31' || iv.start <= prev.end) {
+          if (iv.end === '9999-12-31' || iv.end > prev.end) prev.end = iv.end;
+        } else {
+          // Cek bersebelahan tepat 1 hari agar tidak ada celah semu antar interval berurutan
+          const prevPlusOne = new Date(prev.end);
+          prevPlusOne.setDate(prevPlusOne.getDate() + 1);
+          const nextExpected = prevPlusOne.toISOString().split('T')[0];
+          if (iv.start <= nextExpected) {
+            if (iv.end === '9999-12-31' || iv.end > prev.end) prev.end = iv.end;
+          } else {
+            merged.push({ ...iv });
+          }
+        }
+      }
+      window._loadedHistoryIntervals = merged;
+    }
+    window.markHistoryIntervalLoaded = markHistoryIntervalLoaded;
+
+    function isHistoryRangeCovered(reqStart, reqEnd = null) {
+      if (!window._hasLoadedJobHistory) return false;
+      const intervals = window._loadedHistoryIntervals || [];
+      if (intervals.length === 0) return false;
+      const norm = (d) => (typeof normalizeDateStr === 'function' ? normalizeDateStr(d) : String(d || '').split('T')[0]);
+      const todayStr = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+      let s = reqStart ? norm(reqStart) : '';
+      let e = reqEnd ? norm(reqEnd) : (s || todayStr);
+      if (!s) {
+        const dHot = new Date(todayStr);
+        dHot.setDate(dHot.getDate() - 14);
+        s = dHot.toISOString().split('T')[0];
+        if (s < '2026-10-25') s = '2026-10-25';
+      }
+      if (s > e) { const t = s; s = e; e = t; }
+      return intervals.some(iv => iv.start <= s && iv.end >= e);
+    }
+    window.isHistoryRangeCovered = isHistoryRangeCovered;
+
     function registerJobToGlobalCache(job) {
       if (!job || !job.id) return;
       job.actionTimestamp = Date.now();
@@ -14416,10 +14503,13 @@
       const clusterFilter = document.getElementById('dash-filter-cluster')?.value || 'ALL';
       const shiftFilter = document.getElementById('dash-filter-shift')?.value || 'ALL';
 
-      // Pastikan data Riwayat Selesai (job_history_lt & job_history_wt) rentang filter sudah ditarik dari Supabase
-      if (state.supabaseClient && !window._hasLoadedJobHistory && !state._jobHistoryLoading && typeof loadJobHistoryFromSupabase === 'function') {
+      // Pastikan data Riwayat Selesai (job_history_lt & job_history_wt) rentang filter sudah ditarik ke RAM (Hot-Window / On-Demand)
+      const isChartHistCovered = (typeof window.isHistoryRangeCovered === 'function')
+        ? window.isHistoryRangeCovered(startDate, endDate)
+        : Boolean(window._hasLoadedJobHistory);
+      if (state.supabaseClient && !isChartHistCovered && !state._jobHistoryLoading && typeof loadJobHistoryFromSupabase === 'function') {
         state._jobHistoryLoading = Date.now();
-        loadJobHistoryFromSupabase(true, startDate, endDate).finally(() => {
+        loadJobHistoryFromSupabase(false, startDate, endDate).finally(() => {
           state._jobHistoryLoading = null;
           initKpiSchedulePicaCharts();
         });
@@ -15403,8 +15493,11 @@
       const clusterFilter = document.getElementById('dash-filter-cluster')?.value || 'ALL';
       const shiftFilter = document.getElementById('dash-filter-shift')?.value || 'ALL';
 
-      // Jika riwayat cloud belum ter-load dan sedang tidak fetching, ambil di background tanpa memblokir UI
-      if (state.supabaseClient && !window._hasLoadedJobHistory && !state._jobHistoryLoading && typeof loadJobHistoryFromSupabase === 'function') {
+      // Jika riwayat cloud rentang tanggal ini belum ter-load dan sedang tidak fetching, ambil On-Demand tanpa memblokir UI
+      const isPicaMatrixHistCovered = (typeof window.isHistoryRangeCovered === 'function')
+        ? window.isHistoryRangeCovered(startDate, endDate)
+        : Boolean(window._hasLoadedJobHistory);
+      if (state.supabaseClient && !isPicaMatrixHistCovered && !state._jobHistoryLoading && typeof loadJobHistoryFromSupabase === 'function') {
         state._jobHistoryLoading = Date.now();
         loadJobHistoryFromSupabase(false, startDate, endDate).finally(() => {
           state._jobHistoryLoading = null;
@@ -18158,11 +18251,14 @@
           if (typeof syncCompletedTableMobileHeight === 'function') {
             requestAnimationFrame(syncCompletedTableMobileHeight);
           }
-          // ON-DEMAND LAZY LOAD: Tarik riwayat hari ini dari Supabase hanya saat tab riwayat dibuka pertama kali
-          if (!window._hasLoadedJobHistory && typeof loadJobHistoryFromSupabase === 'function') {
-            const curStart = compStartEl?.value || state.completedFilterStartDate || today;
-            const curEnd = compEndEl?.value || state.completedFilterEndDate || curStart;
-            loadJobHistoryFromSupabase(true, curStart, curEnd).then(() => {
+          // ON-DEMAND LAZY LOAD: Tarik riwayat jika rentang tanggal filter belum tersedia di RAM (Hot-Window / Arsip)
+          const curStart = compStartEl?.value || state.completedFilterStartDate || today;
+          const curEnd = compEndEl?.value || state.completedFilterEndDate || curStart;
+          const isCompHistCovered = (typeof window.isHistoryRangeCovered === 'function')
+            ? window.isHistoryRangeCovered(curStart, curEnd)
+            : Boolean(window._hasLoadedJobHistory);
+          if (!isCompHistCovered && typeof loadJobHistoryFromSupabase === 'function') {
+            loadJobHistoryFromSupabase(false, curStart, curEnd).then(() => {
               if (state.activeTab === 'completed') renderCompletedTable();
             }).catch(() => { });
           }
@@ -19621,7 +19717,7 @@
       } else {
         state.jobHistory.unshift(snapshotRecord);
       }
-      safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
+      if (typeof safeSaveJobHistoryToStorage === 'function') safeSaveJobHistoryToStorage();
 
       // Bersihkan job dari antrean lokal (baik unscheduled maupun scheduled)
       const origId = String(job.id || '');
@@ -21021,11 +21117,23 @@
       const badge = document.getElementById('pica-count-badge');
       if (!tbody) return;
 
-      if (state.supabaseClient && !window._hasLoadedJobHistory) {
+      const picaStartVal = document.getElementById('pica-filter-start-date')?.value || state.picaFilterStartDate || '';
+      const picaEndVal = document.getElementById('pica-filter-end-date')?.value || state.picaFilterEndDate || '';
+      const effPicaStart = picaStartVal || picaEndVal || null;
+      const effPicaEnd = picaEndVal || picaStartVal || null;
+      const picaRangeKey = `${effPicaStart || 'HOT'}|${effPicaEnd || 'HOT'}`;
+      const isPicaHistCovered = (effPicaStart && effPicaEnd && typeof window.isHistoryRangeCovered === 'function')
+        ? window.isHistoryRangeCovered(effPicaStart, effPicaEnd)
+        : Boolean(window._hasLoadedJobHistory);
+      const _picaLastAuto = state._picaLastAutoFetch;
+      const _picaOnCooldown = Boolean(_picaLastAuto && _picaLastAuto.key === picaRangeKey && (Date.now() - _picaLastAuto.ts < 15000));
+
+      if (state.supabaseClient && !isPicaHistCovered && !_picaOnCooldown) {
         showTableLazyLoading(tbody, 'Memuat data catatan kendala PICA dari Supabase...', 'amber');
         if (!state._jobHistoryLoading || (Date.now() - state._jobHistoryLoading > 5000)) {
           state._jobHistoryLoading = Date.now();
-          loadJobHistoryFromSupabase(true).finally(() => {
+          state._picaLastAutoFetch = { key: picaRangeKey, ts: Date.now() };
+          loadJobHistoryFromSupabase(false, effPicaStart, effPicaEnd).finally(() => {
             state._jobHistoryLoading = null;
             if (state.activeTab === 'pica') renderPicaTable();
           });
@@ -21048,8 +21156,6 @@
       const picaShiftVal = document.getElementById('pica-filter-shift')?.value || 'ALL';
       const picaClusterVal = document.getElementById('pica-filter-cluster')?.value || 'ALL';
       const picaSearchVal = (document.getElementById('pica-search-input')?.value || '').toLowerCase().trim();
-      const picaStartVal = document.getElementById('pica-filter-start-date')?.value || state.picaFilterStartDate || '';
-      const picaEndVal = document.getElementById('pica-filter-end-date')?.value || state.picaFilterEndDate || '';
       const currentPicaFilterKey = `${picaStartVal}|${picaEndVal}|${picaShiftVal}|${picaClusterVal}|${picaCatVal}|${picaSearchVal}`;
       if (state._lastPicaFilterKey !== currentPicaFilterKey) {
         state._lastPicaFilterKey = currentPicaFilterKey;
@@ -26610,21 +26716,31 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         if (endInput) endInput.value = endDate;
       }
 
-      // Pastikan data riwayat selesai untuk rentang tanggal filter sudah ditarik ke RAM (On-Demand)
-      if (!window._dashboardLoadedHistRanges) window._dashboardLoadedHistRanges = new Set();
+      // Pastikan data riwayat selesai untuk rentang tanggal filter sudah ditarik ke RAM (Hot-Window / On-Demand)
+      window._dashboardLoadedHistRanges = window._dashboardLoadedHistRanges || new Set();
+      window._dashboardAttemptedArchiveRanges = window._dashboardAttemptedArchiveRanges || new Set();
       const histRangeKey = `${startDate}_${endDate}`;
-      if (!window._dashboardLoadedHistRanges.has(histRangeKey)) {
+      const isDashHistCovered = (typeof window.isHistoryRangeCovered === 'function')
+        ? window.isHistoryRangeCovered(startDate, endDate)
+        : window._dashboardLoadedHistRanges.has(histRangeKey);
+      const kpiTbody = document.getElementById('dash-kpi-perf-tbody');
+      const picaTbody = document.getElementById('dash-pica-matrix-tbody');
+
+      if (state.supabaseClient && !isDashHistCovered && !window._dashboardLoadedHistRanges.has(histRangeKey)) {
         window._dashboardLoadedHistRanges.add(histRangeKey);
+        if (kpiTbody) showTableLazyLoading(kpiTbody, 'Menarik data riwayat KPI periode terpilih...', 'brand', 6);
+        if (picaTbody) showTableLazyLoading(picaTbody, 'Menarik data kendala PICA periode terpilih...', 'amber', 6);
         if (typeof loadJobHistoryFromSupabase === 'function') {
-          loadJobHistoryFromSupabase(false, startDate, endDate).then(() => {
-            if (typeof initKpiSchedulePicaCharts === 'function') initKpiSchedulePicaCharts();
-            if (typeof renderDashboardAchievementChart === 'function') renderDashboardAchievementChart(state.dashboardSelectedCategory || 'ALL');
+          loadJobHistoryFromSupabase(false, startDate, endDate).catch(() => {
+            window._dashboardLoadedHistRanges.delete(histRangeKey);
+          }).finally(() => {
+            if (typeof refreshDashboardData === 'function' && state.activeTab === 'dashboard') refreshDashboardData();
           });
         }
       }
 
-      // Pastikan data rentang tanggal dashboard sudah dimuat di RAM cache (Loop-Proof)
-      if (startDate && endDate && typeof fetchArchiveJobsOnDemand === 'function' && window.globalDataCache && window.globalDataCache.loadedDates) {
+      // Pastikan data jadwal aktif rentang tanggal dashboard sudah dimuat di RAM cache (tanpa memblokir fetchArchiveJobsOnDemand)
+      if (state.supabaseClient && startDate && endDate && typeof fetchArchiveJobsOnDemand === 'function' && window.globalDataCache && window.globalDataCache.loadedDates) {
         let hasMissing = false;
         let cur = new Date(startDate);
         const endD = new Date(endDate);
@@ -26636,21 +26752,13 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           }
           cur.setDate(cur.getDate() + 1);
         }
-        if (hasMissing && !window.globalDataCache.isFetchingArchive) {
-          // Tampilkan baris skeleton shimmer pada tabel KPI dan PICA dashboard seketika
-          const kpiTbody = document.getElementById('dash-kpi-perf-tbody');
-          const picaTbody = document.getElementById('dash-pica-matrix-tbody');
+        if (hasMissing && !window._dashboardAttemptedArchiveRanges.has(histRangeKey) && !window.globalDataCache.isFetchingArchive) {
           if (kpiTbody) showTableLazyLoading(kpiTbody, 'Menyiapkan analitik KPI Schedule...', 'brand', 6);
           if (picaTbody) showTableLazyLoading(picaTbody, 'Menghitung matriks kendala PICA...', 'amber', 6);
 
-          // Tandai tanggal di cache SEBELUM query berjalan agar tidak dipanggil berulang-ulang
-          let markD = new Date(startDate);
-          while (markD <= endD) {
-            window.globalDataCache.loadedDates.add(markD.toISOString().split('T')[0]);
-            markD.setDate(markD.getDate() + 1);
-          }
-          fetchArchiveJobsOnDemand(startDate, endDate).then(() => {
-            refreshDashboardData();
+          window._dashboardAttemptedArchiveRanges.add(histRangeKey);
+          fetchArchiveJobsOnDemand(startDate, endDate).finally(() => {
+            if (state.activeTab === 'dashboard') refreshDashboardData();
           });
         }
       }
@@ -34147,19 +34255,21 @@ Keterangan : ${keterangan}`;
       state.completedFilterDate = today;
       updateCompDateClearBtn();
 
-      const container = document.getElementById('completed-table-container');
-      if (container && typeof showTableLazyLoading === 'function') {
-        showTableLazyLoading(container, 'Memuat riwayat hari ini...', 'emerald', 10);
-      }
-
-      if (typeof loadJobHistoryFromSupabase === 'function') {
-        loadJobHistoryFromSupabase(true, today, today).then(() => {
+      const isTodayCovered = (typeof window.isHistoryRangeCovered === 'function')
+        ? window.isHistoryRangeCovered(today, today)
+        : false;
+      if (isTodayCovered || !state.supabaseClient || typeof loadJobHistoryFromSupabase !== 'function') {
+        renderCompletedTable();
+      } else {
+        const container = document.getElementById('completed-table-container');
+        if (container && typeof showTableLazyLoading === 'function') {
+          showTableLazyLoading(container, 'Memuat riwayat hari ini...', 'emerald', 10);
+        }
+        loadJobHistoryFromSupabase(false, today, today).then(() => {
           renderCompletedTable();
         }).catch(() => {
           renderCompletedTable();
         });
-      } else {
-        renderCompletedTable();
       }
 
       const dispToday = (typeof formatDisplayDate === 'function') ? formatDisplayDate(today) : today;
@@ -34167,6 +34277,21 @@ Keterangan : ${keterangan}`;
     }
     window.resetCompDateFilterToToday = resetCompDateFilterToToday;
     window.resetCompMiningWeekFilter = resetCompDateFilterToToday; // Backwards compatibility
+
+    function _hasMissingCacheDatesInRange(startDate, endDate) {
+      if (!startDate || !window.globalDataCache?.loadedDates) return false;
+      const endTarget = endDate || startDate;
+      let cur = new Date(startDate);
+      const endD = new Date(endTarget);
+      let guard = 0;
+      while (cur <= endD && guard < 120) {
+        guard++;
+        const dStr = cur.toISOString().split('T')[0];
+        if (!window.globalDataCache.loadedDates.has(dStr)) return true;
+        cur.setDate(cur.getDate() + 1);
+      }
+      return false;
+    }
 
     function handleCompDateRangeChange() {
       const startEl = document.getElementById('comp-filter-start-date');
@@ -34181,29 +34306,139 @@ Keterangan : ${keterangan}`;
       const endDate = state.completedFilterEndDate || startDate;
       const container = document.getElementById('completed-table-container');
 
-      // LAZY LOADING ON-DEMAND UNTUK RENTANG TANGGAL (RIWAYAT SELESAI & SINKRONISASI SUPABASE)
+      // LAZY LOADING ON-DEMAND HANYA JIKA RENTANG BELUM TERSEDIA DI RAM (0 KB jika masih di dalam Hot-Window 14 hari / arsip yg sudah ditarik)
       if (startDate && state.supabaseClient) {
-        if (container && typeof showTableLazyLoading === 'function') {
-          showTableLazyLoading(container, 'Memuat seluruh riwayat selesai dari Cloud Supabase...', 'emerald', 10);
-        }
-        const histPromise = (typeof loadJobHistoryFromSupabase === 'function')
-          ? loadJobHistoryFromSupabase(true, startDate, endDate)
-          : Promise.resolve();
-        const archPromise = (typeof fetchArchiveJobsOnDemand === 'function')
-          ? fetchArchiveJobsOnDemand(startDate, endDate)
-          : Promise.resolve();
+        const needHist = (typeof window.isHistoryRangeCovered === 'function')
+          ? !window.isHistoryRangeCovered(startDate, endDate)
+          : true;
+        const needArch = _hasMissingCacheDatesInRange(startDate, endDate);
 
-        Promise.all([histPromise, archPromise]).then(() => {
-          renderCompletedTable();
-        }).catch(() => {
-          renderCompletedTable();
-        });
-        return;
+        if (needHist || needArch) {
+          if (container && typeof showTableLazyLoading === 'function') {
+            showTableLazyLoading(container, 'Memuat data arsip riwayat dari Cloud Supabase...', 'emerald', 10);
+          }
+          const histPromise = (needHist && typeof loadJobHistoryFromSupabase === 'function')
+            ? loadJobHistoryFromSupabase(false, startDate, endDate)
+            : Promise.resolve();
+          const archPromise = (needArch && typeof fetchArchiveJobsOnDemand === 'function')
+            ? fetchArchiveJobsOnDemand(startDate, endDate)
+            : Promise.resolve();
+
+          Promise.all([histPromise, archPromise]).then(() => {
+            renderCompletedTable();
+          }).catch(() => {
+            renderCompletedTable();
+          });
+          return;
+        }
       }
 
       renderCompletedTable();
     }
     window.handleCompDateRangeChange = handleCompDateRangeChange;
+
+    async function searchArchivedHistoryFromSupabase(rawKeyword, autoExpandDates = true) {
+      const kw = String(rawKeyword || '').trim();
+      if (!kw || kw.length < 3 || !state.supabaseClient) {
+        if (kw.length < 3) showToast('Masukkan minimal 3 karakter kata kunci untuk mencari arsip cloud.', 'info');
+        return;
+      }
+      if (window._isSearchingArchiveHistory) return;
+      window._isSearchingArchiveHistory = true;
+
+      const container = document.getElementById('completed-table-container');
+      if (container && typeof showTableLazyLoading === 'function') {
+        showTableLazyLoading(container, `Mencari "${kw}" di seluruh arsip riwayat Supabase...`, 'emerald', 8);
+      }
+
+      try {
+        const HIST_COLS_LT = 'id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,non_ach_category,non_ach_reason,fotos,created_at';
+        const HIST_COLS_WT = 'id,no_lambung,type_unit,cat,job_type,washing_round,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,ada_operator,unit_turun,unit_swing,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,non_ach_category,non_ach_reason,fotos,created_at';
+        const safeKw = kw.replace(/[,()%]/g, ' ').trim();
+        const orFilter = `id.ilike.%${safeKw}%,no_lambung.ilike.%${safeKw}%,lokasi.ilike.%${safeKw}%,opt_name.ilike.%${safeKw}%`;
+
+        const [resLt, resWt] = await Promise.allSettled([
+          state.supabaseClient.from('job_history_lt').select(HIST_COLS_LT).or(orFilter).order('created_at', { ascending: false }).limit(250),
+          state.supabaseClient.from('job_history_wt').select(HIST_COLS_WT).or(orFilter).order('created_at', { ascending: false }).limit(250)
+        ]);
+
+        const rows = [];
+        if (resLt.status === 'fulfilled' && !resLt.value.error && Array.isArray(resLt.value.data)) rows.push(...resLt.value.data);
+        if (resWt.status === 'fulfilled' && !resWt.value.error && Array.isArray(resWt.value.data)) rows.push(...resWt.value.data);
+
+        if (rows.length > 0) {
+          const existingMap = new Map();
+          (state.jobHistory || []).forEach(h => {
+            const hid = String(h.id || h.job_id || '');
+            if (hid) existingMap.set(hid, h);
+          });
+
+          let minDateFound = '';
+          let maxDateFound = '';
+          rows.forEach(item => {
+            if (!item || !item.id) return;
+            item.job_id = item.id;
+            item.no_id = item.id;
+            item.noId = item.id;
+            item.base_job_id = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(item.id) : item.id;
+            if (item.tanggal_rencana) item.tanggal = item.tanggal_rencana;
+            item.washing_round = typeof getJobWashingRound === 'function' ? getJobWashingRound(item) : (parseInt(item.washing_round, 10) || 1);
+            item.washingRound = item.washing_round;
+            item.adaOperator = item.ada_operator || item.adaOperator || 'Ya';
+            item.unitTurun = item.unit_turun || item.unitTurun || 'Ya';
+            item.unitSwing = item.unit_swing || item.unitSwing || 'Ya';
+            item.hmStart = item.hm_start || item.hm_stop || null;
+            item.hmEnd = item.hm_end || item.hm_ready || null;
+            item.hmStop = item.hm_stop || item.hm_start || null;
+            item.hmReady = item.hm_ready || item.hm_end || null;
+            existingMap.set(String(item.id), item);
+
+            const dCandidate = String(item.tanggal_rencana || item.tanggal_eksekusi || '').split('T')[0];
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dCandidate)) {
+              if (!minDateFound || dCandidate < minDateFound) minDateFound = dCandidate;
+              if (!maxDateFound || dCandidate > maxDateFound) maxDateFound = dCandidate;
+            }
+          });
+
+          state.jobHistory = Array.from(existingMap.values()).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+          if (typeof safeSaveJobHistoryToStorage === 'function') safeSaveJobHistoryToStorage();
+
+          if (autoExpandDates && minDateFound) {
+            const startEl = document.getElementById('comp-filter-start-date');
+            const endEl = document.getElementById('comp-filter-end-date');
+            const curStart = startEl?.value || state.completedFilterStartDate || '';
+            const curEnd = endEl?.value || state.completedFilterEndDate || '';
+            if (!curStart || minDateFound < curStart) {
+              if (startEl) startEl.value = minDateFound;
+              state.completedFilterStartDate = minDateFound;
+            }
+            if (maxDateFound && (!curEnd || maxDateFound > curEnd)) {
+              if (endEl) endEl.value = maxDateFound;
+              state.completedFilterEndDate = maxDateFound;
+            }
+            if (typeof updateCompDateClearBtn === 'function') updateCompDateClearBtn();
+          }
+          showToast(`Ditemukan ${rows.length} data arsip cocok dengan "${kw}".`, 'success');
+        } else {
+          showToast(`Tidak ada arsip tambahan untuk "${kw}" di server.`, 'info');
+        }
+      } catch (e) {
+        console.warn('[searchArchivedHistoryFromSupabase Error]', e);
+      } finally {
+        window._isSearchingArchiveHistory = false;
+        renderCompletedTable();
+      }
+    }
+    window.searchArchivedHistoryFromSupabase = searchArchivedHistoryFromSupabase;
+
+    function handleCompSearchEnter() {
+      const searchVal = (document.getElementById('comp-search-input')?.value || '').trim();
+      if (searchVal.length < 3) return;
+      if (!Array.isArray(state._lastFilteredCompletedJobs) || state._lastFilteredCompletedJobs.length === 0) {
+        searchArchivedHistoryFromSupabase(searchVal, true);
+      }
+    }
+    window.handleCompSearchEnter = handleCompSearchEnter;
 
     function clearCompDateFilter() {
       const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
@@ -34487,21 +34722,6 @@ Keterangan : ${keterangan}`;
 
       renderCompletedCategories();
 
-      // LAZY LOADING ON-DEMAND UNTUK RIWAYAT SELESAI
-      if ((!Array.isArray(state.jobHistory) || state.jobHistory.length === 0) && state.supabaseClient) {
-        showTableLazyLoading(container, 'Memuat data Riwayat Selesai dari Cloud Supabase...', 'emerald');
-        if (!state._jobHistoryLoading || (Date.now() - state._jobHistoryLoading > 5000)) {
-          state._jobHistoryLoading = Date.now();
-          loadJobHistoryFromSupabase(true).then(() => {
-            state._jobHistoryLoading = null;
-            if (state.activeTab === 'completed') renderCompletedTable();
-          }).catch(() => {
-            state._jobHistoryLoading = null;
-          });
-        }
-        return;
-      }
-
       // Ambil filter rentang tanggal (Dari & Sampai) - Default: Tanggal Hari Ini
       const today = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
       const compStartDateInput = document.getElementById('comp-filter-start-date');
@@ -34514,6 +34734,29 @@ Keterangan : ${keterangan}`;
       }
       const startDate = compStartDateInput ? compStartDateInput.value : (state.completedFilterStartDate || today);
       const endDate = compEndDateInput ? compEndDateInput.value : (state.completedFilterEndDate || startDate);
+
+      // LAZY LOADING ON-DEMAND UNTUK RIWAYAT SELESAI (Hot-Window 14 Hari + Arsip On-Demand)
+      const compRangeKey = `${startDate}|${endDate}`;
+      const isCompHistCovered = (typeof window.isHistoryRangeCovered === 'function')
+        ? window.isHistoryRangeCovered(startDate, endDate)
+        : Boolean(window._hasLoadedJobHistory);
+      const _compLastAuto = state._compLastAutoFetch;
+      const _compOnCooldown = Boolean(_compLastAuto && _compLastAuto.key === compRangeKey && (Date.now() - _compLastAuto.ts < 15000));
+      if (state.supabaseClient && !isCompHistCovered && !_compOnCooldown) {
+        showTableLazyLoading(container, 'Memuat data Riwayat Selesai dari Cloud Supabase...', 'emerald');
+        if (!state._jobHistoryLoading || (Date.now() - state._jobHistoryLoading > 5000)) {
+          state._jobHistoryLoading = Date.now();
+          state._compLastAutoFetch = { key: compRangeKey, ts: Date.now() };
+          loadJobHistoryFromSupabase(false, startDate, endDate).then(() => {
+            state._jobHistoryLoading = null;
+            if (state.activeTab === 'completed') renderCompletedTable();
+          }).catch(() => {
+            state._jobHistoryLoading = null;
+            if (state.activeTab === 'completed') renderCompletedTable();
+          });
+        }
+        return;
+      }
       state.completedFilterStartDate = startDate;
       state.completedFilterEndDate = endDate;
       state.completedFilterDate = startDate;
@@ -35112,7 +35355,11 @@ Keterangan : ${keterangan}`;
             ? `Tidak ada riwayat pekerjaan ${emptyDateMsg}`
             : 'Belum ada riwayat pekerjaan selesai untuk kategori ini');
 
-        tbody.innerHTML = `<tr><td colspan="${(state.isCompSelectMode ? 1 : 0) + 11 + (isAdmin ? 1 : 0)}" class="py-8 text-center text-slate-400 italic text-xs">${emptyMsg}</td></tr>`;
+        const archiveSearchBtnHtml = (searchVal && searchVal.length >= 3 && state.supabaseClient)
+          ? `<div class="mt-3"><button type="button" onclick="if(typeof searchArchivedHistoryFromSupabase==='function') searchArchivedHistoryFromSupabase(document.getElementById('comp-search-input')?.value || '', true)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold not-italic shadow-sm transition-colors cursor-pointer"><i data-lucide="cloud-download" class="w-3.5 h-3.5"></i> Cari di Seluruh Arsip Cloud (&gt; 14 Hari)</button></div>`
+          : '';
+
+        tbody.innerHTML = `<tr><td colspan="${(state.isCompSelectMode ? 1 : 0) + 11 + (isAdmin ? 1 : 0)}" class="py-8 text-center text-slate-400 italic text-xs"><div>${emptyMsg}</div>${archiveSearchBtnHtml}</td></tr>`;
         const footerCount = container.querySelector('#completed-footer-count');
         if (footerCount) footerCount.textContent = 'Menampilkan 0 riwayat';
         renderCompletedPagination(0, 1);
@@ -35812,7 +36059,7 @@ Keterangan : ${keterangan}`;
             } else {
               state.jobHistory.unshift(matched);
             }
-            safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
+            if (typeof safeSaveJobHistoryToStorage === 'function') safeSaveJobHistoryToStorage();
             return matched;
           }
         }
@@ -41496,8 +41743,9 @@ Keterangan : ${keterangan}`;
       const isInitialPhotosEmpty = (foundPhotos.length === 0);
       renderAirCleanerDetailPhotosUI(foundPhotos, noLambung, cleanIdx, isInitialPhotosEmpty && Boolean(state.supabaseClient) && !isServiceEntry, isServiceEntry);
 
-      // Jika di memori data atau foto masih belum lengkap, tarik secara asinkron dari Supabase (job_history_lt)
-      if (state.supabaseClient) {
+      // Jika di memori data atau foto masih belum lengkap (mis. data >14 hari & AC cache lokal), tarik 1-unit on-demand dari Supabase
+      const needsAcRemoteDetail = !targetJob || (!isServiceEntry && isInitialPhotosEmpty);
+      if (state.supabaseClient && needsAcRemoteDetail) {
         const fetchSupaPhotos = async () => {
           try {
             const AC_HIST_SELECT = 'id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,fotos,created_at';
@@ -41520,7 +41768,24 @@ Keterangan : ${keterangan}`;
                 .ilike('no_lambung', `%${cleanTargetLambung}%`)
                 .or('cat.eq.aircleaner,cat.eq.cac,cat.eq.air_cleaner,cat.eq.unscheduled,id.ilike.%CAC%,id.ilike.%REQ%')
                 .order('created_at', { ascending: false })
-                .limit(25);
+                .limit(50);
+            }
+
+            // Simpan ke cache RAM airCleanerJobCache agar klik tanggal lain pada unit ini instan
+            if (Array.isArray(res.data) && res.data.length > 0 && cleanTargetLambung) {
+              if (!state.airCleanerJobCache) state.airCleanerJobCache = new Map();
+              const existingArr = state.airCleanerJobCache.get(cleanTargetLambung) || [];
+              const byId = new Map(existingArr.map(r => [String(r.id || r.job_id || ''), r]));
+              res.data.forEach(r => {
+                const rid = String(r.id || r.job_id || '');
+                if (rid) byId.set(rid, r);
+              });
+              state.airCleanerJobCache.set(cleanTargetLambung, Array.from(byId.values()));
+            }
+
+            const activeCtx = window.__currentAcDetailTarget;
+            if (!activeCtx || String(activeCtx.noLambung || '') !== String(item.noLambung || noLambung) || Number(activeCtx.cleanIdx) !== Number(cleanIdx)) {
+              return;
             }
 
             let matchedHistoryRow = null;
@@ -45240,26 +45505,49 @@ Keterangan : ${keterangan}`;
         return;
       }
 
+      if (!force && window._hasLoadedAcReplacements && Array.isArray(state.airCleanerReplacements)) {
+        return;
+      }
+
       try {
-        const { data, error } = await state.supabaseClient
-          .from('air_cleaner_replacements')
-          .select('*')
-          .order('created_at', { ascending: false });
+        const CHUNK = 1000;
+        let offset = 0;
+        let allReplacements = [];
+        let error = null;
+        for (let page = 0; page < 20; page++) {
+          const { data: chunk, error: chunkErr } = await state.supabaseClient
+            .from('air_cleaner_replacements')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .range(offset, offset + CHUNK - 1);
+          if (chunkErr) {
+            error = chunkErr;
+            break;
+          }
+          if (Array.isArray(chunk) && chunk.length > 0) {
+            allReplacements = allReplacements.concat(chunk);
+          }
+          if (!Array.isArray(chunk) || chunk.length < CHUNK) break;
+          offset += CHUNK;
+        }
 
         if (error) {
           console.warn('[loadAirCleanerReplacementsFromSupabase Error]', error);
           return;
         }
 
-        if (Array.isArray(data)) {
-          state.airCleanerReplacements = data;
+        state.airCleanerReplacements = allReplacements;
+        window._hasLoadedAcReplacements = true;
+        try {
+          safeStorage.setItem('SE_AC_REPLACEMENTS', JSON.stringify(allReplacements));
+        } catch (e) {
           try {
-            safeStorage.setItem('SE_AC_REPLACEMENTS', JSON.stringify(data));
-          } catch (e) { }
-          updateAirCleanerTabButtons();
-          if (state.airCleanerCategoryTab === 'replace') {
-            renderAirCleanerReplacementsTable();
-          }
+            safeStorage.setItem('SE_AC_REPLACEMENTS', JSON.stringify(allReplacements.slice(0, 300)));
+          } catch (e2) { }
+        }
+        updateAirCleanerTabButtons();
+        if (state.airCleanerCategoryTab === 'replace') {
+          renderAirCleanerReplacementsTable();
         }
       } catch (err) {
         console.warn('[loadAirCleanerReplacementsFromSupabase Exception]', err);
@@ -45279,28 +45567,39 @@ Keterangan : ${keterangan}`;
       }
       try {
         // Pastikan job history & replacements termuat terlebih dahulu sebagai Single Source of Truth
-        if ((!Array.isArray(state.airCleanerReplacements) || state.airCleanerReplacements.length === 0) && typeof loadAirCleanerReplacementsFromSupabase === 'function') {
+        if ((!Array.isArray(state.airCleanerReplacements) || state.airCleanerReplacements.length === 0 || force) && typeof loadAirCleanerReplacementsFromSupabase === 'function') {
           try {
-            await loadAirCleanerReplacementsFromSupabase(true);
+            await loadAirCleanerReplacementsFromSupabase(force);
           } catch (eR) { }
         }
 
-        if ((!Array.isArray(state.jobHistory) || state.jobHistory.length === 0) && typeof loadJobHistoryFromSupabase === 'function') {
+        if ((!Array.isArray(state.jobHistory) || state.jobHistory.length === 0) && !window._hasLoadedJobHistory && typeof loadJobHistoryFromSupabase === 'function') {
           try {
-            await loadJobHistoryFromSupabase(true);
+            await loadJobHistoryFromSupabase(false);
           } catch (eH) { }
         }
 
-        // 1. Tarik seluruh riwayat pengerjaan Clean Air Cleaner & Request Service LT dari job_history_lt (Ultra-low egress)
+        // 1. Tarik seluruh riwayat pengerjaan Clean Air Cleaner & Request Service LT dari job_history_lt (Kebal 14-hari & Anti limit 1.000 baris)
         let acHistoryJobs = [];
         try {
-          const { data: acJobsData, error: acJobsErr } = await state.supabaseClient
-            .from('job_history_lt')
-            .select('id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,fotos,created_at')
-            .or('cat.eq.aircleaner,cat.eq.cac,cat.eq.air_cleaner,cat.eq.unscheduled,id.like.*CAC*,id.like.*REQ*')
-            .order('tanggal_rencana', { ascending: true });
-          if (!acJobsErr && Array.isArray(acJobsData)) {
-            acHistoryJobs = acJobsData;
+          const AC_CHUNK = 1000;
+          let acOffset = 0;
+          for (let page = 0; page < 30; page++) {
+            const { data: acJobsData, error: acJobsErr } = await state.supabaseClient
+              .from('job_history_lt')
+              .select('id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,fotos,created_at')
+              .or('cat.eq.aircleaner,cat.eq.cac,cat.eq.air_cleaner,cat.eq.unscheduled,id.like.*CAC*,id.like.*REQ*')
+              .order('tanggal_rencana', { ascending: true })
+              .range(acOffset, acOffset + AC_CHUNK - 1);
+            if (acJobsErr) {
+              console.warn('[loadAirCleanerFromSupabase] Error fetch CAC jobs chunk:', acJobsErr);
+              break;
+            }
+            if (Array.isArray(acJobsData) && acJobsData.length > 0) {
+              acHistoryJobs = acHistoryJobs.concat(acJobsData);
+            }
+            if (!Array.isArray(acJobsData) || acJobsData.length < AC_CHUNK) break;
+            acOffset += AC_CHUNK;
           }
         } catch (eAc) {
           console.warn('[loadAirCleanerFromSupabase] Error fetch CAC jobs:', eAc);
@@ -45317,10 +45616,26 @@ Keterangan : ${keterangan}`;
           state.airCleanerJobCache.get(u).push(j);
         });
 
-        const { data, error } = await state.supabaseClient
-          .from('air_cleaner_monitoring')
-          .select(SUPABASE_AC_COLS)
-          .order('no_lambung', { ascending: true });
+        const MON_CHUNK = 1000;
+        let monOffset = 0;
+        let data = [];
+        let error = null;
+        for (let page = 0; page < 20; page++) {
+          const { data: monChunk, error: monErr } = await state.supabaseClient
+            .from('air_cleaner_monitoring')
+            .select(SUPABASE_AC_COLS)
+            .order('no_lambung', { ascending: true })
+            .range(monOffset, monOffset + MON_CHUNK - 1);
+          if (monErr) {
+            error = monErr;
+            break;
+          }
+          if (Array.isArray(monChunk) && monChunk.length > 0) {
+            data = data.concat(monChunk);
+          }
+          if (!Array.isArray(monChunk) || monChunk.length < MON_CHUNK) break;
+          monOffset += MON_CHUNK;
+        }
 
         if (error) {
           console.warn('[loadAirCleanerFromSupabase Error]', error);
@@ -46959,7 +47274,7 @@ Keterangan : ${keterangan}`;
           const delHistId = String(payload.old?.job_id || payload.old?.id || '');
           if (delHistId && Array.isArray(state.jobHistory)) {
             state.jobHistory = state.jobHistory.filter(h => String(h.job_id || h.id) !== delHistId);
-            safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
+            if (typeof safeSaveJobHistoryToStorage === 'function') safeSaveJobHistoryToStorage();
             if (state.activeTab === 'completed' && typeof renderCompletedTable === 'function') {
               renderCompletedTable();
             }
@@ -46976,7 +47291,7 @@ Keterangan : ${keterangan}`;
           } else {
             state.jobHistory.unshift(newHist);
           }
-          safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory));
+          if (typeof safeSaveJobHistoryToStorage === 'function') safeSaveJobHistoryToStorage();
 
           // SINKRONISASI INSTAN: Hapus unit yang baru saja diselesaikan dari tampilan jadwal aktif di HP rekan lain!
           const unitNo = String(newHist.no_lambung || '').toUpperCase().trim();
@@ -50611,162 +50926,199 @@ Keterangan : ${keterangan}`;
     }
     window.sanitizeCompletedJobsInActiveTables = sanitizeCompletedJobsInActiveTables;
 
-    // 3. TARIK RIWAYAT SELESAI DARI TABEL job_history_lt & job_history_wt SUPABASE (Hot-Window & On-Demand)
+    // 3. TARIK RIWAYAT SELESAI DARI TABEL job_history_lt & job_history_wt SUPABASE (Hot-Window 14 Hari & On-Demand Archive)
     let _lastJobHistoryFetchTs = 0;
     async function loadJobHistoryFromSupabase(force = false, customStartDate = null, customEndDate = null) {
       if (!state.supabaseClient) return;
 
-      const now = Date.now();
-      const hasSpecificRange = Boolean(customStartDate || customEndDate);
-      const rangeKey = hasSpecificRange ? `${customStartDate}_${customEndDate}` : 'hot_window';
+      const normD = (d) => (typeof normalizeDateStr === 'function' ? normalizeDateStr(d) : String(d || '').split('T')[0]);
+      const reqStart = customStartDate ? normD(customStartDate) : '';
+      const reqEnd = customEndDate ? normD(customEndDate) : (reqStart ? reqStart : '');
+      const hasSpecificRange = Boolean(reqStart);
+
+      const APP_START_DATE = '2026-10-25';
+      const todayStr = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
+      const dStart = new Date(todayStr);
+      dStart.setDate(dStart.getDate() - 14);
+      let hotWindowStartStr = dStart.toISOString().split('T')[0];
+      // Aktifkan batas 14 hari Hot-Window (hanya gunakan APP_START_DATE sebagai batas bawah paling awal)
+      if (hotWindowStartStr < APP_START_DATE) {
+        hotWindowStartStr = APP_START_DATE;
+      }
+
+      const effStart = hasSpecificRange ? reqStart : hotWindowStartStr;
+      const effEnd = hasSpecificRange ? (reqEnd >= effStart ? reqEnd : effStart) : '';
+      const rangeKey = hasSpecificRange ? `${effStart}_${effEnd}` : 'hot_window';
 
       window._loadedHistRanges = window._loadedHistRanges || new Set();
-      // Throttle jika range ini sudah termuat di RAM dan tidak force
-      if (!force && window._loadedHistRanges.has(rangeKey) && Array.isArray(state.jobHistory) && state.jobHistory.length > 0) {
-        return;
+      window._inFlightHistFetches = window._inFlightHistFetches || new Map();
+
+      const now = Date.now();
+      const isWsHealthy = (typeof window.isSupabaseRealtimeHealthy === 'function')
+        ? window.isSupabaseRealtimeHealthy()
+        : Boolean(window._supaRealtimeHealthy);
+      const targetCovEnd = hasSpecificRange ? effEnd : todayStr;
+      const isCovered = (typeof window.isHistoryRangeCovered === 'function')
+        ? window.isHistoryRangeCovered(effStart, targetCovEnd)
+        : (window._loadedHistRanges.has(rangeKey) && window._hasLoadedJobHistory);
+
+      // Hemat Egress: jika rentang sudah ada di RAM & Realtime sehat (atau baru sync < 60 dtk), lewati GET ulang
+      if (!force && isCovered && Array.isArray(state.jobHistory)) {
+        if (isWsHealthy || (now - _lastJobHistoryFetchTs < 60000)) {
+          return state.jobHistory;
+        }
       }
 
-      try {
-        _lastJobHistoryFetchTs = now;
-        if (typeof sanitizeCompletedJobsInActiveTables === 'function') {
-          sanitizeCompletedJobsInActiveTables().catch(err => console.warn('[Sanitize Background]', err));
-        }
+      if (!force && window._inFlightHistFetches.has(rangeKey)) {
+        return window._inFlightHistFetches.get(rangeKey);
+      }
 
-        const HIST_COLS_LT = 'id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,non_ach_category,non_ach_reason,fotos,created_at';
-        const HIST_COLS_WT = 'id,no_lambung,type_unit,cat,job_type,washing_round,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,ada_operator,unit_turun,unit_swing,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,non_ach_category,non_ach_reason,fotos,created_at';
-
-        let startWindowStr = customStartDate;
-        if (!startWindowStr) {
-          const APP_START_DATE = '2026-10-25';
-          const dStart = new Date(getEffectiveTodayString());
-          dStart.setDate(dStart.getDate() - 14);
-          startWindowStr = dStart.toISOString().split('T')[0];
-          if (startWindowStr > APP_START_DATE) {
-            startWindowStr = APP_START_DATE;
+      const fetchTask = (async () => {
+        try {
+          _lastJobHistoryFetchTs = Date.now();
+          if (!hasSpecificRange && (force || !window._hasSanitizedActiveOnce) && typeof sanitizeCompletedJobsInActiveTables === 'function') {
+            window._hasSanitizedActiveOnce = true;
+            sanitizeCompletedJobsInActiveTables().catch(err => console.warn('[Sanitize Background]', err));
           }
-        }
 
-        // Helper fetching paginasi bertahap (chunk 1000 baris) agar data historis tidak terpotong (Aturan #2)
-        async function fetchAllHistoryFromTable(tableName, selectCols) {
-          const CHUNK = 1000;
-          let offset = 0;
-          let keep = true;
-          let allRows = [];
-          while (keep && offset < 50000) {
-            let q = state.supabaseClient
-              .from(tableName)
-              .select(selectCols);
+          const HIST_COLS_LT = 'id,no_lambung,type_unit,cat,job_type,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,non_ach_category,non_ach_reason,fotos,created_at';
+          const HIST_COLS_WT = 'id,no_lambung,type_unit,cat,job_type,washing_round,tanggal_rencana,shift_rencana,waktu_rencana,cluster,lokasi,armada_unit,opt_name,mp1,mp2,ada_operator,unit_turun,unit_swing,tanggal_eksekusi,jam_start,jam_end,durasi,hm_start,hm_end,hm_stop,hm_ready,status_final,keterangan,non_ach_category,non_ach_reason,fotos,created_at';
 
-            if (customStartDate) {
-              q = q.gte('tanggal_rencana', customStartDate);
-            } else {
-              q = q.gte('tanggal_rencana', startWindowStr);
-            }
-            if (customEndDate) {
-              q = q.lte('tanggal_rencana', customEndDate);
-            }
-            let res = await q
-              .order('created_at', { ascending: false })
-              .range(offset, offset + CHUNK - 1);
-
-            if (res.error && tableName === 'job_history_wt' && (/washing_round/i.test(res.error.message || '') || res.error.code === '42703')) {
-              let qFallback = state.supabaseClient
-                .from(tableName)
-                .select(HIST_COLS_LT);
-              if (customStartDate) {
-                qFallback = qFallback.gte('tanggal_rencana', customStartDate);
-              } else {
-                qFallback = qFallback.gte('tanggal_rencana', startWindowStr);
+          const applyHistDateFilter = (queryBuilder) => {
+            if (hasSpecificRange && effEnd) {
+              if (effStart === effEnd) {
+                return queryBuilder.or(`tanggal_rencana.eq.${effStart},tanggal_eksekusi.eq.${effStart}`);
               }
-              if (customEndDate) {
-                qFallback = qFallback.lte('tanggal_rencana', customEndDate);
-              }
-              res = await qFallback
+              return queryBuilder.or(`and(tanggal_rencana.gte.${effStart},tanggal_rencana.lte.${effEnd}),and(tanggal_eksekusi.gte.${effStart},tanggal_eksekusi.lte.${effEnd})`);
+            }
+            return queryBuilder.or(`tanggal_rencana.gte.${effStart},tanggal_eksekusi.gte.${effStart}`);
+          };
+
+          // Helper fetching paginasi bertahap (chunk 1000 baris) agar data historis tidak terpotong (Aturan #2)
+          async function fetchAllHistoryFromTable(tableName, selectCols) {
+            const CHUNK = 1000;
+            let offset = 0;
+            let keep = true;
+            let allRows = [];
+            while (keep && offset < 50000) {
+              let q = applyHistDateFilter(
+                state.supabaseClient
+                  .from(tableName)
+                  .select(selectCols)
+              );
+
+              let res = await q
                 .order('created_at', { ascending: false })
                 .range(offset, offset + CHUNK - 1);
-            }
 
-            if (!res.error && Array.isArray(res.data) && res.data.length > 0) {
-              allRows = allRows.concat(res.data);
-              if (res.data.length < CHUNK) {
-                keep = false;
+              if (res.error && tableName === 'job_history_wt' && (/washing_round/i.test(res.error.message || '') || res.error.code === '42703')) {
+                let qFallback = applyHistDateFilter(
+                  state.supabaseClient
+                    .from(tableName)
+                    .select(HIST_COLS_LT)
+                );
+                res = await qFallback
+                  .order('created_at', { ascending: false })
+                  .range(offset, offset + CHUNK - 1);
+              }
+
+              if (!res.error && Array.isArray(res.data) && res.data.length > 0) {
+                allRows = allRows.concat(res.data);
+                if (res.data.length < CHUNK) {
+                  keep = false;
+                } else {
+                  offset += CHUNK;
+                }
               } else {
-                offset += CHUNK;
+                keep = false;
               }
+            }
+            return allRows;
+          }
+
+          console.log(`[Supabase History Fetch] Menarik ${hasSpecificRange ? `arsip ${effStart} s/d ${effEnd}` : `Hot-Window >= ${effStart}`}...`);
+          const [listLt, listWt] = await Promise.all([
+            fetchAllHistoryFromTable('job_history_lt', HIST_COLS_LT),
+            fetchAllHistoryFromTable('job_history_wt', HIST_COLS_WT)
+          ]);
+
+          const data = [...listLt, ...listWt].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+          if (Array.isArray(data)) {
+            data.forEach(item => {
+              if (item) {
+                item.job_id = item.id;
+                item.no_id = item.id;
+                item.noId = item.id;
+                item.base_job_id = stripHistoryTimeSuffix(item.id);
+                if (item.tanggal_rencana) {
+                  item.tanggal = item.tanggal_rencana;
+                }
+                item.washing_round = typeof getJobWashingRound === 'function' ? getJobWashingRound(item) : (parseInt(item.washing_round, 10) || 1);
+                item.washingRound = item.washing_round;
+                item.adaOperator = item.ada_operator || item.adaOperator || 'Ya';
+                item.unitTurun = item.unit_turun || item.unitTurun || 'Ya';
+                item.unitSwing = item.unit_swing || item.unitSwing || 'Ya';
+                item.hmStart = item.hm_start || item.hm_stop || null;
+                item.hmEnd = item.hm_end || item.hm_ready || null;
+                item.hmStop = item.hm_stop || item.hm_start || null;
+                item.hmReady = item.hm_ready || item.hm_end || null;
+                // Simpan key foto individual ke localStorage HANYA untuk Hot-Window agar tidak memenuhi kuota 5MB saat buka arsip lama
+                const itemRefDate = String(item.tanggal_eksekusi || item.tanggal_rencana || '').split('T')[0];
+                if (!hasSpecificRange && itemRefDate >= hotWindowStartStr && Array.isArray(item.fotos) && item.fotos.length > 0) {
+                  try {
+                    safeStorage.setItem('SE_JOB_FOTOS_' + item.id, JSON.stringify(item.fotos));
+                    const cleanBase = String(item.id).replace(/-\d{4}$/, '');
+                    if (cleanBase !== item.id) safeStorage.setItem('SE_JOB_FOTOS_' + cleanBase, JSON.stringify(item.fotos));
+                  } catch (eF) { }
+                }
+              }
+            });
+            // MERGE & DEDUPLIKASI KE state.jobHistory RAM CACHE
+            const existingMap = new Map();
+            (state.jobHistory || []).forEach(h => {
+              const hid = String(h.id || h.job_id || '');
+              if (hid) existingMap.set(hid, h);
+            });
+            data.forEach(item => {
+              if (item && item.id) {
+                existingMap.set(String(item.id), item);
+              }
+            });
+            state.jobHistory = Array.from(existingMap.values()).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+            window._hasLoadedJobHistory = true;
+            window._loadedHistRanges.add(rangeKey);
+            if (typeof window.markHistoryIntervalLoaded === 'function') {
+              window.markHistoryIntervalLoaded(effStart, hasSpecificRange ? effEnd : '9999-12-31');
+            }
+            if (typeof safeSaveJobHistoryToStorage === 'function') {
+              safeSaveJobHistoryToStorage();
             } else {
-              keep = false;
+              try { safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory.slice(0, 300))); } catch (e) { }
+            }
+            await reconcileActiveJobsAgainstHistory(true);
+            console.log('[Supabase History Sync OK] Total ' + state.jobHistory.length + ' riwayat selesai di RAM (tarikan baru: ' + data.length + ' baris).');
+            if (state.activeTab === 'completed' && typeof renderCompletedTable === 'function') renderCompletedTable();
+            if (typeof window.renderHistoryTable === 'function') window.renderHistoryTable();
+            if (state.activeTab === 'pica' && typeof renderPicaTable === 'function') renderPicaTable();
+            if (state.activeTab === 'dashboard') {
+              if (typeof refreshDashboardData === 'function') refreshDashboardData();
+              else if (typeof initKpiSchedulePicaCharts === 'function') initKpiSchedulePicaCharts();
+              if (typeof renderDashboardPicaMatrix === 'function') renderDashboardPicaMatrix();
+              if (typeof renderManpowerDashboard === 'function') renderManpowerDashboard();
             }
           }
-          return allRows;
+          return state.jobHistory;
+        } catch (e) {
+          console.warn('[loadJobHistoryFromSupabase Error]', e);
+          return state.jobHistory;
+        } finally {
+          window._inFlightHistFetches.delete(rangeKey);
         }
+      })();
 
-        const [listLt, listWt] = await Promise.all([
-          fetchAllHistoryFromTable('job_history_lt', HIST_COLS_LT),
-          fetchAllHistoryFromTable('job_history_wt', HIST_COLS_WT)
-        ]);
-
-        const data = [...listLt, ...listWt].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-
-        if (Array.isArray(data)) {
-          data.forEach(item => {
-            if (item) {
-              item.job_id = item.id;
-              item.no_id = item.id;
-              item.noId = item.id;
-              item.base_job_id = stripHistoryTimeSuffix(item.id);
-              if (item.tanggal_rencana) {
-                item.tanggal = item.tanggal_rencana;
-              }
-              item.washing_round = typeof getJobWashingRound === 'function' ? getJobWashingRound(item) : (parseInt(item.washing_round, 10) || 1);
-              item.washingRound = item.washing_round;
-              item.adaOperator = item.ada_operator || item.adaOperator || 'Ya';
-              item.unitTurun = item.unit_turun || item.unitTurun || 'Ya';
-              item.unitSwing = item.unit_swing || item.unitSwing || 'Ya';
-              item.hmStart = item.hm_start || item.hm_stop || null;
-              item.hmEnd = item.hm_end || item.hm_ready || null;
-              item.hmStop = item.hm_stop || item.hm_start || null;
-              item.hmReady = item.hm_ready || item.hm_end || null;
-              if (Array.isArray(item.fotos) && item.fotos.length > 0) {
-                try {
-                  safeStorage.setItem('SE_JOB_FOTOS_' + item.id, JSON.stringify(item.fotos));
-                  const cleanBase = String(item.id).replace(/-\d{4}$/, '');
-                  if (cleanBase !== item.id) safeStorage.setItem('SE_JOB_FOTOS_' + cleanBase, JSON.stringify(item.fotos));
-                } catch (eF) { }
-              }
-            }
-          });
-          // MERGE & DEDUPLIKASI KE state.jobHistory RAM CACHE
-          const existingMap = new Map();
-          (state.jobHistory || []).forEach(h => {
-            const hid = String(h.id || h.job_id || '');
-            if (hid) existingMap.set(hid, h);
-          });
-          data.forEach(item => {
-            if (item && item.id) {
-              existingMap.set(String(item.id), item);
-            }
-          });
-          state.jobHistory = Array.from(existingMap.values()).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-          window._hasLoadedJobHistory = true;
-          window._loadedHistRanges.add(rangeKey);
-          try {
-            safeStorage.setItem('SE_JOB_HISTORY', JSON.stringify(state.jobHistory.slice(0, 300)));
-          } catch (e) { }
-          await reconcileActiveJobsAgainstHistory(true);
-          console.log('[Supabase History Sync OK] Total ' + state.jobHistory.length + ' riwayat selesai termuat & direkonsiliasi dari Supabase.');
-          if (typeof renderCompletedTable === 'function') renderCompletedTable();
-          if (typeof window.renderHistoryTable === 'function') window.renderHistoryTable();
-          if (state.activeTab === 'pica' && typeof renderPicaTable === 'function') renderPicaTable();
-          if (state.activeTab === 'dashboard') {
-            if (typeof refreshDashboardData === 'function') refreshDashboardData();
-            else if (typeof initKpiSchedulePicaCharts === 'function') initKpiSchedulePicaCharts();
-            if (typeof renderDashboardPicaMatrix === 'function') renderDashboardPicaMatrix();
-            if (typeof renderManpowerDashboard === 'function') renderManpowerDashboard();
-          }
-        }
-      } catch (e) {
-        console.warn('[loadJobHistoryFromSupabase Error]', e);
-      }
+      window._inFlightHistFetches.set(rangeKey, fetchTask);
+      return fetchTask;
     }
     window.loadJobHistoryFromSupabase = loadJobHistoryFromSupabase;
 
@@ -50854,6 +51206,10 @@ Keterangan : ${keterangan}`;
       _isForceSyncInProgress = true;
       showToast('Update data...', 'info');
       try {
+        if (typeof resetHistoryCoverageTracker === 'function') resetHistoryCoverageTracker();
+        window._hasSanitizedActiveOnce = false;
+        window._hasLoadedAcReplacements = false;
+
         const userRole = state.currentUser?.role || 'user';
         const isFieldOp = (userRole === 'mp_lt' || userRole === 'mp_wt' || userRole === 'oilman' || userRole === 'washingman' || userRole === 'operator' || userRole === 'user');
 
@@ -50864,9 +51220,22 @@ Keterangan : ${keterangan}`;
         const syncTasks = [
           (typeof loadJobsFromSupabase === 'function' ? loadJobsFromSupabase(true) : Promise.resolve()),
           (typeof loadJobHistoryFromSupabase === 'function' ? loadJobHistoryFromSupabase(true) : Promise.resolve()),
-          (typeof loadPicaFromSupabase === 'function' ? loadPicaFromSupabase() : Promise.resolve()),
+          (typeof loadPicaFromSupabase === 'function' ? loadPicaFromSupabase(true) : Promise.resolve()),
           (typeof loadAirCleanerFromSupabase === 'function' ? loadAirCleanerFromSupabase(true) : Promise.resolve())
         ];
+        if (state.activeTab === 'dashboard') {
+          const dStart = document.getElementById('dash-filter-start')?.value;
+          const dEnd = document.getElementById('dash-filter-end')?.value;
+          if (dStart && typeof loadJobHistoryFromSupabase === 'function') {
+            syncTasks.push(loadJobHistoryFromSupabase(true, dStart, dEnd || dStart));
+          }
+        } else if (state.activeTab === 'completed') {
+          const cStart = document.getElementById('comp-filter-start-date')?.value || state.completedFilterStartDate;
+          const cEnd = document.getElementById('comp-filter-end-date')?.value || state.completedFilterEndDate;
+          if (cStart && typeof loadJobHistoryFromSupabase === 'function') {
+            syncTasks.push(loadJobHistoryFromSupabase(true, cStart, cEnd || cStart));
+          }
+        }
 
         const effToday = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
         if (!isFieldOp && typeof syncSupabaseMasterData === 'function') {
@@ -52850,14 +53219,14 @@ Keterangan : ${keterangan}`;
 
       // ON-DEMAND ARCHIVE FETCH SEBELUM EXPORT EXCEL
       const fourteenDaysAgo = (typeof getFourteenDaysAgoDateString === 'function') ? getFourteenDaysAgoDateString() : '';
-      if (typeof fetchArchiveJobsOnDemand === 'function') {
-        if (sourceType === 'LT') {
+      if (state.supabaseClient && (typeof fetchArchiveJobsOnDemand === 'function' || typeof loadJobHistoryFromSupabase === 'function')) {
+        if (sourceType === 'LT' && typeof fetchArchiveJobsOnDemand === 'function') {
           const filterDate = document.getElementById('lt-filter-date')?.value || state.lubetruckState?.filterDate || '';
           if (filterDate && fourteenDaysAgo && filterDate < fourteenDaysAgo) {
             showToast('Menyiapkan data arsip Lubetruck...', 'info');
             await fetchArchiveJobsOnDemand(filterDate, filterDate);
           }
-        } else if (sourceType === 'WT') {
+        } else if (sourceType === 'WT' && typeof fetchArchiveJobsOnDemand === 'function') {
           const filterDate = document.getElementById('wt-filter-date')?.value || state.watertruckState?.filterDate || '';
           if (filterDate && fourteenDaysAgo && filterDate < fourteenDaysAgo) {
             showToast('Menyiapkan data arsip Water Truck...', 'info');
@@ -52868,9 +53237,38 @@ Keterangan : ${keterangan}`;
           const compEndDateInput = document.getElementById('comp-filter-end-date');
           const startDate = compStartDateInput?.value || state.completedFilterStartDate || '';
           const endDate = compEndDateInput?.value || state.completedFilterEndDate || startDate;
-          if (startDate && fourteenDaysAgo && startDate < fourteenDaysAgo) {
-            showToast('Menyiapkan data arsip Riwayat Selesai...', 'info');
-            await fetchArchiveJobsOnDemand(startDate, endDate);
+          const effStart = startDate || endDate;
+          const effEnd = endDate || startDate;
+          if (effStart) {
+            const needHist = (typeof window.isHistoryRangeCovered === 'function')
+              ? !window.isHistoryRangeCovered(effStart, effEnd)
+              : !window._hasLoadedJobHistory;
+            const needActive = (typeof _hasMissingCacheDatesInRange === 'function')
+              ? _hasMissingCacheDatesInRange(effStart, effEnd)
+              : Boolean(fourteenDaysAgo && effStart < fourteenDaysAgo);
+            if (needHist || needActive) {
+              showToast('Menyiapkan data arsip Riwayat Selesai...', 'info');
+              const jobsTasks = [];
+              if (needHist && typeof loadJobHistoryFromSupabase === 'function') {
+                jobsTasks.push(loadJobHistoryFromSupabase(false, effStart, effEnd));
+              }
+              if (needActive && typeof fetchArchiveJobsOnDemand === 'function') {
+                jobsTasks.push(fetchArchiveJobsOnDemand(effStart, effEnd));
+              }
+              if (jobsTasks.length > 0) await Promise.all(jobsTasks);
+            }
+          }
+        } else if (sourceType === 'PICA' && typeof loadJobHistoryFromSupabase === 'function') {
+          const picaStart = document.getElementById('pica-filter-start-date')?.value || state.picaFilterStartDate || '';
+          const picaEnd = document.getElementById('pica-filter-end-date')?.value || state.picaFilterEndDate || picaStart;
+          const effPStart = picaStart || picaEnd || null;
+          const effPEnd = picaEnd || picaStart || null;
+          const needPicaHist = (effPStart && effPEnd && typeof window.isHistoryRangeCovered === 'function')
+            ? !window.isHistoryRangeCovered(effPStart, effPEnd)
+            : !window._hasLoadedJobHistory;
+          if (needPicaHist) {
+            showToast('Menyiapkan data arsip PICA...', 'info');
+            await loadJobHistoryFromSupabase(false, effPStart, effPEnd);
           }
         }
       }
