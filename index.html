@@ -39678,30 +39678,25 @@ Keterangan : ${keterangan}`;
 
     // ========================================================================
     // MONITORING CLEAN AIR CLEANER CONTROLLER & LOGIKA OTOMATIS
-    // KHUSUS: Hanya menampilkan tipe unit yang ada di 4 foto spesifikasi:
-    // 1. Excavator: PC200-8M0, PC210-10M0, PC300SE-8M0, PC850-8R1
-    // 2. Bulldozer: PPA_D155A-6, PPA_D245S, PPA_D245X, PPA_D85ESS-2
-    // 3. Excavator Besar/Sedang: PPA_PC 1250-8R, PPA_PC 1250SP-11R, PPA_PC 2000-8,
-    //    PPA_PC200-8M0, PPA_PC210-10M0, PPA_PC300SE-8M0, PPA_PC3400-11M0, PPA_PC500LC-10R, PPA_PC850-8R1
-    // 4. Motor Grader: PPA_GD 705A-5, PPA_GD755-5R, PPA_GD825A-2
+    // KHUSUS: Hanya menampilkan unit PC/Excavator PPA & Dozer PPA (sesuai foto 3 & 4):
+    // 1. Dozer PPA (Foto 3): PPA_D85ESS-2, PPA_D155A-6
+    // 2. PC/Excavator PPA (Foto 4): PPA_PC 1250-8R, PPA_PC 1250SP-11R, PPA_PC 2000-8,
+    //    PPA_PC200-8M0, PPA_PC210-10M0, PPA_PC300SE-8M0, PPA_PC500LC-10R,
+    //    PPA_PC850-8R1, PPA_PC3400-11M0
+    // Unit Drilling (D245S/D245X), Grader (GD), SRT, RMC/FMC/ROM TIDAK masuk monitoring.
     // ========================================================================
     const ALLOWED_AC_TYPE_KEYS = new Set([
-      'PC200-8M0',
-      'PC210-10M0',
-      'PC300SE-8M0',
-      'PC850-8R1',
-      'D155A-6',
-      'D245S',
-      'D245X',
       'D85ESS-2',
+      'D155A-6',
       'PC1250-8R',
       'PC1250SP-11R',
       'PC2000-8',
-      'PC3400-11M0',
+      'PC200-8M0',
+      'PC210-10M0',
+      'PC300SE-8M0',
       'PC500LC-10R',
-      'GD705A-5',
-      'GD755-5R',
-      'GD825A-2'
+      'PC850-8R1',
+      'PC3400-11M0'
     ]);
 
     function normalizeAirCleanerTypeKey(typeStr) {
@@ -39711,10 +39706,13 @@ Keterangan : ${keterangan}`;
         .replace(/[^A-Z0-9-]/g, '');
     }
 
-    // Tipe unit berkode RMC / FMC / ROM TIDAK masuk rekapan Air Cleaner
+    // Tipe unit berkode RMC / FMC / ROM, Drilling (D245), Grader (GD), dan SRT TIDAK masuk Monitoring Air Cleaner
     function isExcludedAirCleanerType(typeStr) {
       const t = String(typeStr || '').toUpperCase().trim();
-      return /(^|[^A-Z0-9])(RMC|FMC|ROM)([^A-Z0-9]|$)/.test(t) || /^(RMC|FMC|ROM)/.test(t);
+      if (!t) return false;
+      if (/(^|[^A-Z0-9])(RMC|FMC|ROM|SRT|GD)([^A-Z0-9]|$)/.test(t)) return true;
+      if (/^(RMC|FMC|ROM|SRT|GD|D245)/.test(t.replace(/^(PPA_)/i, ''))) return true;
+      return /^(RMC|FMC|ROM)/.test(t);
     }
     window.isExcludedAirCleanerType = isExcludedAirCleanerType;
 
@@ -39724,6 +39722,48 @@ Keterangan : ${keterangan}`;
       const cleanKey = normalizeAirCleanerTypeKey(typeStr);
       return ALLOWED_AC_TYPE_KEYS.has(cleanKey);
     }
+
+    function resolveAirCleanerUnitType(noLambung, unitOrType) {
+      const nl = String(noLambung || '').toUpperCase().trim();
+      let rawType = '';
+      if (typeof unitOrType === 'string') {
+        rawType = unitOrType.trim();
+      } else if (unitOrType && typeof unitOrType === 'object') {
+        rawType = String(unitOrType.type || unitOrType.typeUnit || unitOrType.type_unit || unitOrType.tipe || unitOrType.type_model || '').trim();
+      }
+      const genericSet = new Set(['', 'UNIT', 'EXCAVATOR', 'BULLDOZER', 'HAUL TRUCK', 'HEAVY EQUIPMENT', '-', 'UNDEFINED', 'NULL']);
+      // Prioritaskan tipe unit aktual dari Master Units agar data DB/cache yang generic/usang tidak lolos filter
+      if (nl && Array.isArray(state.masterUnits) && state.masterUnits.length > 0) {
+        const mu = state.masterUnits.find(u => u && String(u.noLambung || u.lambung || u.no_lambung || '').trim().toUpperCase() === nl);
+        if (mu) {
+          const mType = String(mu.typeUnit || mu.tipe || mu.type || mu.type_model || '').trim();
+          if (mType && !genericSet.has(mType.toUpperCase())) {
+            return mType;
+          }
+        }
+      }
+      if (!genericSet.has(rawType.toUpperCase())) {
+        return rawType;
+      }
+      if (nl && typeof getUnitTypeFromMaster === 'function') {
+        const prefixResolved = getUnitTypeFromMaster(nl, '__UNKNOWN_AC_TYPE__');
+        if (prefixResolved && prefixResolved !== '__UNKNOWN_AC_TYPE__') {
+          return prefixResolved;
+        }
+      }
+      return '';
+    }
+
+    function isEligibleAirCleanerUnit(noLambung, unitOrType) {
+      const nl = String(noLambung || '').toUpperCase().trim();
+      if (!nl) return false;
+      const objCtx = (unitOrType && typeof unitOrType === 'object') ? unitOrType : undefined;
+      if (typeof isUnitFromRomCluster === 'function' && isUnitFromRomCluster(nl, objCtx)) return false;
+      const resolvedType = resolveAirCleanerUnitType(nl, unitOrType);
+      return isAllowedAirCleanerType(resolvedType);
+    }
+    window.resolveAirCleanerUnitType = resolveAirCleanerUnitType;
+    window.isEligibleAirCleanerUnit = isEligibleAirCleanerUnit;
     window.isAllowedAirCleanerType = isAllowedAirCleanerType;
     window.normalizeAirCleanerTypeKey = normalizeAirCleanerTypeKey;
 
@@ -40639,8 +40679,9 @@ Keterangan : ${keterangan}`;
 
     function updateAirCleanerRecord(noLambung, type, actionType, code, actionDateStr) {
       if (!noLambung) return;
-      // ATURAN BAKU: Unit dari Kluster ROM Area dilarang masuk ke Monitoring Clean Air Cleaner
-      if (typeof isUnitFromRomCluster === 'function' && isUnitFromRomCluster(noLambung)) return;
+      // ATURAN BAKU: Hanya unit PC/Exca PPA & Dozer PPA non-ROM yang boleh masuk Monitoring Clean Air Cleaner
+      const resolvedType = resolveAirCleanerUnitType(noLambung, type);
+      if (!isEligibleAirCleanerUnit(noLambung, resolvedType)) return;
       const targetDate = actionDateStr || getEffectiveTodayString();
       const parts = targetDate.split('-');
       const formattedDate = (parts.length === 3) ? `${parts[2]}/${parts[1]}/${parts[0]}` : targetDate;
@@ -40649,7 +40690,7 @@ Keterangan : ${keterangan}`;
       if (!item) {
         item = {
           noLambung: noLambung.toUpperCase(),
-          type: type || getUnitTypeFromMaster(noLambung, 'Unit'),
+          type: resolvedType || getUnitTypeFromMaster(noLambung, 'Unit'),
           cleans: [],
           serviceCode: '',
           status: 'Baik'
@@ -41107,30 +41148,36 @@ Keterangan : ${keterangan}`;
       const currentVal = select.value || 'ALL';
       const types = new Set();
 
-      // HANYA masukkan tipe unit yang masuk dalam 4 foto spesifikasi dan BUKAN dari Kluster ROM Area
+      // HANYA masukkan tipe unit PC/Exca PPA & Dozer PPA yang eligible dan BUKAN dari Kluster ROM Area
       (state.airCleanerMonitor || []).forEach(m => {
-        if (typeof isUnitFromRomCluster === 'function' && isUnitFromRomCluster(m.noLambung, m)) return;
-        const t = (m.type || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(m.noLambung, '') : '')).trim();
+        if (!isEligibleAirCleanerUnit(m.noLambung, m)) return;
+        const t = resolveAirCleanerUnitType(m.noLambung, m);
         if (t && isAllowedAirCleanerType(t)) types.add(t);
       });
 
       if (Array.isArray(state.masterUnits)) {
         state.masterUnits.forEach(u => {
           const nl = String(u.noLambung || u.lambung || u.no_lambung || '').trim();
-          if (typeof isUnitFromRomCluster === 'function' && isUnitFromRomCluster(nl, u)) return;
+          if (!isEligibleAirCleanerUnit(nl, u)) return;
           const t = (u.typeUnit || u.tipe || u.type || u.type_model || '').trim();
           if (t && isAllowedAirCleanerType(t)) types.add(t);
         });
       }
 
       const sortedTypes = Array.from(types).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-      if (select.options.length !== (sortedTypes.length + 1)) {
+      const existingOpts = Array.from(select.options).map(o => o.value).join('|');
+      const nextOpts = ['ALL', ...sortedTypes].join('|');
+      const nextVal = (currentVal === 'ALL' || sortedTypes.includes(currentVal)) ? currentVal : 'ALL';
+
+      if (existingOpts !== nextOpts) {
         let optionsHtml = '<option value="ALL">All Type Unit</option>';
         sortedTypes.forEach(t => {
-          optionsHtml += `<option value="${t}" ${t === currentVal ? 'selected' : ''}>${t}</option>`;
+          optionsHtml += `<option value="${t}" ${t === nextVal ? 'selected' : ''}>${t}</option>`;
         });
         select.innerHTML = optionsHtml;
-        select.value = currentVal;
+      }
+      if (select.value !== nextVal) {
+        select.value = nextVal;
       }
     }
     window.updateAirCleanerTypeOptions = updateAirCleanerTypeOptions;
@@ -42502,12 +42549,8 @@ Keterangan : ${keterangan}`;
         }
       });
 
-      // Filter KHUSUS: HANYA tampilkan tipe unit yang ada di 4 foto spesifikasi pengguna & BUKAN dari Kluster ROM Area
-      let allowedBaseList = rawList.filter(m => {
-        if (isUnitFromRomCluster(m.noLambung, m)) return false;
-        const mType = (m.type || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(m.noLambung, 'Unit') : '')).trim();
-        return !isExcludedAirCleanerType(mType) && (isAllowedAirCleanerType(mType) || (Array.isArray(m.cleans) && m.cleans.length > 0));
-      });
+      // Filter KHUSUS: HANYA tampilkan unit PC/Exca PPA & Dozer PPA yang eligible & BUKAN dari Kluster ROM Area
+      let allowedBaseList = rawList.filter(m => isEligibleAirCleanerUnit(m.noLambung, m));
 
       // Terapkan filter kluster (3 Kluster: Selatan, Tengah, Utara tanpa ROM Area) sebelum menghitung badge & tabel
       if (selectedCluster !== 'ALL') {
@@ -45527,8 +45570,8 @@ Keterangan : ${keterangan}`;
 
     async function syncAirCleanerToSupabase(item) {
       if (!state.supabaseClient || !item || !item.noLambung) return;
-      // ATURAN BAKU: Unit dari Kluster ROM Area dilarang disimpan ke air_cleaner_monitoring
-      if (typeof isUnitFromRomCluster === 'function' && isUnitFromRomCluster(item.noLambung, item)) return;
+      // ATURAN BAKU: Hanya unit PC/Exca PPA & Dozer PPA non-ROM yang boleh disimpan ke air_cleaner_monitoring
+      if (!isEligibleAirCleanerUnit(item.noLambung, item)) return;
       try {
         await state.supabaseClient.from('air_cleaner_monitoring').upsert({
           id: 'AC-' + item.noLambung.toUpperCase(),
@@ -45616,9 +45659,9 @@ Keterangan : ${keterangan}`;
       if (!state.supabaseClient) return;
       // Master Data TTL Cache (12 Jam) - Versi 12 untuk Single Source of Truth + Eksklusi Kluster ROM Area
       const savedAcTs = Number(safeStorage.getItem('SE_AIR_CLEANER_TS') || 0);
-      const isAcFresh = (Date.now() - savedAcTs) < MASTER_DATA_TTL_MS && safeStorage.getItem('SE_AIR_CLEANER_VER') === '12';
+      const isAcFresh = (Date.now() - savedAcTs) < MASTER_DATA_TTL_MS && safeStorage.getItem('SE_AIR_CLEANER_VER') === '13';
       if (!force && !window._acRealtimeDirty && isAcFresh && Array.isArray(state.airCleanerMonitor) && state.airCleanerMonitor.length > 0) {
-        state.airCleanerMonitor = state.airCleanerMonitor.filter(m => !isUnitFromRomCluster(m.noLambung, m));
+        state.airCleanerMonitor = state.airCleanerMonitor.filter(m => isEligibleAirCleanerUnit(m.noLambung, m));
         console.log('[Supabase Cache TTL] Air Cleaner fresh dari cache lokal (TTL 12 Jam):', state.airCleanerMonitor.length, 'unit');
         return;
       }
@@ -45710,28 +45753,28 @@ Keterangan : ${keterangan}`;
             romUnitsInSupa.push(nl);
             return;
           }
-          if (nl) {
-            const dbCleans = (Array.isArray(row.cleans) && row.cleans.length > 0) ? [...row.cleans] : [];
-            supaMap.set(nl, {
-              id: row.id || ('AC-' + nl),
-              noLambung: nl,
-              type: row.type_model || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(nl, 'Unit') : 'Unit'),
-              // Jika acHistoryJobs tersedia sebagai Single Source of Truth, bangun ulang cleans dari 0 agar 100% sinkron dengan Riwayat Selesai tanpa duplikat/orphan
-              cleans: hasFullHistorySSOT ? [] : dbCleans,
-              cleanRecords: [],
-              dbCleans: dbCleans,
-              dbStatus: row.status || 'Baik',
-              serviceCode: hasFullHistorySSOT ? '' : (row.service_code || ''),
-              status: row.status || 'Baik',
-              lastCleanedDate: row.last_cleaned_date || null,
-              evidence_url: row.evidence_url || null,
-              lastEvidenceUrl: row.evidence_url || null,
-              lastReplacedAt: row.last_replaced_at || null,
-              lastReplacedBy: row.last_replaced_by || null,
-              replaceNotes: row.replace_notes || null,
-              fromSupa: true
-            });
-          }
+          const resolvedType = resolveAirCleanerUnitType(nl, row);
+          if (!isEligibleAirCleanerUnit(nl, resolvedType)) return;
+          const dbCleans = (Array.isArray(row.cleans) && row.cleans.length > 0) ? [...row.cleans] : [];
+          supaMap.set(nl, {
+            id: row.id || ('AC-' + nl),
+            noLambung: nl,
+            type: resolvedType,
+            // Jika acHistoryJobs tersedia sebagai Single Source of Truth, bangun ulang cleans dari 0 agar 100% sinkron dengan Riwayat Selesai tanpa duplikat/orphan
+            cleans: hasFullHistorySSOT ? [] : dbCleans,
+            cleanRecords: [],
+            dbCleans: dbCleans,
+            dbStatus: row.status || 'Baik',
+            serviceCode: hasFullHistorySSOT ? '' : (row.service_code || ''),
+            status: row.status || 'Baik',
+            lastCleanedDate: row.last_cleaned_date || null,
+            evidence_url: row.evidence_url || null,
+            lastEvidenceUrl: row.evidence_url || null,
+            lastReplacedAt: row.last_replaced_at || null,
+            lastReplacedBy: row.last_replaced_by || null,
+            replaceNotes: row.replace_notes || null,
+            fromSupa: true
+          });
         });
 
         // Auto-clean: Hapus unit Kluster ROM Area jika ditemukan di tabel air_cleaner_monitoring Supabase
@@ -45965,8 +46008,8 @@ Keterangan : ${keterangan}`;
           let monItem = supaMap.get(uLambung);
           if (!monItem) {
             const sampleType = uJobs[0]?.typeUnit || 'Unit';
-            const resolvedType = (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(uLambung, sampleType) : sampleType);
-            if (!isAllowedAirCleanerType(resolvedType)) return;
+            const resolvedType = resolveAirCleanerUnitType(uLambung, sampleType);
+            if (!isEligibleAirCleanerUnit(uLambung, resolvedType)) return;
             monItem = {
               id: 'AC-' + uLambung,
               noLambung: uLambung,
@@ -46099,9 +46142,9 @@ Keterangan : ${keterangan}`;
           });
         }
 
-        // Urutkan daftar monitoring: Unit yang paling mendekati pergantian air cleaner di paling atas (kecualikan Kluster ROM Area)
+        // Urutkan daftar monitoring: Unit yang paling mendekati pergantian air cleaner di paling atas (HANYA PC/Exca PPA & Dozer PPA)
         state.airCleanerMonitor = Array.from(supaMap.values())
-          .filter(item => !isUnitFromRomCluster(item.noLambung, item) && !isExcludedAirCleanerType(item.type) && (isAllowedAirCleanerType(item.type) || (Array.isArray(item.cleans) && item.cleans.length > 0)))
+          .filter(item => isEligibleAirCleanerUnit(item.noLambung, item))
           .sort((a, b) => {
             const scoreA = getAirCleanerUrgencyScore(a);
             const scoreB = getAirCleanerUrgencyScore(b);
@@ -46120,7 +46163,7 @@ Keterangan : ${keterangan}`;
           });
           safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(slimMonitorForStorage));
           safeStorage.setItem('SE_AIR_CLEANER_TS', String(Date.now()));
-          safeStorage.setItem('SE_AIR_CLEANER_VER', '12');
+          safeStorage.setItem('SE_AIR_CLEANER_VER', '13');
         } catch (eStore) { }
         window._acRealtimeDirty = false;
 
@@ -46581,7 +46624,16 @@ Keterangan : ${keterangan}`;
       const row = payload?.new;
       if (!row || !row.no_lambung) return;
       const lambung = String(row.no_lambung).toUpperCase().trim();
-      if (typeof isUnitFromRomCluster === 'function' && isUnitFromRomCluster(lambung, row)) return;
+      if (!isEligibleAirCleanerUnit(lambung, row)) {
+        if (Array.isArray(state.airCleanerMonitor)) {
+          const prevLen = state.airCleanerMonitor.length;
+          state.airCleanerMonitor = state.airCleanerMonitor.filter(m => String(m.noLambung || '').toUpperCase().trim() !== lambung);
+          if (state.airCleanerMonitor.length !== prevLen && state.activeTab === 'air-cleaner-monitor' && typeof renderAirCleanerMonitorTable === 'function') {
+            renderAirCleanerMonitorTable();
+          }
+        }
+        return;
+      }
       if (!Array.isArray(state.airCleanerMonitor)) state.airCleanerMonitor = [];
       let item = state.airCleanerMonitor.find(m => String(m.noLambung || '').toUpperCase() === lambung);
       if (!item) {
@@ -53574,11 +53626,7 @@ Keterangan : ${keterangan}`;
           fileNamePrefix = isTabCoal ? 'Data_Clean_Air_Cleaner_COAL' : 'Data_Clean_Air_Cleaner_NON_COAL';
 
           let rawList = state.airCleanerMonitor || [];
-          let allowedBaseList = rawList.filter(m => {
-            if (isUnitFromRomCluster(m.noLambung, m)) return false;
-            const mType = (m.type || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(m.noLambung, 'Unit') : '')).trim();
-            return !isExcludedAirCleanerType(mType) && (isAllowedAirCleanerType(mType) || (Array.isArray(m.cleans) && m.cleans.length > 0));
-          });
+          let allowedBaseList = rawList.filter(m => isEligibleAirCleanerUnit(m.noLambung, m));
 
           if (selectedCluster !== 'ALL') {
             allowedBaseList = allowedBaseList.filter(m => getAirCleanerUnitCluster(m.noLambung, m) === selectedCluster);
