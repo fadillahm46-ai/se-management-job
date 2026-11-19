@@ -3150,21 +3150,16 @@
                           </div>
                         </div>
 
-                        <!-- Legend Horizontal Sesuai Spesifikasi (4 Kategori Unschedule: Greasing, Add Oil, Clean Air Cleaner, Washing Request) -->
+                        <!-- Legend Horizontal Sesuai Spesifikasi (3 Kategori Lapangan: Breakdown, Service, Washing Request) -->
                         <div class="kpi-donut-legend text-xs">
                           <div class="flex items-center space-x-1">
                             <span class="w-2.5 h-2.5 rounded-full bg-[#DC2626] shadow-2xs shrink-0"></span>
-                            <span id="kpi-unsch-dur-legend-greasing" class="font-bold text-slate-800">Greasing
-                              (0%)</span>
-                          </div>
-                          <div class="flex items-center space-x-1">
-                            <span class="w-2.5 h-2.5 rounded-full bg-[#EA580C] shadow-2xs shrink-0"></span>
-                            <span id="kpi-unsch-dur-legend-addoil" class="font-bold text-slate-800">Add Oil
+                            <span id="kpi-unsch-dur-legend-breakdown" class="font-bold text-slate-800">Breakdown
                               (0%)</span>
                           </div>
                           <div class="flex items-center space-x-1">
                             <span class="w-2.5 h-2.5 rounded-full bg-[#0284C7] shadow-2xs shrink-0"></span>
-                            <span id="kpi-unsch-dur-legend-aircleaner" class="font-bold text-slate-800">Clean Air Cleaner
+                            <span id="kpi-unsch-dur-legend-service" class="font-bold text-slate-800">Service
                               (0%)</span>
                           </div>
                           <div class="flex items-center space-x-1">
@@ -3186,20 +3181,14 @@
                           <table class="w-full text-xs">
                             <tbody class="divide-y divide-slate-100 font-semibold">
                               <tr class="hover:bg-red-50/40 transition">
-                                <td class="kpi-tbl-label text-slate-800 font-bold">GREASING</td>
-                                <td id="kpi-unsch-dur-table-greasing"
+                                <td class="kpi-tbl-label text-slate-800 font-bold">BREAKDOWN</td>
+                                <td id="kpi-unsch-dur-table-breakdown"
                                   class="kpi-tbl-val-dur text-right font-black font-mono text-[#DC2626]">
                                   0 Jam 0 Menit</td>
                               </tr>
                               <tr class="hover:bg-red-50/40 transition">
-                                <td class="kpi-tbl-label text-slate-800 font-bold">ADD OIL</td>
-                                <td id="kpi-unsch-dur-table-addoil"
-                                  class="kpi-tbl-val-dur text-right font-black font-mono text-[#EA580C]">
-                                  0 Jam 0 Menit</td>
-                              </tr>
-                              <tr class="hover:bg-red-50/40 transition">
-                                <td class="kpi-tbl-label text-slate-800 font-bold">CLEAN AIR CLEANER</td>
-                                <td id="kpi-unsch-dur-table-aircleaner"
+                                <td class="kpi-tbl-label text-slate-800 font-bold">SERVICE</td>
+                                <td id="kpi-unsch-dur-table-service"
                                   class="kpi-tbl-val-dur text-right font-black font-mono text-[#0284C7]">
                                   0 Jam 0 Menit</td>
                               </tr>
@@ -4495,9 +4484,7 @@
                   <select id="direct-status" onchange="clearDirectFieldError('direct-status')"
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-800 focus:outline-none focus:border-emerald-500 bg-white cursor-pointer">
                     <option value="" selected disabled>-- Pilih Status --</option>
-                    <option value="BD_GREASING">BD (Greasing/Adjust Track)</option>
-                    <option value="BD_ADD_OIL">BD (Add Oil/Grease)</option>
-                    <option value="BD_AIR_CLEANER">BD (Clean Air Cleaner)</option>
+                    <option value="BREAKDOWN">BREAKDOWN (Kendala Unit)</option>
                     <option value="SERVICE">SERVICE (Maintenance/PCR)</option>
                   </select>
                   <p id="err-direct-status" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi</p>
@@ -14738,71 +14725,22 @@
 
       // -----------------------------------------------------------------
       // 1. HITUNG EVENT RIIL (DIAMBIL DARI JOB YANG TELAH DISELESAIKAN)
-      // Aturan: Khusus untuk 3 kartu grafik ini, Job Request berstatus SERVICE masuk ke SCHEDULE (Event & Durasi),
-      // sedangkan Bar Chart ACH. KPI SCHEDULE & KPI target 95% tetap murni dari jadwal SCH (filteredSch).
+      // Sesuai aturan: Event Job diambil dari pekerjaan yang telah diselesaikan di lapangan
       // -----------------------------------------------------------------
       const isJobCompleted = (j) => {
         if (!j) return false;
         const s = String(j.status || '').toLowerCase().trim();
         const sf = String(j.status_final || '').toUpperCase().trim();
-        if (['non_ach', 'non-ach', 'cancel', 'cancelled', 'pending', 'scheduled', 'open', 'queue'].includes(s)) return false;
-        if (['NON_ACH', 'NON-ACH', 'CANCEL', 'CANCELLED', 'PENDING'].includes(sf)) return false;
         if (['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'washing', 'washing request', 'wash'].includes(s)) return true;
         if (['ACHIEVED', 'ACH', 'DONE', 'SERVICE', 'BREAKDOWN', 'BD', 'WASHING REQUEST', 'WASHING', 'WASH'].includes(sf)) return true;
         if (typeof window.isAchLikeStatus === 'function') return window.isAchLikeStatus(j);
         return false;
       };
 
-      // Klasifikasi Job Request yang telah selesai: apakah SERVICE, WASHING, BD Baru (Greasing/Add Oil/Air Cleaner), atau BD Lama
-      const classifyCompletedUnschJob = (j) => {
-        const s = String(j.status || '').toLowerCase().trim();
-        const sf = String(j.status_final || '').toUpperCase().trim();
-        const kond = String(j.kondisi || j.unitCondition || '').toLowerCase().trim();
-        const ketRaw = String(j.keterangan || j.bdNotes || j.bd_notes || '').trim();
-        const reqJobRaw = String(j.requestedJob || j.requested_job || '').trim();
-        const descLower = `${ j.deskripsi || '' } ${ ketRaw }`.toLowerCase();
-        const isWt = (j.targetType === 'WT' || j.serviceType === 'watertruck' || j.job_type === 'water' || j.job_type === 'unsch_wt' || String(j.id || '').toUpperCase().startsWith('WT'));
-
-        // 1. Washing Request (WT)
-        if (sf === 'WASHING REQUEST' || sf === 'WASHING' || sf === 'WASH' || ['washing', 'washing request', 'wash'].includes(s) || kond === 'washing' || kond === 'washing request') {
-          return 'WASHING';
-        }
-        // 2. Service (masuk ke Schedule pada 3 kartu ini)
-        if (sf === 'SERVICE' || s === 'service' || kond === 'service') {
-          return 'SERVICE';
-        }
-        // 3. Breakdown (BD)
-        const isBd = (sf === 'BREAKDOWN' || sf === 'BD' || ['bd', 'breakdown'].includes(s) || kond === 'breakdown' || kond === 'bd' || descLower.includes('breakdown') || descLower.includes('[bd]'));
-        if (isBd) {
-          if (isWt) return 'WASHING';
-          // Cek prefix/kategori BD spesifik dari pilihan baru:
-          // - BD (Greasing/Adjust Track)
-          // - BD (Add Oil/Grease)
-          // - BD (Clean Air Cleaner)
-          if (/^bd\s*\(\s*greasing/i.test(ketRaw) || /\bbd\s*\(\s*greasing\/adjust\s*track\s*\)/i.test(ketRaw) || /^greasing/i.test(reqJobRaw)) {
-            return 'BD_GREASING';
-          }
-          if (/^bd\s*\(\s*add\s*oil/i.test(ketRaw) || /\bbd\s*\(\s*add\s*oil\/grease\s*\)/i.test(ketRaw) || /^(add\s*oil|top\s*up\s*oil)/i.test(reqJobRaw)) {
-            return 'BD_ADD_OIL';
-          }
-          if (/^bd\s*\(\s*clean\s*air\s*cleaner/i.test(ketRaw) || /\bbd\s*\(\s*clean\s*air\s*cleaner\s*\)/i.test(ketRaw) || /^(clean\s*)?air\s*cleaner/i.test(reqJobRaw)) {
-            return 'BD_AIR_CLEANER';
-          }
-          // Data BD lama (sebelum pemecahan 3 opsi BD): dibagi 10% Greasing, 90% Add Oil, 0% Air Cleaner
-          return 'BD_LEGACY';
-        }
-        // 4. Fallback untuk Job Request lama yang status_final-nya 'DONE' / 'ACHIEVED'
-        if (isWt || descLower.includes('washing') || descLower.includes('cuci')) return 'WASHING';
-        return 'SERVICE';
-      };
-
       const completedSchJobs = filteredSch.filter(isJobCompleted);
-      const rawCompletedUnschJobs = filteredUnsch.filter(isJobCompleted);
-      const serviceReqJobs = rawCompletedUnschJobs.filter(j => classifyCompletedUnschJob(j) === 'SERVICE');
-      const completedUnschJobs = rawCompletedUnschJobs.filter(j => classifyCompletedUnschJob(j) !== 'SERVICE');
-      const cardCompletedSchJobs = [...completedSchJobs, ...serviceReqJobs];
+      const completedUnschJobs = filteredUnsch.filter(isJobCompleted);
 
-      const schEventCount = cardCompletedSchJobs.length;
+      const schEventCount = completedSchJobs.length;
       const unschEventCount = completedUnschJobs.length;
       const totalEvents = schEventCount + unschEventCount;
       const schEventPct = totalEvents > 0 ? Math.round((schEventCount / totalEvents) * 100) : 0;
@@ -14862,10 +14800,10 @@
       }
 
       // -----------------------------------------------------------------
-      // 2. HITUNG DURASI RIIL (TERMASUK SERVICE JOB REQUEST DI SCHEDULE)
+      // 2. HITUNG DURASI RIIL (HANYA DARI PEKERJAAN YANG SELESAI / ACH)
       // -----------------------------------------------------------------
       let schMins = 0;
-      cardCompletedSchJobs.forEach(j => {
+      completedSchJobs.forEach(j => {
         schMins += calcJobDurationMins(j);
       });
 
@@ -14931,7 +14869,7 @@
               tooltip: {
                 enabled: hasDuration,
                 callbacks: {
-                  label: (c) => ` ${c.label}: ${c.raw}% (${c.label === 'Schedule' ? formatDurationShort(schMins) : formatDurationShort(unschMins)})`
+                  label: (c) => ` ${c.label}: ${c.raw}% (${c.label === 'Schedule' ? schHours + ' Jam' : unschHours + ' Jam'})`
                 }
               }
             }
@@ -14940,90 +14878,97 @@
       }
 
       // -----------------------------------------------------------------
-      // 2B. DURASI UNSCHEDULE LT/WT (4 KATEGORI: GREASING, ADD OIL, CLEAN AIR CLEANER, WASHING REQUEST)
+      // 2B. DURASI UNSCHEDULE LT/WT (BREAKDOWN 4 KATEGORI)
       // -----------------------------------------------------------------
       const canvasUnschDur = document.getElementById('chart-kpi-unschedule-duration');
       if (canvasUnschDur && canvasUnschDur.getContext) {
         const ctxUnschDur = canvasUnschDur.getContext('2d');
         if (kpiUnscheduledDurationChartInstance) kpiUnscheduledDurationChartInstance.destroy();
 
-        let minsGreasing = 0;
-        let minsAddOil = 0;
-        let minsAirCleaner = 0;
-        let minsWashing = 0;
-        let legacyBdMins = 0;
-
-        completedUnschJobs.forEach(j => {
-          const dur = calcJobDurationMins(j);
-          if (dur <= 0) return;
-          const cat = classifyCompletedUnschJob(j);
-          if (cat === 'WASHING') {
-            minsWashing += dur;
-          } else if (cat === 'BD_GREASING') {
-            minsGreasing += dur;
-          } else if (cat === 'BD_ADD_OIL') {
-            minsAddOil += dur;
-          } else if (cat === 'BD_AIR_CLEANER') {
-            minsAirCleaner += dur;
-          } else if (cat === 'BD_LEGACY') {
-            legacyBdMins += dur;
-          }
+        // Ambil dari data Type Job Request (REQ / Unschedule) di Riwayat Selesai yang berstatus SERVICE, BREAKDOWN (BD), atau WASHING REQUEST (WASHING)
+        const unschAchJobs = filteredUnsch.filter(j => {
+          const s = String(j.status || '').toLowerCase().trim();
+          const sf = String(j.status_final || '').toUpperCase().trim();
+          if (['non_ach', 'non-ach', 'cancel', 'cancelled', 'pending', 'scheduled', 'open', 'queue'].includes(s)) return false;
+          if (['NON_ACH', 'NON-ACH', 'CANCEL', 'CANCELLED', 'PENDING'].includes(sf)) return false;
+          return ['service', 'bd', 'breakdown', 'washing', 'washing request', 'wash', 'ach', 'achieved', 'done'].includes(s) ||
+            ['SERVICE', 'BREAKDOWN', 'BD', 'WASHING REQUEST', 'WASHING', 'WASH', 'ACHIEVED', 'ACH', 'DONE'].includes(sf);
         });
 
-        // Aturan pengguna untuk data BD lama: 10% Greasing, 90% Add Oil, 0% Air Cleaner
-        if (legacyBdMins > 0) {
-          const legacyGreasing = Math.round(legacyBdMins * 0.10);
-          const legacyAddOil = legacyBdMins - legacyGreasing;
-          minsGreasing += legacyGreasing;
-          minsAddOil += legacyAddOil;
-        }
+        const getUnschCategory = (j) => {
+          const s = String(j.status || '').toLowerCase().trim();
+          const sf = String(j.status_final || '').toUpperCase().trim();
+          const kond = String(j.kondisi || j.unitCondition || '').toLowerCase().trim();
+          const desc = String(j.deskripsi || j.keterangan || '').toLowerCase();
+          const isWt = (j.targetType === 'WT' || j.serviceType === 'watertruck' || j.job_type === 'water' || j.job_type === 'unsch_wt' || String(j.id || '').toUpperCase().startsWith('WT'));
 
-        const totalUnschMins = minsGreasing + minsAddOil + minsAirCleaner + minsWashing;
+          // 1. Cek status eksplisit dari Riwayat Selesai (SERVICE, BREAKDOWN/BD, WASHING REQUEST/WASHING)
+          if (sf === 'WASHING REQUEST' || sf === 'WASHING' || sf === 'WASH' || ['washing', 'washing request', 'wash'].includes(s) || kond === 'washing' || kond === 'washing request') {
+            return 'WASHING';
+          }
+          if (sf === 'BREAKDOWN' || sf === 'BD' || ['bd', 'breakdown'].includes(s) || kond === 'breakdown' || kond === 'bd') {
+            return 'BREAKDOWN';
+          }
+          if (sf === 'SERVICE' || s === 'service' || kond === 'service') {
+            return 'SERVICE';
+          }
 
-        const pctGreasing = totalUnschMins > 0 ? Math.round((minsGreasing / totalUnschMins) * 100) : 0;
-        const pctAddOil = totalUnschMins > 0 ? Math.round((minsAddOil / totalUnschMins) * 100) : 0;
-        const pctAirCleaner = totalUnschMins > 0 ? Math.round((minsAirCleaner / totalUnschMins) * 100) : 0;
+          // 2. Fallback untuk job request lama yang status_final-nya 'DONE' / 'ACHIEVED'
+          if (isWt || desc.includes('washing') || desc.includes('cuci')) return 'WASHING';
+          if (desc.includes('breakdown') || desc.includes('[bd]')) return 'BREAKDOWN';
+          return 'SERVICE';
+        };
+
+        const isJobBreakdown = (j) => getUnschCategory(j) === 'BREAKDOWN';
+        const isJobWashing = (j) => getUnschCategory(j) === 'WASHING';
+        const isJobService = (j) => getUnschCategory(j) === 'SERVICE';
+
+        const minsBreakdown = unschAchJobs.filter(isJobBreakdown).reduce((sum, j) => sum + calcJobDurationMins(j), 0);
+        const minsService = unschAchJobs.filter(isJobService).reduce((sum, j) => sum + calcJobDurationMins(j), 0);
+        const minsWashing = unschAchJobs.filter(isJobWashing).reduce((sum, j) => sum + calcJobDurationMins(j), 0);
+
+        const totalUnschMins = minsBreakdown + minsService + minsWashing;
+
+        const pctBreakdown = totalUnschMins > 0 ? Math.round((minsBreakdown / totalUnschMins) * 100) : 0;
+        const pctService = totalUnschMins > 0 ? Math.round((minsService / totalUnschMins) * 100) : 0;
         const pctWashing = totalUnschMins > 0 ? Math.round((minsWashing / totalUnschMins) * 100) : 0;
 
-        const unschTableGreasing = document.getElementById('kpi-unsch-dur-table-greasing');
-        const unschTableAddOil = document.getElementById('kpi-unsch-dur-table-addoil');
-        const unschTableAirCleaner = document.getElementById('kpi-unsch-dur-table-aircleaner');
+        const unschTableBreakdown = document.getElementById('kpi-unsch-dur-table-breakdown');
+        const unschTableService = document.getElementById('kpi-unsch-dur-table-service');
         const unschTableWashing = document.getElementById('kpi-unsch-dur-table-washing');
         const unschTableTotal = document.getElementById('kpi-unsch-dur-table-total');
         const unschHeaderTotal = document.getElementById('kpi-unsch-dur-header-total');
         const unschCenterPct = document.getElementById('kpi-unsch-dur-center-pct');
         const unschCenterLabel = document.getElementById('kpi-unsch-dur-center-label');
 
-        const unschLegGreasing = document.getElementById('kpi-unsch-dur-legend-greasing');
-        const unschLegAddOil = document.getElementById('kpi-unsch-dur-legend-addoil');
-        const unschLegAirCleaner = document.getElementById('kpi-unsch-dur-legend-aircleaner');
+        const unschLegBreakdown = document.getElementById('kpi-unsch-dur-legend-breakdown');
+        const unschLegService = document.getElementById('kpi-unsch-dur-legend-service');
         const unschLegWashing = document.getElementById('kpi-unsch-dur-legend-washing');
 
-        if (unschTableGreasing) unschTableGreasing.textContent = formatMinsToHoursMins(minsGreasing);
-        if (unschTableAddOil) unschTableAddOil.textContent = formatMinsToHoursMins(minsAddOil);
-        if (unschTableAirCleaner) unschTableAirCleaner.textContent = formatMinsToHoursMins(minsAirCleaner);
+        if (unschTableBreakdown) unschTableBreakdown.textContent = formatMinsToHoursMins(minsBreakdown);
+        if (unschTableService) unschTableService.textContent = formatMinsToHoursMins(minsService);
         if (unschTableWashing) unschTableWashing.textContent = formatMinsToHoursMins(minsWashing);
         if (unschTableTotal) unschTableTotal.textContent = formatMinsToHoursMins(totalUnschMins);
         if (unschHeaderTotal) unschHeaderTotal.textContent = `Total: ${formatMinsToHoursMins(totalUnschMins)}`;
 
-        if (unschLegGreasing) unschLegGreasing.textContent = `Greasing (${pctGreasing}%)`;
-        if (unschLegAddOil) unschLegAddOil.textContent = `Add Oil (${pctAddOil}%)`;
-        if (unschLegAirCleaner) unschLegAirCleaner.textContent = `Clean Air Cleaner (${pctAirCleaner}%)`;
+        if (unschLegBreakdown) unschLegBreakdown.textContent = `Breakdown (${pctBreakdown}%)`;
+        if (unschLegService) unschLegService.textContent = `Service (${pctService}%)`;
         if (unschLegWashing) unschLegWashing.textContent = `Washing Request (${pctWashing}%)`;
 
         // Cari kategori dominan untuk angka tengah donat
         let dominantPct = 0;
         let dominantLabel = '-';
         if (totalUnschMins > 0) {
-          const catEntries = [
-            { mins: minsAddOil, pct: pctAddOil, label: 'ADD OIL' },
-            { mins: minsGreasing, pct: pctGreasing, label: 'GREASING' },
-            { mins: minsAirCleaner, pct: pctAirCleaner, label: 'AIR CLEANER' },
-            { mins: minsWashing, pct: pctWashing, label: 'WASHING' }
-          ];
-          catEntries.sort((a, b) => b.mins - a.mins);
-          dominantPct = catEntries[0].pct;
-          dominantLabel = catEntries[0].label;
+          if (minsBreakdown >= minsService && minsBreakdown >= minsWashing) {
+            dominantPct = pctBreakdown;
+            dominantLabel = 'BREAKDOWN';
+          } else if (minsService >= minsBreakdown && minsService >= minsWashing) {
+            dominantPct = pctService;
+            dominantLabel = 'SERVICE';
+          } else {
+            dominantPct = pctWashing;
+            dominantLabel = 'WASHING';
+          }
         }
 
         if (unschCenterPct) unschCenterPct.textContent = totalUnschMins > 0 ? `${dominantPct}%` : '0%';
@@ -15033,10 +14978,10 @@
         kpiUnscheduledDurationChartInstance = new Chart(ctxUnschDur, {
           type: 'doughnut',
           data: {
-            labels: hasUnschDur ? ['GREASING', 'ADD OIL', 'CLEAN AIR CLEANER', 'WASHING REQUEST'] : ['Belum Ada Permintaan'],
+            labels: hasUnschDur ? ['BREAKDOWN', 'SERVICE', 'WASHING REQUEST'] : ['Belum Ada Permintaan'],
             datasets: [{
-              data: hasUnschDur ? [minsGreasing, minsAddOil, minsAirCleaner, minsWashing] : [1],
-              backgroundColor: hasUnschDur ? ['#DC2626', '#EA580C', '#0284C7', '#06B6D4'] : ['#E2E8F0'],
+              data: hasUnschDur ? [pctBreakdown, pctService, pctWashing] : [1],
+              backgroundColor: hasUnschDur ? ['#DC2626', '#0284C7', '#06B6D4'] : ['#E2E8F0'],
               borderWidth: 2,
               borderColor: '#FFFFFF'
             }]
@@ -15052,14 +14997,12 @@
                 enabled: hasUnschDur,
                 callbacks: {
                   label: (c) => {
-                    const infoMap = {
-                      'GREASING': { pct: pctGreasing, txt: formatMinsToHoursMins(minsGreasing) },
-                      'ADD OIL': { pct: pctAddOil, txt: formatMinsToHoursMins(minsAddOil) },
-                      'CLEAN AIR CLEANER': { pct: pctAirCleaner, txt: formatMinsToHoursMins(minsAirCleaner) },
-                      'WASHING REQUEST': { pct: pctWashing, txt: formatMinsToHoursMins(minsWashing) }
+                    const durasiMap = {
+                      'BREAKDOWN': formatMinsToHoursMins(minsBreakdown),
+                      'SERVICE': formatMinsToHoursMins(minsService),
+                      'WASHING REQUEST': formatMinsToHoursMins(minsWashing)
                     };
-                    const info = infoMap[c.label] || { pct: 0, txt: '0 Jam 0 Menit' };
-                    return ` ${c.label}: ${info.pct}% (${info.txt})`;
+                    return ` ${c.label}: ${c.raw}% (${durasiMap[c.label] || ''})`;
                   }
                 }
               }
@@ -46523,8 +46466,8 @@ Keterangan : ${keterangan}`;
           const isAcCat = (j.cat === 'aircleaner' || j.cat === 'air_cleaner' || j.cat === 'cac' || targetId.includes('-CAC-')) && !isJobReq && !isBd;
           if (isAcCat) return true;
 
-          // 2. Job Request LT: request air cleaner (ACH/Service) atau Service (wajib semprot air cleaner; BD tidak dihitung sebagai semprotan Air Cleaner)
-          if (isJobReq && !isBd) {
+          // 2. Job Request LT: request air cleaner (ACH/Service) atau Service (wajib semprot air cleaner)
+          if (isJobReq) {
             if (isAcReq) return true;
             if (isServiceStatus || reqJobStr.includes('service') || descStr.includes('service') || ketStr.includes('service')) return true;
           }
@@ -48897,8 +48840,6 @@ Keterangan : ${keterangan}`;
           if (formPane) formPane.classList.remove('hidden');
           if (directPane) directPane.classList.add('hidden');
         }
-        const curDirectSvc = document.querySelector('input[name="direct-tipe-service"]:checked')?.value || 'lubetruck';
-        if (typeof handleDirectServiceTypeChange === 'function') handleDirectServiceTypeChange(curDirectSvc);
       }
 
       // Tanggal default diset ke hari ini jika belum terisi
@@ -48945,8 +48886,6 @@ Keterangan : ${keterangan}`;
           btnForm.className = 'px-5 py-2.5 rounded-xl text-xs font-black tracking-wide transition-all text-slate-600 hover:text-slate-900 cursor-pointer';
         }
 
-        const curDirectSvc = document.querySelector('input[name="direct-tipe-service"]:checked')?.value || 'lubetruck';
-        if (typeof handleDirectServiceTypeChange === 'function') handleDirectServiceTypeChange(curDirectSvc);
         populateDirectArmadaOptions();
         populateDirectPersonnelDatalists();
       } else {
@@ -48987,23 +48926,19 @@ Keterangan : ${keterangan}`;
       const isWt = (svcType === 'watertruck');
       const statusSel = document.getElementById('direct-status');
       if (statusSel) {
-        const prevVal = statusSel.value || '';
         if (isWt) {
           statusSel.innerHTML = `
             <option value="" selected disabled>-- Pilih Status --</option>
+            <option value="BREAKDOWN">BREAKDOWN (Kendala Unit)</option>
             <option value="SERVICE">SERVICE (Maintenance/PCR)</option>
             <option value="WASHING">WASHING REQUEST (Pencucian Unit)</option>
           `;
-          if (prevVal === 'SERVICE' || prevVal === 'WASHING') statusSel.value = prevVal;
         } else {
           statusSel.innerHTML = `
             <option value="" selected disabled>-- Pilih Status --</option>
-            <option value="BD_GREASING">BD (Greasing/Adjust Track)</option>
-            <option value="BD_ADD_OIL">BD (Add Oil/Grease)</option>
-            <option value="BD_AIR_CLEANER">BD (Clean Air Cleaner)</option>
+            <option value="BREAKDOWN">BREAKDOWN (Kendala Unit)</option>
             <option value="SERVICE">SERVICE (Maintenance/PCR)</option>
           `;
-          if (['BD_GREASING', 'BD_ADD_OIL', 'BD_AIR_CLEANER', 'SERVICE'].includes(prevVal)) statusSel.value = prevVal;
         }
       }
       populateDirectArmadaOptions();
@@ -49896,55 +49831,23 @@ Keterangan : ${keterangan}`;
         if (hmStart && hmFinish) hmUnit = `${hmStart} s/d ${hmFinish}`;
         else if (hmStart || hmFinish) hmUnit = hmStart || hmFinish;
 
-        // Map status:
-        // LT: BD_GREASING, BD_ADD_OIL, BD_AIR_CLEANER, SERVICE
-        // WT: SERVICE, WASHING
+        // Map status (BREAKDOWN, SERVICE, atau WASHING REQUEST)
         let finalStatus = 'service';
         let unitCond = 'service';
         let histStatus = 'SERVICE';
-        let bdPrefixLabel = '';
-        let reqJobLabel = '';
 
-        const isBdChoice = (statusChoice === 'BD_GREASING' || statusChoice === 'BD_ADD_OIL' || statusChoice === 'BD_AIR_CLEANER' || statusChoice === 'BREAKDOWN');
-        if (isBdChoice) {
+        if (statusChoice === 'BREAKDOWN') {
           finalStatus = 'bd';
           unitCond = 'breakdown';
           histStatus = 'BREAKDOWN';
-          if (statusChoice === 'BD_GREASING') {
-            bdPrefixLabel = 'BD (Greasing/Adjust Track)';
-            reqJobLabel = 'Greasing/Adjust Track';
-          } else if (statusChoice === 'BD_ADD_OIL') {
-            bdPrefixLabel = 'BD (Add Oil/Grease)';
-            reqJobLabel = 'Add Oil/Grease';
-          } else if (statusChoice === 'BD_AIR_CLEANER') {
-            bdPrefixLabel = 'BD (Clean Air Cleaner)';
-            reqJobLabel = 'Clean Air Cleaner';
-          } else {
-            reqJobLabel = 'Breakdown';
-          }
         } else if (statusChoice === 'WASHING') {
           finalStatus = 'washing';
           unitCond = 'washing';
           histStatus = 'WASHING REQUEST';
-          reqJobLabel = 'Washing Request';
         } else {
           finalStatus = 'service';
           unitCond = 'service';
           histStatus = 'SERVICE';
-          reqJobLabel = 'Service / Maintenance';
-        }
-
-        // Format keterangan: jika memilih BD bersyarat, sisipkan prefix detail BD (misal: "BD (Greasing/Adjust Track) : greasing bucket")
-        let finalKeterangan = keterangan;
-        if (bdPrefixLabel) {
-          const cleanKet = String(keterangan || '').trim();
-          if (!cleanKet || cleanKet === '-') {
-            finalKeterangan = bdPrefixLabel;
-          } else if (cleanKet.toLowerCase().startsWith(bdPrefixLabel.toLowerCase())) {
-            finalKeterangan = cleanKet;
-          } else {
-            finalKeterangan = `${bdPrefixLabel} : ${cleanKet}`;
-          }
         }
 
         const directJob = {
@@ -49974,10 +49877,7 @@ Keterangan : ${keterangan}`;
           noLambung: lambung,
           typeUnit: getUnitTypeFromMaster(lambung, 'HAUL TRUCK'),
           deskripsi: deskripsi,
-          keterangan: finalKeterangan,
-          bdNotes: isBdChoice ? finalKeterangan : '',
-          requestedJob: reqJobLabel,
-          requested_job: reqJobLabel,
+          keterangan: keterangan,
           hmStart: hmStart || '',
           hmEnd: hmFinish || '',
           hmStop: hmStart || '',
@@ -49986,7 +49886,7 @@ Keterangan : ${keterangan}`;
           status: finalStatus,
           status_final: histStatus,
           unitCondition: unitCond,
-          kondisi: isBdChoice ? 'BREAKDOWN' : ((statusChoice === 'SERVICE' || statusChoice === 'WASHING') ? statusChoice : 'NORMAL'),
+          kondisi: (statusChoice === 'BREAKDOWN' || statusChoice === 'SERVICE' || statusChoice === 'WASHING') ? statusChoice : 'NORMAL',
           armada: armada,
           armadaUnit: armada,
           armada_unit: armada,
@@ -50009,7 +49909,7 @@ Keterangan : ${keterangan}`;
 
         // Kunci snapshot ke riwayat selesai (job_history)
         if (typeof lockJobHistorySnapshot === 'function') {
-          await lockJobHistorySnapshot(directJob, histStatus, finalKeterangan);
+          await lockJobHistorySnapshot(directJob, histStatus, keterangan);
         }
 
         // Catat ke state lokal completed & jobHistory
@@ -50020,9 +49920,10 @@ Keterangan : ${keterangan}`;
           window.globalDataCache.jobs.set(finalJobId, directJob);
         }
 
-        // Khusus status SERVICE pada LT: perbarui rekapan Air Cleaner (BD Clean Air Cleaner TIDAK masuk Monitoring Air Cleaner sesuai aturan pengguna)
-        if (!isWt && statusChoice === 'SERVICE' && typeof updateAirCleanerRecord === 'function') {
-          updateAirCleanerRecord(lambung, getUnitTypeFromMaster(lambung, 'HAUL TRUCK'), 'service', finalKeterangan);
+        // Jika status SERVICE atau pekerjaan mengandung air cleaner, perbarui rekapan Air Cleaner
+        const acText = `${deskripsi} ${keterangan}`.toLowerCase();
+        if (!isWt && (statusChoice === 'SERVICE' || acText.includes('air cleaner')) && typeof updateAirCleanerRecord === 'function') {
+          updateAirCleanerRecord(lambung, getUnitTypeFromMaster(lambung, 'HAUL TRUCK'), 'service', keterangan);
         }
 
         // Update master unit lokasi & populasi
@@ -50094,9 +49995,6 @@ Keterangan : ${keterangan}`;
         const rLt = document.querySelector('input[name="direct-tipe-service"][value="lubetruck"]');
         if (rLt) rLt.checked = true;
         if (typeof handleDirectServiceTypeChange === 'function') handleDirectServiceTypeChange('lubetruck');
-      } else {
-        const curSvc = document.querySelector('input[name="direct-tipe-service"]:checked')?.value || 'lubetruck';
-        if (typeof handleDirectServiceTypeChange === 'function') handleDirectServiceTypeChange(curSvc);
       }
       const shiftEl = document.getElementById('direct-shift');
       if (shiftEl) shiftEl.value = String(state.currentShift || 1);
