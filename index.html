@@ -12388,7 +12388,7 @@
     const SUPABASE_USER_COLS = 'id,nrp,nama,password,role,jabatan,status_aktif';
     const SUPABASE_UNIT_COLS = 'id,no_lambung,type_model,kategori,cluster,lokasi,status,status_aktif';
     const SUPABASE_ROSTER_COLS = 'id,nrp,nama,tanggal,shift,jenis,unit,unit_efektif,kode_shift,periode,is_spare';
-    const SUPABASE_AC_COLS = 'id,no_lambung,type_model,cleans,service_code,status,last_cleaned_date,evidence_url,last_replaced_at,last_replaced_by,replace_notes,updated_at';
+    const SUPABASE_AC_COLS = 'id,no_lambung,type_model,cleans,service_code,status,last_cleaned_date,evidence_url,last_replaced_at,last_replaced_by,replace_notes,updated_at,lokasi';
     const SUPABASE_AC_REPLACEMENTS_COLS = 'id,no_lambung,type_model,tanggal,jam,pic,pic_nrp,keterangan,evidence_url,created_at';
     const SUPABASE_PICA_COLS = 'id,job_id,no_lambung,tanggal,shift,cluster,kategori,problem_description,root_cause,corrective_action,preventive_action,pic,status,created_at,updated_at';
     const SUPABASE_WASH_CHECKLIST_COLS = 'id,date,cn,hm,shift,wt,remark,start_time,end_time,uploaded_by,created_at';
@@ -19108,7 +19108,8 @@
 
       if (jobOrUnit) {
         const jCluster = String(jobOrUnit.cluster || '').toUpperCase();
-        const jLokasi = String(jobOrUnit.lokasi || '').toUpperCase();
+        const rawJLokasi = String(jobOrUnit.lokasi || '');
+        const jLokasi = rawJLokasi.startsWith('__AC_EXCL__:') ? '' : rawJLokasi.toUpperCase();
         const jKat = String(jobOrUnit.kategori || jobOrUnit.cat || '').trim().toLowerCase();
         if (jCluster.includes('ROM') || /\bROM\b/.test(jLokasi) || jKat === 'rom') return true;
       }
@@ -30646,6 +30647,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       else if (job.status === 'cancel' || job.status === 'cancelled') statusStr = 'CANCEL';
       else if (job.status === 'service') statusStr = 'SERVICE';
       else if (job.status === 'bd' || job.status === 'breakdown') statusStr = 'BREAKDOWN';
+      else if (job.status === 'washing' || job.status === 'wash' || job.status_final === 'WASHING REQUEST') statusStr = 'WASHING REQUEST';
       else if (job.status === 'parkir') statusStr = 'PARKIR';
       else if (job.status === 'done') statusStr = 'DONE';
 
@@ -39924,10 +39926,12 @@ Keterangan : ${keterangan}`;
           job.shift_rencana = job.originalShift;
           job.shift = job.originalShift;
         }
-        const ket = (isSchTopUp && unitCondition === 'normal')
+        let ket = (isSchTopUp && unitCondition === 'normal')
           ? (topUpBuiltKeterangan || buildTopUpKeteranganText())
           : ((document.getElementById('ach-keterangan')?.value || '').trim() || (isJobRequest ? 'Selesai sesuai SOP' : 'Nihil / Lancar sesuai SOP'));
 
+        let reqFinalStatus = 'DONE';
+        let reqStatusLower = 'done';
         if (isJobRequest) {
           if (!jamStart || !jamEnd) {
             showToast('Jam start dan jam selesai wajib diisi!', 'warning');
@@ -39942,10 +39946,31 @@ Keterangan : ${keterangan}`;
           let selectedJobType = document.getElementById('ach-job-type')?.value;
           if (selectedKeadaan === 'SERVICE') {
             selectedJobType = 'Service / Maintenance';
+            reqFinalStatus = 'SERVICE';
+            reqStatusLower = 'service';
+          } else if (selectedKeadaan === 'WASHING') {
+            selectedJobType = 'Washing Request';
+            reqFinalStatus = 'WASHING REQUEST';
+            reqStatusLower = 'washing';
           } else if (selectedKeadaan === 'BREAKDOWN') {
             if (!selectedJobType) {
               showToast('Untuk Breakdown, silakan pilih Pekerjaan: Greasing, Air Cleaner, atau Top Up Oil!', 'warning');
               return;
+            }
+            reqFinalStatus = 'BREAKDOWN';
+            reqStatusLower = 'bd';
+            let bdPrefix = '';
+            const jtLow = String(selectedJobType).toLowerCase();
+            if (jtLow.includes('greas')) bdPrefix = 'BD (Greasing/Adjust Track)';
+            else if (jtLow.includes('oil') || jtLow.includes('top up')) bdPrefix = 'BD (Add Oil/Grease)';
+            else if (jtLow.includes('air cleaner')) bdPrefix = 'BD (Clean Air Cleaner)';
+            if (bdPrefix) {
+              const cleanKet = String(ket || '').trim();
+              if (!cleanKet || cleanKet === '-' || cleanKet.toLowerCase() === 'selesai sesuai sop') {
+                ket = bdPrefix;
+              } else if (!cleanKet.toLowerCase().startsWith(bdPrefix.toLowerCase())) {
+                ket = `${bdPrefix} : ${cleanKet}`;
+              }
             }
           }
 
@@ -39994,7 +40019,8 @@ Keterangan : ${keterangan}`;
             descStr.includes('service') ||
             ketStr.includes('service');
 
-          if (isAcCat || ((isAcReq || isServiceAction) && isJobRequest)) {
+          const isReqBdAction = isJobRequest && (reqStatusLower === 'bd' || selectedKeadaan === 'BREAKDOWN');
+          if (isAcCat || (!isReqBdAction && (isAcReq || isServiceAction) && isJobRequest)) {
             const psRadio = document.querySelector('input[name="ach-ps-type"]:checked');
             let psCode = psRadio ? psRadio.value : '';
             if (!psCode) {
@@ -40115,7 +40141,8 @@ Keterangan : ${keterangan}`;
         }
 
         // JIKA TIDAK ADA FOTO BASE64 (Atau semua foto sudah berupa link URL Drive):
-        job.status = isJobRequest ? 'done' : 'ach';
+        job.status = isJobRequest ? reqStatusLower : 'ach';
+        if (isJobRequest) job.status_final = reqFinalStatus;
         job.isPending = false;
         job.isLocked = true;
         job.is_locked = true;
@@ -40129,7 +40156,7 @@ Keterangan : ${keterangan}`;
 
         // Kunci snapshot data historis ke tabel job_history di Supabase
         if (typeof lockJobHistorySnapshot === 'function') {
-          await lockJobHistorySnapshot(job, isJobRequest ? 'DONE' : 'ACHIEVED', ket);
+          await lockJobHistorySnapshot(job, isJobRequest ? reqFinalStatus : 'ACHIEVED', ket);
         }
 
         toggleModal('modal-ach-form', false);
@@ -42468,7 +42495,11 @@ Keterangan : ${keterangan}`;
 
       applyJobDetailsToModal(targetJob);
 
-      // Simpan konteks aksi untuk fitur delete & salin job
+      // Simpan konteks aksi untuk fitur delete & salin job (termasuk metadata Opsi B: isJobReq, mergedJobIds, mergedIsoDates)
+      const matchedRec = Array.isArray(item.cleanRecords) ? item.cleanRecords[cleanIdx] : null;
+      const effIdForCheck = String(initialJobId || targetJob?.id || matchedRec?.jobId || '').toUpperCase();
+      const effCatForCheck = String(targetJob?.cat || matchedRec?.job?.cat || '').toLowerCase().trim();
+      const isReqEntry = effIdForCheck.includes('-REQ-') || effCatForCheck === 'unscheduled' || (!effIdForCheck.includes('-CAC-') && Boolean(isServiceEntry));
       window.__currentAcDetailTarget = {
         noLambung: item.noLambung || noLambung,
         cleanIdx: Number(cleanIdx),
@@ -42477,7 +42508,10 @@ Keterangan : ${keterangan}`;
         rawClean: rawClean || '',
         jobId: initialJobId || '',
         job: targetJob || null,
-        isService: isServiceEntry
+        isService: isServiceEntry,
+        isJobReq: isReqEntry,
+        mergedJobIds: Array.isArray(matchedRec?.mergedJobIds) ? [...matchedRec.mergedJobIds] : (initialJobId ? [String(initialJobId)] : []),
+        mergedIsoDates: Array.isArray(matchedRec?.mergedIsoDates) ? [...matchedRec.mergedIsoDates] : (stdActionDate ? [String(stdActionDate)] : [])
       };
 
       // Simpan & render foto evidence ke UI modal
@@ -42556,6 +42590,11 @@ Keterangan : ${keterangan}`;
                     if (window.__currentAcDetailTarget) {
                       window.__currentAcDetailTarget.jobId = row.id;
                       window.__currentAcDetailTarget.job = row;
+                      window.__currentAcDetailTarget.isJobReq = rowId.includes('-REQ-') || String(row.cat || '').toLowerCase().trim() === 'unscheduled';
+                      if (!Array.isArray(window.__currentAcDetailTarget.mergedJobIds)) window.__currentAcDetailTarget.mergedJobIds = [];
+                      if (!window.__currentAcDetailTarget.mergedJobIds.includes(String(row.id))) {
+                        window.__currentAcDetailTarget.mergedJobIds.push(String(row.id));
+                      }
                     }
                   }
                   if (row.keterangan && row.keterangan !== '-') {
@@ -42867,7 +42906,7 @@ Keterangan : ${keterangan}`;
         return;
       }
 
-      const { noLambung, cleanIdx, actionDate, stdActionDate, jobId } = window.__currentAcDetailTarget;
+      const { noLambung, cleanIdx, actionDate, stdActionDate, jobId, job, isJobReq, mergedJobIds, mergedIsoDates } = window.__currentAcDetailTarget;
       const item = (state.airCleanerMonitor || []).find(m => String(m.noLambung || '').trim().toUpperCase() === String(noLambung || '').trim().toUpperCase());
       if (!item || !Array.isArray(item.cleans) || cleanIdx < 0 || cleanIdx >= item.cleans.length) {
         if (typeof showToast === 'function') {
@@ -42876,8 +42915,76 @@ Keterangan : ${keterangan}`;
         return;
       }
 
+      const cleanUnitUpper = String(noLambung || '').trim().toUpperCase();
+      const targetIsoDates = new Set();
+      if (stdActionDate) targetIsoDates.add(String(stdActionDate).split('T')[0].trim());
+      if (Array.isArray(mergedIsoDates)) {
+        mergedIsoDates.forEach(d => { if (d) targetIsoDates.add(String(d).split('T')[0].trim()); });
+      }
+      if (targetIsoDates.size === 0 && actionDate && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(actionDate)) {
+        const p = actionDate.split('/');
+        targetIsoDates.add(`${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`);
+      }
+
+      // Kumpulkan seluruh job terkait bulatan ini (termasuk multi-job di hari sama / sesi SERVICE berurutan)
+      const isCacJobMeta = (idStr, catStr) => {
+        const idU = String(idStr || '').toUpperCase();
+        const cL = String(catStr || '').toLowerCase().trim();
+        if (idU.includes('-REQ-') || cL === 'unscheduled') return false;
+        return idU.includes('-CAC-') || cL === 'aircleaner' || cL === 'air_cleaner' || cL === 'cac';
+      };
+
+      const cacJobIds = new Set();
+      const reqJobIds = new Set();
+      const classifyIdAndCat = (idVal, catVal) => {
+        const sId = String(idVal || '').trim();
+        if (!sId) return;
+        if (isCacJobMeta(sId, catVal)) cacJobIds.add(sId);
+        else reqJobIds.add(sId);
+      };
+
+      if (jobId) classifyIdAndCat(jobId, job?.cat);
+      if (Array.isArray(mergedJobIds)) {
+        mergedJobIds.forEach(mid => {
+          const cachedRef = (state.airCleanerJobCache?.get(cleanUnitUpper) || []).find(x => String(x.id || x.job_id || '') === String(mid))
+            || (state.jobHistory || []).find(x => String(x.id || x.job_id || '') === String(mid));
+          classifyIdAndCat(mid, cachedRef?.cat);
+        });
+      }
+
+      // Lengkapi dari airCleanerJobCache & state.jobHistory pada tanggal yang persis sama untuk unit ini
+      const relatedPools = [
+        ...(state.airCleanerJobCache?.get(cleanUnitUpper) || []),
+        ...(Array.isArray(state.jobHistory) ? state.jobHistory.filter(h => String(h?.no_lambung || '').trim().toUpperCase() === cleanUnitUpper) : [])
+      ];
+      relatedPools.forEach(r => {
+        if (!r) return;
+        const rId = String(r.id || r.job_id || '').trim();
+        if (!rId || rId.startsWith('WT') || rId.includes('-GRS-') || rId.includes('-TUO-')) return;
+        const rDates = [
+          String(r.tanggal_rencana || '').split('T')[0].trim(),
+          String(r.tanggal_eksekusi || '').split('T')[0].trim(),
+          String(r.tanggal || '').split('T')[0].trim()
+        ].filter(Boolean);
+        const matchesDate = rDates.some(d => targetIsoDates.has(d));
+        if (!matchesDate) return;
+        const rCat = String(r.cat || '').toLowerCase().trim();
+        if (isCacJobMeta(rId, rCat)) {
+          cacJobIds.add(rId);
+        } else if (rId.includes('-REQ-') || rCat === 'unscheduled') {
+          const sf = String(r.status_final || r.status || '').toUpperCase();
+          const txt = `${r.keterangan || ''} ${r.deskripsi || ''} ${r.requestedJob || ''}`.toLowerCase();
+          if (sf === 'SERVICE' || txt.includes('air cleaner') || txt.includes('service')) {
+            reqJobIds.add(rId);
+          }
+        }
+      });
+
+      const isPureReqOrNonCac = (cacJobIds.size === 0) && (Boolean(isJobReq) || reqJobIds.size > 0 || !String(jobId || '').toUpperCase().includes('-CAC-'));
       const cleanLabel = `Ke ${cleanIdx + 1}` + (actionDate ? ` (${actionDate})` : '');
-      const confirmMsg = `Apakah Anda yakin ingin menghapus catatan penyemprotan ${cleanLabel} untuk unit ${noLambung}?\n\nCatatan berikutnya akan otomatis bergeser maju mengisi urutan tanpa meninggalkan kolom kosong.`;
+      const confirmMsg = isPureReqOrNonCac
+        ? `Apakah Anda yakin ingin menghapus catatan penyemprotan ${cleanLabel} untuk unit ${noLambung} dari Monitoring Air Cleaner?\n\nData Job Request ini akan TETAP TERSIMPAN aman di menu Riwayat Selesai (hanya dikeluarkan dari hitungan Monitoring Air Cleaner), dan catatan berikutnya akan bergeser maju.`
+        : `Apakah Anda yakin ingin menghapus catatan penyemprotan ${cleanLabel} untuk unit ${noLambung}?\n\nRiwayat jadwal Air Cleaner (-CAC-) ini akan dihapus permanen, dan catatan berikutnya akan otomatis bergeser maju mengisi urutan tanpa meninggalkan kolom kosong.`;
       if (!confirm(confirmMsg)) {
         return;
       }
@@ -42889,32 +42996,61 @@ Keterangan : ${keterangan}`;
         item.cleanRecords.splice(cleanIdx, 1);
       }
 
-      // 2b. Bersihkan juga dari cache lokal & job_history_lt (jika merupakan job CAC) agar tidak muncul kembali saat refresh
-      const cleanUnitUpper = String(noLambung || '').trim().toUpperCase();
+      // 2b. OPSI B:
+      // - Untuk -CAC- (Schedule Air Cleaner murni): hapus permanen dari job_history_lt & jobs_lt Supabase + memori lokal
+      // - Untuk -REQ- (Job Request Service / Air Cleaner): PERTAHANKAN di job_history_lt & Riwayat Selesai,
+      //   tetapi simpan penanda pengecualian (excludedKeys) ke air_cleaner_monitoring Supabase agar tidak muncul kembali saat refresh/sync!
       if (state.airCleanerJobCache && state.airCleanerJobCache.has(cleanUnitUpper)) {
         const cachedList = state.airCleanerJobCache.get(cleanUnitUpper) || [];
         state.airCleanerJobCache.set(cleanUnitUpper, cachedList.filter(j => {
           const jId = String(j.id || j.job_id || '');
+          if (cacJobIds.has(jId) || reqJobIds.has(jId)) return false;
           if (jobId && jId === String(jobId)) return false;
-          if (stdActionDate && (j.tanggal_rencana === stdActionDate || j.tanggal_eksekusi === stdActionDate)) return false;
+          const jDates = [String(j.tanggal_rencana || '').split('T')[0], String(j.tanggal_eksekusi || '').split('T')[0]];
+          if (jDates.some(d => d && targetIsoDates.has(d))) return false;
           return true;
         }));
       }
-      if (jobId && String(jobId).includes('-CAC-')) {
+
+      if (cacJobIds.size > 0) {
+        const cacDeleteIds = new Set();
+        cacJobIds.forEach(cid => {
+          cacDeleteIds.add(cid);
+          const base = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(cid) : cid.replace(/-([01]\d|2[0-3])[0-5]\d$/, '');
+          if (base) cacDeleteIds.add(base);
+        });
+        const delIdArr = Array.from(cacDeleteIds);
         if (Array.isArray(state.jobHistory)) {
-          state.jobHistory = state.jobHistory.filter(h => String(h.id || h.job_id || '') !== String(jobId));
+          state.jobHistory = state.jobHistory.filter(h => !delIdArr.includes(String(h.id || '')) && !delIdArr.includes(String(h.job_id || '')));
+          if (typeof safeSaveJobHistoryToStorage === 'function') safeSaveJobHistoryToStorage();
         }
         if (Array.isArray(state.lubetruckState?.jobs)) {
-          state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => String(j.id || j.job_id || '') !== String(jobId));
+          state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => !delIdArr.includes(String(j.id || '')) && !delIdArr.includes(String(j.job_id || '')));
         }
-        if (state.supabaseClient) {
+        if (window.globalDataCache?.jobs) {
+          delIdArr.forEach(did => window.globalDataCache.jobs.delete(did));
+        }
+        if (state.supabaseClient && delIdArr.length > 0) {
           try {
             await Promise.allSettled([
-              state.supabaseClient.from('job_history_lt').delete().eq('id', String(jobId)),
-              state.supabaseClient.from('jobs_lt').delete().eq('id', String(jobId))
+              state.supabaseClient.from('job_history_lt').delete().in('id', delIdArr),
+              state.supabaseClient.from('jobs_lt').delete().in('id', delIdArr)
             ]);
           } catch (eDelJob) { }
         }
+      }
+
+      if (isPureReqOrNonCac || reqJobIds.size > 0) {
+        const nextExcl = new Set(Array.isArray(item.excludedKeys) ? item.excludedKeys : []);
+        reqJobIds.forEach(rid => {
+          nextExcl.add('ID:' + rid);
+          const base = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(rid) : rid.replace(/-([01]\d|2[0-3])[0-5]\d$/, '');
+          if (base && base !== rid) nextExcl.add('ID:' + base);
+        });
+        targetIsoDates.forEach(isoD => {
+          if (isoD) nextExcl.add('REQ_DATE:' + isoD);
+        });
+        item.excludedKeys = Array.from(nextExcl);
       }
 
       // 3. Evaluasi ulang status unit sesuai jumlah cleans terbaru:
@@ -42940,16 +43076,23 @@ Keterangan : ${keterangan}`;
         }
       }
 
-      if (count === 0) {
+      const stillHasService = item.cleans.some(c => /\(SERVICE|\(PS\s*\d+/i.test(String(c || '')));
+      if (count === 0 || !stillHasService) {
         item.serviceCode = '';
       }
 
-      // 4. Simpan perubahan ke safeStorage
+      // 4. Simpan perubahan ke safeStorage (tanpa objek job besar di cleanRecords) & reset fingerprint agar sync akurat
       try {
-        safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(state.airCleanerMonitor));
+        const slimMonitor = (state.airCleanerMonitor || []).map(m => {
+          const copy = { ...m };
+          delete copy.cleanRecords;
+          return copy;
+        });
+        safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(slimMonitor));
+        safeStorage.removeItem('SE_AIR_CLEANER_FP');
       } catch (e) { }
 
-      // 5. Sinkronkan ke Supabase Cloud tabel air_cleaner_monitoring
+      // 5. Sinkronkan ke Supabase Cloud tabel air_cleaner_monitoring (termasuk excludedKeys untuk -REQ-)
       if (typeof syncAirCleanerToSupabase === 'function') {
         try {
           await syncAirCleanerToSupabase(item);
@@ -42965,7 +43108,10 @@ Keterangan : ${keterangan}`;
       toggleModal('modal-ac-detail', false);
 
       if (typeof showToast === 'function') {
-        showToast(`Catatan penyemprotan ${cleanLabel} unit ${noLambung} berhasil dihapus & urutan telah disesuaikan!`, 'success');
+        const msg = isPureReqOrNonCac
+          ? `Catatan ${cleanLabel} unit ${noLambung} dikeluarkan dari Monitoring Air Cleaner (Riwayat Job Request tetap aman tersimpan)!`
+          : `Catatan penyemprotan ${cleanLabel} unit ${noLambung} berhasil dihapus permanen & urutan telah disesuaikan!`;
+        showToast(msg, 'success');
       }
     }
     window.deleteAirCleanerActionEntry = deleteAirCleanerActionEntry;
@@ -46221,12 +46367,54 @@ Keterangan : ${keterangan}`;
       return syncJobToSupabase(order, true);
     }
 
+    function parseAcExcludedKeys(rawVal) {
+      if (!rawVal) return [];
+      if (Array.isArray(rawVal)) {
+        return Array.from(new Set(rawVal.map(v => String(v || '').trim()).filter(Boolean)));
+      }
+      const s = String(rawVal).trim();
+      if (!s.startsWith('__AC_EXCL__:')) return [];
+      try {
+        const parsed = JSON.parse(s.slice('__AC_EXCL__:'.length));
+        if (Array.isArray(parsed)) {
+          return Array.from(new Set(parsed.map(v => String(v || '').trim()).filter(Boolean)));
+        }
+      } catch (e) { }
+      return [];
+    }
+    window.parseAcExcludedKeys = parseAcExcludedKeys;
+
+    function serializeAcExcludedKeys(keys) {
+      if (!Array.isArray(keys) || keys.length === 0) return null;
+      const clean = Array.from(new Set(keys.map(v => String(v || '').trim()).filter(Boolean)));
+      if (clean.length === 0) return null;
+      return '__AC_EXCL__:' + JSON.stringify(clean);
+    }
+    window.serializeAcExcludedKeys = serializeAcExcludedKeys;
+
+    function isJobExcludedFromAirCleaner(job, isoDate, excludedKeys) {
+      if (!Array.isArray(excludedKeys) || excludedKeys.length === 0 || !job) return false;
+      const exclSet = new Set(excludedKeys);
+      const jId = String(job.id || job.job_id || '').trim();
+      const jBaseId = jId ? ((typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(jId) : jId.replace(/-([01]\d|2[0-3])[0-5]\d$/, '')) : '';
+      if (jId && exclSet.has('ID:' + jId)) return true;
+      if (jBaseId && exclSet.has('ID:' + jBaseId)) return true;
+      const jIdU = jId.toUpperCase();
+      const jCatL = String(job.cat || '').toLowerCase().trim();
+      const isReqJob = jIdU.includes('-REQ-') || jCatL === 'unscheduled' || (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(job));
+      if (isReqJob && isoDate && exclSet.has('REQ_DATE:' + String(isoDate).split('T')[0].trim())) {
+        return true;
+      }
+      return false;
+    }
+    window.isJobExcludedFromAirCleaner = isJobExcludedFromAirCleaner;
+
     async function syncAirCleanerToSupabase(item) {
       if (!state.supabaseClient || !item || !item.noLambung) return;
       // ATURAN BAKU: Hanya unit PC/Exca PPA & Dozer PPA non-ROM yang boleh disimpan ke air_cleaner_monitoring
       if (!isEligibleAirCleanerUnit(item.noLambung, item)) return;
       try {
-        await state.supabaseClient.from('air_cleaner_monitoring').upsert({
+        const payload = {
           id: 'AC-' + item.noLambung.toUpperCase(),
           no_lambung: item.noLambung.toUpperCase(),
           type_model: item.type || 'Unit',
@@ -46234,7 +46422,11 @@ Keterangan : ${keterangan}`;
           service_code: item.serviceCode || '',
           status: item.status || 'Baik',
           updated_at: new Date().toISOString()
-        }, { onConflict: 'no_lambung' });
+        };
+        if (Array.isArray(item.excludedKeys)) {
+          payload.lokasi = serializeAcExcludedKeys(item.excludedKeys);
+        }
+        await state.supabaseClient.from('air_cleaner_monitoring').upsert(payload, { onConflict: 'no_lambung' });
       } catch (err) {
         console.warn('[Supabase Outbound Air Cleaner Exception]', err);
       }
@@ -46457,6 +46649,7 @@ Keterangan : ${keterangan}`;
             const resolvedType = resolveAirCleanerUnitType(nl, row);
             if (!isEligibleAirCleanerUnit(nl, resolvedType)) return;
             const dbCleans = (Array.isArray(row.cleans) && row.cleans.length > 0) ? [...row.cleans] : [];
+            const rowExcludedKeys = parseAcExcludedKeys(row.lokasi);
             supaMap.set(nl, {
               id: row.id || ('AC-' + nl),
               noLambung: nl,
@@ -46464,6 +46657,7 @@ Keterangan : ${keterangan}`;
               // Jika acHistoryJobs tersedia sebagai Single Source of Truth, bangun ulang cleans dari 0 agar 100% sinkron dengan Riwayat Selesai tanpa duplikat/orphan
               cleans: hasFullHistorySSOT ? [] : dbCleans,
               cleanRecords: [],
+              excludedKeys: rowExcludedKeys,
               dbCleans: dbCleans,
               dbStatus: row.status || 'Baik',
               serviceCode: hasFullHistorySSOT ? '' : (row.service_code || ''),
@@ -46726,6 +46920,7 @@ Keterangan : ${keterangan}`;
             }
 
             const repInfo = lastReplacementMap.get(uLambung);
+            const monExcludedKeys = Array.isArray(monItem.excludedKeys) ? monItem.excludedKeys : [];
             // 1. Kelompokkan berdasarkan tanggal kerja (prioritaskan tanggal jadwal/waktu sesuai aturan)
             const byDateMap = new Map();
             uJobs.forEach(job => {
@@ -46733,6 +46928,7 @@ Keterangan : ${keterangan}`;
               if (!rawDate) return;
               const isoDate = rawDate.includes('/') ? rawDate.split('/').reverse().join('-') : rawDate;
               if (repInfo && isoDate <= repInfo.dateStr) return;
+              if (isJobExcludedFromAirCleaner(job, isoDate, monExcludedKeys)) return;
 
               const jId = String(job.id || '');
               const isCac = jId.includes('-CAC-') || job.cat === 'aircleaner' || job.cat === 'air_cleaner' || job.cat === 'cac';
@@ -46742,8 +46938,18 @@ Keterangan : ${keterangan}`;
               const hasPhotos = Array.isArray(job.fotos) && job.fotos.some(p => p && String(p).trim() !== '');
               const score = (isCac ? 10 : 5) + (hasPhotos ? 4 : 0) + (sfUpper === 'ACHIEVED' || sfUpper === 'ACH' ? 2 : 1);
 
-              if (!byDateMap.has(isoDate) || score > byDateMap.get(isoDate).score) {
-                byDateMap.set(isoDate, { isoDate, job, isService, isCac, hasPhotos, score });
+              if (!byDateMap.has(isoDate)) {
+                byDateMap.set(isoDate, { isoDate, job, isService, isCac, hasPhotos, score, allJobIds: jId ? [jId] : [], allIsoDates: [isoDate] });
+              } else {
+                const cur = byDateMap.get(isoDate);
+                if (jId && !cur.allJobIds.includes(jId)) cur.allJobIds.push(jId);
+                if (score > cur.score) {
+                  cur.job = job;
+                  cur.isService = isService;
+                  cur.isCac = isCac;
+                  cur.hasPhotos = hasPhotos;
+                  cur.score = score;
+                }
               }
             });
 
@@ -46759,8 +46965,15 @@ Keterangan : ${keterangan}`;
                 const d2 = new Date(itemDay.isoDate + 'T00:00:00Z');
                 const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
                 if (diffDays === 1 && prev.isService && itemDay.isService) {
+                  const combIds = Array.from(new Set([...(prev.allJobIds || []), ...(itemDay.allJobIds || [])]));
+                  const combDates = Array.from(new Set([...(prev.allIsoDates || [prev.isoDate]), ...(itemDay.allIsoDates || [itemDay.isoDate])]));
                   if (itemDay.isCac) {
+                    itemDay.allJobIds = combIds;
+                    itemDay.allIsoDates = combDates;
                     mergedDays[mergedDays.length - 1] = itemDay;
+                  } else {
+                    prev.allJobIds = combIds;
+                    prev.allIsoDates = combDates;
                   }
                   continue;
                 }
@@ -46791,7 +47004,9 @@ Keterangan : ${keterangan}`;
                   entryText: entryText,
                   isService: itemDay.isService,
                   jobId: job.id,
-                  job: job
+                  job: job,
+                  mergedJobIds: Array.isArray(itemDay.allJobIds) ? [...itemDay.allJobIds] : (job.id ? [String(job.id)] : []),
+                  mergedIsoDates: Array.isArray(itemDay.allIsoDates) ? [...itemDay.allIsoDates] : [itemDay.isoDate]
                 });
               }
               if (sCode) monItem.serviceCode = sCode;
@@ -47390,6 +47605,7 @@ Keterangan : ${keterangan}`;
           type: row.type_model || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(lambung, 'Unit') : 'Unit'),
           cleans: Array.isArray(row.cleans) ? row.cleans : [],
           cleanRecords: [],
+          excludedKeys: (typeof parseAcExcludedKeys === 'function') ? parseAcExcludedKeys(row.lokasi) : [],
           serviceCode: row.service_code || '',
           status: row.status || 'Baik',
           lastReplacedAt: row.last_replaced_at || null,
@@ -47401,6 +47617,9 @@ Keterangan : ${keterangan}`;
         state.airCleanerMonitor.push(item);
       } else {
         if (Array.isArray(row.cleans)) item.cleans = row.cleans;
+        if (row.lokasi !== undefined && typeof parseAcExcludedKeys === 'function') {
+          item.excludedKeys = parseAcExcludedKeys(row.lokasi);
+        }
         if (row.service_code !== undefined) item.serviceCode = row.service_code || '';
         if (row.status) item.status = row.status;
         if (row.last_replaced_at !== undefined) item.lastReplacedAt = row.last_replaced_at || null;
@@ -50114,17 +50333,12 @@ Keterangan : ${keterangan}`;
           created_at: new Date().toISOString()
         };
 
-        // Kunci snapshot ke riwayat selesai (job_history)
+        // Kunci snapshot ke riwayat selesai (lockJobHistorySnapshot sudah menambahkan record ber-suffix -HHMM ke state.jobHistory, membersihkan globalDataCache, dan meng-upsert ke job_history_lt/wt Supabase)
         if (typeof lockJobHistorySnapshot === 'function') {
           await lockJobHistorySnapshot(directJob, histStatus, finalKeterangan);
-        }
-
-        // Catat ke state lokal completed & jobHistory
-        if (!state.jobHistory) state.jobHistory = [];
-        state.jobHistory.unshift(directJob);
-
-        if (window.globalDataCache && window.globalDataCache.jobs) {
-          window.globalDataCache.jobs.set(finalJobId, directJob);
+        } else {
+          if (!state.jobHistory) state.jobHistory = [];
+          state.jobHistory.unshift(directJob);
         }
 
         // Khusus status SERVICE pada LT: perbarui rekapan Air Cleaner (BD Clean Air Cleaner TIDAK masuk Monitoring Air Cleaner sesuai aturan pengguna)
@@ -50140,15 +50354,6 @@ Keterangan : ${keterangan}`;
             cluster: cluster,
             lokasi: lokasi
           });
-        }
-
-        // Sinkronkan ke Supabase jika client aktif
-        if (state.supabaseClient && typeof syncJobToSupabase === 'function') {
-          try {
-            await syncJobToSupabase(directJob, true);
-          } catch (errSync) {
-            console.warn('[handleDirectCompletionSubmit Supabase Error]', errSync);
-          }
         }
 
         saveDatabaseSync();
