@@ -3150,16 +3150,21 @@
                           </div>
                         </div>
 
-                        <!-- Legend Horizontal Sesuai Spesifikasi (3 Kategori Lapangan: Breakdown, Service, Washing Request) -->
+                        <!-- Legend Horizontal Sesuai Spesifikasi (4 Kategori Unschedule: Greasing, Add Oil, Clean Air Cleaner, Washing Request) -->
                         <div class="kpi-donut-legend text-xs">
                           <div class="flex items-center space-x-1">
                             <span class="w-2.5 h-2.5 rounded-full bg-[#DC2626] shadow-2xs shrink-0"></span>
-                            <span id="kpi-unsch-dur-legend-breakdown" class="font-bold text-slate-800">Breakdown
+                            <span id="kpi-unsch-dur-legend-greasing" class="font-bold text-slate-800">Greasing
+                              (0%)</span>
+                          </div>
+                          <div class="flex items-center space-x-1">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#EA580C] shadow-2xs shrink-0"></span>
+                            <span id="kpi-unsch-dur-legend-addoil" class="font-bold text-slate-800">Add Oil
                               (0%)</span>
                           </div>
                           <div class="flex items-center space-x-1">
                             <span class="w-2.5 h-2.5 rounded-full bg-[#0284C7] shadow-2xs shrink-0"></span>
-                            <span id="kpi-unsch-dur-legend-service" class="font-bold text-slate-800">Service
+                            <span id="kpi-unsch-dur-legend-aircleaner" class="font-bold text-slate-800">Clean Air Cleaner
                               (0%)</span>
                           </div>
                           <div class="flex items-center space-x-1">
@@ -3181,14 +3186,20 @@
                           <table class="w-full text-xs">
                             <tbody class="divide-y divide-slate-100 font-semibold">
                               <tr class="hover:bg-red-50/40 transition">
-                                <td class="kpi-tbl-label text-slate-800 font-bold">BREAKDOWN</td>
-                                <td id="kpi-unsch-dur-table-breakdown"
+                                <td class="kpi-tbl-label text-slate-800 font-bold">GREASING</td>
+                                <td id="kpi-unsch-dur-table-greasing"
                                   class="kpi-tbl-val-dur text-right font-black font-mono text-[#DC2626]">
                                   0 Jam 0 Menit</td>
                               </tr>
                               <tr class="hover:bg-red-50/40 transition">
-                                <td class="kpi-tbl-label text-slate-800 font-bold">SERVICE</td>
-                                <td id="kpi-unsch-dur-table-service"
+                                <td class="kpi-tbl-label text-slate-800 font-bold">ADD OIL</td>
+                                <td id="kpi-unsch-dur-table-addoil"
+                                  class="kpi-tbl-val-dur text-right font-black font-mono text-[#EA580C]">
+                                  0 Jam 0 Menit</td>
+                              </tr>
+                              <tr class="hover:bg-red-50/40 transition">
+                                <td class="kpi-tbl-label text-slate-800 font-bold">CLEAN AIR CLEANER</td>
+                                <td id="kpi-unsch-dur-table-aircleaner"
                                   class="kpi-tbl-val-dur text-right font-black font-mono text-[#0284C7]">
                                   0 Jam 0 Menit</td>
                               </tr>
@@ -4484,7 +4495,9 @@
                   <select id="direct-status" onchange="clearDirectFieldError('direct-status')"
                     class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-800 focus:outline-none focus:border-emerald-500 bg-white cursor-pointer">
                     <option value="" selected disabled>-- Pilih Status --</option>
-                    <option value="BREAKDOWN">BREAKDOWN (Kendala Unit)</option>
+                    <option value="BD_GREASING">BD (Greasing/Adjust Track)</option>
+                    <option value="BD_ADD_OIL">BD (Add Oil/Grease)</option>
+                    <option value="BD_AIR_CLEANER">BD (Clean Air Cleaner)</option>
                     <option value="SERVICE">SERVICE (Maintenance/PCR)</option>
                   </select>
                   <p id="err-direct-status" class="hidden text-rose-500 text-[11px] font-semibold mt-1">Wajib diisi</p>
@@ -13158,6 +13171,10 @@
           safeStorage.removeItem('SE_MASTER_DATA_TS');
           safeStorage.removeItem('SE_MASTER_ROSTER');
           safeStorage.removeItem('SE_MASTER_ROSTER_FP');
+          safeStorage.removeItem('SE_MASTER_ROSTER_ACTIVE_FP');
+          safeStorage.removeItem('SE_MASTER_ROSTER_SCHED_FP');
+          safeStorage.removeItem('SE_MASTER_ROSTER_SCHED_CHECK_TS');
+          safeStorage.removeItem('SE_MASTER_ROSTER_SCOPE');
           safeStorage.removeItem('SE_MASTER_USERS');
           safeStorage.removeItem('SE_CLUSTER_LT');
           safeStorage.removeItem('SE_CLUSTER_WT');
@@ -14667,7 +14684,9 @@
       const _chartDashLast = state._dashChartLastHistFetch;
       const _chartDashOnCooldown = Boolean(_chartDashLast && _chartDashLast.key === chartHistRangeKey && (Date.now() - _chartDashLast.ts < 15000));
       const _chartDashInFlight = Boolean(state._dashChartHistInFlight && state._dashChartHistInFlight.key === chartHistRangeKey && (Date.now() - state._dashChartHistInFlight.ts < 15000));
-      if (state.supabaseClient && !isChartHistCovered && !_chartDashOnCooldown && !_chartDashInFlight && typeof loadJobHistoryFromSupabase === 'function') {
+      const _chartDashRole = String(state.currentUser?.role || '').toLowerCase();
+      const _canFetchChartDash = Boolean(state.supabaseClient && state.currentUser && state.activeTab === 'dashboard' && ['admin', 'basecontrol', 'base_control', 'bsc', 'track', 'tim_track'].includes(_chartDashRole));
+      if (_canFetchChartDash && !isChartHistCovered && !_chartDashOnCooldown && !_chartDashInFlight && typeof loadJobHistoryFromSupabase === 'function') {
         state._dashChartHistInFlight = { key: chartHistRangeKey, ts: Date.now() };
         state._dashChartLastHistFetch = { key: chartHistRangeKey, ts: Date.now() };
         loadJobHistoryFromSupabase(false, startDate, endDate).finally(() => {
@@ -14719,22 +14738,71 @@
 
       // -----------------------------------------------------------------
       // 1. HITUNG EVENT RIIL (DIAMBIL DARI JOB YANG TELAH DISELESAIKAN)
-      // Sesuai aturan: Event Job diambil dari pekerjaan yang telah diselesaikan di lapangan
+      // Aturan: Khusus untuk 3 kartu grafik ini, Job Request berstatus SERVICE masuk ke SCHEDULE (Event & Durasi),
+      // sedangkan Bar Chart ACH. KPI SCHEDULE & KPI target 95% tetap murni dari jadwal SCH (filteredSch).
       // -----------------------------------------------------------------
       const isJobCompleted = (j) => {
         if (!j) return false;
         const s = String(j.status || '').toLowerCase().trim();
         const sf = String(j.status_final || '').toUpperCase().trim();
+        if (['non_ach', 'non-ach', 'cancel', 'cancelled', 'pending', 'scheduled', 'open', 'queue'].includes(s)) return false;
+        if (['NON_ACH', 'NON-ACH', 'CANCEL', 'CANCELLED', 'PENDING'].includes(sf)) return false;
         if (['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'washing', 'washing request', 'wash'].includes(s)) return true;
         if (['ACHIEVED', 'ACH', 'DONE', 'SERVICE', 'BREAKDOWN', 'BD', 'WASHING REQUEST', 'WASHING', 'WASH'].includes(sf)) return true;
         if (typeof window.isAchLikeStatus === 'function') return window.isAchLikeStatus(j);
         return false;
       };
 
-      const completedSchJobs = filteredSch.filter(isJobCompleted);
-      const completedUnschJobs = filteredUnsch.filter(isJobCompleted);
+      // Klasifikasi Job Request yang telah selesai: apakah SERVICE, WASHING, BD Baru (Greasing/Add Oil/Air Cleaner), atau BD Lama
+      const classifyCompletedUnschJob = (j) => {
+        const s = String(j.status || '').toLowerCase().trim();
+        const sf = String(j.status_final || '').toUpperCase().trim();
+        const kond = String(j.kondisi || j.unitCondition || '').toLowerCase().trim();
+        const ketRaw = String(j.keterangan || j.bdNotes || j.bd_notes || '').trim();
+        const reqJobRaw = String(j.requestedJob || j.requested_job || '').trim();
+        const descLower = `${ j.deskripsi || '' } ${ ketRaw }`.toLowerCase();
+        const isWt = (j.targetType === 'WT' || j.serviceType === 'watertruck' || j.job_type === 'water' || j.job_type === 'unsch_wt' || String(j.id || '').toUpperCase().startsWith('WT'));
 
-      const schEventCount = completedSchJobs.length;
+        // 1. Washing Request (WT)
+        if (sf === 'WASHING REQUEST' || sf === 'WASHING' || sf === 'WASH' || ['washing', 'washing request', 'wash'].includes(s) || kond === 'washing' || kond === 'washing request') {
+          return 'WASHING';
+        }
+        // 2. Service (masuk ke Schedule pada 3 kartu ini)
+        if (sf === 'SERVICE' || s === 'service' || kond === 'service') {
+          return 'SERVICE';
+        }
+        // 3. Breakdown (BD)
+        const isBd = (sf === 'BREAKDOWN' || sf === 'BD' || ['bd', 'breakdown'].includes(s) || kond === 'breakdown' || kond === 'bd' || descLower.includes('breakdown') || descLower.includes('[bd]'));
+        if (isBd) {
+          if (isWt) return 'WASHING';
+          // Cek prefix/kategori BD spesifik dari pilihan baru:
+          // - BD (Greasing/Adjust Track)
+          // - BD (Add Oil/Grease)
+          // - BD (Clean Air Cleaner)
+          if (/^bd\s*\(\s*greasing/i.test(ketRaw) || /\bbd\s*\(\s*greasing\/adjust\s*track\s*\)/i.test(ketRaw) || /^greasing/i.test(reqJobRaw)) {
+            return 'BD_GREASING';
+          }
+          if (/^bd\s*\(\s*add\s*oil/i.test(ketRaw) || /\bbd\s*\(\s*add\s*oil\/grease\s*\)/i.test(ketRaw) || /^(add\s*oil|top\s*up\s*oil)/i.test(reqJobRaw)) {
+            return 'BD_ADD_OIL';
+          }
+          if (/^bd\s*\(\s*clean\s*air\s*cleaner/i.test(ketRaw) || /\bbd\s*\(\s*clean\s*air\s*cleaner\s*\)/i.test(ketRaw) || /^(clean\s*)?air\s*cleaner/i.test(reqJobRaw)) {
+            return 'BD_AIR_CLEANER';
+          }
+          // Data BD lama (sebelum pemecahan 3 opsi BD): dibagi 10% Greasing, 90% Add Oil, 0% Air Cleaner
+          return 'BD_LEGACY';
+        }
+        // 4. Fallback untuk Job Request lama yang status_final-nya 'DONE' / 'ACHIEVED'
+        if (isWt || descLower.includes('washing') || descLower.includes('cuci')) return 'WASHING';
+        return 'SERVICE';
+      };
+
+      const completedSchJobs = filteredSch.filter(isJobCompleted);
+      const rawCompletedUnschJobs = filteredUnsch.filter(isJobCompleted);
+      const serviceReqJobs = rawCompletedUnschJobs.filter(j => classifyCompletedUnschJob(j) === 'SERVICE');
+      const completedUnschJobs = rawCompletedUnschJobs.filter(j => classifyCompletedUnschJob(j) !== 'SERVICE');
+      const cardCompletedSchJobs = [...completedSchJobs, ...serviceReqJobs];
+
+      const schEventCount = cardCompletedSchJobs.length;
       const unschEventCount = completedUnschJobs.length;
       const totalEvents = schEventCount + unschEventCount;
       const schEventPct = totalEvents > 0 ? Math.round((schEventCount / totalEvents) * 100) : 0;
@@ -14794,10 +14862,10 @@
       }
 
       // -----------------------------------------------------------------
-      // 2. HITUNG DURASI RIIL (HANYA DARI PEKERJAAN YANG SELESAI / ACH)
+      // 2. HITUNG DURASI RIIL (TERMASUK SERVICE JOB REQUEST DI SCHEDULE)
       // -----------------------------------------------------------------
       let schMins = 0;
-      completedSchJobs.forEach(j => {
+      cardCompletedSchJobs.forEach(j => {
         schMins += calcJobDurationMins(j);
       });
 
@@ -14863,7 +14931,7 @@
               tooltip: {
                 enabled: hasDuration,
                 callbacks: {
-                  label: (c) => ` ${c.label}: ${c.raw}% (${c.label === 'Schedule' ? schHours + ' Jam' : unschHours + ' Jam'})`
+                  label: (c) => ` ${c.label}: ${c.raw}% (${c.label === 'Schedule' ? formatDurationShort(schMins) : formatDurationShort(unschMins)})`
                 }
               }
             }
@@ -14872,97 +14940,90 @@
       }
 
       // -----------------------------------------------------------------
-      // 2B. DURASI UNSCHEDULE LT/WT (BREAKDOWN 4 KATEGORI)
+      // 2B. DURASI UNSCHEDULE LT/WT (4 KATEGORI: GREASING, ADD OIL, CLEAN AIR CLEANER, WASHING REQUEST)
       // -----------------------------------------------------------------
       const canvasUnschDur = document.getElementById('chart-kpi-unschedule-duration');
       if (canvasUnschDur && canvasUnschDur.getContext) {
         const ctxUnschDur = canvasUnschDur.getContext('2d');
         if (kpiUnscheduledDurationChartInstance) kpiUnscheduledDurationChartInstance.destroy();
 
-        // Ambil dari data Type Job Request (REQ / Unschedule) di Riwayat Selesai yang berstatus SERVICE, BREAKDOWN (BD), atau WASHING REQUEST (WASHING)
-        const unschAchJobs = filteredUnsch.filter(j => {
-          const s = String(j.status || '').toLowerCase().trim();
-          const sf = String(j.status_final || '').toUpperCase().trim();
-          if (['non_ach', 'non-ach', 'cancel', 'cancelled', 'pending', 'scheduled', 'open', 'queue'].includes(s)) return false;
-          if (['NON_ACH', 'NON-ACH', 'CANCEL', 'CANCELLED', 'PENDING'].includes(sf)) return false;
-          return ['service', 'bd', 'breakdown', 'washing', 'washing request', 'wash', 'ach', 'achieved', 'done'].includes(s) ||
-            ['SERVICE', 'BREAKDOWN', 'BD', 'WASHING REQUEST', 'WASHING', 'WASH', 'ACHIEVED', 'ACH', 'DONE'].includes(sf);
+        let minsGreasing = 0;
+        let minsAddOil = 0;
+        let minsAirCleaner = 0;
+        let minsWashing = 0;
+        let legacyBdMins = 0;
+
+        completedUnschJobs.forEach(j => {
+          const dur = calcJobDurationMins(j);
+          if (dur <= 0) return;
+          const cat = classifyCompletedUnschJob(j);
+          if (cat === 'WASHING') {
+            minsWashing += dur;
+          } else if (cat === 'BD_GREASING') {
+            minsGreasing += dur;
+          } else if (cat === 'BD_ADD_OIL') {
+            minsAddOil += dur;
+          } else if (cat === 'BD_AIR_CLEANER') {
+            minsAirCleaner += dur;
+          } else if (cat === 'BD_LEGACY') {
+            legacyBdMins += dur;
+          }
         });
 
-        const getUnschCategory = (j) => {
-          const s = String(j.status || '').toLowerCase().trim();
-          const sf = String(j.status_final || '').toUpperCase().trim();
-          const kond = String(j.kondisi || j.unitCondition || '').toLowerCase().trim();
-          const desc = String(j.deskripsi || j.keterangan || '').toLowerCase();
-          const isWt = (j.targetType === 'WT' || j.serviceType === 'watertruck' || j.job_type === 'water' || j.job_type === 'unsch_wt' || String(j.id || '').toUpperCase().startsWith('WT'));
+        // Aturan pengguna untuk data BD lama: 10% Greasing, 90% Add Oil, 0% Air Cleaner
+        if (legacyBdMins > 0) {
+          const legacyGreasing = Math.round(legacyBdMins * 0.10);
+          const legacyAddOil = legacyBdMins - legacyGreasing;
+          minsGreasing += legacyGreasing;
+          minsAddOil += legacyAddOil;
+        }
 
-          // 1. Cek status eksplisit dari Riwayat Selesai (SERVICE, BREAKDOWN/BD, WASHING REQUEST/WASHING)
-          if (sf === 'WASHING REQUEST' || sf === 'WASHING' || sf === 'WASH' || ['washing', 'washing request', 'wash'].includes(s) || kond === 'washing' || kond === 'washing request') {
-            return 'WASHING';
-          }
-          if (sf === 'BREAKDOWN' || sf === 'BD' || ['bd', 'breakdown'].includes(s) || kond === 'breakdown' || kond === 'bd') {
-            return 'BREAKDOWN';
-          }
-          if (sf === 'SERVICE' || s === 'service' || kond === 'service') {
-            return 'SERVICE';
-          }
+        const totalUnschMins = minsGreasing + minsAddOil + minsAirCleaner + minsWashing;
 
-          // 2. Fallback untuk job request lama yang status_final-nya 'DONE' / 'ACHIEVED'
-          if (isWt || desc.includes('washing') || desc.includes('cuci')) return 'WASHING';
-          if (desc.includes('breakdown') || desc.includes('[bd]')) return 'BREAKDOWN';
-          return 'SERVICE';
-        };
-
-        const isJobBreakdown = (j) => getUnschCategory(j) === 'BREAKDOWN';
-        const isJobWashing = (j) => getUnschCategory(j) === 'WASHING';
-        const isJobService = (j) => getUnschCategory(j) === 'SERVICE';
-
-        const minsBreakdown = unschAchJobs.filter(isJobBreakdown).reduce((sum, j) => sum + calcJobDurationMins(j), 0);
-        const minsService = unschAchJobs.filter(isJobService).reduce((sum, j) => sum + calcJobDurationMins(j), 0);
-        const minsWashing = unschAchJobs.filter(isJobWashing).reduce((sum, j) => sum + calcJobDurationMins(j), 0);
-
-        const totalUnschMins = minsBreakdown + minsService + minsWashing;
-
-        const pctBreakdown = totalUnschMins > 0 ? Math.round((minsBreakdown / totalUnschMins) * 100) : 0;
-        const pctService = totalUnschMins > 0 ? Math.round((minsService / totalUnschMins) * 100) : 0;
+        const pctGreasing = totalUnschMins > 0 ? Math.round((minsGreasing / totalUnschMins) * 100) : 0;
+        const pctAddOil = totalUnschMins > 0 ? Math.round((minsAddOil / totalUnschMins) * 100) : 0;
+        const pctAirCleaner = totalUnschMins > 0 ? Math.round((minsAirCleaner / totalUnschMins) * 100) : 0;
         const pctWashing = totalUnschMins > 0 ? Math.round((minsWashing / totalUnschMins) * 100) : 0;
 
-        const unschTableBreakdown = document.getElementById('kpi-unsch-dur-table-breakdown');
-        const unschTableService = document.getElementById('kpi-unsch-dur-table-service');
+        const unschTableGreasing = document.getElementById('kpi-unsch-dur-table-greasing');
+        const unschTableAddOil = document.getElementById('kpi-unsch-dur-table-addoil');
+        const unschTableAirCleaner = document.getElementById('kpi-unsch-dur-table-aircleaner');
         const unschTableWashing = document.getElementById('kpi-unsch-dur-table-washing');
         const unschTableTotal = document.getElementById('kpi-unsch-dur-table-total');
         const unschHeaderTotal = document.getElementById('kpi-unsch-dur-header-total');
         const unschCenterPct = document.getElementById('kpi-unsch-dur-center-pct');
         const unschCenterLabel = document.getElementById('kpi-unsch-dur-center-label');
 
-        const unschLegBreakdown = document.getElementById('kpi-unsch-dur-legend-breakdown');
-        const unschLegService = document.getElementById('kpi-unsch-dur-legend-service');
+        const unschLegGreasing = document.getElementById('kpi-unsch-dur-legend-greasing');
+        const unschLegAddOil = document.getElementById('kpi-unsch-dur-legend-addoil');
+        const unschLegAirCleaner = document.getElementById('kpi-unsch-dur-legend-aircleaner');
         const unschLegWashing = document.getElementById('kpi-unsch-dur-legend-washing');
 
-        if (unschTableBreakdown) unschTableBreakdown.textContent = formatMinsToHoursMins(minsBreakdown);
-        if (unschTableService) unschTableService.textContent = formatMinsToHoursMins(minsService);
+        if (unschTableGreasing) unschTableGreasing.textContent = formatMinsToHoursMins(minsGreasing);
+        if (unschTableAddOil) unschTableAddOil.textContent = formatMinsToHoursMins(minsAddOil);
+        if (unschTableAirCleaner) unschTableAirCleaner.textContent = formatMinsToHoursMins(minsAirCleaner);
         if (unschTableWashing) unschTableWashing.textContent = formatMinsToHoursMins(minsWashing);
         if (unschTableTotal) unschTableTotal.textContent = formatMinsToHoursMins(totalUnschMins);
         if (unschHeaderTotal) unschHeaderTotal.textContent = `Total: ${formatMinsToHoursMins(totalUnschMins)}`;
 
-        if (unschLegBreakdown) unschLegBreakdown.textContent = `Breakdown (${pctBreakdown}%)`;
-        if (unschLegService) unschLegService.textContent = `Service (${pctService}%)`;
+        if (unschLegGreasing) unschLegGreasing.textContent = `Greasing (${pctGreasing}%)`;
+        if (unschLegAddOil) unschLegAddOil.textContent = `Add Oil (${pctAddOil}%)`;
+        if (unschLegAirCleaner) unschLegAirCleaner.textContent = `Clean Air Cleaner (${pctAirCleaner}%)`;
         if (unschLegWashing) unschLegWashing.textContent = `Washing Request (${pctWashing}%)`;
 
         // Cari kategori dominan untuk angka tengah donat
         let dominantPct = 0;
         let dominantLabel = '-';
         if (totalUnschMins > 0) {
-          if (minsBreakdown >= minsService && minsBreakdown >= minsWashing) {
-            dominantPct = pctBreakdown;
-            dominantLabel = 'BREAKDOWN';
-          } else if (minsService >= minsBreakdown && minsService >= minsWashing) {
-            dominantPct = pctService;
-            dominantLabel = 'SERVICE';
-          } else {
-            dominantPct = pctWashing;
-            dominantLabel = 'WASHING';
-          }
+          const catEntries = [
+            { mins: minsAddOil, pct: pctAddOil, label: 'ADD OIL' },
+            { mins: minsGreasing, pct: pctGreasing, label: 'GREASING' },
+            { mins: minsAirCleaner, pct: pctAirCleaner, label: 'AIR CLEANER' },
+            { mins: minsWashing, pct: pctWashing, label: 'WASHING' }
+          ];
+          catEntries.sort((a, b) => b.mins - a.mins);
+          dominantPct = catEntries[0].pct;
+          dominantLabel = catEntries[0].label;
         }
 
         if (unschCenterPct) unschCenterPct.textContent = totalUnschMins > 0 ? `${dominantPct}%` : '0%';
@@ -14972,10 +15033,10 @@
         kpiUnscheduledDurationChartInstance = new Chart(ctxUnschDur, {
           type: 'doughnut',
           data: {
-            labels: hasUnschDur ? ['BREAKDOWN', 'SERVICE', 'WASHING REQUEST'] : ['Belum Ada Permintaan'],
+            labels: hasUnschDur ? ['GREASING', 'ADD OIL', 'CLEAN AIR CLEANER', 'WASHING REQUEST'] : ['Belum Ada Permintaan'],
             datasets: [{
-              data: hasUnschDur ? [pctBreakdown, pctService, pctWashing] : [1],
-              backgroundColor: hasUnschDur ? ['#DC2626', '#0284C7', '#06B6D4'] : ['#E2E8F0'],
+              data: hasUnschDur ? [minsGreasing, minsAddOil, minsAirCleaner, minsWashing] : [1],
+              backgroundColor: hasUnschDur ? ['#DC2626', '#EA580C', '#0284C7', '#06B6D4'] : ['#E2E8F0'],
               borderWidth: 2,
               borderColor: '#FFFFFF'
             }]
@@ -14991,12 +15052,14 @@
                 enabled: hasUnschDur,
                 callbacks: {
                   label: (c) => {
-                    const durasiMap = {
-                      'BREAKDOWN': formatMinsToHoursMins(minsBreakdown),
-                      'SERVICE': formatMinsToHoursMins(minsService),
-                      'WASHING REQUEST': formatMinsToHoursMins(minsWashing)
+                    const infoMap = {
+                      'GREASING': { pct: pctGreasing, txt: formatMinsToHoursMins(minsGreasing) },
+                      'ADD OIL': { pct: pctAddOil, txt: formatMinsToHoursMins(minsAddOil) },
+                      'CLEAN AIR CLEANER': { pct: pctAirCleaner, txt: formatMinsToHoursMins(minsAirCleaner) },
+                      'WASHING REQUEST': { pct: pctWashing, txt: formatMinsToHoursMins(minsWashing) }
                     };
-                    return ` ${c.label}: ${c.raw}% (${durasiMap[c.label] || ''})`;
+                    const info = infoMap[c.label] || { pct: 0, txt: '0 Jam 0 Menit' };
+                    return ` ${c.label}: ${info.pct}% (${info.txt})`;
                   }
                 }
               }
@@ -15662,7 +15725,9 @@
       const _picaDashLast = state._dashPicaLastHistFetch;
       const _picaDashOnCooldown = Boolean(_picaDashLast && _picaDashLast.key === picaMatrixRangeKey && (Date.now() - _picaDashLast.ts < 15000));
       const _picaDashInFlight = Boolean(state._dashPicaHistInFlight && state._dashPicaHistInFlight.key === picaMatrixRangeKey && (Date.now() - state._dashPicaHistInFlight.ts < 15000));
-      if (state.supabaseClient && !isPicaMatrixHistCovered && !_picaDashOnCooldown && !_picaDashInFlight && typeof loadJobHistoryFromSupabase === 'function') {
+      const _picaDashRole = String(state.currentUser?.role || '').toLowerCase();
+      const _canFetchPicaDash = Boolean(state.supabaseClient && state.currentUser && state.activeTab === 'dashboard' && ['admin', 'basecontrol', 'base_control', 'bsc', 'track', 'tim_track'].includes(_picaDashRole));
+      if (_canFetchPicaDash && !isPicaMatrixHistCovered && !_picaDashOnCooldown && !_picaDashInFlight && typeof loadJobHistoryFromSupabase === 'function') {
         state._dashPicaHistInFlight = { key: picaMatrixRangeKey, ts: Date.now() };
         state._dashPicaLastHistFetch = { key: picaMatrixRangeKey, ts: Date.now() };
         loadJobHistoryFromSupabase(false, startDate, endDate).finally(() => {
@@ -16070,6 +16135,9 @@
         });
 
         // 2. JIKA BELUM KETEMU DI LOCAL, QUERY KE SUPABASE DENGAN TIMEOUT 2 DETIK
+        if (!user && typeof ensureSupabaseClient === 'function') {
+          ensureSupabaseClient();
+        }
         if (!user && typeof state !== 'undefined' && state.supabaseClient) {
           try {
             const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000));
@@ -16123,10 +16191,28 @@
           if (typeof showToast === 'function') {
             showToast(`Login berhasil! Selamat bertugas, ${user.nama}`, 'success');
           }
+          if (typeof ensureSupabaseClient === 'function' && ensureSupabaseClient(false)) {
+            window._initialBootJobsPending = true;
+          }
           try {
             renderAppForUser(user);
           } catch (err) {
             console.error('[Login] Error saat renderAppForUser:', err);
+          }
+          // Mulai sinkronisasi Supabase & Realtime WebSocket setelah user benar-benar login
+          try {
+            if (typeof initSupabase === 'function') {
+              initSupabase(true).then(() => {
+                if (typeof startRelaxedBackgroundPolling === 'function') {
+                  startRelaxedBackgroundPolling();
+                }
+              }).catch(() => { window._initialBootJobsPending = false; });
+            } else {
+              window._initialBootJobsPending = false;
+            }
+          } catch (supaLoginErr) {
+            window._initialBootJobsPending = false;
+            console.warn('[Login] initSupabase warning:', supaLoginErr);
           }
         } else {
           // Kembalikan tombol ke keadaan normal jika login gagal
@@ -16889,9 +16975,9 @@
     window.fetchAllPagedSupabaseRows = fetchAllPagedSupabaseRows;
 
     async function ensureJobsForDate(dateStr, force = false) {
-      if (!dateStr || !state.supabaseClient) return;
+      if (!dateStr || !state.supabaseClient || !state.currentUser) return;
       if (!force) {
-        if (window.globalDataCache?.isFetchingActiveJobs) return;
+        if (window.globalDataCache?.isFetchingActiveJobs || window._initialBootJobsPending) return;
         const isDateLoaded = Boolean(window.globalDataCache?.loadedDates?.has(dateStr));
         const isWsHealthy = (typeof window.isSupabaseRealtimeHealthy === 'function')
           ? window.isSupabaseRealtimeHealthy()
@@ -17276,9 +17362,12 @@
     }
 
     function handleLogout() {
-      // Clear current session state
+      // Clear current session state & hentikan Realtime/Polling agar sesi logout 0 traffic ke Supabase
       state.currentUser = null;
       safeStorage.removeItem('SE_SESSION_USER');
+      if (typeof teardownSupabaseSession === 'function') {
+        teardownSupabaseSession();
+      }
 
       document.querySelectorAll('[id^="modal-"]').forEach(m => {
         m.classList.add('hidden');
@@ -19548,6 +19637,7 @@
         'WT-WSC-02112026-1-E8511-0735'
       ];
       const targetUnits = ['E548', 'E549', 'E543', 'E8511'];
+      const targetDates = new Set(['2026-11-01', '2026-11-02']);
 
       let driverWt2644 = '-';
       let partnerWt2644 = '-';
@@ -19560,10 +19650,11 @@
 
       const patchJob = (j) => {
         if (!j) return false;
-        const jId = String(j.id || j.noId || j.no_id || j.job_id || '').toUpperCase();
-        const jUnit = String(j.noLambung || j.no_lambung || '').toUpperCase();
-        const isMatchId = targetIds.some(id => jId.includes(id) || id.includes(jId));
-        const isMatchUnit = targetUnits.includes(jUnit) && (
+        const jId = String(j.id || j.noId || j.no_id || j.job_id || '').trim().toUpperCase();
+        const jUnit = String(j.noLambung || j.no_lambung || '').trim().toUpperCase();
+        const jDate = String(j.tanggal_eksekusi || j.tanggal_rencana || j.tanggal || j.tanggalRealisasi || '').trim().split('T')[0];
+        const isMatchId = Boolean(jId) && targetIds.some(id => jId === id || jId.startsWith(id));
+        const isMatchUnit = targetUnits.includes(jUnit) && targetDates.has(jDate) && (
           String(j.status || j.status_final || '').toLowerCase().includes('parkir') ||
           String(j.keterangan || '').toLowerCase().includes('parkir') ||
           String(j.alasanNonAch || '').toLowerCase().includes('parkir')
@@ -19587,59 +19678,15 @@
         return false;
       };
 
-      let touched = false;
-      let dbNeedsRepair = false;
-      const doesEntryNeedDbSync = (h) => {
-        if (!h) return false;
-        const jId = String(h.id || h.noId || h.no_id || h.job_id || '').toUpperCase();
-        const jUnit = String(h.noLambung || h.no_lambung || '').toUpperCase();
-        const isMatchId = targetIds.some(id => jId.includes(id) || id.includes(jId));
-        const isMatchUnit = targetUnits.includes(jUnit) && (
-          String(h.status || h.status_final || '').toLowerCase().includes('parkir') ||
-          String(h.keterangan || '').toLowerCase().includes('parkir') ||
-          String(h.alasanNonAch || '').toLowerCase().includes('parkir')
-        );
-        if (!isMatchId && !isMatchUnit) return false;
-        return (
-          String(h.armada_unit || '').trim().toUpperCase() !== 'WT2644' ||
-          String(h.mp1 || '').trim().toUpperCase() !== 'SUGENG HARIYANTO (TIA)' ||
-          (driverWt2644 !== '-' && String(h.opt_name || '').trim() !== driverWt2644)
-        );
-      };
-
+      // Normalisasi di memori saja untuk 4 riwayat historis 01-02/11/2026 (0 PATCH DB / 0 Realtime WAL saat boot/reload)
       if (Array.isArray(state.jobHistory)) {
-        state.jobHistory.forEach(h => {
-          if (doesEntryNeedDbSync(h)) dbNeedsRepair = true;
-          if (patchJob(h)) touched = true;
-        });
+        state.jobHistory.forEach(h => { patchJob(h); });
       }
       if (state.watertruckState && Array.isArray(state.watertruckState.jobs)) {
-        state.watertruckState.jobs.forEach(j => { if (patchJob(j)) touched = true; });
+        state.watertruckState.jobs.forEach(j => { patchJob(j); });
       }
       if (Array.isArray(state._lastFilteredCompletedJobs)) {
-        state._lastFilteredCompletedJobs.forEach(j => { if (patchJob(j)) touched = true; });
-      }
-
-      // Hanya kirim PATCH ke Supabase sekali per sesi jika data DB mentah di jobHistory memang masih belum sesuai
-      if (touched && dbNeedsRepair && !window._sugengHistoryDbSynced && state.supabaseClient && window._supabaseHasJobHistory !== false) {
-        window._sugengHistoryDbSynced = true;
-        try {
-          const updatePayload = {
-            armada_unit: 'WT2644',
-            mp1: 'SUGENG HARIYANTO (TIA)'
-          };
-          if (driverWt2644 !== '-') updatePayload.opt_name = driverWt2644;
-          state.supabaseClient.from('job_history_wt')
-            .update(updatePayload)
-            .in('id', targetIds)
-            .then(() => console.log('[History Repair] Sukses update job history WT2644 ke Supabase'))
-            .catch(err => {
-              window._sugengHistoryDbSynced = false;
-              console.warn('[History Repair] Gagal update ke Supabase:', err);
-            });
-        } catch (e) {
-          window._sugengHistoryDbSynced = false;
-        }
+        state._lastFilteredCompletedJobs.forEach(j => { patchJob(j); });
       }
     }
     window.repairSpecificSugengHistoryJobs = repairSpecificSugengHistoryJobs;
@@ -26944,9 +26991,16 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         if (endInput) endInput.value = endDate;
       }
 
-      // Pastikan data riwayat selesai untuk rentang tanggal filter sudah ditarik ke RAM (Hot-Window / On-Demand)
+      // Pastikan data riwayat selesai & arsip jadwal HANYA ditarik saat user sudah login, role manajemen/dashboard, dan tab Dashboard sedang aktif dibuka
       window._dashboardLoadedHistRanges = window._dashboardLoadedHistRanges || new Set();
       window._dashboardAttemptedArchiveRanges = window._dashboardAttemptedArchiveRanges || new Set();
+      const dashRole = String(state.currentUser?.role || '').toLowerCase();
+      const canFetchDashCloud = Boolean(
+        state.supabaseClient &&
+        state.currentUser &&
+        state.activeTab === 'dashboard' &&
+        ['admin', 'basecontrol', 'base_control', 'bsc', 'track', 'tim_track'].includes(dashRole)
+      );
       const histRangeKey = `${startDate}_${endDate}`;
       const isDashHistCovered = (typeof window.isHistoryRangeCovered === 'function')
         ? window.isHistoryRangeCovered(startDate, endDate)
@@ -26954,7 +27008,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       const kpiTbody = document.getElementById('dash-kpi-perf-tbody');
       const picaTbody = document.getElementById('dash-pica-matrix-tbody');
 
-      if (state.supabaseClient && !isDashHistCovered && !window._dashboardLoadedHistRanges.has(histRangeKey)) {
+      if (canFetchDashCloud && !isDashHistCovered && !window._dashboardLoadedHistRanges.has(histRangeKey)) {
         window._dashboardLoadedHistRanges.add(histRangeKey);
         if (kpiTbody) showTableLazyLoading(kpiTbody, 'Menarik data riwayat KPI periode terpilih...', 'brand', 6);
         if (picaTbody) showTableLazyLoading(picaTbody, 'Menarik data kendala PICA periode terpilih...', 'amber', 6);
@@ -26967,9 +27021,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         }
       }
 
-      // Pastikan data jadwal aktif rentang tanggal dashboard sudah dimuat di RAM cache (tanpa memblokir fetchArchiveJobsOnDemand)
-      if (state.supabaseClient && startDate && endDate && typeof fetchArchiveJobsOnDemand === 'function' && window.globalDataCache && window.globalDataCache.loadedDates) {
-        let hasMissing = false;
+      // Pastikan data jadwal aktif rentang tanggal dashboard sudah dimuat di RAM cache (tarik HANYA tanggal yang benar-benar belum ada)
+      if (canFetchDashCloud && startDate && endDate && typeof fetchArchiveJobsOnDemand === 'function' && window.globalDataCache && window.globalDataCache.loadedDates) {
+        let missingMin = '';
+        let missingMax = '';
         let cur = new Date(startDate);
         const endD = new Date(endDate);
         let dashDayGuard = 0;
@@ -26977,12 +27032,14 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           dashDayGuard++;
           const dStr = cur.toISOString().split('T')[0];
           if (!window.globalDataCache.loadedDates.has(dStr)) {
-            hasMissing = true;
-            break;
+            if (!missingMin) missingMin = dStr;
+            missingMax = dStr;
           }
           cur.setDate(cur.getDate() + 1);
         }
-        if (hasMissing && !window._dashboardAttemptedArchiveRanges.has(histRangeKey) && !window.globalDataCache.isFetchingArchive) {
+        const hasMissing = Boolean(missingMin && missingMax);
+        const missingRangeKey = hasMissing ? `${missingMin}_${missingMax}` : histRangeKey;
+        if (hasMissing && !window._dashboardAttemptedArchiveRanges.has(missingRangeKey) && !window.globalDataCache.isFetchingArchive) {
           // Cegah double-fetch saat startup: jika boot sync Hot-Window (getJobsWithCache) sedang berjalan, tunggu selesai dulu
           if (window.globalDataCache.isFetchingActiveJobs || window._initialBootJobsPending) {
             if (kpiTbody) showTableLazyLoading(kpiTbody, 'Menyiapkan analitik KPI Schedule...', 'brand', 6);
@@ -26998,8 +27055,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
             if (kpiTbody) showTableLazyLoading(kpiTbody, 'Menyiapkan analitik KPI Schedule...', 'brand', 6);
             if (picaTbody) showTableLazyLoading(picaTbody, 'Menghitung matriks kendala PICA...', 'amber', 6);
 
-            window._dashboardAttemptedArchiveRanges.add(histRangeKey);
-            fetchArchiveJobsOnDemand(startDate, endDate).finally(() => {
+            window._dashboardAttemptedArchiveRanges.add(missingRangeKey);
+            fetchArchiveJobsOnDemand(missingMin, missingMax).finally(() => {
               if (state.activeTab === 'dashboard') refreshDashboardData();
             });
           }
@@ -28366,11 +28423,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       renderMasterOperatorsTable();
       if (typeof renderMpKontakProTable === "function") renderMpKontakProTable();
       if (typeof notifyDataChanged === "function") notifyDataChanged();
-
-      // Emit sinyal broadcast jika channel realtime aktif
-      if (typeof emitJobBroadcastSignal === "function") {
-        emitJobBroadcastSignal(nrp, "UPDATE", "master_operators");
-      }
+      // Catatan: master_operators tidak memakai JOB_SIGNAL agar tidak memicu query view jobs (HTTP 406) di perangkat lain
     }
 
     function promptDeleteMasterOperator(id) {
@@ -28409,10 +28462,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
       renderMasterOperatorsTable();
       if (typeof renderMpKontakProTable === "function") renderMpKontakProTable();
       if (typeof notifyDataChanged === "function") notifyDataChanged();
-
-      if (typeof emitJobBroadcastSignal === "function" && target?.nrp) {
-        emitJobBroadcastSignal(target.nrp, "DELETE", "master_operators");
-      }
+      // Catatan: master_operators tidak memakai JOB_SIGNAL agar tidak memicu error HTTP 406 di perangkat lain
     }
     function openImportOperatorsModal() {
       state.parsedOperatorsImportData = [];
@@ -29882,22 +29932,60 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
     }
 
     let _rosterLoadPromise = null;
+    let _rosterLoadMode = null;
     async function loadRosterFromSupabase(periodFilter = null, force = false) {
       if (!state.supabaseClient) {
         console.warn('[Supabase Roster] Client belum siap');
         return false;
       }
+      const isScheduleWindowMode = (periodFilter === '__SCHEDULE_WINDOW__');
       const isActiveWindowMode = (periodFilter === '__ACTIVE_MONTH__');
       const todayRefStr = (typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0];
-      const activeMinDateObj = new Date(todayRefStr + 'T00:00:00');
-      activeMinDateObj.setDate(activeMinDateObj.getDate() - 30);
+      const activeMinDateObj = new Date(todayRefStr + 'T00:00:00Z');
+      activeMinDateObj.setUTCDate(activeMinDateObj.getUTCDate() - 30);
       const activeMinDateStr = activeMinDateObj.toISOString().split('T')[0];
 
-      // Cek Fingerprint Server jika data roster sudah tersimpan di memori / cache lokal
+      const schedMinObj = new Date(todayRefStr + 'T00:00:00Z');
+      schedMinObj.setUTCDate(schedMinObj.getUTCDate() - 2);
+      const schedMinDateStr = schedMinObj.toISOString().split('T')[0];
+      const schedMaxObj = new Date(todayRefStr + 'T00:00:00Z');
+      schedMaxObj.setUTCDate(schedMaxObj.getUTCDate() + 3);
+      const schedMaxDateStr = schedMaxObj.toISOString().split('T')[0];
+      const schedScopeKey = `sched_${schedMinDateStr}_${schedMaxDateStr}`;
+
+      // Jika full/30-hari roster sudah ada di RAM, jangan turunkan dengan window jadwal sempit
+      if (isScheduleWindowMode && !force && state._isRosterFullyLoaded && Array.isArray(state.masterRoster) && state.masterRoster.length > 0) {
+        return true;
+      }
+
+      // Cek Cache / Fingerprint Server agar reload cepat & hemat Log Ingestion
       let pendingRosterFp = null;
-      if (!periodFilter || isActiveWindowMode) {
+      if (isScheduleWindowMode) {
+        const hasTodayInMem = Array.isArray(state.masterRoster) && state.masterRoster.some(r => r && String(r.tanggal || '').split('T')[0] === todayRefStr);
+        const savedScope = safeStorage.getItem('SE_MASTER_ROSTER_SCOPE') || '';
+        const lastSchedCheckTs = Number(safeStorage.getItem('SE_MASTER_ROSTER_SCHED_CHECK_TS') || 0);
+        const hasValidLocalScope = (savedScope === schedScopeKey || savedScope === 'active_30d' || savedScope === 'active_30d_truncated' || savedScope === 'full' || savedScope === 'full_truncated');
+        if (!force && hasTodayInMem && hasValidLocalScope && (Date.now() - lastSchedCheckTs < 10 * 60 * 1000)) {
+          console.log('[Supabase Roster Cache OK] Window jadwal ±3 hari fresh di lokal (0 request):', state.masterRoster.length, 'baris');
+          return true;
+        }
+        if (typeof checkSupabaseTableFingerprint === 'function') {
+          const fp = await checkSupabaseTableFingerprint('SE_MASTER_ROSTER_SCHED_FP', [{
+            table: 'master_roster',
+            tsCol: 'updated_at',
+            filterFn: (q => q.gte('tanggal', schedMinDateStr).lte('tanggal', schedMaxDateStr))
+          }]);
+          if (fp.ok) pendingRosterFp = { key: 'SE_MASTER_ROSTER_SCHED_FP', sig: fp.signature };
+          if (!force && hasTodayInMem && savedScope === schedScopeKey && fp.ok && fp.match) {
+            try { safeStorage.setItem('SE_MASTER_ROSTER_SCHED_CHECK_TS', String(Date.now())); } catch (eTs) { }
+            console.log('[Supabase Fingerprint OK] Master Roster window jadwal identik dengan server:', state.masterRoster.length, 'baris');
+            return true;
+          }
+        }
+      } else if (!periodFilter || isActiveWindowMode) {
+        const savedScope = safeStorage.getItem('SE_MASTER_ROSTER_SCOPE') || '';
         const hasCachedRoster = Array.isArray(state.masterRoster) && state.masterRoster.length > 0 &&
-          (state._isRosterFullyLoaded || (isActiveWindowMode && safeStorage.getItem('SE_MASTER_ROSTER_SCOPE') === 'active_30d'));
+          (state._isRosterFullyLoaded || (isActiveWindowMode && savedScope === 'active_30d') || (!periodFilter && savedScope === 'full'));
         const fpKey = isActiveWindowMode ? 'SE_MASTER_ROSTER_ACTIVE_FP' : 'SE_MASTER_ROSTER_FP';
         if (typeof checkSupabaseTableFingerprint === 'function') {
           const fp = await checkSupabaseTableFingerprint(fpKey, [{
@@ -29914,13 +30002,20 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
         }
       }
       if (_rosterLoadPromise) {
-        return _rosterLoadPromise;
+        // Jika request baru butuh cakupan lebih luas dari window jadwal yang sedang jalan, tunggu selesai lalu lanjut
+        if (_rosterLoadMode === '__SCHEDULE_WINDOW__' && !isScheduleWindowMode) {
+          try { await _rosterLoadPromise; } catch (eWait) { }
+        } else {
+          return _rosterLoadPromise;
+        }
       }
 
+      _rosterLoadMode = isScheduleWindowMode ? '__SCHEDULE_WINDOW__' : (isActiveWindowMode ? '__ACTIVE_MONTH__' : (periodFilter || 'full'));
       _rosterLoadPromise = (async () => {
         try {
-          const tbody = document.getElementById('db-roster-tbody');
-          const countLabel = document.getElementById('db-roster-count-label');
+          const isRosterTabVisible = (state.activeTab === 'master-data' && state.masterActiveSection === 'roster');
+          const tbody = isRosterTabVisible ? document.getElementById('db-roster-tbody') : null;
+          const countLabel = isRosterTabVisible ? document.getElementById('db-roster-count-label') : null;
           if (tbody && (!state.masterRoster || state.masterRoster.length === 0)) {
             tbody.innerHTML = (typeof generateTableSkeletonTrRows === 'function') ? generateTableSkeletonTrRows(8) : '';
           }
@@ -29940,7 +30035,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           let fromOffset = 0;
           let hasMore = true;
           let iteration = 0;
-          const MAX_ITERATIONS = 100; // Kapasitas hingga 100.000 baris roster
+          const MAX_ITERATIONS = isScheduleWindowMode ? 5 : 100; // Kapasitas hingga 100.000 baris roster
 
           while (hasMore && iteration < MAX_ITERATIONS) {
             iteration++;
@@ -29948,7 +30043,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
               .from('master_roster')
               .select(SUPABASE_ROSTER_COLS);
 
-            if (isActiveWindowMode) {
+            if (isScheduleWindowMode) {
+              query = query.gte('tanggal', schedMinDateStr).lte('tanggal', schedMaxDateStr);
+            } else if (isActiveWindowMode) {
               query = query.gte('tanggal', activeMinDateStr);
             } else if (periodFilter) {
               query = query.eq('periode', periodFilter);
@@ -30013,7 +30110,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
                 state.masterRoster = state.masterRoster.concat(chunkMapped);
               }
 
-              if (document.getElementById('db-roster-tbody')) {
+              if (isRosterTabVisible && document.getElementById('db-roster-tbody')) {
                 renderDatabaseRosterTable();
                 if (countLabel) {
                   countLabel.innerHTML = `Memuat data Cloud: <strong class="text-brand-600">${state.masterRoster.length.toLocaleString('id-ID')}</strong> data...`;
@@ -30038,18 +30135,30 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
               try { safeStorage.setItem('SE_MASTER_ROSTER', JSON.stringify(state.masterRoster.slice(0, 1000))); } catch (e) { }
             }
             try {
-              safeStorage.setItem('SE_MASTER_ROSTER_SCOPE', isActiveWindowMode ? 'active_30d' : 'full');
-              if (pendingRosterFp && state.masterRoster.length <= 1500) {
+              const isTruncatedLocal = state.masterRoster.length > 1500;
+              if (isScheduleWindowMode) {
+                safeStorage.setItem('SE_MASTER_ROSTER_SCOPE', schedScopeKey);
+              } else if (isActiveWindowMode) {
+                safeStorage.setItem('SE_MASTER_ROSTER_SCOPE', isTruncatedLocal ? 'active_30d_truncated' : 'active_30d');
+              } else if (!periodFilter) {
+                safeStorage.setItem('SE_MASTER_ROSTER_SCOPE', isTruncatedLocal ? 'full_truncated' : 'full');
+              }
+              safeStorage.setItem('SE_MASTER_ROSTER_SCHED_CHECK_TS', String(Date.now()));
+              if (pendingRosterFp && !isTruncatedLocal) {
                 saveSupabaseFingerprint(pendingRosterFp.key, pendingRosterFp.sig);
               }
             } catch (eFp) { }
 
-            state._isRosterFullyLoaded = true;
-            console.log('[Supabase Roster] Berhasil memuat total ' + state.masterRoster.length + ' data roster dari Supabase.');
-            renderDatabaseRosterTable();
+            if (!isScheduleWindowMode) {
+              state._isRosterFullyLoaded = true;
+            }
+            console.log('[Supabase Roster] Berhasil memuat total ' + state.masterRoster.length + ' data roster dari Supabase (' + (isScheduleWindowMode ? 'window ±3 hari' : (isActiveWindowMode ? '30 hari' : 'penuh')) + ').');
+            if (isRosterTabVisible) {
+              renderDatabaseRosterTable();
+            }
 
-            // Auto-heal data roster unit 5 angka ke Supabase di background
-            if (typeof autoHealRosterSpareUnitsToSupabase === 'function') {
+            // Auto-heal data roster unit 5 angka hanya saat muat roster penuh/tab Roster (bukan saat boot ringan)
+            if (!isScheduleWindowMode && typeof autoHealRosterSpareUnitsToSupabase === 'function') {
               autoHealRosterSpareUnitsToSupabase();
             }
             if (force) {
@@ -30061,7 +30170,9 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
               state.masterRoster = [];
               safeStorage.removeItem('SE_MASTER_ROSTER');
             }
-            renderDatabaseRosterTable();
+            if (isRosterTabVisible) {
+              renderDatabaseRosterTable();
+            }
             return true;
           }
           return false;
@@ -30070,6 +30181,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           return false;
         } finally {
           _rosterLoadPromise = null;
+          _rosterLoadMode = null;
         }
       })();
 
@@ -38203,7 +38315,8 @@ Keterangan : ${keterangan}`;
     }
 
     async function ensureRosterForDate(targetDate) {
-      if (!targetDate || !state.supabaseClient) return false;
+      if (!targetDate || !state.supabaseClient || !state.currentUser) return false;
+      if (typeof _rosterLoadPromise !== 'undefined' && _rosterLoadPromise) return false;
       const normDate = (typeof normalizeDateStr === 'function') ? normalizeDateStr(targetDate) : String(targetDate).trim();
       if (!normDate) return false;
 
@@ -43244,7 +43357,8 @@ Keterangan : ${keterangan}`;
       const selectAllCheckbox = document.getElementById('roster-select-all');
       if (!tbody) return;
 
-      if ((!state.masterRoster || state.masterRoster.length === 0) && state.supabaseClient && !_rosterLoadPromise) {
+      const isRosterTabActive = (state.activeTab === 'master-data' && state.masterActiveSection === 'roster');
+      if (isRosterTabActive && (!state.masterRoster || state.masterRoster.length === 0) && state.supabaseClient && !_rosterLoadPromise) {
         tbody.innerHTML = (typeof generateTableSkeletonTrRows === 'function') ? generateTableSkeletonTrRows(8) : '';
         const countLabel = document.getElementById('db-roster-count-label');
         if (countLabel) countLabel.innerHTML = '';
@@ -44160,11 +44274,7 @@ Keterangan : ${keterangan}`;
       if (typeof renderLtScheduleTable === "function") renderLtScheduleTable();
       if (typeof renderWtScheduleTable === "function") renderWtScheduleTable();
       if (typeof renderManpowerDashboard === "function") renderManpowerDashboard();
-
-      // 6. Pancarkan sinyal realtime ke perangkat lain
-      if (typeof emitJobBroadcastSignal === "function") {
-        emitJobBroadcastSignal(unit, "UPDATE", "master_armada");
-      }
+      // 6. Sinkronisasi realtime master_armada sudah ditangani langsung oleh listener postgres_changes (tanpa JOB_SIGNAL yang memicu HTTP 406)
     }
     async function syncClusterAssignedFromMasterArmada(skipSupabaseUpsert = true) {
       if (!state.masterArmada || !Array.isArray(state.masterArmada)) return;
@@ -46413,8 +46523,8 @@ Keterangan : ${keterangan}`;
           const isAcCat = (j.cat === 'aircleaner' || j.cat === 'air_cleaner' || j.cat === 'cac' || targetId.includes('-CAC-')) && !isJobReq && !isBd;
           if (isAcCat) return true;
 
-          // 2. Job Request LT: request air cleaner (ACH/Service) atau Service (wajib semprot air cleaner)
-          if (isJobReq) {
+          // 2. Job Request LT: request air cleaner (ACH/Service) atau Service (wajib semprot air cleaner; BD tidak dihitung sebagai semprotan Air Cleaner)
+          if (isJobReq && !isBd) {
             if (isAcReq) return true;
             if (isServiceStatus || reqJobStr.includes('service') || descStr.includes('service') || ketStr.includes('service')) return true;
           }
@@ -47576,9 +47686,12 @@ Keterangan : ${keterangan}`;
 
       const cleanKw = String(keyword || '').replace(/[,()%]/g, ' ').trim();
 
-      // Periksa apakah rentang tanggal sudah ada di RAM cache
+      // Periksa apakah rentang tanggal sudah ada di RAM cache; jika hanya sebagian tanggal yang kurang, sempitkan query ke sub-rentang yang kurang saja
+      let effStartDate = startDate;
+      let effEndDate = endDate;
       if (startDate && endDate && !cleanKw) {
-        let allDatesCached = true;
+        let missingMin = '';
+        let missingMax = '';
         let cur = new Date(startDate);
         const endD = new Date(endDate);
         let guard = 0;
@@ -47586,14 +47699,18 @@ Keterangan : ${keterangan}`;
           guard++;
           const dStr = cur.toISOString().split('T')[0];
           if (!window.globalDataCache?.loadedDates?.has(dStr)) {
-            allDatesCached = false;
-            break;
+            if (!missingMin) missingMin = dStr;
+            missingMax = dStr;
           }
           cur.setDate(cur.getDate() + 1);
         }
-        if (allDatesCached && guard > 0) {
+        if (!missingMin && guard > 0) {
           console.log(`[Archive Cache Hit] Rentang ${startDate} s/d ${endDate} sudah ada di RAM cache, 0 KB Egress!`);
           return Array.from(window.globalDataCache.jobs.values());
+        }
+        if (missingMin && missingMax) {
+          effStartDate = missingMin;
+          effEndDate = missingMax;
         }
       }
 
@@ -47602,7 +47719,7 @@ Keterangan : ${keterangan}`;
       if (archiveLoadingIndicator) archiveLoadingIndicator.classList.remove('hidden');
 
       try {
-        console.log(`[On-Demand Archive Fetch] Menarik data arsip: ${startDate || 'all'} s/d ${endDate || 'all'}, keyword: "${cleanKw}"...`);
+        console.log(`[On-Demand Archive Fetch] Menarik data arsip: ${effStartDate || 'all'} s/d ${effEndDate || 'all'}, keyword: "${cleanKw}"...`);
         const CHUNK_SIZE = 1000;
 
         async function fetchArchiveFromTable(tblName) {
@@ -47619,8 +47736,8 @@ Keterangan : ${keterangan}`;
               .from(tblName)
               .select(SUPABASE_JOB_LIST_COLS);
 
-            if (startDate) query = query.gte('tanggal', startDate);
-            if (endDate) query = query.lte('tanggal', endDate);
+            if (effStartDate) query = query.gte('tanggal', effStartDate);
+            if (effEndDate) query = query.lte('tanggal', effEndDate);
             if (cleanKw) {
               query = query.or(`no_lambung.ilike.%${cleanKw}%,lokasi.ilike.%${cleanKw}%,opt_name.ilike.%${cleanKw}%,pemesan.ilike.%${cleanKw}%`);
             }
@@ -47751,6 +47868,8 @@ Keterangan : ${keterangan}`;
         .on('broadcast', { event: 'JOB_SIGNAL' }, async ({ payload }) => {
           const { id, action, table, data, sender } = payload || {};
           if (!id) return;
+          // 0. Abaikan sinyal non-jobs (mis. master_operators / master_armada dari client versi lama) agar tidak memicu error HTTP 406 pada view jobs
+          if (table && table !== 'jobs' && table !== 'jobs_lt' && table !== 'jobs_wt') return;
           // 1. Lewati pesan yang berasal dari sesi tab browser ini sendiri
           if (sender && sender === (typeof APP_CLIENT_ID !== 'undefined' ? APP_CLIENT_ID : '')) return;
 
@@ -48095,8 +48214,10 @@ Keterangan : ${keterangan}`;
 
     function startRelaxedBackgroundPolling() {
       if (_relaxedPollingTimer) clearInterval(_relaxedPollingTimer);
+      if (!state.currentUser) return;
       _relaxedPollingTimer = setInterval(async () => {
         try {
+          if (!state.currentUser) return;
           if (document.hidden || document.visibilityState !== 'visible') return;
           if (document.querySelector('.modal:not(.hidden)')) return;
           if (!state.supabaseClient) return;
@@ -48122,7 +48243,7 @@ Keterangan : ${keterangan}`;
 
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && state.supabaseClient) {
+        if (!document.hidden && state.supabaseClient && state.currentUser) {
           const isWsHealthy = isRealtimeSubscribed && realtimeChannel && realtimeChannel.state === 'joined';
           // 1. Jika WebSocket dalam keadaan sehat & tersambung, data sudah 100% realtime (0 KB Egress!)
           if (isWsHealthy) {
@@ -48144,7 +48265,7 @@ Keterangan : ${keterangan}`;
         }
       });
       window.addEventListener('focus', () => {
-        if (state.supabaseClient) {
+        if (state.supabaseClient && state.currentUser) {
           const isWsHealthy = isRealtimeSubscribed && realtimeChannel && realtimeChannel.state === 'joined';
           if (isWsHealthy) {
             return; // 0 KB Egress saat WebSocket normal
@@ -48160,7 +48281,7 @@ Keterangan : ${keterangan}`;
         }
       });
       window.addEventListener('online', () => {
-        if (state.supabaseClient) {
+        if (state.supabaseClient && state.currentUser) {
           console.log('[Realtime DB] Jaringan online kembali, menyambungkan WebSocket...');
           setupSupabaseRealtimeListener();
           loadJobsFromSupabase();
@@ -48192,32 +48313,95 @@ Keterangan : ${keterangan}`;
       }
     }
 
-    async function initSupabase() {
-      // Prioritaskan konfigurasi langsung dari konstanta SUPABASE_CONFIG di atas
+    function ensureSupabaseClient(forceRecreate = false) {
       const supaUrl = SUPABASE_CONFIG.url || safeStorage.getItem('SE_SUPA_URL');
       const supaKey = SUPABASE_CONFIG.anonKey || safeStorage.getItem('SE_SUPA_KEY');
+      if (!supaUrl || !supaKey || typeof supabase === 'undefined') return null;
+      if (!forceRecreate && state.supabaseClient) return state.supabaseClient;
+      try {
+        state.supabaseClient = supabase.createClient(supaUrl, supaKey);
+        patchPostgrestCatch(state.supabaseClient);
+        state.isOnlineSupabase = true;
+        return state.supabaseClient;
+      } catch (e) {
+        console.warn('[Supabase] Gagal inisialisasi client:', e);
+        return null;
+      }
+    }
+    window.ensureSupabaseClient = ensureSupabaseClient;
 
-      if (supaUrl && supaKey && typeof supabase !== 'undefined') {
+    function teardownSupabaseSession() {
+      try {
+        if (_relaxedPollingTimer) {
+          clearInterval(_relaxedPollingTimer);
+          _relaxedPollingTimer = null;
+        }
+        if (reconnectRealtimeTimeout) {
+          clearTimeout(reconnectRealtimeTimeout);
+          reconnectRealtimeTimeout = null;
+        }
+        if (realtimeChannel && state.supabaseClient) {
+          try { state.supabaseClient.removeChannel(realtimeChannel); } catch (eRm) { }
+        }
+        realtimeChannel = null;
+        isRealtimeSubscribed = false;
+        window._supaRealtimeHealthy = false;
+        window._supabaseBootedForNrp = null;
+        window._supabaseBootPromise = null;
+        window._initialBootJobsPending = false;
+        const statusEl = document.getElementById('header-db-status');
+        if (statusEl) statusEl.textContent = 'Siap';
+      } catch (e) { }
+    }
+    window.teardownSupabaseSession = teardownSupabaseSession;
+
+    async function initSupabase(forceReinit = false) {
+      const client = ensureSupabaseClient(false);
+      if (!client) return;
+
+      // AUTH GATE: Jangan lakukan fetch data massal atau buka WebSocket Realtime sebelum user benar-benar login
+      if (!state.currentUser) {
+        const statusEl = document.getElementById('header-db-status');
+        if (statusEl) statusEl.textContent = 'Siap';
+        console.log('[Supabase] Menunggu login pengguna sebelum sinkronisasi & Realtime aktif (0 request).');
+        return;
+      }
+
+      const curUserKey = String(state.currentUser.nrp || state.currentUser.nama || state.currentUser.role || 'logged_in');
+      if (!forceReinit && window._supabaseBootPromise) {
+        return window._supabaseBootPromise;
+      }
+      if (!forceReinit && window._supabaseBootedForNrp === curUserKey) {
+        if (typeof setupSupabaseRealtimeListener === 'function' && (!isRealtimeSubscribed || !realtimeChannel || realtimeChannel.state !== 'joined')) {
+          setupSupabaseRealtimeListener();
+        }
+        return;
+      }
+
+      const statusEl = document.getElementById('header-db-status');
+      if (statusEl) statusEl.textContent = 'Online';
+
+      // Set flag sinkronisasi awal secara sinkron SEBELUM await agar refreshDashboardData() menunggu Hot-Window tanpa double-fetch
+      window._initialBootJobsPending = true;
+
+      const bootPromise = (async () => {
         try {
-          state.supabaseClient = supabase.createClient(supaUrl, supaKey);
-          patchPostgrestCatch(state.supabaseClient);
-          state.isOnlineSupabase = true;
-          const statusEl = document.getElementById('header-db-status');
-          if (statusEl) statusEl.textContent = 'Online';
-
-          // Cek apakah data master sudah ada di cache lokal (Master Data TTL Cache)
           // Cek role pengguna: apakah operator lapangan?
-          const userRole = state.currentUser?.role || 'user';
+          const userRole = String(state.currentUser?.role || 'user').toLowerCase();
           const isFieldOp = (userRole === 'mp_lt' || userRole === 'mp_wt' || userRole === 'oilman' || userRole === 'washingman' || userRole === 'operator' || userRole === 'user');
 
           // Muat master data (Armada & Populasi Unit pakai Fingerprint Check; skip tabel user/kontak penuh untuk role lapangan)
           const masterLoadTasks = [];
           masterLoadTasks.push(typeof syncSupabaseMasterData === 'function' ? syncSupabaseMasterData(false, { skipHeavyMaster: isFieldOp }) : Promise.resolve());
 
+          // Tarik roster ringan window ±3 hari (1 request, cache lokal utuh) agar auto-fill Personil Schedule selalu terisi tanpa download 6.540 baris
+          const rosterBootTask = (typeof loadRosterFromSupabase === 'function'
+            ? loadRosterFromSupabase('__SCHEDULE_WINDOW__', false)
+            : Promise.resolve());
+
           // OPTIMASI BOOT AWAL (Hemat Egress & Anti Double-Fetch):
           // Saat startup, HANYA muat Jadwal Aktif (`loadJobsFromSupabase`) dengan Hot-Window terfokus.
-          // Riwayat Selesai, Air Cleaner, PICA, dan Roster dimuat secara On-Demand (Lazy-Load) saat tab terkait dibuka.
-          window._initialBootJobsPending = true;
+          // Riwayat Selesai, Air Cleaner, PICA, dan Roster 30-hari dimuat secara On-Demand (Lazy-Load) saat tab terkait dibuka.
           const bootJobsPromise = (typeof loadJobsFromSupabase === 'function' ? loadJobsFromSupabase() : Promise.resolve())
             .finally(() => {
               window._initialBootJobsPending = false;
@@ -48225,10 +48409,19 @@ Keterangan : ${keterangan}`;
           window._initialBootJobsPromise = bootJobsPromise;
           const bootTasks = [
             bootJobsPromise,
+            rosterBootTask,
             ...masterLoadTasks
           ];
 
           await Promise.allSettled(bootTasks);
+
+          // Jika user keburu logout di tengah proses boot, hentikan sebelum membuka WebSocket
+          if (!state.currentUser) {
+            teardownSupabaseSession();
+            return;
+          }
+
+          window._supabaseBootedForNrp = curUserKey;
 
           if (typeof alignJobsWithMasterUnits === 'function') {
             alignJobsWithMasterUnits();
@@ -48245,17 +48438,22 @@ Keterangan : ${keterangan}`;
             setupSupabaseRealtimeListener();
           }
 
-          if (state.masterActiveSection === 'roster' && typeof renderDatabaseRosterTable === 'function') {
+          // Hanya render tabel database roster jika user memang sedang membuka tab Master Data -> Roster
+          if (state.activeTab === 'master-data' && state.masterActiveSection === 'roster' && typeof renderDatabaseRosterTable === 'function') {
             renderDatabaseRosterTable();
           }
+          // refreshActiveTable() sudah menangani render & cek role tab aktif (termasuk Dashboard tanpa double-call)
           refreshActiveTable();
-          if (state.activeTab === 'dashboard' && typeof refreshDashboardData === 'function') {
-            refreshDashboardData();
-          }
         } catch (e) {
+          window._initialBootJobsPending = false;
           console.warn('[Supabase] Init gagal, menggunakan local fallback:', e);
+        } finally {
+          window._supabaseBootPromise = null;
         }
-      }
+      })();
+
+      window._supabaseBootPromise = bootPromise;
+      return bootPromise;
     }
 
     // Bus Komunikasi Realtime Antar Tab (0 ms latency)
@@ -48699,6 +48897,8 @@ Keterangan : ${keterangan}`;
           if (formPane) formPane.classList.remove('hidden');
           if (directPane) directPane.classList.add('hidden');
         }
+        const curDirectSvc = document.querySelector('input[name="direct-tipe-service"]:checked')?.value || 'lubetruck';
+        if (typeof handleDirectServiceTypeChange === 'function') handleDirectServiceTypeChange(curDirectSvc);
       }
 
       // Tanggal default diset ke hari ini jika belum terisi
@@ -48745,6 +48945,8 @@ Keterangan : ${keterangan}`;
           btnForm.className = 'px-5 py-2.5 rounded-xl text-xs font-black tracking-wide transition-all text-slate-600 hover:text-slate-900 cursor-pointer';
         }
 
+        const curDirectSvc = document.querySelector('input[name="direct-tipe-service"]:checked')?.value || 'lubetruck';
+        if (typeof handleDirectServiceTypeChange === 'function') handleDirectServiceTypeChange(curDirectSvc);
         populateDirectArmadaOptions();
         populateDirectPersonnelDatalists();
       } else {
@@ -48785,19 +48987,23 @@ Keterangan : ${keterangan}`;
       const isWt = (svcType === 'watertruck');
       const statusSel = document.getElementById('direct-status');
       if (statusSel) {
+        const prevVal = statusSel.value || '';
         if (isWt) {
           statusSel.innerHTML = `
             <option value="" selected disabled>-- Pilih Status --</option>
-            <option value="BREAKDOWN">BREAKDOWN (Kendala Unit)</option>
             <option value="SERVICE">SERVICE (Maintenance/PCR)</option>
             <option value="WASHING">WASHING REQUEST (Pencucian Unit)</option>
           `;
+          if (prevVal === 'SERVICE' || prevVal === 'WASHING') statusSel.value = prevVal;
         } else {
           statusSel.innerHTML = `
             <option value="" selected disabled>-- Pilih Status --</option>
-            <option value="BREAKDOWN">BREAKDOWN (Kendala Unit)</option>
+            <option value="BD_GREASING">BD (Greasing/Adjust Track)</option>
+            <option value="BD_ADD_OIL">BD (Add Oil/Grease)</option>
+            <option value="BD_AIR_CLEANER">BD (Clean Air Cleaner)</option>
             <option value="SERVICE">SERVICE (Maintenance/PCR)</option>
           `;
+          if (['BD_GREASING', 'BD_ADD_OIL', 'BD_AIR_CLEANER', 'SERVICE'].includes(prevVal)) statusSel.value = prevVal;
         }
       }
       populateDirectArmadaOptions();
@@ -49690,23 +49896,55 @@ Keterangan : ${keterangan}`;
         if (hmStart && hmFinish) hmUnit = `${hmStart} s/d ${hmFinish}`;
         else if (hmStart || hmFinish) hmUnit = hmStart || hmFinish;
 
-        // Map status (BREAKDOWN, SERVICE, atau WASHING REQUEST)
+        // Map status:
+        // LT: BD_GREASING, BD_ADD_OIL, BD_AIR_CLEANER, SERVICE
+        // WT: SERVICE, WASHING
         let finalStatus = 'service';
         let unitCond = 'service';
         let histStatus = 'SERVICE';
+        let bdPrefixLabel = '';
+        let reqJobLabel = '';
 
-        if (statusChoice === 'BREAKDOWN') {
+        const isBdChoice = (statusChoice === 'BD_GREASING' || statusChoice === 'BD_ADD_OIL' || statusChoice === 'BD_AIR_CLEANER' || statusChoice === 'BREAKDOWN');
+        if (isBdChoice) {
           finalStatus = 'bd';
           unitCond = 'breakdown';
           histStatus = 'BREAKDOWN';
+          if (statusChoice === 'BD_GREASING') {
+            bdPrefixLabel = 'BD (Greasing/Adjust Track)';
+            reqJobLabel = 'Greasing/Adjust Track';
+          } else if (statusChoice === 'BD_ADD_OIL') {
+            bdPrefixLabel = 'BD (Add Oil/Grease)';
+            reqJobLabel = 'Add Oil/Grease';
+          } else if (statusChoice === 'BD_AIR_CLEANER') {
+            bdPrefixLabel = 'BD (Clean Air Cleaner)';
+            reqJobLabel = 'Clean Air Cleaner';
+          } else {
+            reqJobLabel = 'Breakdown';
+          }
         } else if (statusChoice === 'WASHING') {
           finalStatus = 'washing';
           unitCond = 'washing';
           histStatus = 'WASHING REQUEST';
+          reqJobLabel = 'Washing Request';
         } else {
           finalStatus = 'service';
           unitCond = 'service';
           histStatus = 'SERVICE';
+          reqJobLabel = 'Service / Maintenance';
+        }
+
+        // Format keterangan: jika memilih BD bersyarat, sisipkan prefix detail BD (misal: "BD (Greasing/Adjust Track) : greasing bucket")
+        let finalKeterangan = keterangan;
+        if (bdPrefixLabel) {
+          const cleanKet = String(keterangan || '').trim();
+          if (!cleanKet || cleanKet === '-') {
+            finalKeterangan = bdPrefixLabel;
+          } else if (cleanKet.toLowerCase().startsWith(bdPrefixLabel.toLowerCase())) {
+            finalKeterangan = cleanKet;
+          } else {
+            finalKeterangan = `${bdPrefixLabel} : ${cleanKet}`;
+          }
         }
 
         const directJob = {
@@ -49736,7 +49974,10 @@ Keterangan : ${keterangan}`;
           noLambung: lambung,
           typeUnit: getUnitTypeFromMaster(lambung, 'HAUL TRUCK'),
           deskripsi: deskripsi,
-          keterangan: keterangan,
+          keterangan: finalKeterangan,
+          bdNotes: isBdChoice ? finalKeterangan : '',
+          requestedJob: reqJobLabel,
+          requested_job: reqJobLabel,
           hmStart: hmStart || '',
           hmEnd: hmFinish || '',
           hmStop: hmStart || '',
@@ -49745,7 +49986,7 @@ Keterangan : ${keterangan}`;
           status: finalStatus,
           status_final: histStatus,
           unitCondition: unitCond,
-          kondisi: (statusChoice === 'BREAKDOWN' || statusChoice === 'SERVICE' || statusChoice === 'WASHING') ? statusChoice : 'NORMAL',
+          kondisi: isBdChoice ? 'BREAKDOWN' : ((statusChoice === 'SERVICE' || statusChoice === 'WASHING') ? statusChoice : 'NORMAL'),
           armada: armada,
           armadaUnit: armada,
           armada_unit: armada,
@@ -49768,7 +50009,7 @@ Keterangan : ${keterangan}`;
 
         // Kunci snapshot ke riwayat selesai (job_history)
         if (typeof lockJobHistorySnapshot === 'function') {
-          await lockJobHistorySnapshot(directJob, histStatus, keterangan);
+          await lockJobHistorySnapshot(directJob, histStatus, finalKeterangan);
         }
 
         // Catat ke state lokal completed & jobHistory
@@ -49779,10 +50020,9 @@ Keterangan : ${keterangan}`;
           window.globalDataCache.jobs.set(finalJobId, directJob);
         }
 
-        // Jika status SERVICE atau pekerjaan mengandung air cleaner, perbarui rekapan Air Cleaner
-        const acText = `${deskripsi} ${keterangan}`.toLowerCase();
-        if (!isWt && (statusChoice === 'SERVICE' || acText.includes('air cleaner')) && typeof updateAirCleanerRecord === 'function') {
-          updateAirCleanerRecord(lambung, getUnitTypeFromMaster(lambung, 'HAUL TRUCK'), 'service', keterangan);
+        // Khusus status SERVICE pada LT: perbarui rekapan Air Cleaner (BD Clean Air Cleaner TIDAK masuk Monitoring Air Cleaner sesuai aturan pengguna)
+        if (!isWt && statusChoice === 'SERVICE' && typeof updateAirCleanerRecord === 'function') {
+          updateAirCleanerRecord(lambung, getUnitTypeFromMaster(lambung, 'HAUL TRUCK'), 'service', finalKeterangan);
         }
 
         // Update master unit lokasi & populasi
@@ -49854,6 +50094,9 @@ Keterangan : ${keterangan}`;
         const rLt = document.querySelector('input[name="direct-tipe-service"][value="lubetruck"]');
         if (rLt) rLt.checked = true;
         if (typeof handleDirectServiceTypeChange === 'function') handleDirectServiceTypeChange('lubetruck');
+      } else {
+        const curSvc = document.querySelector('input[name="direct-tipe-service"]:checked')?.value || 'lubetruck';
+        if (typeof handleDirectServiceTypeChange === 'function') handleDirectServiceTypeChange(curSvc);
       }
       const shiftEl = document.getElementById('direct-shift');
       if (shiftEl) shiftEl.value = String(state.currentShift || 1);
@@ -50228,7 +50471,8 @@ Keterangan : ${keterangan}`;
       }
       safeStorage.setItem('SE_SUPA_URL', url);
       safeStorage.setItem('SE_SUPA_KEY', key);
-      initSupabase();
+      if (typeof ensureSupabaseClient === 'function') ensureSupabaseClient(true);
+      if (state.currentUser) initSupabase(true);
       toggleModal('settings-modal', false);
       showToast('Konfigurasi Supabase berhasil disimpan!', 'success');
     }
@@ -51880,10 +52124,15 @@ Keterangan : ${keterangan}`;
             if (typeof window.renderHistoryTable === 'function') window.renderHistoryTable();
             if (state.activeTab === 'pica' && typeof renderPicaTable === 'function') renderPicaTable();
             if (state.activeTab === 'dashboard') {
-              if (typeof refreshDashboardData === 'function') refreshDashboardData();
-              else if (typeof initKpiSchedulePicaCharts === 'function') initKpiSchedulePicaCharts();
-              if (typeof renderDashboardPicaMatrix === 'function') renderDashboardPicaMatrix();
-              if (typeof renderManpowerDashboard === 'function') renderManpowerDashboard();
+              const _hDashRole = String(state.currentUser?.role || '').toLowerCase();
+              const _isMgmtDash = ['admin', 'basecontrol', 'base_control', 'bsc', 'track', 'tim_track'].includes(_hDashRole);
+              if (_isMgmtDash) {
+                if (typeof refreshDashboardData === 'function') refreshDashboardData();
+                else if (typeof initKpiSchedulePicaCharts === 'function') initKpiSchedulePicaCharts();
+                if (typeof renderDashboardPicaMatrix === 'function') renderDashboardPicaMatrix();
+              } else if (typeof renderManpowerDashboard === 'function') {
+                renderManpowerDashboard();
+              }
             }
           }
           return state.jobHistory;
@@ -54569,14 +54818,12 @@ Keterangan : ${keterangan}`;
       try { initMiningWeekData(); } catch (e) { console.warn('[Boot] initMiningWeekData warning:', e); }
       try { updateAppVersionBadge(); } catch (e) { console.warn('[Boot] updateAppVersionBadge warning:', e); }
 
-      // 2. Inisialisasi Supabase non-blocking di background & jalankan Relaxed Polling
+      // 2. Siapkan instance client Supabase di memori (0 HTTP request / 0 WebSocket sebelum sesi login terverifikasi)
       try {
-        initSupabase().then(() => {
-          if (typeof startRelaxedBackgroundPolling === 'function') {
-            startRelaxedBackgroundPolling();
-          }
-        });
-      } catch (e) { console.warn('[Boot] initSupabase warning:', e); }
+        if (typeof ensureSupabaseClient === 'function') {
+          ensureSupabaseClient(false);
+        }
+      } catch (e) { console.warn('[Boot] ensureSupabaseClient warning:', e); }
 
       try {
         if (typeof loadRemotePhotoLogsFromGoogleSheet === 'function') {
@@ -54772,7 +55019,21 @@ Keterangan : ${keterangan}`;
             }
 
             state.currentUser = user;
+            if (typeof ensureSupabaseClient === 'function' && ensureSupabaseClient(false)) {
+              window._initialBootJobsPending = true;
+            }
             renderAppForUser(user);
+            // Jalankan sinkronisasi Supabase & Realtime WebSocket SETELAH sesi user terpulihkan (role sudah akurat & 0 request saat belum login)
+            try {
+              initSupabase().then(() => {
+                if (typeof startRelaxedBackgroundPolling === 'function') {
+                  startRelaxedBackgroundPolling();
+                }
+              }).catch(() => { window._initialBootJobsPending = false; });
+            } catch (eSupaBoot) {
+              window._initialBootJobsPending = false;
+              console.warn('[Boot] initSupabase post-session warning:', eSupaBoot);
+            }
           } else {
             if (typeof resetLoginButtonState === 'function') resetLoginButtonState();
           }
