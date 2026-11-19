@@ -12554,15 +12554,20 @@
     function mapSupabaseJobRowToModel(row) {
       if (!row || !row.id) return null;
       const targetId = String(row.id);
-      const isExplicitUnsch = (targetId.startsWith('UNS') || targetId.includes('-REQ-') || row.cat === 'unscheduled' || row.job_type === 'unsch_lt' || row.job_type === 'unsch_wt');
-      const isWt = (targetId.includes('WT') || row.service_type === 'watertruck' || ['coal', 'rom', 'non_coal'].includes(row.cat) || row.job_type === 'sch_wt' || row.job_type === 'water' || row.job_type === 'unsch_wt');
+      const upperTargetId = targetId.toUpperCase();
+      const isExplicitUnsch = (upperTargetId.startsWith('UNS') || upperTargetId.includes('-REQ-') || row.cat === 'unscheduled' || row.job_type === 'unsch_lt' || row.job_type === 'unsch_wt');
+      const isExplicitLtPrefix = /^(LT-|PLT-|UNS-LT|LTJ)/i.test(upperTargetId);
+      const isExplicitWtPrefix = /^(WT-|PWT-|UNS-WT|WTJ)/i.test(upperTargetId);
+      const rowCatRaw = String(row.cat || '').toLowerCase().trim();
+      const isWt = isExplicitLtPrefix
+        ? false
+        : (isExplicitWtPrefix || row.service_type === 'watertruck' || ['coal', 'rom', 'non_coal', 'noncoal'].includes(rowCatRaw) || row.job_type === 'sch_wt' || row.job_type === 'water' || row.job_type === 'unsch_wt');
 
       const isUnschWt = isExplicitUnsch && isWt;
       const isUnschLt = isExplicitUnsch && !isWt;
       const isSchWt = !isExplicitUnsch && isWt;
       const isSchLt = !isExplicitUnsch && !isWt;
 
-      const upperTargetId = targetId.toUpperCase();
       let resolvedCat = String(row.cat || (isWt ? 'coal' : 'small')).toLowerCase().trim();
       if (!isExplicitUnsch) {
         // Utamakan membaca No ID (prefix resmi) sebagai penentu kategori utama
@@ -12570,7 +12575,8 @@
           resolvedCat = 'non_coal';
         } else if (upperTargetId.startsWith('WT-WSC') || upperTargetId.includes('-WSC-')) {
           const clUpper = String(row.cluster || '').toUpperCase().trim();
-          resolvedCat = (resolvedCat === 'rom' || clUpper === 'ROM') ? 'rom' : 'coal';
+          const isRomCluster = (clUpper === 'ROM' || clUpper === 'ROM AREA' || (typeof getParentCluster === 'function' && getParentCluster(row.cluster) === 'ROM'));
+          resolvedCat = (resolvedCat === 'rom' || isRomCluster) ? 'rom' : 'coal';
         } else if (upperTargetId.startsWith('LT-CAC') || upperTargetId.includes('-CAC-')) {
           resolvedCat = 'aircleaner';
         } else if (upperTargetId.startsWith('LT-TUO') || upperTargetId.includes('-TUO-')) {
@@ -12968,12 +12974,18 @@
       for (const job of Array.from(window.globalDataCache.jobs.values())) {
         if (!job) continue;
         const targetId = String(job.id || '');
-        const isExplicitUnsch = (targetId.startsWith('UNS') || targetId.includes('-REQ-') || job.cat === 'unscheduled' || job.job_type === 'unsch_lt' || job.job_type === 'unsch_wt' || job.serviceType === 'Job Request');
+        const upperId = targetId.toUpperCase();
+        const isExplicitUnsch = (upperId.startsWith('UNS') || upperId.includes('-REQ-') || job.cat === 'unscheduled' || job.job_type === 'unsch_lt' || job.job_type === 'unsch_wt' || job.serviceType === 'Job Request');
         if (!isExplicitUnsch && typeof isJobAlreadyClosedInHistory === 'function' && isJobAlreadyClosedInHistory(job, state.jobHistory)) {
           window.globalDataCache.jobs.delete(targetId);
           continue;
         }
-        const isWt = (targetId.includes('WT') || job.serviceType === 'watertruck' || job.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(job.cat));
+        const isExplicitLtPrefix = /^(LT-|PLT-|UNS-LT|LTJ)/i.test(upperId);
+        const isExplicitWtPrefix = /^(WT-|PWT-|UNS-WT|WTJ)/i.test(upperId);
+        const jobCatLow = String(job.cat || '').toLowerCase().trim();
+        const isWt = isExplicitLtPrefix
+          ? false
+          : (isExplicitWtPrefix || job.serviceType === 'watertruck' || job.targetType === 'WT' || ['coal', 'rom', 'non_coal', 'noncoal'].includes(jobCatLow) || job.job_type === 'sch_wt' || job.job_type === 'unsch_wt');
 
         const isUnschWt = isExplicitUnsch && isWt;
         const isUnschLt = isExplicitUnsch && !isWt;
@@ -13580,6 +13592,30 @@
       return 'Selatan';
     }
     window.getParentCluster = getParentCluster;
+
+    function resolveVisibleClustersForJobs(baseClusters, jobsList) {
+      const result = [];
+      const seen = new Set();
+      (Array.isArray(baseClusters) ? baseClusters : []).forEach(cl => {
+        if (!cl) return;
+        const norm = String(cl).trim();
+        const key = norm.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          result.push(norm);
+        }
+      });
+      (Array.isArray(jobsList) ? jobsList : []).forEach(j => {
+        const parent = getParentCluster(j?.cluster);
+        const key = String(parent || '').trim().toLowerCase();
+        if (key && !seen.has(key)) {
+          seen.add(key);
+          result.push(parent);
+        }
+      });
+      return result;
+    }
+    window.resolveVisibleClustersForJobs = resolveVisibleClustersForJobs;
 
     function formatClusterLabel(clusterName) {
       if (!clusterName) return '-';
@@ -16821,6 +16857,37 @@
       ensureJobsForDate(today);
     }
 
+    async function fetchAllPagedSupabaseRows(tableName, selectCols, applyFilterFn, options = {}) {
+      if (!state.supabaseClient) return { data: [], error: new Error('No Supabase client') };
+      const CHUNK = options.chunkSize || 1000;
+      const maxRows = options.maxRows || 20000;
+      const orderCol = options.orderCol !== undefined ? options.orderCol : 'tanggal';
+      const ascending = options.ascending !== false;
+      let offset = 0;
+      let allRows = [];
+      let lastError = null;
+      while (offset < maxRows) {
+        let q = state.supabaseClient.from(tableName).select(selectCols);
+        if (typeof applyFilterFn === 'function') q = applyFilterFn(q);
+        if (orderCol) {
+          q = q.order(orderCol, { ascending }).order('id', { ascending: true });
+        } else {
+          q = q.order('id', { ascending: true });
+        }
+        const res = await q.range(offset, offset + CHUNK - 1);
+        if (res?.error) {
+          lastError = res.error;
+          break;
+        }
+        const batch = Array.isArray(res?.data) ? res.data : [];
+        if (batch.length > 0) allRows = allRows.concat(batch);
+        if (batch.length < CHUNK) break;
+        offset += CHUNK;
+      }
+      return { data: allRows, error: lastError };
+    }
+    window.fetchAllPagedSupabaseRows = fetchAllPagedSupabaseRows;
+
     async function ensureJobsForDate(dateStr, force = false) {
       if (!dateStr || !state.supabaseClient) return;
       if (!force) {
@@ -16845,68 +16912,82 @@
       try {
         console.log(`[Supabase On-Demand] Memuat jadwal untuk tanggal ${dateStr} (force: ${force})...`);
         const [resLt, resWt] = await Promise.allSettled([
-          state.supabaseClient.from('jobs_lt').select(SUPABASE_JOB_LIST_COLS).eq('tanggal', dateStr),
-          state.supabaseClient.from('jobs_wt').select(SUPABASE_JOB_LIST_COLS).eq('tanggal', dateStr)
+          fetchAllPagedSupabaseRows('jobs_lt', SUPABASE_JOB_LIST_COLS, q => q.eq('tanggal', dateStr), { orderCol: 'id' }),
+          fetchAllPagedSupabaseRows('jobs_wt', SUPABASE_JOB_LIST_COLS, q => q.eq('tanggal', dateStr), { orderCol: 'id' })
         ]);
 
-        let cloudJobs = [];
+        let cloudLtJobs = [];
+        let cloudWtJobs = [];
         let fetchedLt = false;
         let fetchedWt = false;
 
         if (resLt.status === 'fulfilled' && !resLt.value.error && Array.isArray(resLt.value.data)) {
-          cloudJobs = cloudJobs.concat(resLt.value.data);
+          cloudLtJobs = resLt.value.data;
           fetchedLt = true;
         }
         if (resWt.status === 'fulfilled' && !resWt.value.error && Array.isArray(resWt.value.data)) {
-          cloudJobs = cloudJobs.concat(resWt.value.data);
+          cloudWtJobs = resWt.value.data;
           fetchedWt = true;
         }
 
-        // Fallback ke view jobs jika salah satu gagal
+        // Fallback ke view jobs jika keduanya gagal
         if (!fetchedLt && !fetchedWt) {
-          const { data, error } = await state.supabaseClient
-            .from('jobs')
-            .select(SUPABASE_JOB_LIST_COLS)
-            .eq('tanggal', dateStr);
+          const { data, error } = await fetchAllPagedSupabaseRows('jobs', SUPABASE_JOB_LIST_COLS, q => q.eq('tanggal', dateStr), { orderCol: 'id' });
           if (!error && Array.isArray(data)) {
-            cloudJobs = data;
+            fetchedLt = true;
+            fetchedWt = true;
+            data.forEach(j => {
+              const uid = String(j.id || '').toUpperCase();
+              const isLtPfx = /^(LT-|PLT-|UNS-LT|LTJ)/i.test(uid);
+              const isWtPfx = /^(WT-|PWT-|UNS-WT|WTJ)/i.test(uid);
+              const isWtRow = isLtPfx ? false : (isWtPfx || j.targetType === 'WT' || ['coal', 'rom', 'non_coal', 'noncoal'].includes(String(j.cat || '').toLowerCase().trim()));
+              if (isWtRow) cloudWtJobs.push(j);
+              else cloudLtJobs.push(j);
+            });
           }
         }
 
-        const cloudJobIds = new Set(cloudJobs.map(j => String(j.id)));
-
-        // Hapus job lokal pada tanggal ini yang sudah tidak ada di cloud (HANYA jika cloudJobs berhasil ditarik)
-        if (window.globalDataCache && window.globalDataCache.jobs && cloudJobs.length > 0) {
+        const reconcileSideForDate = (isWtSide, cloudRows) => {
+          if (!window.globalDataCache || !window.globalDataCache.jobs) return;
+          const cloudIds = new Set(cloudRows.map(j => String(j.id)));
           for (const [jId, jObj] of Array.from(window.globalDataCache.jobs.entries())) {
             if (String(jId).startsWith('UNS-') || window.globalDataCache.orderRequests?.has(jId)) continue;
             if (window._bgJobQueue && window._bgJobQueue[jId]) continue; // Jangan hapus jika sedang upload background
             if (typeof _jobSyncQueue !== 'undefined' && _jobSyncQueue.has(jId)) continue; // Jangan hapus jika ada di sync queue
             if (jObj?.actionTimestamp && (Date.now() - jObj.actionTimestamp < 60000)) continue; // Proteksi 60 detik untuk job lokal baru
-            if (jObj?.tanggal === dateStr) {
-              if (!cloudJobIds.has(jId)) {
-                window.globalDataCache.jobs.delete(jId);
+            if (jObj?.tanggal !== dateStr) continue;
+            const uid = String(jId).toUpperCase();
+            const isLtPfx = /^(LT-|PLT-|UNS-LT|LTJ)/i.test(uid);
+            const isWtPfx = /^(WT-|PWT-|UNS-WT|WTJ)/i.test(uid);
+            const cLow = String(jObj?.cat || '').toLowerCase().trim();
+            const jIsWt = isLtPfx ? false : (isWtPfx || ['coal', 'rom', 'non_coal', 'noncoal'].includes(cLow) || jObj?.targetType === 'WT' || jObj?.job_type === 'sch_wt');
+            if (jIsWt === isWtSide && !cloudIds.has(jId)) {
+              window.globalDataCache.jobs.delete(jId);
+            }
+          }
+          cloudRows.forEach(row => {
+            const jobObj = mapSupabaseJobRowToModel(row);
+            if (jobObj && jobObj.id) {
+              const jId = String(jobObj.id);
+              const existing = window.globalDataCache?.jobs?.get(jId);
+              if (existing) {
+                const isLockedOrBg = existing.isLocked ||
+                  Boolean(window._bgJobQueue && window._bgJobQueue[jId]) ||
+                  ['ach', 'achieved', 'done', 'service', 'bd', 'parkir'].includes(String(existing.status || '').toLowerCase());
+                if (isLockedOrBg) return;
               }
+              window.globalDataCache.jobs.set(jId, jobObj);
             }
-          }
+          });
+        };
+
+        // Rekonsiliasi LT & WT secara independen agar gagalnya 1 tabel tidak pernah menghapus tabel satunya!
+        if (fetchedLt) reconcileSideForDate(false, cloudLtJobs);
+        if (fetchedWt) reconcileSideForDate(true, cloudWtJobs);
+
+        if (fetchedLt && fetchedWt) {
+          window.globalDataCache?.loadedDates?.add(dateStr);
         }
-
-        // Masukkan data cloud riil
-        cloudJobs.forEach(row => {
-          const jobObj = mapSupabaseJobRowToModel(row);
-          if (jobObj && jobObj.id) {
-            const jId = String(jobObj.id);
-            const existing = window.globalDataCache?.jobs?.get(jId);
-            if (existing) {
-              const isLockedOrBg = existing.isLocked ||
-                Boolean(window._bgJobQueue && window._bgJobQueue[jId]) ||
-                ['ach', 'achieved', 'done', 'service', 'bd', 'parkir'].includes(String(existing.status || '').toLowerCase());
-              if (isLockedOrBg) return;
-            }
-            window.globalDataCache.jobs.set(jId, jobObj);
-          }
-        });
-
-        window.globalDataCache?.loadedDates?.add(dateStr);
         if (typeof alignJobsWithMasterUnits === 'function') alignJobsWithMasterUnits();
         syncGlobalCacheToState();
         if (typeof alignJobsWithMasterUnits === 'function') alignJobsWithMasterUnits();
@@ -19627,7 +19708,10 @@
       }
 
       let histId = cleanBaseId;
-      if (!/\-\d{4}$/.test(histId)) {
+      const alreadyHasTimeSuffix = (typeof stripHistoryTimeSuffix === 'function')
+        ? (stripHistoryTimeSuffix(histId) !== histId)
+        : /-([01]\d|2[0-3])[0-5]\d$/.test(histId);
+      if (!alreadyHasTimeSuffix) {
         histId = histId + timeSuffix;
       }
       const cleanId = histId;
@@ -19638,7 +19722,7 @@
         const hIdStr = String(h.id || '');
         if (hIdStr.startsWith(cleanBaseId + '-')) {
           const suffix = hIdStr.slice(cleanBaseId.length);
-          if (/^-\d{4}$/.test(suffix)) return true;
+          if (/^-([01]\d|2[0-3])[0-5]\d$/.test(suffix)) return true;
         }
         return false;
       });
@@ -19654,36 +19738,54 @@
         }
       }
 
-      // Proteksi Tambahan Lapis Baja: Periksa apakah unit pada tanggal & shift ini sudah pernah ACHIEVED/SERVICE
+      // Proteksi Tambahan Lapis Baja: Cek HANYA job yang benar-benar IDENTIK (tabel, kategori, unit, tanggal, shift, & putaran)
+      // DILARANG memblokir NON_ACH antar-kategori (misal Small Track vs Air Cleaner / Top Up / Washing) atau antar-shift (S1 vs S2)!
       if (statusFinal === 'NON_ACH') {
         const targetUnit = String(job.noLambung || job.no_lambung || '').trim().toUpperCase();
-        const targetDate = String(job.tanggal || job.originalDate || getEffectiveTodayString()).trim().split('T')[0];
-        const targetShift = parseInt(job.shift || 1, 10);
-        const jCat = String(job.cat || '').toLowerCase().trim();
-        const isWashingCoalRom = (jCat === 'coal' || jCat === 'rom');
-        const jRound = (typeof getJobWashingRound === 'function')
-          ? getJobWashingRound(job)
-          : (parseInt(job.washingRound || job.washing_round || (cleanBaseId.includes('-W2') ? 2 : 1), 10) || 1);
+        const targetDate = String(job.tanggal_rencana || job.originalDate || job.tanggal || getEffectiveTodayString()).trim().split('T')[0];
+        const targetShift = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(job) : (parseInt(job.shift || 1, 10) || 1);
+        const normCatKey = (obj, objIsWt) => {
+          const idU = String(obj?.id || obj?.job_id || obj?.no_id || '').toUpperCase();
+          if (idU.startsWith('LT-CAC') || idU.includes('-CAC-')) return 'aircleaner';
+          if (idU.startsWith('LT-TUO') || idU.includes('-TUO-')) return 'topup';
+          if (idU.startsWith('WT-WNC') || idU.includes('-WNC-')) return 'non_coal';
+          const c = String(obj?.cat || '').toLowerCase().trim();
+          if (c === 'air_cleaner' || c === 'cac') return 'aircleaner';
+          if (c === 'topup_oil' || c === 'top_up' || c === 'top up oil' || c === 'tuo') return 'topup';
+          if (c === 'noncoal' || c === 'wnc') return 'non_coal';
+          if (c) return c;
+          return objIsWt ? 'coal' : 'small';
+        };
+        const jCat = normCatKey(job, isWt);
+        const jRound = isWt
+          ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(job) : (parseInt(job.washingRound || job.washing_round || (cleanBaseId.includes('-W2') ? 2 : 1), 10) || 1))
+          : 1;
 
         const alreadyDone = Array.isArray(state.jobHistory) && state.jobHistory.some(h => {
-          const hu = String(h.no_lambung || '').trim().toUpperCase();
-          const hd = String(h.tanggal_eksekusi || h.tanggal_rencana || '').trim().split('T')[0];
-          const hs = parseInt(h.shift_rencana || h.shift || 1, 10);
+          if (!h) return false;
           const hst = String(h.status_final || '').toUpperCase();
           const isDoneSt = ['ACHIEVED', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR'].includes(hst);
-          if (!isDoneSt || hu !== targetUnit || hd !== targetDate) return false;
-          if (isWashingCoalRom) {
+          if (!isDoneSt) return false;
+          const hIsWt = (typeof isJobWaterTruck === 'function') ? isJobWaterTruck(h) : (String(h.job_type || '').toLowerCase() === 'water' || /^(WT-|PWT-|UNS-WT|WTJ)/i.test(String(h.id || '')));
+          if (hIsWt !== isWt) return false;
+          const hu = String(h.no_lambung || '').trim().toUpperCase();
+          const hd = String(h.tanggal_rencana || h.tanggal_eksekusi || '').trim().split('T')[0];
+          if (hu !== targetUnit || hd !== targetDate) return false;
+          const hs = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(h) : (parseInt(h.shift_rencana || h.shift || 1, 10) || 1);
+          if (hs !== targetShift) return false;
+          const hCat = normCatKey(h, hIsWt);
+          if (hCat !== jCat) return false;
+          if (isWt) {
             const hRound = (typeof getJobWashingRound === 'function')
               ? getJobWashingRound(h)
               : (parseInt(h.washing_round || h.washingRound || (String(h.id || '').includes('-W2') ? 2 : 1), 10) || 1);
-            return hs === targetShift && hRound === jRound;
+            return hRound === jRound;
           }
-          const isPc300 = (typeof isExca300Unit === 'function') ? isExca300Unit(job) : false;
-          return isPc300 ? (hs === targetShift) : true;
+          return true;
         });
 
         if (alreadyDone) {
-          console.warn(`[History Protection] Ditolak mutlak pembuatan NON_ACH untuk unit ${targetUnit} tgl ${targetDate} karena unit sudah ACHIEVED/SERVICE!`);
+          console.warn(`[History Protection] Ditolak mutlak pembuatan NON_ACH untuk unit ${targetUnit} (${jCat} S${targetShift}${isWt ? ' W' + jRound : ''}) tgl ${targetDate} karena jadwal identik sudah ACHIEVED/SERVICE!`);
           return;
         }
       }
@@ -19762,7 +19864,9 @@
         cat: job.cat || 'small',
         washing_round: jWashingRound,
         washingRound: jWashingRound,
-        job_type: (isWt || cleanId.includes('WT') || cleanBaseId.includes('WT') || job.targetType === 'WT') ? 'water' : 'lube',
+        job_type: (/^(LT-|PLT-|UNS-LT|LTJ)/i.test(cleanBaseId) || /^(LT-|PLT-|UNS-LT|LTJ)/i.test(cleanId))
+          ? 'lube'
+          : ((isWt || /^(WT-|PWT-|UNS-WT|WTJ)/i.test(cleanBaseId) || /^(WT-|PWT-|UNS-WT|WTJ)/i.test(cleanId) || job.targetType === 'WT') ? 'water' : 'lube'),
         tanggal_rencana: job.originalDate || job.original_date || job.tanggal_rencana || job.planDate || job.tanggal,
         shift_rencana: (typeof getCompletedJobPlannedShift === 'function')
           ? getCompletedJobPlannedShift(job)
@@ -19865,7 +19969,10 @@
       // Kunci ke Supabase tabel job_history (atau tabel split job_history_lt / job_history_wt)
       if (state.supabaseClient && window._supabaseHasJobHistory !== false) {
         try {
-          const isWtHist = (isWt || cleanId.includes('WT') || cleanBaseId.includes('WT') || job.targetType === 'WT' || snapshotRecord.job_type === 'water');
+          const isExplicitLtHist = (/^(LT-|PLT-|UNS-LT|LTJ)/i.test(cleanBaseId) || /^(LT-|PLT-|UNS-LT|LTJ)/i.test(cleanId));
+          const isWtHist = isExplicitLtHist
+            ? false
+            : (isWt || /^(WT-|PWT-|UNS-WT|WTJ)/i.test(cleanBaseId) || /^(WT-|PWT-|UNS-WT|WTJ)/i.test(cleanId) || job.targetType === 'WT' || snapshotRecord.job_type === 'water');
           const targetHistTable = isWtHist ? 'job_history_wt' : 'job_history_lt';
 
           const histPayload = {
@@ -20199,8 +20306,14 @@
     async function batchUpsertJobsToSupabase(batchRows) {
       if (!state.supabaseClient || !Array.isArray(batchRows) || batchRows.length === 0) return { error: null };
 
-      const ltRows = batchRows.filter(r => !String(r.id || '').toUpperCase().startsWith('WT') && r.job_type !== 'sch_wt' && r.job_type !== 'water' && !['coal', 'rom', 'non_coal', 'noncoal'].includes(r.cat));
-      const wtRows = batchRows.filter(r => String(r.id || '').toUpperCase().startsWith('WT') || r.job_type === 'sch_wt' || r.job_type === 'water' || ['coal', 'rom', 'non_coal', 'noncoal'].includes(r.cat));
+      const isBatchWtRow = (r) => {
+        const uid = String(r?.id || '').toUpperCase();
+        if (/^(LT-|PLT-|UNS-LT|LTJ)/i.test(uid)) return false;
+        if (/^(WT-|PWT-|UNS-WT|WTJ)/i.test(uid)) return true;
+        return r?.job_type === 'sch_wt' || r?.job_type === 'unsch_wt' || r?.job_type === 'water' || ['coal', 'rom', 'non_coal', 'noncoal'].includes(String(r?.cat || '').toLowerCase().trim());
+      };
+      const ltRows = batchRows.filter(r => !isBatchWtRow(r));
+      const wtRows = batchRows.filter(r => isBatchWtRow(r));
 
       let err = null;
       if (ltRows.length > 0) {
@@ -22438,14 +22551,15 @@
     function getJobWashingRound(job) {
       if (!job) return 1;
       const idStr = String(job.job_id || job.no_id || job.noId || job.id || '').toUpperCase();
-      if (idStr.includes('-W2-') || idStr.endsWith('-W2') || idStr.includes('_W2')) return 2;
-      if (idStr.includes('-W1-') || idStr.endsWith('-W1') || idStr.includes('_W1')) return 1;
+      if (/(?:^|[-_])W2(?:[-_]|$)/i.test(idStr)) return 2;
+      if (/(?:^|[-_])W1(?:[-_]|$)/i.test(idStr)) return 1;
 
       const explicitRound = parseInt(job.washingRound !== undefined ? job.washingRound : job.washing_round, 10);
       if (explicitRound === 2) return 2;
       if (explicitRound === 1) return 1;
 
-      const waktuStr = String(job.waktu || job.waktu_rencana || job.jamStart || job.jam_start || '');
+      // Jangan gunakan jamStart eksekusi aktual untuk menebak round karena jadwal W1 bisa saja dikerjakan telat di jendela jam W2
+      const waktuStr = String(job.waktu || job.waktu_rencana || '');
       if (/(?:11:[2-5]\d|12:\d\d|13:\d\d|14:\d\d|23:[3-5]\d|00:\d\d|01:\d\d|02:\d\d)/.test(waktuStr)) return 2;
       return 1;
     }
@@ -22496,11 +22610,17 @@
 
       const defaultTime = (shift === 1) ? '11:30 s/d 12:00' : '23:30 s/d 00:00';
       const newJobs = [];
+      let skippedCrossCat = 0;
 
       candidates.forEach(src => {
         const cleanLambung = (src.noLambung || '').trim().toUpperCase();
         const randSuffix = Math.random().toString(36).substr(2, 4);
         const id = (typeof generateScheduleJobId === 'function') ? generateScheduleJobId({ ...src, targetType: 'WT', cat: activeCat, washingRound: 2 }, selectedDate, shift, 2) : `WT-SCH-${selectedDate.replace(/-/g, '')}-${cleanLambung}-S${shift}-W2-${randSuffix}`;
+        const conflictOtherCat = allWtJobs.find(x => String(x.id) === String(id) && String(x.cat || '').toLowerCase().trim() !== String(activeCat).toLowerCase().trim());
+        if (conflictOtherCat) {
+          skippedCrossCat++;
+          return;
+        }
         const job = {
           id: id,
           cat: activeCat,
@@ -22572,7 +22692,8 @@
 
       if (typeof notifyDataChanged === 'function') notifyDataChanged('jobs_updated');
       renderWtScheduleTable();
-      showToast(`Berhasil menduplikasi ${newJobs.length} unit ke Washing Ke-2 (Shift ${shift})!`, 'success');
+      const skipNote = skippedCrossCat > 0 ? ` (${skippedCrossCat} unit dilewati karena bentrok ID dengan kategori Washing lain)` : '';
+      showToast(`Berhasil menduplikasi ${newJobs.length} unit ke Washing Ke-2 (Shift ${shift})!${skipNote}`, skippedCrossCat > 0 ? 'warning' : 'success');
     }
     window.quickDuplicateWtWashing1To2 = quickDuplicateWtWashing1To2;
 
@@ -22618,6 +22739,7 @@
       }
 
       const newJobs = [];
+      let skippedCrossCat = 0;
       candidates.forEach(src => {
         const cleanLambung = (src.noLambung || '').trim().toUpperCase();
         const round = parseInt(src.washingRound, 10) || 1;
@@ -22637,6 +22759,11 @@
 
         const randSuffix = Math.random().toString(36).substr(2, 4);
         const id = (typeof generateScheduleJobId === 'function') ? generateScheduleJobId({ ...src, targetType: 'WT', cat: activeCat, washingRound: round }, selectedDate, tShift, round) : `WT-SCH-${selectedDate.replace(/-/g, '')}-${cleanLambung}-S${tShift}-W${round}-${randSuffix}`;
+        const conflictOtherCat = allWtJobs.find(x => String(x.id) === String(id) && String(x.cat || '').toLowerCase().trim() !== String(activeCat).toLowerCase().trim());
+        if (conflictOtherCat) {
+          skippedCrossCat++;
+          return;
+        }
         const job = {
           id: id,
           cat: activeCat,
@@ -23797,27 +23924,9 @@
         const jCat = String(j.cat || '').toLowerCase().trim();
         const isWashingCoalRom = (jCat === 'coal' || jCat === 'rom');
 
-        const inHistory = Array.isArray(state.jobHistory) && state.jobHistory.some(h => {
-          if (!h) return false;
-          const hId = String(h.id || '').trim();
-          const hJobId = String(h.job_id || '').trim();
-          const hBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(hJobId || hId) : (hJobId || hId).replace(/-\d{4}$/, '');
-          const jBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(cleanJobId) : cleanJobId.replace(/-\d{4}$/, '');
-
-          // ATURAN KERAS PENGGUNA: Prioritas dan mutlak membaca ID saja (ID No 1)!
-          // Dilarang keras mencocokkan riwayat selesai menggunakan nomor unit / tanggal eksekusi.
-          if (cleanJobId && (hJobId === cleanJobId || hId === cleanJobId || hBaseId === jBaseId)) {
-            if (isWashingCoalRom) {
-              const hRound = (typeof extractRoundFromJob === 'function') ? extractRoundFromJob(h) : (String(h.id || '').includes('-W2') ? 2 : 1);
-              const jRound = (typeof extractRoundFromJob === 'function')
-                ? extractRoundFromJob(j)
-                : (String(j.id || '').includes('-W2') ? 2 : (parseInt(j.washingRound || j.washing_round || 1, 10) || 1));
-              return hRound === jRound;
-            }
-            return true;
-          }
-          return false;
-        });
+        const inHistory = (typeof isJobAlreadyClosedInHistory === 'function')
+          ? isJobAlreadyClosedInHistory(j, state.jobHistory)
+          : false;
 
         const isActioned = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'parkir', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s)
           || (j.status_final !== undefined && j.status_final !== null && String(j.status_final).trim() !== '')
@@ -24131,36 +24240,26 @@
       // Sesuai aturan baru: Baik Admin maupun MP hanya menampilkan antrean aktif yang belum di-action.
       // Unit yang sudah di-action (ACH, NON-ACH, SERVICE, BD, CANCEL, dsb) otomatis masuk ke menu Riwayat Selesai.
       let jobs = state.lubetruckState.jobs.filter(j => {
-        const matchCat = (j.cat === activeCat);
+        const cleanJobId = String(j.id || j.job_id || j.noId || j.no_id || '');
+        const upperJobId = cleanJobId.toUpperCase();
+        // Normalisasi kategori LT secara konsisten dengan prefix ID resmi (LT-CAC, LT-TUO, LT-GRS)
+        let effectiveCat = String(j.cat || '').toLowerCase().trim();
+        if (effectiveCat === 'air_cleaner' || effectiveCat === 'cac' || effectiveCat === 'air cleaner') effectiveCat = 'aircleaner';
+        else if (effectiveCat === 'topup_oil' || effectiveCat === 'top_up' || effectiveCat === 'top up oil' || effectiveCat === 'tuo') effectiveCat = 'topup';
+        if (upperJobId.startsWith('LT-CAC') || upperJobId.includes('-CAC-')) {
+          effectiveCat = 'aircleaner';
+        } else if (upperJobId.startsWith('LT-TUO') || upperJobId.includes('-TUO-')) {
+          effectiveCat = 'topup';
+        } else if (upperJobId.startsWith('LT-GRS') || upperJobId.includes('-GRS-')) {
+          effectiveCat = (effectiveCat === 'digger') ? 'digger' : 'small';
+        }
+        const matchCat = (effectiveCat === activeCat);
         const matchDate = (j.tanggal === selectedDate || (!j.tanggal && selectedDate === '2026-09-27'));
         const s = String(j.status || '').toLowerCase().trim();
-        const cleanJobId = String(j.id || '');
-        const jUnit = String(j.noLambung || '').trim().toUpperCase();
-        const jDate = j.tanggal || '';
-        const jShift = String(j.shift || 1);
-        const jCat = String(j.cat || '').toLowerCase().trim();
-        const isWashingCoalRom = (jCat === 'coal' || jCat === 'rom');
-        const jRound = (typeof getJobWashingRound === 'function')
-          ? getJobWashingRound(j)
-          : (String(j.id || '').includes('-W2') ? 2 : (parseInt(j.washingRound || j.washing_round || 1, 10) || 1));
 
-        const inHistory = Array.isArray(state.jobHistory) && state.jobHistory.some(h => {
-          if (!h) return false;
-          // PENGAMAN KRUSIAL: Hanya riwayat yang SELESAI/TEREKSEKUSI yang dapat menyembunyikan jadwal aktif!
-          // Riwayat NON_ACH atau CANCEL DILARANG menyembunyikan unit yang dijadwalkan kembali!
-          const hFinal = String(h.status_final || h.status || '').toUpperCase().trim();
-          const isRealDone = ['ACHIEVED', 'ACH', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR'].includes(hFinal) || Boolean(h.is_achieved);
-          if (!isRealDone) return false;
-
-          const hId = String(h.id || '').trim();
-          const hJobId = String(h.job_id || '').trim();
-          const hBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(hJobId || hId) : (hJobId || hId).replace(/-\d{4}$/, '');
-          const jBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(cleanJobId) : cleanJobId.replace(/-\d{4}$/, '');
-
-          // ATURAN KERAS PENGGUNA: ID masing-masing SCH adalah penentu mutlak (ID No 1)!
-          // Dilarang keras mencocokkan riwayat selesai selain menggunakan ID.
-          return cleanJobId && (hJobId === cleanJobId || hId === cleanJobId || hBaseId === jBaseId);
-        });
+        const inHistory = (typeof isJobAlreadyClosedInHistory === 'function')
+          ? isJobAlreadyClosedInHistory(j, state.jobHistory)
+          : false;
         const isActioned = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'parkir', 'non_ach', 'non-ach', 'cancel', 'cancelled'].includes(s) || (j.status_final !== undefined && j.status_final !== null && String(j.status_final).trim() !== '') || inHistory;
         const isQueueActive = ((s === 'scheduled') || (s === 'pending') || Boolean(j.isPending)) && !isActioned;
         return matchCat && matchDate && isQueueActive;
@@ -24292,7 +24391,8 @@
           ? ['Selatan', 'Tengah', 'Utara', 'ROM']
           : ['Selatan', 'Tengah', 'Utara'];
         const targetParent = (clusterFilter === 'ALL') ? null : getParentCluster(clusterFilter);
-        const clusters = (clusterFilter === 'ALL') ? defaultClusters : [targetParent];
+        const baseClusters = (clusterFilter === 'ALL') ? defaultClusters : [targetParent];
+        const clusters = resolveVisibleClustersForJobs(baseClusters, jobs);
         clusters.forEach(clusterName => {
           let clusterJobs = jobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
           sortSchedJobsList(clusterJobs, state.ltSchedSort);
@@ -24526,7 +24626,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
         const defaultClusters = ['Selatan', 'Tengah', 'Utara'];
         const targetParent = (clusterFilter === 'ALL') ? null : getParentCluster(clusterFilter);
-        const clusters = (clusterFilter === 'ALL') ? defaultClusters : [targetParent];
+        const baseClusters = (clusterFilter === 'ALL') ? defaultClusters : [targetParent];
+        const clusters = resolveVisibleClustersForJobs(baseClusters, shiftJobs);
         clusters.forEach(clusterName => {
           let clusterJobs = shiftJobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
           sortSchedJobsList(clusterJobs, state.ltSchedSort);
@@ -24535,9 +24636,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
           const clusterBar = document.createElement('div');
           clusterBar.className = 'px-3 py-1.5 bg-emerald-50/70 border-b border-emerald-100/60 flex items-center justify-between text-xs';
+          const clusterDisplayName = clusterName.toUpperCase() === 'ROM' ? 'ROM AREA' : `KGU ${clusterName.toUpperCase()}`;
           clusterBar.innerHTML = `
             <div class="flex items-center space-x-2">
-              <span class="font-extrabold text-emerald-950 text-[11px]">KGU ${clusterName.toUpperCase()}</span>
+              <span class="font-extrabold text-emerald-950 text-[11px]">${clusterDisplayName}</span>
             </div>
             <div class="flex items-center space-x-2">
               <span class="text-[10px] text-emerald-800 font-bold">${clusterJobs.length} Alat Berat</span>
@@ -24882,7 +24984,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           effectiveCat = 'non_coal';
         } else if (upperJobId.startsWith('WT-WSC') || upperJobId.includes('-WSC-')) {
           const clUpper = String(j.cluster || '').toUpperCase().trim();
-          effectiveCat = (effectiveCat === 'rom' || clUpper === 'ROM') ? 'rom' : 'coal';
+          const isRomCluster = (clUpper === 'ROM' || clUpper === 'ROM AREA' || (typeof getParentCluster === 'function' && getParentCluster(j.cluster) === 'ROM'));
+          effectiveCat = (effectiveCat === 'rom' || isRomCluster) ? 'rom' : 'coal';
         }
         const matchCat = (effectiveCat === activeCat);
         const matchDate = (j.tanggal === selectedDate || (!j.tanggal && selectedDate === '2026-09-27'));
@@ -24981,7 +25084,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
         const defaultClusters = ['Selatan', 'Tengah', 'Utara'];
         const targetParent = (clusterFilter === 'ALL') ? null : getParentCluster(clusterFilter);
-        const clusters = (clusterFilter === 'ALL') ? defaultClusters : [targetParent];
+        const baseClusters = (clusterFilter === 'ALL') ? defaultClusters : [targetParent];
+        const clusters = resolveVisibleClustersForJobs(baseClusters, jobs);
         clusters.forEach(clusterName => {
           let clusterJobs = jobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
           sortSchedJobsList(clusterJobs, state.wtSchedSort);
@@ -24990,9 +25094,10 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
           const clusterBar = document.createElement('div');
           clusterBar.className = 'px-3 py-1.5 bg-cyan-50/70 border-b border-cyan-100/60 flex items-center justify-between text-xs';
+          const clusterDisplayName = clusterName.toUpperCase() === 'ROM' ? 'ROM AREA' : `KGU ${clusterName.toUpperCase()}`;
           clusterBar.innerHTML = `
             <div class="flex items-center space-x-2">
-              <span class="font-extrabold text-cyan-950 text-[11px]">KGU ${clusterName.toUpperCase()}</span>
+              <span class="font-extrabold text-cyan-950 text-[11px]">${clusterDisplayName}</span>
             </div>
             <div class="flex items-center space-x-2">
               <span class="text-[10px] text-cyan-800 font-bold">${clusterJobs.length} Alat Berat</span>
@@ -25183,7 +25288,7 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
 
         let defaultClusters = (activeCat === 'rom') ? ['ROM'] : ['Selatan', 'Tengah', 'Utara'];
         const targetParent = (clusterFilter === 'ALL') ? null : getParentCluster(clusterFilter);
-        const clusters = (clusterFilter === 'ALL') ? defaultClusters : [targetParent];
+        const baseClusters = (clusterFilter === 'ALL') ? defaultClusters : [targetParent];
 
         const rounds = [
           { num: 1, title: 'WASHING KE 1', bg: 'bg-teal-600', defaultTime: shiftNum === 1 ? '06:00 s/d 06:30' : '18:00 s/d 18:30' },
@@ -25210,7 +25315,8 @@ ${isAdmin ? `<span class="mt-1 block">Klik <b>+ Tambah Unit</b> untuk menambahka
           `;
           shiftWrapper.appendChild(roundHeader);
 
-          clusters.forEach(clusterName => {
+          const roundClusters = resolveVisibleClustersForJobs(baseClusters, roundJobs);
+          roundClusters.forEach(clusterName => {
             let clusterJobs = roundJobs.filter(j => getParentCluster(j.cluster).toLowerCase() === clusterName.toLowerCase());
             sortSchedJobsList(clusterJobs, state.wtSchedSort);
             const clusterSection = document.createElement('div');
@@ -31178,29 +31284,34 @@ Keterangan : ${keterangan}`;
             // Jangan ubah kluster & lokasi jika job sudah ach, non-ach, atau sudah dikerjakan
             if (typeof isJobLockedOrFinished === 'function' && isJobLockedOrFinished(j)) return;
 
-            const oldJobCluster = j.cluster || '';
-            const isJobClusterChanged = Boolean(targetCluster && oldJobCluster && normClusterKey(oldJobCluster) !== normClusterKey(targetCluster));
+            const isRomJob = (String(j.cat || '').toLowerCase().trim() === 'rom');
+            const isTargetRom = Boolean(targetCluster && normClusterKey(targetCluster) === 'rom');
+            const effectiveTargetCluster = (isRomJob && !isTargetRom) ? '' : targetCluster;
 
-            // Cek juga apakah armada yang terpasang pada job berasal dari cluster lama yang berbeda dengan targetCluster
+            const oldJobCluster = j.cluster || '';
+            const isJobClusterChanged = Boolean(effectiveTargetCluster && oldJobCluster && normClusterKey(oldJobCluster) !== normClusterKey(effectiveTargetCluster));
+
+            // Cek juga apakah armada yang terpasang pada job berasal dari cluster lama yang berbeda dengan effectiveTargetCluster
             const currentArmada = (typeof getJobArmadaName === 'function') ? getJobArmadaName(j) : (j.armada || j.ltUnit || j.wtUnit || '-');
             const armCluster = (currentArmada && currentArmada !== '-' && typeof getArmadaRegisteredCluster === 'function')
               ? getArmadaRegisteredCluster(currentArmada)
               : '';
             const isCrossClusterArmada = Boolean(
-              targetCluster &&
+              effectiveTargetCluster &&
               armCluster &&
               armCluster !== 'Workshop' &&
-              normClusterKey(armCluster) !== normClusterKey(targetCluster)
+              normClusterKey(armCluster) !== normClusterKey(effectiveTargetCluster)
             );
 
             // ATURAN PENGGUNA: Jika cluster unit berpindah, HANYA armada & personil yang dikosongkan otomatis! Unit tetap utuh.
             const isExcludedJob = Boolean(excludeJobId && String(j.id) === String(excludeJobId));
-            if (!isExcludedJob && (forceClearArmada || isMasterClusterChanged || isJobClusterChanged || (updateSupabase && isCrossClusterArmada))) {
+            const allowClusterSyncForJob = (!isRomJob || isTargetRom);
+            if (!isExcludedJob && allowClusterSyncForJob && (forceClearArmada || isMasterClusterChanged || isJobClusterChanged || (updateSupabase && isCrossClusterArmada))) {
               clearJobArmadaAndCrew(j);
               anyArmadaCleared = true;
             }
 
-            if (targetCluster) j.cluster = targetCluster;
+            if (effectiveTargetCluster) j.cluster = effectiveTargetCluster;
             if (targetLokasi) j.lokasi = targetLokasi;
             if (j.id) affectedJobsMap.set(String(j.id), j);
             updatedJobCount++;
@@ -31273,6 +31384,40 @@ Keterangan : ${keterangan}`;
             }
           };
 
+          const isNonRomClusterTarget = Boolean(targetCluster && normClusterKey(targetCluster) !== 'rom');
+          const wtSyncPromises = [];
+          if (isNonRomClusterTarget) {
+            wtSyncPromises.push(
+              state.supabaseClient
+                .from('jobs_wt')
+                .update(jobUpdateData)
+                .ilike('no_lambung', cleanLambung)
+                .in('status', ['scheduled', 'plan', 'pending'])
+                .neq('cat', 'rom')
+                .neq('id', excludeJobId ? String(excludeJobId) : '__NO_EXCLUDE__')
+            );
+            if (targetLokasi) {
+              wtSyncPromises.push(
+                state.supabaseClient
+                  .from('jobs_wt')
+                  .update({ lokasi: targetLokasi, updated_at: nowIso })
+                  .ilike('no_lambung', cleanLambung)
+                  .in('status', ['scheduled', 'plan', 'pending'])
+                  .eq('cat', 'rom')
+                  .neq('id', excludeJobId ? String(excludeJobId) : '__NO_EXCLUDE__')
+              );
+            }
+          } else {
+            wtSyncPromises.push(
+              state.supabaseClient
+                .from('jobs_wt')
+                .update(jobUpdateData)
+                .ilike('no_lambung', cleanLambung)
+                .in('status', ['scheduled', 'plan', 'pending'])
+                .neq('id', excludeJobId ? String(excludeJobId) : '__NO_EXCLUDE__')
+            );
+          }
+
           await Promise.allSettled([
             // Perbarui tabel master_units di cloud
             syncMasterUnitRow(),
@@ -31283,12 +31428,7 @@ Keterangan : ${keterangan}`;
               .ilike('no_lambung', cleanLambung)
               .in('status', ['scheduled', 'plan', 'pending'])
               .neq('id', excludeJobId ? String(excludeJobId) : '__NO_EXCLUDE__'),
-            state.supabaseClient
-              .from('jobs_wt')
-              .update(jobUpdateData)
-              .ilike('no_lambung', cleanLambung)
-              .in('status', ['scheduled', 'plan', 'pending'])
-              .neq('id', excludeJobId ? String(excludeJobId) : '__NO_EXCLUDE__')
+            ...wtSyncPromises
           ]);
 
           // Pancarkan sinyal realtime untuk setiap job aktif yang berubah agar HP/Komputer lain langsung sinkron
@@ -31389,7 +31529,8 @@ Keterangan : ${keterangan}`;
           const m = masterMap.get(lb);
           if (m) {
             let changed = false;
-            if (m.cluster && j.cluster !== m.cluster) {
+            const isRomJob = (String(j.cat || '').toLowerCase().trim() === 'rom');
+            if (!isRomJob && m.cluster && j.cluster !== m.cluster) {
               const isClusterMoved = Boolean(j.cluster && normClusterKey(j.cluster) !== normClusterKey(m.cluster));
               j.cluster = m.cluster;
               if (isClusterMoved) {
@@ -31829,7 +31970,14 @@ Keterangan : ${keterangan}`;
       const catSelect = document.getElementById('add-job-cat');
 
       const isWt = (targetType === 'WT');
-      const effectiveCluster = cluster || (isWt ? (state.watertruckState?.filterCluster !== 'ALL' ? state.watertruckState.filterCluster : 'Selatan') : (state.lubetruckState?.filterCluster !== 'ALL' ? state.lubetruckState.filterCluster : 'Selatan'));
+      // Otomatis tentukan kategori sesuai menu tab yang sedang aktif (Foto 3)
+      const currentActiveCat = isWt
+        ? (state.watertruckState?.activeCategory || 'coal')
+        : (state.lubetruckState?.activeCategory || 'small');
+      const defaultClusterFallback = (isWt && currentActiveCat === 'rom') ? 'ROM' : 'Selatan';
+      const effectiveCluster = cluster || (isWt
+        ? ((currentActiveCat === 'rom') ? 'ROM' : (state.watertruckState?.filterCluster !== 'ALL' ? state.watertruckState.filterCluster : defaultClusterFallback))
+        : (state.lubetruckState?.filterCluster !== 'ALL' ? state.lubetruckState.filterCluster : 'Selatan'));
 
       if (shiftInp) shiftInp.value = shift;
       if (clusterInp) clusterInp.value = effectiveCluster;
@@ -31837,7 +31985,7 @@ Keterangan : ${keterangan}`;
       if (washingRoundInp) washingRoundInp.value = washingRound;
 
       if (titleEl) titleEl.textContent = isWt ? 'Tambah Unit ke Jadwal Washing' : 'Tambah Unit ke Jadwal Lubetruck';
-      const isRomCluster = (effectiveCluster || '').toUpperCase() === 'ROM';
+      const isRomCluster = (typeof getParentCluster === 'function' ? getParentCluster(effectiveCluster) === 'ROM' : (effectiveCluster || '').toUpperCase() === 'ROM');
       const effectiveClusterLabel = isRomCluster ? 'ROM Area' : (effectiveCluster ? 'KGU ' + effectiveCluster : 'Semua Cluster');
       if (subtitleEl) subtitleEl.textContent = `Shift ${shift}   ${effectiveClusterLabel}${isWt ? `   Washing Ke ${washingRound}` : ''}`;
       if (armadaLabelEl) armadaLabelEl.textContent = isWt ? 'No WT Bertugas' : 'No LT Bertugas';
@@ -31851,11 +31999,6 @@ Keterangan : ${keterangan}`;
         dateInp.value = effectiveDate;
         dateInp.removeAttribute('min'); // Bebaskan admin memilih tanggal mana pun
       }
-
-      // Otomatis tentukan kategori sesuai menu tab yang sedang aktif (Foto 3)
-      const currentActiveCat = isWt
-        ? (state.watertruckState?.activeCategory || 'coal')
-        : (state.lubetruckState?.activeCategory || 'small');
 
       if (catSelect) {
         if (isWt) {
@@ -31930,7 +32073,7 @@ Keterangan : ${keterangan}`;
 
       // Populasi opsi armada & unit dari Data Master
       const armadaSearchInp = document.getElementById('add-job-armada-search'); if (armadaSearchInp) armadaSearchInp.value = ''; if (typeof closeAddJobArmadaDropdown === 'function') closeAddJobArmadaDropdown();
-      populateAddJobArmadaOptions(targetType, cluster, shift);
+      populateAddJobArmadaOptions(targetType, (clusterInp?.value || effectiveCluster), shift);
       renderAddJobUnitOptions('');
       // Proaktif sinkronkan seluruh Data Master Populasi Unit dari Cloud Supabase jika cache lokal belum lengkap (> 25 unit)
       if (!state._unitsLoadedFromSupabase && state.supabaseClient) {
@@ -32697,7 +32840,9 @@ Keterangan : ${keterangan}`;
         const effectiveCluster = clusterInp ? clusterInp.value : '';
         const isWt = (targetTypeInp?.value === 'WT');
         const washingRound = washingRoundInp ? washingRoundInp.value : 1;
-        subtitleEl.textContent = `Shift ${detectedShift}   ${effectiveCluster ? 'KGU ' + effectiveCluster : 'Semua Cluster'}${isWt ? `   Washing Ke ${washingRound}` : ''}`;
+        const isRomCl = effectiveCluster && (typeof getParentCluster === 'function' ? getParentCluster(effectiveCluster) === 'ROM' : effectiveCluster.toUpperCase() === 'ROM');
+        const effectiveClusterLabel = isRomCl ? 'ROM Area' : (effectiveCluster ? 'KGU ' + effectiveCluster : 'Semua Cluster');
+        subtitleEl.textContent = `Shift ${detectedShift}   ${effectiveClusterLabel}${isWt ? `   Washing Ke ${washingRound}` : ''}`;
       }
 
       // Otomatis perbarui personil armada (OPT, MP1, MP2) mengikuti shift dari waktu yang dipilih
@@ -32903,9 +33048,31 @@ Keterangan : ${keterangan}`;
         }
       }
 
-      // Selalu refresh armada sesuai kategori (WT untuk washing, LT untuk lubetruck)
-      const currentCluster = document.getElementById('add-job-cluster')?.value || 'Selatan';
+      // Selalu sinkronkan cluster untuk Washing ROM agar tidak ter-default ke Selatan
+      const clusterInp = document.getElementById('add-job-cluster');
       const currentShift = parseInt(document.getElementById('add-job-shift')?.value || '1', 10);
+      const currentRound = document.getElementById('add-job-washing-round')?.value || '1';
+      let currentCluster = clusterInp?.value || 'Selatan';
+      if (val === 'rom') {
+        currentCluster = 'ROM';
+        if (clusterInp) clusterInp.value = 'ROM';
+      } else if (typeof getParentCluster === 'function' ? getParentCluster(currentCluster) === 'ROM' : String(currentCluster).toUpperCase().trim() === 'ROM') {
+        const curLambung = (document.getElementById('add-job-no-unit')?.value || '').trim().toUpperCase();
+        const unitMaster = curLambung ? (state.masterUnits || []).find(item => (item.lambung || '').toUpperCase() === curLambung) : null;
+        const unitCluster = (unitMaster?.cluster && (typeof getParentCluster !== 'function' || getParentCluster(unitMaster.cluster) !== 'ROM')) ? unitMaster.cluster : '';
+        const filterCl = isWashingCat ? state.watertruckState?.filterCluster : state.lubetruckState?.filterCluster;
+        const fallbackCl = (filterCl && filterCl !== 'ALL' && (typeof getParentCluster !== 'function' || getParentCluster(filterCl) !== 'ROM')) ? filterCl : 'Selatan';
+        currentCluster = unitCluster || fallbackCl;
+        if (clusterInp) clusterInp.value = currentCluster;
+      }
+      const subEl = document.getElementById('add-job-modal-subtitle');
+      if (subEl) {
+        const isRomCl = (typeof getParentCluster === 'function' ? getParentCluster(currentCluster) === 'ROM' : String(currentCluster).toUpperCase().trim() === 'ROM');
+        const clLabel = isRomCl ? 'ROM Area' : (currentCluster ? 'KGU ' + currentCluster : 'Semua Cluster');
+        subEl.textContent = `Shift ${currentShift}   ${clLabel}${isWashingCat ? `   Washing Ke ${currentRound}` : ''}`;
+      }
+
+      // Selalu refresh armada sesuai kategori (WT untuk washing, LT untuk lubetruck)
       if (typeof populateAddJobArmadaOptions === 'function') {
         populateAddJobArmadaOptions(isWashingCat ? 'WT' : 'LT', currentCluster, currentShift);
       }
@@ -32933,21 +33100,22 @@ Keterangan : ${keterangan}`;
         if (lokasiInp && (!lokasiInp.value || lokasiInp.value.trim() === '') && u.lokasi && u.lokasi !== '-') {
           lokasiInp.value = u.lokasi;
         }
-        if (clusterSel && u.cluster) {
-          clusterSel.value = u.cluster;
+        const catVal = (document.getElementById('add-job-cat')?.value || '').toLowerCase().trim();
+        if (clusterSel && (catVal === 'rom' || u.cluster)) {
+          const resolvedCluster = (catVal === 'rom') ? 'ROM' : u.cluster;
+          clusterSel.value = resolvedCluster;
+          const subEl = document.getElementById('add-job-modal-subtitle');
+          const sVal = document.getElementById('add-job-shift')?.value || '1';
+          const rVal = document.getElementById('add-job-washing-round')?.value || '1';
+          const tTypeInp = (document.getElementById('add-job-target-type')?.value || '').toUpperCase();
+          const curTargetType = (tTypeInp === 'WT' || ['coal', 'rom', 'non_coal'].includes(catVal)) ? 'WT' : 'LT';
+          const isRomCl = (typeof getParentCluster === 'function' ? getParentCluster(resolvedCluster) === 'ROM' : String(resolvedCluster).toUpperCase().trim() === 'ROM');
+          const clLabel = isRomCl ? 'ROM Area' : ('KGU ' + resolvedCluster);
+          if (subEl) {
+            subEl.textContent = 'Shift ' + sVal + '   ' + clLabel + (curTargetType === 'WT' ? ('   Washing Ke ' + rVal) : '');
+          }
           if (typeof populateAddJobArmadaOptions === 'function') {
-            const subEl = document.getElementById('add-job-modal-subtitle');
-            const sVal = document.getElementById('add-job-shift')?.value || '1';
-            const rVal = document.getElementById('add-job-washing-round')?.value || '1';
-            const catVal = (document.getElementById('add-job-cat')?.value || '').toLowerCase();
-            const tTypeInp = (document.getElementById('add-job-target-type')?.value || '').toUpperCase();
-            const curTargetType = (tTypeInp === 'WT' || ['coal', 'rom', 'non_coal'].includes(catVal)) ? 'WT' : 'LT';
-            if (subEl) {
-              subEl.textContent = 'Shift ' + sVal + '   KGU ' + u.cluster + (curTargetType === 'WT' ? ('   Washing Ke ' + rVal) : '');
-            }
-            if (typeof populateAddJobArmadaOptions === 'function') {
-              populateAddJobArmadaOptions(curTargetType, u.cluster, parseInt(sVal, 10));
-            }
+            populateAddJobArmadaOptions(curTargetType, resolvedCluster, parseInt(sVal, 10));
           }
         }
       }
@@ -33079,19 +33247,22 @@ Keterangan : ${keterangan}`;
         if (lokasiInp && u.lokasi && u.lokasi !== '-') {
           lokasiInp.value = u.lokasi;
         }
-        if (clusterSel && u.cluster) {
-          clusterSel.value = u.cluster;
+        const catVal = (document.getElementById('add-job-cat')?.value || '').toLowerCase().trim();
+        if (clusterSel && (catVal === 'rom' || u.cluster)) {
+          const resolvedCluster = (catVal === 'rom') ? 'ROM' : u.cluster;
+          clusterSel.value = resolvedCluster;
           const subEl = document.getElementById('add-job-modal-subtitle');
           const sVal = document.getElementById('add-job-shift')?.value || '1';
           const rVal = document.getElementById('add-job-washing-round')?.value || '1';
-          const catVal = (document.getElementById('add-job-cat')?.value || '').toLowerCase();
           const tTypeInp = (document.getElementById('add-job-target-type')?.value || '').toUpperCase();
           const curTargetType = (tTypeInp === 'WT' || ['coal', 'rom', 'non_coal'].includes(catVal)) ? 'WT' : 'LT';
+          const isRomCl = (typeof getParentCluster === 'function' ? getParentCluster(resolvedCluster) === 'ROM' : String(resolvedCluster).toUpperCase().trim() === 'ROM');
+          const clLabel = isRomCl ? 'ROM Area' : ('KGU ' + resolvedCluster);
           if (subEl) {
-            subEl.textContent = 'Shift ' + sVal + '   KGU ' + u.cluster + (curTargetType === 'WT' ? ('   Washing Ke ' + rVal) : '');
+            subEl.textContent = 'Shift ' + sVal + '   ' + clLabel + (curTargetType === 'WT' ? ('   Washing Ke ' + rVal) : '');
           }
           if (typeof populateAddJobArmadaOptions === 'function') {
-            populateAddJobArmadaOptions(curTargetType, u.cluster, parseInt(sVal, 10));
+            populateAddJobArmadaOptions(curTargetType, resolvedCluster, parseInt(sVal, 10));
           }
         }
       }
@@ -33112,12 +33283,13 @@ Keterangan : ${keterangan}`;
       const waktuInpVal = document.getElementById('add-job-waktu')?.value?.trim();
       const detectedShift = (typeof detectShiftFromTimeString === 'function') ? detectShiftFromTimeString(waktuInpVal) : null;
       const shift = detectedShift || parseInt(document.getElementById('add-job-shift')?.value || '1', 10);
-      const cluster = document.getElementById('add-job-cluster')?.value || 'Selatan';
+      const rawCluster = document.getElementById('add-job-cluster')?.value || 'Selatan';
       const targetTypeInp = (document.getElementById('add-job-target-type')?.value || '').toUpperCase();
       const rawCat = document.getElementById('add-job-cat')?.value || '';
       const isWtJob = (targetTypeInp === 'WT' || ['coal', 'rom', 'non_coal'].includes(rawCat.toLowerCase()));
       const targetType = isWtJob ? 'WT' : 'LT';
       const cat = rawCat || (isWtJob ? 'non_coal' : 'small');
+      const cluster = (isWtJob && String(cat).toLowerCase().trim() === 'rom') ? 'ROM' : rawCluster;
       const waktu = waktuInpVal || '-';
       const noLambung = document.getElementById('add-job-no-unit')?.value?.trim().toUpperCase();
       const lokasi = document.getElementById('add-job-lokasi')?.value?.trim().toUpperCase();
@@ -33189,7 +33361,8 @@ Keterangan : ${keterangan}`;
         registerOrUpdateMasterUnit({
           lambung: noLambung,
           type: typeUnit,
-          cluster: cluster,
+          // Pertahankan cluster permanen unit di master saat dijadwalkan sementara ke Washing ROM
+          cluster: (String(cat).toLowerCase().trim() === 'rom' && existingMaster && existingMaster.cluster) ? existingMaster.cluster : cluster,
           lokasi: lokasi,
           // Pertahankan kategori unit yang sudah terdaftar di master; jangan menimpa dengan kategori jadwal harian
           kategori: existingMaster ? existingMaster.kategori : (isWt ? ((cat === 'coal' || cat === 'rom') ? 'coal' : 'non_coal') : 'coal')
@@ -33203,12 +33376,39 @@ Keterangan : ${keterangan}`;
 
         if (monthlyJobs.length > 0) {
           const targetArray = isWt ? state.watertruckState.jobs : state.lubetruckState.jobs;
-          // Filter out existing job with same id to prevent duplicate
+          const normCatForConflict = (cVal) => {
+            const c = String(cVal || '').toLowerCase().trim();
+            if (c === 'air_cleaner' || c === 'cac') return 'aircleaner';
+            if (c === 'topup_oil' || c === 'top_up' || c === 'top up oil' || c === 'tuo') return 'topup';
+            if (c === 'noncoal' || c === 'wnc') return 'non_coal';
+            return c;
+          };
+          const newCatNorm = normCatForConflict(baseJob.cat);
+          // Filter out existing job with same id to prevent duplicate / cross-category overwrite
           const existingIds = new Set(targetArray.map(j => j.id));
           let addedOrUpdatedCount = 0;
+          let skippedCrossCatCount = 0;
+          const skippedCrossCatIds = new Set();
           monthlyJobs.forEach(nj => {
             if (typeof isJobAlreadyClosedInHistory === 'function' && isJobAlreadyClosedInHistory(nj, state.jobHistory)) {
               return; // Jangan buat ulang job untuk tanggal yang sudah berstatus selesai di Riwayat
+            }
+            const existingCached = existingIds.has(nj.id)
+              ? targetArray.find(item => item.id === nj.id)
+              : window.globalDataCache?.jobs?.get(String(nj.id));
+            if (existingCached) {
+              const s = String(existingCached?.status || '').toLowerCase();
+              const isRealDone = ['ach', 'achieved', 'done', 'service'].includes(s);
+              if (isRealDone) {
+                return; // JANGAN timpa job yang sudah selesai/dikerjakan di lapangan
+              }
+              const exCatNorm = normCatForConflict(existingCached?.cat);
+              if (exCatNorm && newCatNorm && exCatNorm !== newCatNorm) {
+                // PROTEKSI ANTI-TIMPA LINTAS KATEGORI (Coal vs ROM / Small vs Big Digger)
+                skippedCrossCatCount++;
+                skippedCrossCatIds.add(String(nj.id));
+                return;
+              }
             }
             if (typeof registerJobToGlobalCache === 'function') {
               registerJobToGlobalCache(nj);
@@ -33216,18 +33416,13 @@ Keterangan : ${keterangan}`;
             if (existingIds.has(nj.id)) {
               const idx = targetArray.findIndex(item => item.id === nj.id);
               if (idx !== -1) {
-                const existingJob = targetArray[idx];
-                const s = String(existingJob?.status || '').toLowerCase();
-                const isRealDone = ['ach', 'achieved', 'done', 'service'].includes(s);
-                if (isRealDone) {
-                  return; // JANGAN timpa job yang sudah selesai/dikerjakan di lapangan
-                }
                 // Jika sebelumnya berstatus non_ach (false auto-close) atau scheduled, pulihkan ke scheduled baru
                 targetArray[idx] = nj;
                 addedOrUpdatedCount++;
               }
             } else {
               targetArray.push(nj);
+              existingIds.add(nj.id);
               addedOrUpdatedCount++;
             }
           });
@@ -33241,6 +33436,9 @@ Keterangan : ${keterangan}`;
             const batchRows = [];
             monthlyJobs.forEach(job => {
               const targetId = String(job.id);
+              if (skippedCrossCatIds.has(targetId)) {
+                return; // Jangan timpa jadwal kategori lain yang ber-ID sama di Supabase
+              }
               if (typeof isJobAlreadyClosedInHistory === 'function' && isJobAlreadyClosedInHistory(job, state.jobHistory)) {
                 return; // Cegah insert baris zombie untuk tanggal/shift/putaran yang sudah ditutup di Riwayat
               }
@@ -33293,7 +33491,10 @@ Keterangan : ${keterangan}`;
           }
           toggleModal('modal-add-job', false);
           if (addedOrUpdatedCount > 0) {
-            showToast(`Jadwal 1 bulan penuh (${addedOrUpdatedCount} hari penugasan) berhasil dibentuk untuk unit ${noLambung}!`, 'success');
+            const conflictNote = skippedCrossCatCount > 0 ? ` (${skippedCrossCatCount} hari dilewati karena bentrok ID dengan kategori lain)` : '';
+            showToast(`Jadwal 1 bulan penuh (${addedOrUpdatedCount} hari penugasan) berhasil dibentuk untuk unit ${noLambung}!${conflictNote}`, skippedCrossCatCount > 0 ? 'warning' : 'success');
+          } else if (skippedCrossCatCount > 0) {
+            showToast(`Unit ${noLambung} dilewati (${skippedCrossCatCount} hari) karena sudah terdaftar pada kategori jadwal lain dengan ID yang sama. Hapus dari kategori lama terlebih dahulu agar tidak saling menimpa.`, 'warning', 6000);
           } else {
             showToast(`Unit ${noLambung} pada tanggal tersebut sudah selesai tercatat di Riwayat.`, 'info');
           }
@@ -33306,37 +33507,50 @@ Keterangan : ${keterangan}`;
       const catKey = (typeof getScheduleCategoryKey === 'function') ? getScheduleCategoryKey(baseJob.cat, isWt) : (isWt ? 'coal' : 'small');
       baseJob.id = (typeof generateScheduleJobId === 'function') ? generateScheduleJobId(baseJob, baseJob.tanggal, baseJob.shift, baseJob.washingRound) : (isWt ? ('WT-SCH-' + (baseJob.tanggal || '').replace(/-/g, '') + '-' + noLambung + '-' + catKey + '-S' + baseJob.shift) : ('LT-SCH-' + (baseJob.tanggal || '').replace(/-/g, '') + '-' + noLambung + '-' + catKey + '-S' + baseJob.shift));
 
+      // PROTEKSI ANTI-TIMPA LINTAS KATEGORI (Coal vs ROM / Small Track vs Big Digger)
+      const targetListCheck = isWt ? (state.watertruckState?.jobs || []) : (state.lubetruckState?.jobs || []);
+      const existingSameId = targetListCheck.find(item => String(item.id) === String(baseJob.id)) || window.globalDataCache?.jobs?.get(String(baseJob.id));
+      if (existingSameId && String(existingSameId.cat || '').toLowerCase().trim() !== String(baseJob.cat || '').toLowerCase().trim()) {
+        const exCatLabel = String(existingSameId.cat || '').toUpperCase();
+        showToast(`Unit ${noLambung} (${targetDate}, Shift ${shift}${isWt ? ', W' + washingRound : ''}) sudah terdaftar di kategori ${exCatLabel} dengan ID ${baseJob.id}. Hapus dari ${exCatLabel} terlebih dahulu agar tidak saling menimpa!`, 'warning', 6500);
+        return;
+      }
+
       if (typeof isJobAlreadyClosedInHistory === 'function' && isJobAlreadyClosedInHistory(baseJob, state.jobHistory)) {
         showToast(`Unit ${noLambung} pada tanggal, shift & putaran tersebut sudah selesai tercatat di Riwayat!`, 'warning');
         return;
       }
 
-      // PEMBERSIHAN RESIDU KENDALA LAMA: Jika unit ini sebelumnya pernah salah action NON_ACH / dibatalkan
-      // dan admin menjadwalkan kembali unit ini, bersihkan sisa status NON_ACH di state.jobHistory & PICA
+      // PEMBERSIHAN RESIDU KENDALA LAMA: Hanya bersihkan sisa NON_ACH/CANCEL untuk ID/slot yang PERSIS SAMA (bukan kategori/putaran lain!)
+      const newBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(baseJob.id) : String(baseJob.id || '');
+      const newCatLow = String(baseJob.cat || '').toLowerCase().trim();
+      const newRoundNum = isWt ? (parseInt(baseJob.washingRound || 1, 10) || 1) : 1;
       if (Array.isArray(state.jobHistory)) {
         state.jobHistory = state.jobHistory.filter(h => {
           if (!h) return false;
+          const hStatus = String(h.status_final || h.status || '').toUpperCase().trim();
+          if (!['NON_ACH', 'NON-ACH', 'CANCEL', 'CANCELLED'].includes(hStatus)) return true;
+          const hId = String(h.job_id || h.id || '').trim();
+          const hBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(hId) : hId;
+          if (newBaseId && hBaseId && hBaseId === newBaseId) return false;
           const hUnit = String(h.no_lambung || h.noLambung || '').trim().toUpperCase();
           const hDate = String(h.tanggal_rencana || h.tanggal || h.tanggal_eksekusi || '').split('T')[0];
-          const hShift = String((typeof extractShiftFromJob === 'function') ? extractShiftFromJob(h) : (h.shift_rencana || h.shift || 1));
-          const hStatus = String(h.status_final || h.status || '').toUpperCase().trim();
-          const isSameJob = (hUnit === noLambung && hDate === targetDate && hShift === String(shift));
-          if (isSameJob && ['NON_ACH', 'NON-ACH', 'CANCEL', 'CANCELLED'].includes(hStatus)) {
-            return false;
-          }
-          return true;
+          const hShift = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(h) : (parseInt(h.shift_rencana || h.shift || 1, 10) || 1);
+          const hCatLow = String(h.cat || '').toLowerCase().trim();
+          const hRoundNum = isWt ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(h) : 1) : 1;
+          const isSameExactSlot = (hUnit === noLambung && hDate === targetDate && hShift === Number(shift) && hCatLow === newCatLow && (!isWt || hRoundNum === newRoundNum));
+          return !isSameExactSlot;
         });
       }
       if (Array.isArray(state.picaCloudRecords)) {
         state.picaCloudRecords = state.picaCloudRecords.filter(p => {
-          const pUnit = String(p.no_lambung || '').trim().toUpperCase();
-          const pDate = String(p.tanggal || '').split('T')[0];
-          const pShift = String(p.shift || 1);
-          return !(pUnit === noLambung && pDate === targetDate && pShift === String(shift));
+          const pJobId = String(p.job_id || p.id || '').replace(/^PICA-/, '');
+          const pBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(pJobId) : pJobId;
+          return !(newBaseId && pBaseId && pBaseId === newBaseId);
         });
       }
-      if (state.supabaseClient) {
-        state.supabaseClient.from('pica_records').delete().eq('no_lambung', noLambung).eq('tanggal', targetDate).eq('shift', shift).then(() => { });
+      if (state.supabaseClient && baseJob.id) {
+        state.supabaseClient.from('pica_records').delete().in('job_id', [String(baseJob.id), String(newBaseId)]).then(() => { });
       }
 
       if (typeof registerJobToGlobalCache === 'function') {
@@ -34053,17 +34267,23 @@ Keterangan : ${keterangan}`;
      */
     function isJobWaterTruck(j) {
       if (!j) return false;
-      const rawId = String(j.id || j.job_id || j.noId || j.no_id || '').toUpperCase();
-      if (rawId.startsWith('WT') || rawId.startsWith('PWT') || rawId.startsWith('UNS-WT')) return true;
+      const rawId = String(j.id || j.job_id || j.noId || j.no_id || '').toUpperCase().trim();
+      // PRIORITAS MUTLAK PREFIX ID: ID LT-* / PLT-* / UNS-LT / LTJ selalu LT (cegah salah rute saat lambung/armada mengandung 'WT')
+      if (/^(LT-|PLT-|UNS-LT|LTJ)/i.test(rawId)) return false;
+      if (/^(WT-|PWT-|UNS-WT|WTJ)/i.test(rawId)) return true;
       if (j.targetType === 'WT') return true;
+      if (j.targetType === 'LT') return false;
       const sType = String(j.serviceType || j.service_type || '').toLowerCase();
       if (sType === 'watertruck' || sType === 'washing' || sType === 'water') return true;
-      const cat = String(j.cat || '').toLowerCase();
-      if (['coal', 'rom', 'non_coal', 'washing', 'wsc', 'wnc'].includes(cat) || cat.includes('coal') || cat.includes('rom') || cat.includes('wash')) return true;
+      if (sType === 'lubetruck' || sType === 'lube') return false;
+      const cat = String(j.cat || '').toLowerCase().trim();
+      if (['small', 'digger', 'aircleaner', 'air_cleaner', 'cac', 'topup', 'topup_oil', 'top_up', 'tuo'].includes(cat)) return false;
+      if (['coal', 'rom', 'non_coal', 'noncoal', 'washing', 'wsc', 'wnc'].includes(cat) || cat.includes('coal') || cat.includes('rom') || cat.includes('wash')) return true;
+      const jType = String(j.job_type || '').toLowerCase();
+      if (jType === 'sch_lt' || jType === 'unsch_lt' || jType === 'lube') return false;
+      if (jType === 'sch_wt' || jType === 'unsch_wt' || jType === 'washing' || jType === 'water') return true;
       const armada = String(j.armada || j.armada_unit || j.wtUnit || '').toUpperCase();
       if (armada.startsWith('WT')) return true;
-      const jType = String(j.job_type || '').toLowerCase();
-      if (jType === 'sch_wt' || jType === 'unsch_wt' || jType === 'washing' || jType === 'water') return true;
       return false;
     }
     window.isJobWaterTruck = isJobWaterTruck;
@@ -39742,7 +39962,10 @@ Keterangan : ${keterangan}`;
             : `${isWt ? 'WT-GRS-' : 'LT-GRS-'}${String(planDate || getEffectiveTodayString()).replace(/-/g, '')}-${planShift}-${String(job.noLambung || 'UNIT').trim().toUpperCase()}`;
         }
         let targetHistId = cleanBaseId;
-        if (!/\-\d{4}$/.test(targetHistId)) {
+        const alreadyHasSuffix = (typeof stripHistoryTimeSuffix === 'function')
+          ? (stripHistoryTimeSuffix(targetHistId) !== targetHistId)
+          : /-([01]\d|2[0-3])[0-5]\d$/.test(targetHistId);
+        if (!alreadyHasSuffix) {
           targetHistId = targetHistId + timeSuffix;
         }
         job.targetHistId = targetHistId;
@@ -46482,15 +46705,19 @@ Keterangan : ${keterangan}`;
             : ((typeof extractRoundFromJob === 'function') ? extractRoundFromJob(row) : (/(?:^|[-_])W2(?:[-_]|$)/i.test(targetId) ? 2 : (parseInt(row.washing_round || row.washingRound, 10) || 1))))
         : 1;
       let existingJob = findJobById(targetId);
-      if (!existingJob && targetLambung && !targetId.includes('-REQ-') && !targetId.startsWith('UNS')) {
+      // Fallback hanya boleh mencocokkan job lokal ber-ID sementara (JOB-/TMP-) agar TIDAK PERNAH menimpa job lain yang punya ID kanonikal berbeda!
+      if (!existingJob && targetLambung && targetCat && !targetId.includes('-REQ-') && !targetId.startsWith('UNS')) {
         const pool = isWtRow ? (state.watertruckState?.jobs || []) : (state.lubetruckState?.jobs || []);
         existingJob = pool.find(j => {
+          const curId = String(j.id || '').trim();
+          const isTempOrLegacyId = (!curId || curId.startsWith('JOB-') || curId.startsWith('TMP-'));
+          if (!isTempOrLegacyId) return false;
           if ((j.noLambung || '').trim().toUpperCase() !== targetLambung) return false;
           const jDate = String(j.tanggal || j.tanggal_rencana || '').trim().split('T')[0];
           if (!targetDate || !jDate || jDate !== targetDate) return false;
           const jShift = String((typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (j.shift || 1));
           if (jShift !== targetShift) return false;
-          if (targetCat && j.cat && j.cat.toLowerCase().trim() !== targetCat) return false;
+          if (!j.cat || j.cat.toLowerCase().trim() !== targetCat) return false;
           if (isWtRow) {
             const jRound = (typeof getJobWashingRound === 'function')
               ? getJobWashingRound(j)
@@ -46499,6 +46726,12 @@ Keterangan : ${keterangan}`;
           }
           return true;
         });
+        if (existingJob && targetId && existingJob.id !== targetId) {
+          if (window.globalDataCache?.jobs && existingJob.id) {
+            window.globalDataCache.jobs.delete(String(existingJob.id));
+          }
+          existingJob.id = targetId;
+        }
       }
 
       if (existingJob) {
@@ -47163,32 +47396,12 @@ Keterangan : ${keterangan}`;
         let ltSuccess = false;
         let wtSuccess = false;
 
-        // Ambil data langsung dari tabel fisik jobs_lt dan jobs_wt secara paralel
+        // Ambil data langsung dari tabel fisik jobs_lt dan jobs_wt secara paralel dengan PAGINASI PENUH (anti potong 1000 baris PostgREST!)
         const [resLt, resWt, pendingLtRes, pendingWtRes] = await Promise.allSettled([
-          state.supabaseClient
-            .from('jobs_lt')
-            .select(SUPABASE_JOB_LIST_COLS)
-            .gte('tanggal', startDate)
-            .lte('tanggal', endDate)
-            .order('tanggal', { ascending: true }),
-          state.supabaseClient
-            .from('jobs_wt')
-            .select(SUPABASE_JOB_LIST_COLS)
-            .gte('tanggal', startDate)
-            .lte('tanggal', endDate)
-            .order('tanggal', { ascending: true }),
-          state.supabaseClient
-            .from('jobs_lt')
-            .select(SUPABASE_JOB_LIST_COLS)
-            .or('is_pending.eq.true,status.eq.scheduled,status.eq.pending,status.eq.open,status.eq.in_progress,status.eq.-')
-            .lt('tanggal', startDate)
-            .limit(500),
-          state.supabaseClient
-            .from('jobs_wt')
-            .select(SUPABASE_JOB_LIST_COLS)
-            .or('is_pending.eq.true,status.eq.scheduled,status.eq.pending,status.eq.open,status.eq.in_progress,status.eq.-')
-            .lt('tanggal', startDate)
-            .limit(500)
+          fetchAllPagedSupabaseRows('jobs_lt', SUPABASE_JOB_LIST_COLS, q => q.gte('tanggal', startDate).lte('tanggal', endDate), { orderCol: 'tanggal', ascending: true }),
+          fetchAllPagedSupabaseRows('jobs_wt', SUPABASE_JOB_LIST_COLS, q => q.gte('tanggal', startDate).lte('tanggal', endDate), { orderCol: 'tanggal', ascending: true }),
+          fetchAllPagedSupabaseRows('jobs_lt', SUPABASE_JOB_LIST_COLS, q => q.or('is_pending.eq.true,status.eq.scheduled,status.eq.pending,status.eq.open,status.eq.in_progress,status.eq.-').lt('tanggal', startDate), { orderCol: 'tanggal', ascending: true, maxRows: 5000 }),
+          fetchAllPagedSupabaseRows('jobs_wt', SUPABASE_JOB_LIST_COLS, q => q.or('is_pending.eq.true,status.eq.scheduled,status.eq.pending,status.eq.open,status.eq.in_progress,status.eq.-').lt('tanggal', startDate), { orderCol: 'tanggal', ascending: true, maxRows: 5000 })
         ]);
 
         if (resLt.status === 'fulfilled' && !resLt.value.error && Array.isArray(resLt.value.data)) {
@@ -47214,19 +47427,16 @@ Keterangan : ${keterangan}`;
         // Fallback: Jika kedua tabel fisik gagal (misal skema belum termigrasi), gunakan view jobs
         if (!ltSuccess && !wtSuccess) {
           console.log('[Supabase Sync Fallback] Menggunakan view jobs...');
-          const { data: viewData, error: viewError } = await state.supabaseClient
-            .from('jobs')
-            .select(SUPABASE_JOB_LIST_COLS)
-            .gte('tanggal', startDate)
-            .lte('tanggal', endDate)
-            .order('tanggal', { ascending: true });
+          const { data: viewData, error: viewError } = await fetchAllPagedSupabaseRows('jobs', SUPABASE_JOB_LIST_COLS, q => q.gte('tanggal', startDate).lte('tanggal', endDate), { orderCol: 'tanggal', ascending: true });
 
           if (!viewError && Array.isArray(viewData)) {
             ltSuccess = true;
             wtSuccess = true;
             viewData.forEach(j => {
-              const tid = String(j.id || '');
-              const isWt = (tid.includes('WT') || j.targetType === 'WT' || ['coal', 'rom', 'non_coal'].includes(j.cat));
+              const uid = String(j.id || '').toUpperCase();
+              const isLtPfx = /^(LT-|PLT-|UNS-LT|LTJ)/i.test(uid);
+              const isWtPfx = /^(WT-|PWT-|UNS-WT|WTJ)/i.test(uid);
+              const isWt = isLtPfx ? false : (isWtPfx || j.targetType === 'WT' || ['coal', 'rom', 'non_coal', 'noncoal'].includes(String(j.cat || '').toLowerCase().trim()));
               if (isWt) cloudWtJobs.push(j);
               else cloudLtJobs.push(j);
             });
@@ -47234,8 +47444,16 @@ Keterangan : ${keterangan}`;
         }
 
         // =========================================================================
-        // REKONSILIASI AKURAT ANTI-ZOMBIE (LT & WT INDEPENDEN)
+        // REKONSILIASI AKURAT ANTI-ZOMBIE (LT & WT INDEPENDEN, PREFIX-SAFE)
         // =========================================================================
+        const isCachedJobWt = (jId, jObj) => {
+          const uid = String(jId || '').toUpperCase();
+          if (/^(LT-|PLT-|UNS-LT|LTJ)/i.test(uid)) return false;
+          if (/^(WT-|PWT-|UNS-WT|WTJ)/i.test(uid)) return true;
+          const cLow = String(jObj?.cat || '').toLowerCase().trim();
+          return ['coal', 'rom', 'non_coal', 'noncoal'].includes(cLow) || jObj?.targetType === 'WT' || jObj?.job_type === 'sch_wt';
+        };
+
         if (ltSuccess) {
           const cloudLtIds = new Set(cloudLtJobs.map(j => String(j.id)));
           for (const [jId, jObj] of Array.from(window.globalDataCache.jobs.entries())) {
@@ -47244,9 +47462,9 @@ Keterangan : ${keterangan}`;
             if (typeof _jobSyncQueue !== 'undefined' && _jobSyncQueue.has(jId)) continue; // Jangan hapus jika ada di sync queue
             if (jObj?.actionTimestamp && (Date.now() - jObj.actionTimestamp < 60000)) continue; // Proteksi 60 detik untuk job lokal baru
             const jDate = jObj?.tanggal || '';
-            const isLtJob = !String(jId).includes('WT') && (
-              ['small', 'digger', 'aircleaner', 'topup'].includes(jObj?.cat) ||
-              String(jId).startsWith('LT-') ||
+            const isLtJob = !isCachedJobWt(jId, jObj) && (
+              ['small', 'digger', 'aircleaner', 'air_cleaner', 'topup', 'topup_oil'].includes(String(jObj?.cat || '').toLowerCase().trim()) ||
+              /^(LT-|PLT-|LTJ)/i.test(String(jId)) ||
               jObj?.targetType === 'LT' ||
               jObj?.job_type === 'sch_lt'
             );
@@ -47283,11 +47501,7 @@ Keterangan : ${keterangan}`;
             if (typeof _jobSyncQueue !== 'undefined' && _jobSyncQueue.has(jId)) continue; // Jangan hapus jika ada di sync queue
             if (jObj?.actionTimestamp && (Date.now() - jObj.actionTimestamp < 60000)) continue; // Proteksi 60 detik untuk job lokal baru
             const jDate = jObj?.tanggal || '';
-            const isWtJob = String(jId).includes('WT') ||
-              ['coal', 'rom', 'non_coal', 'noncoal'].includes(jObj?.cat) ||
-              String(jId).startsWith('WT-') ||
-              jObj?.targetType === 'WT' ||
-              jObj?.job_type === 'sch_wt';
+            const isWtJob = isCachedJobWt(jId, jObj);
             if (isWtJob) {
               if (force || (jDate <= endDate) || !jDate || jObj.isPending) {
                 if (!cloudWtIds.has(jId)) {
@@ -47313,12 +47527,14 @@ Keterangan : ${keterangan}`;
           });
         }
 
-        // Tandai seluruh tanggal dalam rentang Hot-Window sebagai fully loaded
-        let curD = new Date(startDate);
-        const endD = new Date(endDate);
-        while (curD <= endD) {
-          window.globalDataCache.loadedDates.add(curD.toISOString().split('T')[0]);
-          curD.setDate(curD.getDate() + 1);
+        // Tandai seluruh tanggal dalam rentang Hot-Window sebagai fully loaded HANYA jika kedua tabel LT & WT sukses penuh
+        if (ltSuccess && wtSuccess) {
+          let curD = new Date(startDate);
+          const endD = new Date(endDate);
+          while (curD <= endD) {
+            window.globalDataCache.loadedDates.add(curD.toISOString().split('T')[0]);
+            curD.setDate(curD.getDate() + 1);
+          }
         }
 
         if (typeof reconcileActiveJobsAgainstHistory === 'function') {
@@ -47768,62 +47984,53 @@ Keterangan : ${keterangan}`;
           }
           if (typeof safeSaveJobHistoryToStorage === 'function') safeSaveJobHistoryToStorage();
 
-          // SINKRONISASI INSTAN: Hapus unit yang baru saja diselesaikan dari tampilan jadwal aktif di HP rekan lain!
+          // SINKRONISASI INSTAN: Hapus HANYA jadwal dengan ID yang PERSIS SAMA dari tampilan aktif di HP rekan lain!
+          // DILARANG KERAS menghapus jadwal berdasarkan no_lambung saja (mencegah slot 2-4 / shift lain / kategori lain ikut hilang!)
           const unitNo = String(newHist.no_lambung || '').toUpperCase().trim();
           const rawDate = String(newHist.tanggal_rencana || newHist.tanggal_eksekusi || '').split('T')[0];
-          const shift = parseInt(newHist.shift_rencana || 1, 10);
-
           const histCat = String(newHist.cat || '').toLowerCase().trim();
-          const histTypeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(newHist) : '';
-          const histRound = (typeof getJobWashingRound === 'function')
-            ? getJobWashingRound(newHist)
-            : (parseInt(newHist.washing_round || newHist.washingRound || (String(newHist.id || '').includes('-W2') ? 2 : 1), 10) || 1);
+          const histIdStr = String(newHist.id || newHist.job_id || '').trim();
+          const histBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(histIdStr) : histIdStr.replace(/-([01]\d|2[0-3])[0-5]\d$/, '');
+          const histStatusUpper = String(newHist.status_final || newHist.status || '').toUpperCase().trim();
+          const isRealClosedHist = ['ACHIEVED', 'ACH', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR'].includes(histStatusUpper) || Boolean(newHist.is_achieved);
+          const isFreshNonAchInsert = (payload.eventType === 'INSERT') && ['NON_ACH', 'NON-ACH', 'CANCEL', 'CANCELLED'].includes(histStatusUpper);
+          const isWtHistTable = (payload.table === 'job_history_wt') || (!payload.table && typeof isJobWaterTruck === 'function' && isJobWaterTruck(newHist));
 
-          if (unitNo && state.lubetruckState?.jobs) {
+          const shouldRemoveJobByHistId = (j) => {
+            if (!j || !histIdStr) return false;
+            if (isRealClosedHist && typeof isJobAlreadyClosedInHistory === 'function') {
+              return isJobAlreadyClosedInHistory(j, [newHist]);
+            }
+            if (isFreshNonAchInsert) {
+              const jId = String(j.id || '').trim();
+              const jBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(jId) : jId;
+              if (!jId) return false;
+              const jShift = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (parseInt(j.shift || 1, 10) || 1);
+              const hShift = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(newHist) : (parseInt(newHist.shift_rencana || newHist.shift || 1, 10) || 1);
+              if (jShift !== hShift) return false;
+              if (isWtHistTable) {
+                const jRound = (typeof getJobWashingRound === 'function') ? getJobWashingRound(j) : 1;
+                const hRound = (typeof getJobWashingRound === 'function') ? getJobWashingRound(newHist) : 1;
+                if (jRound !== hRound) return false;
+              }
+              return (jId === histIdStr || jId === histBaseId || (jBaseId && histBaseId && jBaseId === histBaseId));
+            }
+            return false;
+          };
+
+          if ((isRealClosedHist || isFreshNonAchInsert) && !isWtHistTable && state.lubetruckState?.jobs) {
             state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => {
-              const jU = String(j.noLambung || '').toUpperCase().trim();
-              const jD = String(j.tanggal || '').split('T')[0];
-              const jS = parseInt(j.shift || 1, 10);
-              const jCat = String(j.cat || '').toLowerCase().trim();
-              const jTypeCode = (typeof getJobTypeCode === 'function') ? getJobTypeCode(j) : '';
-              const isSameCat = (histTypeCode && jTypeCode) ? (histTypeCode === jTypeCode) : ((histCat && jCat) ? (histCat === jCat || ((histCat === 'small' || histCat === 'digger') && (jCat === 'small' || jCat === 'digger'))) : true);
-              return !(jU === unitNo && jD === rawDate && jS === shift && isSameCat);
+              if (shouldRemoveJobByHistId(j)) {
+                if (window.globalDataCache?.jobs && j?.id) window.globalDataCache.jobs.delete(String(j.id));
+                return false;
+              }
+              return true;
             });
           }
-          if (unitNo && state.watertruckState?.jobs) {
-            const histIdStr = String(newHist.id || newHist.job_id || '').trim();
-            const histBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(histIdStr) : histIdStr.replace(/-\d{4}$/, '');
-            const histHasW2 = histIdStr.includes('-W2') || histBaseId.includes('-W2') || histRound === 2;
-
+          if ((isRealClosedHist || isFreshNonAchInsert) && isWtHistTable && state.watertruckState?.jobs) {
             state.watertruckState.jobs = state.watertruckState.jobs.filter(j => {
-              const jId = String(j.id || '');
-              const jBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(jId) : jId.replace(/-\d{4}$/, '');
-              const jRound = (typeof getJobWashingRound === 'function') ? getJobWashingRound(j) : (parseInt(j.washingRound || (jId.includes('-W2') ? 2 : 1), 10) || 1);
-              const jHasW2 = jId.includes('-W2') || jBaseId.includes('-W2') || jRound === 2;
-              const jS = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(j) : (parseInt(j.shift || 1, 10) || 1);
-              const jCat = String(j.cat || '').toLowerCase().trim();
-
-              // ATURAN KERAS PENGGUNA: ID & Shift & Putaran adalah penentu mutlak!
-              // Shift harus sama, Putaran (W1 vs W2) harus sama, Kategori harus sama!
-              if (jS !== shift || jRound !== histRound || jHasW2 !== histHasW2) return true;
-              if (histCat && jCat && histCat !== jCat) return true;
-
-              // 1. Pencocokan ID Langsung
-              if (jId && (jId === histIdStr || jId === histBaseId || (jBaseId && jBaseId === histBaseId))) {
-                if (window.globalDataCache?.jobs) window.globalDataCache.jobs.delete(jId);
-                return false;
-              }
-              if (jBaseId && histIdStr.startsWith(jBaseId + '-') && /^-\d{4}$/.test(histIdStr.slice(jBaseId.length))) {
-                if (window.globalDataCache?.jobs) window.globalDataCache.jobs.delete(jId);
-                return false;
-              }
-
-              // 2. Pencocokan fallback: No Lambung + Tanggal + Shift + Putaran + Kategori sama persis
-              const jU = String(j.noLambung || '').toUpperCase().trim();
-              const jD = String(j.tanggal || '').split('T')[0];
-              const isMatch = (jU === unitNo && jD === rawDate);
-              if (isMatch) {
-                if (window.globalDataCache?.jobs) window.globalDataCache.jobs.delete(jId);
+              if (shouldRemoveJobByHistId(j)) {
+                if (window.globalDataCache?.jobs && j?.id) window.globalDataCache.jobs.delete(String(j.id));
                 return false;
               }
               return true;
@@ -51278,7 +51485,14 @@ Keterangan : ${keterangan}`;
     window.pushAllJobHistoryToSupabase = pushAllJobHistoryToSupabase;
 
     function stripHistoryTimeSuffix(rawId) {
-      return String(rawId || '').trim().replace(/-\d{4}$/, '');
+      const s = String(rawId || '').trim();
+      const m = s.match(/^(.*)-([01]\d|2[0-3])([0-5]\d)$/);
+      if (!m) return s;
+      const candidate = m[1];
+      // Jangan potong jika segmen -4digit adalah nomor lambung unit itu sendiri (bukan suffix waktu eksekusi -HHMM)
+      if (/^[A-Z]{2}-[A-Z0-9]+-\d{8}-[12]$/i.test(candidate)) return s;
+      if (!candidate || candidate.split('-').length < 4) return s;
+      return candidate;
     }
     window.stripHistoryTimeSuffix = stripHistoryTimeSuffix;
 
@@ -51318,13 +51532,13 @@ Keterangan : ${keterangan}`;
       if (!job || !Array.isArray(historyList) || historyList.length === 0) return false;
       const rawId = String(job.id || job.job_id || job.noId || job.no_id || '').trim();
       if (!rawId) return false;
-      const baseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(rawId) : rawId.replace(/-\d{4}$/, '');
+      const baseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(rawId) : rawId;
 
-      const isWt = (rawId.startsWith('WT') || job.targetType === 'WT' || ['coal', 'rom', 'non_coal', 'noncoal'].includes(String(job.cat || '').toLowerCase()));
+      const isWt = (typeof isJobWaterTruck === 'function')
+        ? isJobWaterTruck(job)
+        : (/^(WT-|PWT-|UNS-WT|WTJ)/i.test(rawId) || (!/^(LT-|PLT-|UNS-LT|LTJ)/i.test(rawId) && (job.targetType === 'WT' || ['coal', 'rom', 'non_coal', 'noncoal'].includes(String(job.cat || '').toLowerCase()))));
       const jShift = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(job) : (parseInt(job.shift || job.shift_rencana, 10) || 1);
       const jRound = isWt ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(job) : extractRoundFromJob(job)) : 1;
-      const jCat = String(job.cat || '').toLowerCase().trim();
-      const jHasW2 = rawId.includes('-W2') || baseId.includes('-W2') || jRound === 2;
 
       return historyList.some(h => {
         if (!h) return false;
@@ -51332,21 +51546,29 @@ Keterangan : ${keterangan}`;
         const isClosedStatus = ['ACHIEVED', 'ACH', 'DONE', 'SERVICE', 'BREAKDOWN', 'PARKIR'].includes(hFinal) || Boolean(h.is_achieved);
         if (!isClosedStatus) return false;
 
-        if (isWt) {
-          const hShift = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(h) : (parseInt(h.shift_rencana || h.shift, 10) || 1);
-          const hRound = (typeof getJobWashingRound === 'function') ? getJobWashingRound(h) : extractRoundFromJob(h);
-          if (jShift !== hShift || jRound !== hRound) return false;
-        }
-
         const hId = String(h.id || '').trim();
         const hJobId = String(h.job_id || '').trim();
-        const hBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(hJobId || hId) : (hJobId || hId).replace(/-\d{4}$/, '');
+        const hRefId = hJobId || hId;
+        const hIsWt = (typeof isJobWaterTruck === 'function')
+          ? isJobWaterTruck(h)
+          : (/^(WT-|PWT-|UNS-WT|WTJ)/i.test(hRefId) || (!/^(LT-|PLT-|UNS-LT|LTJ)/i.test(hRefId) && String(h.job_type || '').toLowerCase() === 'water'));
+        if (hIsWt !== isWt) return false;
+
+        const hShift = (typeof extractShiftFromJob === 'function') ? extractShiftFromJob(h) : (parseInt(h.shift_rencana || h.shift, 10) || 1);
+        if (jShift !== hShift) return false;
+
+        if (isWt) {
+          const hRound = (typeof getJobWashingRound === 'function') ? getJobWashingRound(h) : extractRoundFromJob(h);
+          if (jRound !== hRound) return false;
+        }
+
+        const hBaseId = (typeof stripHistoryTimeSuffix === 'function') ? stripHistoryTimeSuffix(hRefId) : hRefId;
 
         // ATURAN KERAS PENGGUNA: Utamakan membaca No ID (ID adalah penentu mutlak #1)!
         if (hId === rawId || hJobId === rawId) return true;
         if (baseId && hBaseId && baseId === hBaseId) return true;
-        if (baseId && hId.startsWith(baseId + '-') && /^-\d{4}$/.test(hId.slice(baseId.length))) return true;
-        if (baseId && hJobId.startsWith(baseId + '-') && /^-\d{4}$/.test(hJobId.slice(baseId.length))) return true;
+        if (baseId && hId.startsWith(baseId + '-') && /^-([01]\d|2[0-3])[0-5]\d$/.test(hId.slice(baseId.length))) return true;
+        if (baseId && hJobId.startsWith(baseId + '-') && /^-([01]\d|2[0-3])[0-5]\d$/.test(hJobId.slice(baseId.length))) return true;
 
         return false;
       });
@@ -51416,16 +51638,9 @@ Keterangan : ${keterangan}`;
 
         if (!zErr && Array.isArray(zombieWt) && zombieWt.length > 0) {
           const toMove = zombieWt.filter(j => {
-            const ket = String(j.keterangan || '').trim();
-            const s = String(j.status || '').toLowerCase();
-            return (
-              ket.includes('Kendala Shift') ||
-              ket.includes('Non ACH') ||
-              ket.startsWith('[SERVICE]') ||
-              ket.startsWith('[BREAKDOWN]') ||
-              ket.startsWith('[PARKIR]') ||
-              s === 'non_ach' || s === 'service' || s === 'bd' || s === 'parkir' || s === 'ach'
-            );
+            const s = String(j.status || '').toLowerCase().trim();
+            // PROTEKSI MUTLAK: Jangan pernah memindahkan/menghapus jadwal aktif ('scheduled'/'pending'/'open') hanya karena teks keterangan!
+            return ['non_ach', 'non-ach', 'service', 'bd', 'breakdown', 'parkir', 'ach', 'achieved', 'done', 'cancel', 'cancelled'].includes(s);
           });
 
           if (toMove.length > 0) {
