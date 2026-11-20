@@ -13415,7 +13415,28 @@
             if (savedAc) {
               const parsedAc = JSON.parse(savedAc);
               if (Array.isArray(parsedAc) && parsedAc.length > 0) {
-                state.airCleanerMonitor = parsedAc;
+                state.airCleanerMonitor = parsedAc.map(m => {
+                  if (!m || !Array.isArray(m.cleans)) return m;
+                  const cleanOnly = [];
+                  const extractedExcl = Array.isArray(m.excludedKeys) ? [...m.excludedKeys] : [];
+                  m.cleans.forEach(c => {
+                    if (c && typeof c === 'object' && Array.isArray(c.__ac_excluded)) {
+                      c.__ac_excluded.forEach(k => { if (k) extractedExcl.push(String(k).trim()); });
+                    } else if (typeof c === 'string' && c.trim().startsWith('__AC_EXCL__:')) {
+                      try {
+                        const arr = JSON.parse(c.trim().slice('__AC_EXCL__:'.length));
+                        if (Array.isArray(arr)) arr.forEach(k => { if (k) extractedExcl.push(String(k).trim()); });
+                      } catch (eP) { }
+                    } else {
+                      cleanOnly.push(c);
+                    }
+                  });
+                  return {
+                    ...m,
+                    cleans: cleanOnly,
+                    excludedKeys: Array.from(new Set(extractedExcl.filter(Boolean)))
+                  };
+                });
               }
             }
           }
@@ -41753,11 +41774,17 @@ Keterangan : ${keterangan}`;
             newReplacementRecord.id = insData[0].id;
           }
 
-          await state.supabaseClient.from('air_cleaner_monitoring').upsert({
+          const existingMonForRep = (state.airCleanerMonitor || []).find(m => String(m.noLambung || '').trim().toUpperCase() === noLambung);
+          const preservedExclForRep = Array.isArray(existingMonForRep?.excludedKeys) ? existingMonForRep.excludedKeys : [];
+          const encodedRepCleans = (typeof encodeAcCleansForDb === 'function')
+            ? encodeAcCleansForDb([], preservedExclForRep)
+            : [];
+
+          const { error: acUpsertErr } = await state.supabaseClient.from('air_cleaner_monitoring').upsert({
             id: 'AC-' + noLambung,
             no_lambung: noLambung,
             type_model: typeUnit,
-            cleans: [],
+            cleans: encodedRepCleans,
             service_code: '',
             status: 'Baik',
             last_cleaned_date: tanggal,
@@ -41767,6 +41794,9 @@ Keterangan : ${keterangan}`;
             replace_notes: notes,
             updated_at: new Date().toISOString()
           }, { onConflict: 'no_lambung' });
+          if (acUpsertErr) {
+            console.warn('[Supabase Replace AC Upsert Error]', acUpsertErr);
+          }
 
           console.log('[Supabase Replace AC Synced OK]', noLambung, replaceNoId);
         } catch (supaErr) {
@@ -42989,6 +43019,16 @@ Keterangan : ${keterangan}`;
         return;
       }
 
+      // Simpan snapshot rollback jika sinkronisasi ke Supabase gagal
+      const prevCleans = Array.isArray(item.cleans) ? [...item.cleans] : [];
+      const prevCleanRecords = Array.isArray(item.cleanRecords) ? [...item.cleanRecords] : null;
+      const prevExcludedKeys = Array.isArray(item.excludedKeys) ? [...item.excludedKeys] : [];
+      const prevStatus = item.status;
+      const prevServiceCode = item.serviceCode;
+      const prevCacheList = (state.airCleanerJobCache && state.airCleanerJobCache.has(cleanUnitUpper))
+        ? [...(state.airCleanerJobCache.get(cleanUnitUpper) || [])]
+        : null;
+
       // 2. Hapus entri dari array cleans & cleanRecords pada indeks ini
       // Dengan splice, entri berikutnya otomatis bergeser maju mengisi kekosongan sehingga berjajar rapi
       item.cleans.splice(cleanIdx, 1);
@@ -42996,10 +43036,11 @@ Keterangan : ${keterangan}`;
         item.cleanRecords.splice(cleanIdx, 1);
       }
 
-      // 2b. OPSI B:
+      // 2b. OPSI A (Cara 2):
       // - Untuk -CAC- (Schedule Air Cleaner murni): hapus permanen dari job_history_lt & jobs_lt Supabase + memori lokal
       // - Untuk -REQ- (Job Request Service / Air Cleaner): PERTAHANKAN di job_history_lt & Riwayat Selesai,
-      //   tetapi simpan penanda pengecualian (excludedKeys) ke air_cleaner_monitoring Supabase agar tidak muncul kembali saat refresh/sync!
+      //   tetapi simpan penanda pengecualian (excludedKeys) ke kolom JSONB `cleans` pada tabel air_cleaner_monitoring Supabase
+      //   (bebas dari batas VARCHAR(100) kolom `lokasi`) agar tidak muncul kembali saat refresh/sync!
       if (state.airCleanerJobCache && state.airCleanerJobCache.has(cleanUnitUpper)) {
         const cachedList = state.airCleanerJobCache.get(cleanUnitUpper) || [];
         state.airCleanerJobCache.set(cleanUnitUpper, cachedList.filter(j => {
@@ -43012,6 +43053,7 @@ Keterangan : ${keterangan}`;
         }));
       }
 
+      let cacDeleteFailedErr = null;
       if (cacJobIds.size > 0) {
         const cacDeleteIds = new Set();
         cacJobIds.forEach(cid => {
@@ -43020,24 +43062,43 @@ Keterangan : ${keterangan}`;
           if (base) cacDeleteIds.add(base);
         });
         const delIdArr = Array.from(cacDeleteIds);
-        if (Array.isArray(state.jobHistory)) {
-          state.jobHistory = state.jobHistory.filter(h => !delIdArr.includes(String(h.id || '')) && !delIdArr.includes(String(h.job_id || '')));
-          if (typeof safeSaveJobHistoryToStorage === 'function') safeSaveJobHistoryToStorage();
-        }
-        if (Array.isArray(state.lubetruckState?.jobs)) {
-          state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => !delIdArr.includes(String(j.id || '')) && !delIdArr.includes(String(j.job_id || '')));
-        }
-        if (window.globalDataCache?.jobs) {
-          delIdArr.forEach(did => window.globalDataCache.jobs.delete(did));
-        }
         if (state.supabaseClient && delIdArr.length > 0) {
           try {
-            await Promise.allSettled([
+            const [resHistDel, resActiveDel] = await Promise.all([
               state.supabaseClient.from('job_history_lt').delete().in('id', delIdArr),
               state.supabaseClient.from('jobs_lt').delete().in('id', delIdArr)
             ]);
-          } catch (eDelJob) { }
+            if (resHistDel?.error) cacDeleteFailedErr = resHistDel.error;
+            else if (resActiveDel?.error) cacDeleteFailedErr = resActiveDel.error;
+          } catch (eDelJob) {
+            cacDeleteFailedErr = eDelJob;
+          }
         }
+        if (!cacDeleteFailedErr) {
+          if (Array.isArray(state.jobHistory)) {
+            state.jobHistory = state.jobHistory.filter(h => !delIdArr.includes(String(h.id || '')) && !delIdArr.includes(String(h.job_id || '')));
+            if (typeof safeSaveJobHistoryToStorage === 'function') safeSaveJobHistoryToStorage();
+          }
+          if (Array.isArray(state.lubetruckState?.jobs)) {
+            state.lubetruckState.jobs = state.lubetruckState.jobs.filter(j => !delIdArr.includes(String(j.id || '')) && !delIdArr.includes(String(j.job_id || '')));
+          }
+          if (window.globalDataCache?.jobs) {
+            delIdArr.forEach(did => window.globalDataCache.jobs.delete(did));
+          }
+        }
+      }
+
+      if (cacDeleteFailedErr) {
+        item.cleans = prevCleans;
+        if (prevCleanRecords) item.cleanRecords = prevCleanRecords;
+        item.excludedKeys = prevExcludedKeys;
+        item.status = prevStatus;
+        item.serviceCode = prevServiceCode;
+        if (prevCacheList && state.airCleanerJobCache) state.airCleanerJobCache.set(cleanUnitUpper, prevCacheList);
+        if (typeof showToast === 'function') {
+          showToast(`Gagal menghapus riwayat di Supabase: ${cacDeleteFailedErr.message || cacDeleteFailedErr}`, 'error');
+        }
+        return;
       }
 
       if (isPureReqOrNonCac || reqJobIds.size > 0) {
@@ -43081,7 +43142,29 @@ Keterangan : ${keterangan}`;
         item.serviceCode = '';
       }
 
-      // 4. Simpan perubahan ke safeStorage (tanpa objek job besar di cleanRecords) & reset fingerprint agar sync akurat
+      // 4. Sinkronkan ke Supabase Cloud tabel air_cleaner_monitoring (termasuk excludedKeys di kolom JSONB cleans)
+      if (state.supabaseClient && typeof syncAirCleanerToSupabase === 'function') {
+        const syncRes = await syncAirCleanerToSupabase(item, { preserveRemoteExcluded: true });
+        if (!syncRes || syncRes.ok === false) {
+          // Rollback state lokal agar UI jujur mencerminkan kondisi Supabase
+          item.cleans = prevCleans;
+          if (prevCleanRecords) item.cleanRecords = prevCleanRecords;
+          item.excludedKeys = prevExcludedKeys;
+          item.status = prevStatus;
+          item.serviceCode = prevServiceCode;
+          if (prevCacheList && state.airCleanerJobCache) state.airCleanerJobCache.set(cleanUnitUpper, prevCacheList);
+          if (typeof renderAirCleanerMonitorTable === 'function') {
+            renderAirCleanerMonitorTable();
+          }
+          const errDetail = syncRes?.error?.message || 'Gagal sinkronisasi ke database Supabase.';
+          if (typeof showToast === 'function') {
+            showToast(`Gagal menyimpan penghapusan ke Supabase: ${errDetail}`, 'error');
+          }
+          return;
+        }
+      }
+
+      // 5. Simpan perubahan ke safeStorage (tanpa objek job besar di cleanRecords) & reset fingerprint agar sync akurat
       try {
         const slimMonitor = (state.airCleanerMonitor || []).map(m => {
           const copy = { ...m };
@@ -43091,15 +43174,6 @@ Keterangan : ${keterangan}`;
         safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(slimMonitor));
         safeStorage.removeItem('SE_AIR_CLEANER_FP');
       } catch (e) { }
-
-      // 5. Sinkronkan ke Supabase Cloud tabel air_cleaner_monitoring (termasuk excludedKeys untuk -REQ-)
-      if (typeof syncAirCleanerToSupabase === 'function') {
-        try {
-          await syncAirCleanerToSupabase(item);
-        } catch (err) {
-          console.warn('[deleteAirCleanerActionEntry Supabase sync error]', err);
-        }
-      }
 
       // 6. Re-render tabel monitoring air cleaner & tutup modal
       if (typeof renderAirCleanerMonitorTable === 'function') {
@@ -43307,6 +43381,13 @@ Keterangan : ${keterangan}`;
       });
 
       rawList.forEach(item => {
+        if (Array.isArray(item.cleans) && typeof isAcExcludedMarker === 'function' && item.cleans.some(c => isAcExcludedMarker(c))) {
+          const extracted = (typeof extractAcExcludedKeys === 'function') ? extractAcExcludedKeys(item.cleans) : [];
+          if (extracted.length > 0) {
+            item.excludedKeys = Array.from(new Set([...(Array.isArray(item.excludedKeys) ? item.excludedKeys : []), ...extracted]));
+          }
+          item.cleans = (typeof stripAcExcludedFromCleans === 'function') ? stripAcExcludedFromCleans(item.cleans) : item.cleans;
+        }
         const u = String(item.noLambung || '').trim().toUpperCase();
         if (lastRepMap.has(u)) {
           const repInfo = lastRepMap.get(u);
@@ -46367,10 +46448,27 @@ Keterangan : ${keterangan}`;
       return syncJobToSupabase(order, true);
     }
 
+    function isAcExcludedMarker(entry) {
+      if (!entry) return false;
+      if (typeof entry === 'object' && Array.isArray(entry.__ac_excluded)) return true;
+      if (typeof entry === 'string' && entry.trim().startsWith('__AC_EXCL__:')) return true;
+      return false;
+    }
+    window.isAcExcludedMarker = isAcExcludedMarker;
+
+    function stripAcExcludedFromCleans(rawCleans) {
+      if (!Array.isArray(rawCleans)) return [];
+      return rawCleans.filter(entry => !isAcExcludedMarker(entry));
+    }
+    window.stripAcExcludedFromCleans = stripAcExcludedFromCleans;
+
     function parseAcExcludedKeys(rawVal) {
       if (!rawVal) return [];
       if (Array.isArray(rawVal)) {
         return Array.from(new Set(rawVal.map(v => String(v || '').trim()).filter(Boolean)));
+      }
+      if (typeof rawVal === 'object' && Array.isArray(rawVal.__ac_excluded)) {
+        return Array.from(new Set(rawVal.__ac_excluded.map(v => String(v || '').trim()).filter(Boolean)));
       }
       const s = String(rawVal).trim();
       if (!s.startsWith('__AC_EXCL__:')) return [];
@@ -46383,6 +46481,34 @@ Keterangan : ${keterangan}`;
       return [];
     }
     window.parseAcExcludedKeys = parseAcExcludedKeys;
+
+    function extractAcExcludedKeys(rawCleans, rawLokasi) {
+      const merged = new Set();
+      if (Array.isArray(rawCleans)) {
+        rawCleans.forEach(entry => {
+          if (isAcExcludedMarker(entry)) {
+            parseAcExcludedKeys(entry).forEach(k => merged.add(k));
+          }
+        });
+      }
+      if (rawLokasi) {
+        parseAcExcludedKeys(rawLokasi).forEach(k => merged.add(k));
+      }
+      return Array.from(merged);
+    }
+    window.extractAcExcludedKeys = extractAcExcludedKeys;
+
+    function encodeAcCleansForDb(cleans, excludedKeys) {
+      const cleanOnly = stripAcExcludedFromCleans(Array.isArray(cleans) ? cleans : []);
+      const cleanKeys = Array.isArray(excludedKeys)
+        ? Array.from(new Set(excludedKeys.map(v => String(v || '').trim()).filter(Boolean)))
+        : [];
+      if (cleanKeys.length > 0) {
+        return [...cleanOnly, { __ac_excluded: cleanKeys }];
+      }
+      return cleanOnly;
+    }
+    window.encodeAcCleansForDb = encodeAcCleansForDb;
 
     function serializeAcExcludedKeys(keys) {
       if (!Array.isArray(keys) || keys.length === 0) return null;
@@ -46409,26 +46535,69 @@ Keterangan : ${keterangan}`;
     }
     window.isJobExcludedFromAirCleaner = isJobExcludedFromAirCleaner;
 
-    async function syncAirCleanerToSupabase(item) {
-      if (!state.supabaseClient || !item || !item.noLambung) return;
+    async function syncAirCleanerToSupabase(item, options = {}) {
+      if (!state.supabaseClient || !item || !item.noLambung) {
+        return { ok: false, error: new Error('Supabase client atau data unit Air Cleaner tidak valid.') };
+      }
       // ATURAN BAKU: Hanya unit PC/Exca PPA & Dozer PPA non-ROM yang boleh disimpan ke air_cleaner_monitoring
-      if (!isEligibleAirCleanerUnit(item.noLambung, item)) return;
+      if (!isEligibleAirCleanerUnit(item.noLambung, item)) return { ok: true, skipped: true };
       try {
+        const nlUpper = String(item.noLambung || '').toUpperCase().trim();
+        const cleanOnly = stripAcExcludedFromCleans(item.cleans);
+        const mergedExclSet = new Set(
+          Array.isArray(item.excludedKeys)
+            ? item.excludedKeys.map(v => String(v || '').trim()).filter(Boolean)
+            : []
+        );
+        let hadLegacyLokasiExcl = Boolean(item._hadLegacyLokasiExcl);
+
+        // Pertahankan & gabungkan excludedKeys yang sudah tersimpan di server agar perangkat ber-cache lama tidak menimpanya
+        if (options.preserveRemoteExcluded !== false) {
+          try {
+            const { data: remoteRow } = await state.supabaseClient
+              .from('air_cleaner_monitoring')
+              .select('cleans,lokasi')
+              .eq('no_lambung', nlUpper)
+              .maybeSingle();
+            if (remoteRow) {
+              extractAcExcludedKeys(remoteRow.cleans, remoteRow.lokasi).forEach(k => mergedExclSet.add(k));
+              if (String(remoteRow.lokasi || '').trim().startsWith('__AC_EXCL__:')) {
+                hadLegacyLokasiExcl = true;
+              }
+            }
+          } catch (eFetchExcl) { }
+        }
+
+        const mergedExcludedKeys = Array.from(mergedExclSet);
+        item.excludedKeys = mergedExcludedKeys;
+
         const payload = {
-          id: 'AC-' + item.noLambung.toUpperCase(),
-          no_lambung: item.noLambung.toUpperCase(),
+          id: 'AC-' + nlUpper,
+          no_lambung: nlUpper,
           type_model: item.type || 'Unit',
-          cleans: item.cleans || [],
+          // Simpan excludedKeys di dalam kolom `cleans` bertipe JSONB (tanpa batas 100 karakter)
+          cleans: encodeAcCleansForDb(cleanOnly, mergedExcludedKeys),
           service_code: item.serviceCode || '',
           status: item.status || 'Baik',
           updated_at: new Date().toISOString()
         };
-        if (Array.isArray(item.excludedKeys)) {
-          payload.lokasi = serializeAcExcludedKeys(item.excludedKeys);
+        // Bersihkan sisa legacy __AC_EXCL__ di kolom lokasi (VARCHAR 100) jika pernah ada
+        if (hadLegacyLokasiExcl) {
+          payload.lokasi = null;
         }
-        await state.supabaseClient.from('air_cleaner_monitoring').upsert(payload, { onConflict: 'no_lambung' });
+
+        const { error } = await state.supabaseClient
+          .from('air_cleaner_monitoring')
+          .upsert(payload, { onConflict: 'no_lambung' });
+        if (error) {
+          console.error('[Supabase Outbound Air Cleaner Error]', error, payload);
+          return { ok: false, error };
+        }
+        item._hadLegacyLokasiExcl = false;
+        return { ok: true, error: null };
       } catch (err) {
         console.warn('[Supabase Outbound Air Cleaner Exception]', err);
+        return { ok: false, error: err };
       }
     }
 
@@ -46648,8 +46817,10 @@ Keterangan : ${keterangan}`;
             }
             const resolvedType = resolveAirCleanerUnitType(nl, row);
             if (!isEligibleAirCleanerUnit(nl, resolvedType)) return;
-            const dbCleans = (Array.isArray(row.cleans) && row.cleans.length > 0) ? [...row.cleans] : [];
-            const rowExcludedKeys = parseAcExcludedKeys(row.lokasi);
+            const rawDbCleans = (Array.isArray(row.cleans) && row.cleans.length > 0) ? [...row.cleans] : [];
+            const dbCleans = stripAcExcludedFromCleans(rawDbCleans);
+            const rowExcludedKeys = extractAcExcludedKeys(rawDbCleans, row.lokasi);
+            const hadLegacyLokasiExcl = String(row.lokasi || '').trim().startsWith('__AC_EXCL__:');
             supaMap.set(nl, {
               id: row.id || ('AC-' + nl),
               noLambung: nl,
@@ -46658,6 +46829,8 @@ Keterangan : ${keterangan}`;
               cleans: hasFullHistorySSOT ? [] : dbCleans,
               cleanRecords: [],
               excludedKeys: rowExcludedKeys,
+              _hadLegacyLokasiExcl: hadLegacyLokasiExcl,
+              rawDbCleans: rawDbCleans,
               dbCleans: dbCleans,
               dbStatus: row.status || 'Baik',
               serviceCode: hasFullHistorySSOT ? '' : (row.service_code || ''),
@@ -47042,19 +47215,21 @@ Keterangan : ${keterangan}`;
             if (count === 0) monItem.serviceCode = '';
 
             if (hasFullHistorySSOT && monItem.fromSupa) {
-              const cleansChanged = JSON.stringify(monItem.cleans) !== JSON.stringify(monItem.dbCleans || []);
+              const expectedDbCleans = encodeAcCleansForDb(monItem.cleans, monItem.excludedKeys);
+              const cleansChanged = JSON.stringify(expectedDbCleans) !== JSON.stringify(monItem.rawDbCleans || []);
               const statusChanged = monItem.status !== monItem.dbStatus;
-              if (cleansChanged || statusChanged) {
+              if (cleansChanged || statusChanged || monItem._hadLegacyLokasiExcl) {
                 unitsToSyncToDb.push(monItem);
               }
             }
+            delete monItem.rawDbCleans;
             delete monItem.dbCleans;
             delete monItem.dbStatus;
           });
 
           if (unitsToSyncToDb.length > 0 && typeof syncAirCleanerToSupabase === 'function') {
             unitsToSyncToDb.forEach(itemToSync => {
-              syncAirCleanerToSupabase(itemToSync).catch(() => { });
+              syncAirCleanerToSupabase(itemToSync, { preserveRemoteExcluded: false }).catch(() => { });
             });
           }
 
@@ -47597,15 +47772,22 @@ Keterangan : ${keterangan}`;
         return;
       }
       if (!Array.isArray(state.airCleanerMonitor)) state.airCleanerMonitor = [];
+      const cleanOnlyRt = (typeof stripAcExcludedFromCleans === 'function')
+        ? stripAcExcludedFromCleans(row.cleans)
+        : (Array.isArray(row.cleans) ? row.cleans : []);
+      const excludedRt = (typeof extractAcExcludedKeys === 'function')
+        ? extractAcExcludedKeys(row.cleans, row.lokasi)
+        : ((typeof parseAcExcludedKeys === 'function') ? parseAcExcludedKeys(row.lokasi) : []);
+
       let item = state.airCleanerMonitor.find(m => String(m.noLambung || '').toUpperCase() === lambung);
       if (!item) {
         item = {
           id: row.id || ('AC-' + lambung),
           noLambung: lambung,
           type: row.type_model || (typeof getUnitTypeFromMaster === 'function' ? getUnitTypeFromMaster(lambung, 'Unit') : 'Unit'),
-          cleans: Array.isArray(row.cleans) ? row.cleans : [],
+          cleans: cleanOnlyRt,
           cleanRecords: [],
-          excludedKeys: (typeof parseAcExcludedKeys === 'function') ? parseAcExcludedKeys(row.lokasi) : [],
+          excludedKeys: excludedRt,
           serviceCode: row.service_code || '',
           status: row.status || 'Baik',
           lastReplacedAt: row.last_replaced_at || null,
@@ -47616,9 +47798,9 @@ Keterangan : ${keterangan}`;
         };
         state.airCleanerMonitor.push(item);
       } else {
-        if (Array.isArray(row.cleans)) item.cleans = row.cleans;
-        if (row.lokasi !== undefined && typeof parseAcExcludedKeys === 'function') {
-          item.excludedKeys = parseAcExcludedKeys(row.lokasi);
+        if (Array.isArray(row.cleans)) item.cleans = cleanOnlyRt;
+        if (Array.isArray(row.cleans) || row.lokasi !== undefined) {
+          item.excludedKeys = excludedRt;
         }
         if (row.service_code !== undefined) item.serviceCode = row.service_code || '';
         if (row.status) item.status = row.status;
@@ -48512,15 +48694,20 @@ Keterangan : ${keterangan}`;
             const isSvc = (sfUpper === 'SERVICE');
             const isDoneAc = (sfUpper === 'ACHIEVED' || sfUpper === 'ACH' || sfUpper === 'DONE' || isSvc);
             if (payload.eventType !== 'UPDATE' && isDoneAc && !isBd && typeof updateAirCleanerRecord === 'function') {
-              const acPsMatch = String(newHist.keterangan || '').match(/PS\s*(\d+)/i);
-              const acCodeArg = acPsMatch ? ('PS' + acPsMatch[1]) : (isSvc ? 'SERVICE' : 'clean');
-              updateAirCleanerRecord(unitNo, newHist.type_unit || '', isSvc ? 'service' : 'clean', acCodeArg, rawDate || undefined);
-              try {
-                const slimAc = (state.airCleanerMonitor || []).map(m => { const c = { ...m }; delete c.cleanRecords; return c; });
-                safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(slimAc));
-              } catch (e) { }
-              if (state.activeTab === 'air-cleaner-monitor' && typeof renderAirCleanerMonitorTable === 'function') {
-                renderAirCleanerMonitorTable();
+              const existingMon = (state.airCleanerMonitor || []).find(m => String(m.noLambung || '').toUpperCase().trim() === unitNo);
+              const isRtExcluded = existingMon && typeof isJobExcludedFromAirCleaner === 'function'
+                && isJobExcludedFromAirCleaner(newHist, rawDate, existingMon.excludedKeys);
+              if (!isRtExcluded) {
+                const acPsMatch = String(newHist.keterangan || '').match(/PS\s*(\d+)/i);
+                const acCodeArg = acPsMatch ? ('PS' + acPsMatch[1]) : (isSvc ? 'SERVICE' : 'clean');
+                updateAirCleanerRecord(unitNo, newHist.type_unit || '', isSvc ? 'service' : 'clean', acCodeArg, rawDate || undefined);
+                try {
+                  const slimAc = (state.airCleanerMonitor || []).map(m => { const c = { ...m }; delete c.cleanRecords; return c; });
+                  safeStorage.setItem('SE_AIR_CLEANER', JSON.stringify(slimAc));
+                } catch (e) { }
+                if (state.activeTab === 'air-cleaner-monitor' && typeof renderAirCleanerMonitorTable === 'function') {
+                  renderAirCleanerMonitorTable();
+                }
               }
             } else {
               window._acRealtimeDirty = true;
