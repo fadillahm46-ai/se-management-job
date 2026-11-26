@@ -1739,6 +1739,50 @@
     html.dark-mode #mobile-filter-drawer-body .in-mobile-drawer .mob-filter-field-label {
       color: #94a3b8 !important;
     }
+
+    /* Styling & Dark Mode untuk Pop-up Informasi MP (Clean & Minimalis) */
+    @keyframes mpSchedInfoPopIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    #modal-mp-schedule-info .mp-sched-info-card {
+      animation: mpSchedInfoPopIn 200ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    html.dark-mode #modal-mp-schedule-info .mp-sched-info-card {
+      background-color: #0f172a !important;
+      border-color: #1e293b !important;
+    }
+
+    html.dark-mode #modal-mp-schedule-info #mp-sched-info-title {
+      color: #f8fafc !important;
+    }
+
+    html.dark-mode #modal-mp-schedule-info .mp-sched-info-heading {
+      color: #e2e8f0 !important;
+    }
+
+    html.dark-mode #modal-mp-schedule-info .mp-sched-info-line {
+      color: #94a3b8 !important;
+    }
+
+    /* Pill OPP (Opportunity) di sebelah tanggal realisasi Riwayat Selesai */
+    .opp-riwayat-pill {
+      background-color: #2563eb !important;
+      color: #ffffff !important;
+    }
+
+    html.dark-mode .opp-riwayat-pill {
+      background-color: #2563eb !important;
+      color: #ffffff !important;
+    }
   </style>
 </head>
 
@@ -3813,6 +3857,17 @@
                 <div id="mp-card-cover-overlay" class="hidden absolute inset-0 bg-black/50 backdrop-blur-[1px] z-0">
                 </div>
 
+                <!-- Tombol Ikon Buku: Buka Kembali Pop-up Informasi Jadwal Schedule (Sudut Kiri Atas Kartu Profil MP) -->
+                <button type="button" id="btn-mp-schedule-info-book" onclick="openMpScheduleInfoModal()"
+                  class="absolute top-3.5 left-3.5 z-20 w-9 h-9 rounded-full bg-emerald-600/95 hover:bg-emerald-700 text-white flex items-center justify-center cursor-pointer shadow-md transition active:scale-95 border-2 border-white/80"
+                  title="Informasi Jadwal Schedule" aria-label="Buka Informasi Jadwal Schedule">
+                  <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                  </svg>
+                </button>
+
                 <!-- Tombol Kamera Ganti Background di Sudut Kanan Atas Kartu (Hanya Ikon Kamera Tanpa Teks) -->
                 <label
                   class="absolute top-3.5 right-3.5 z-20 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center cursor-pointer shadow-md transition active:scale-95 border border-white/20"
@@ -5514,6 +5569,15 @@
                 </svg>
                 <span>Manajemen Akun Pegawai</span>
               </button>
+              <button type="button" onclick="switchMasterSection('schedule-info')" id="btn-master-sec-schedule-info"
+                class="px-3.5 py-2 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center space-x-1.5 cursor-pointer">
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                </svg>
+                <span>Info Jadwal</span>
+              </button>
             </div>
             <span class="text-[11px] font-semibold text-slate-400 hidden lg:inline-block">Master Control Panel</span>
           </div>
@@ -6565,6 +6629,167 @@
                     <!-- Populated via renderMasterArmadaTable() -->
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================================== -->
+          <!-- SUB-MENU 6: INFO JADWAL SCHEDULE (OILMAN & WASHINGMAN) -->
+          <!-- ========================================== -->
+          <div id="master-section-schedule-info" class="hidden space-y-4">
+            <!-- Header Info Jadwal (Ringkas) -->
+            <div
+              class="bg-white px-4 py-3.5 sm:px-5 sm:py-4 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-3">
+              <span
+                class="w-9 h-9 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-700 flex items-center justify-center shrink-0">
+                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" viewBox="0 0 24 24">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                </svg>
+              </span>
+              <h3 class="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">Pengaturan Pop-up Info
+                Jadwal Schedule</h3>
+            </div>
+
+            <!-- Grid Editor 2 Kolom: Oilman & Washingman -->
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <!-- KARTU EDITOR OILMAN -->
+              <div
+                class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col justify-between">
+                <div
+                  class="px-5 py-4 bg-gradient-to-r from-emerald-50 to-white border-b border-emerald-100 flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span
+                      class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" viewBox="0 0 24 24">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                      </svg>
+                    </span>
+                    <div class="min-w-0">
+                      <h4 class="text-xs sm:text-sm font-extrabold text-slate-900 truncate">Informasi Untuk Oilman</h4>
+                      <p class="text-[11px] text-emerald-700 font-semibold">Lubetruck / Unit Track Big Digger</p>
+                    </div>
+                  </div>
+                  <label
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-emerald-200 text-[11px] font-bold text-slate-700 cursor-pointer shrink-0 select-none">
+                    <input type="checkbox" id="master-sched-info-oilman-active" checked
+                      class="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                    <span>Auto Pop-up</span>
+                  </label>
+                </div>
+
+                <div class="p-5 flex-1">
+                  <div>
+                    <label for="master-sched-info-oilman-content"
+                      class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2">Isi
+                      Informasi</label>
+                    <textarea id="master-sched-info-oilman-content" rows="13"
+                      placeholder="Tulis informasi untuk Oilman di sini..."
+                      class="w-full px-3.5 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-emerald-500 text-xs font-medium text-slate-800 leading-relaxed resize-y transition font-sans"></textarea>
+                  </div>
+                </div>
+
+                <div
+                  class="px-5 py-3.5 bg-slate-50/70 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <button type="button" onclick="previewScheduleInfoDraft('oilman')"
+                      class="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer">
+                      <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                        </path>
+                      </svg>
+                      <span>Pratinjau</span>
+                    </button>
+                    <button type="button" onclick="resetScheduleInfoDraftToDefault('oilman')"
+                      class="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 font-semibold text-xs transition cursor-pointer">
+                      Reset Default
+                    </button>
+                  </div>
+                  <button type="button" id="btn-save-sched-info-oilman" onclick="saveScheduleInfoNote('oilman')"
+                    class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7">
+                      </path>
+                    </svg>
+                    <span>Simpan Oilman</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- KARTU EDITOR WASHINGMAN -->
+              <div
+                class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col justify-between">
+                <div
+                  class="px-5 py-4 bg-gradient-to-r from-cyan-50 to-white border-b border-cyan-100 flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span
+                      class="w-8 h-8 rounded-xl bg-cyan-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" viewBox="0 0 24 24">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                      </svg>
+                    </span>
+                    <div class="min-w-0">
+                      <h4 class="text-xs sm:text-sm font-extrabold text-slate-900 truncate">Informasi Untuk Washingman
+                      </h4>
+                      <p class="text-[11px] text-cyan-700 font-semibold">Water Truck / Washing Unit Coal</p>
+                    </div>
+                  </div>
+                  <label
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-cyan-200 text-[11px] font-bold text-slate-700 cursor-pointer shrink-0 select-none">
+                    <input type="checkbox" id="master-sched-info-washingman-active" checked
+                      class="w-3.5 h-3.5 rounded text-cyan-600 focus:ring-cyan-500 cursor-pointer">
+                    <span>Auto Pop-up</span>
+                  </label>
+                </div>
+
+                <div class="p-5 flex-1">
+                  <div>
+                    <label for="master-sched-info-washingman-content"
+                      class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2">Isi
+                      Informasi</label>
+                    <textarea id="master-sched-info-washingman-content" rows="13"
+                      placeholder="Tulis informasi untuk Washingman di sini..."
+                      class="w-full px-3.5 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-cyan-500 text-xs font-medium text-slate-800 leading-relaxed resize-y transition font-sans"></textarea>
+                  </div>
+                </div>
+
+                <div
+                  class="px-5 py-3.5 bg-slate-50/70 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <button type="button" onclick="previewScheduleInfoDraft('washingman')"
+                      class="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer">
+                      <svg class="w-3.5 h-3.5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                        </path>
+                      </svg>
+                      <span>Pratinjau</span>
+                    </button>
+                    <button type="button" onclick="resetScheduleInfoDraftToDefault('washingman')"
+                      class="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 font-semibold text-xs transition cursor-pointer">
+                      Reset Default
+                    </button>
+                  </div>
+                  <button type="button" id="btn-save-sched-info-washingman"
+                    onclick="saveScheduleInfoNote('washingman')"
+                    class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7">
+                      </path>
+                    </svg>
+                    <span>Simpan Washingman</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -11757,6 +11982,34 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- MODAL: POP-UP INFORMASI (OILMAN & WASHINGMAN - SIMPLE & CLEAN) -->
+  <div id="modal-mp-schedule-info" role="dialog" aria-modal="true" aria-labelledby="mp-sched-info-title"
+    style="display:none;"
+    class="fixed inset-0 z-[80] bg-black/45 backdrop-blur-xs items-center justify-center hidden p-4 sm:p-5 overflow-y-auto">
+    <div
+      class="mp-sched-info-card bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[85vh]">
+      <!-- Header Polos Clean -->
+      <div class="px-6 pt-6 pb-2 shrink-0">
+        <h3 id="mp-sched-info-title" class="text-lg font-bold tracking-tight text-slate-900">
+          Informasi
+        </h3>
+      </div>
+
+      <!-- Body Konten Bersih -->
+      <div id="mp-sched-info-body" class="px-6 py-2 overflow-y-auto flex-1 text-[13px] leading-relaxed text-slate-500">
+        <!-- Diisi dinamis oleh renderMpScheduleInfoModalContent() -->
+      </div>
+
+      <!-- Footer Tombol Paham -->
+      <div class="px-6 pt-3 pb-5 shrink-0">
+        <button type="button" id="btn-mp-sched-info-understand" onclick="closeMpScheduleInfoModal()"
+          class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-semibold text-sm transition cursor-pointer">
+          Paham
+        </button>
+      </div>
     </div>
   </div>
   <!-- MODAL: RINCIAN PENCAPAIAN TIAP KATEGORI SCHEDULE (Pop-up saat Kartu Kategori Diklik) -->
@@ -17789,6 +18042,11 @@
         renderManpowerDashboard();
         syncAllDateFiltersToToday();
         navigateTab('dashboard');
+
+        // Tampilkan pop-up Informasi Jadwal Schedule otomatis untuk Oilman & Washingman saat membuka aplikasi
+        if (typeof maybeAutoShowMpScheduleInfoModal === 'function') {
+          maybeAutoShowMpScheduleInfoModal(user);
+        }
       }
 
       if (typeof initOrderSubtabView === 'function') {
@@ -18297,7 +18555,7 @@
 
     function switchMasterSection(sectionKey) {
       state.masterActiveSection = sectionKey;
-      ['roster', 'units', 'armada', 'operators', 'accounts'].forEach(sec => {
+      ['roster', 'units', 'armada', 'operators', 'accounts', 'schedule-info'].forEach(sec => {
         const secEl = document.getElementById(`master-section-${sec}`);
         const btnEl = document.getElementById(`btn-master-sec-${sec}`);
         if (secEl) {
@@ -18306,9 +18564,9 @@
         }
         if (btnEl) {
           if (sec === sectionKey) {
-            btnEl.className = 'px-3.5 py-2 rounded-xl text-xs font-bold transition bg-brand-200 text-brand-800 shadow-2xs flex items-center space-x-1.5';
+            btnEl.className = 'px-3.5 py-2 rounded-xl text-xs font-bold transition bg-brand-200 text-brand-800 shadow-2xs flex items-center space-x-1.5 cursor-pointer';
           } else {
-            btnEl.className = 'px-3.5 py-2 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center space-x-1.5';
+            btnEl.className = 'px-3.5 py-2 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center space-x-1.5 cursor-pointer';
           }
         }
       });
@@ -18325,6 +18583,14 @@
         // [Audit] Tarik akun terbaru dari Supabase (cooldown 2 menit agar hemat egress)
         if (state.supabaseClient && typeof refreshMasterUsersFromSupabase === 'function') {
           refreshMasterUsersFromSupabase(false, 2 * 60 * 1000);
+        }
+      }
+      else if (sectionKey === 'schedule-info') {
+        if (typeof renderMasterScheduleInfoEditor === 'function') {
+          renderMasterScheduleInfoEditor();
+        }
+        if (state.supabaseClient && typeof loadScheduleInfoFromSupabase === 'function') {
+          loadScheduleInfoFromSupabase(false);
         }
       }
       else if (sectionKey === 'roster' && state.masterSubtab === 'database') {
@@ -18344,6 +18610,7 @@
     function handleLogout() {
       // Clear current session state & hentikan Realtime/Polling agar sesi logout 0 traffic ke Supabase
       state.currentUser = null;
+      window._mpScheduleInfoShownForSessionKey = null;
       safeStorage.removeItem('SE_SESSION_USER');
       if (typeof teardownSupabaseSession === 'function') {
         teardownSupabaseSession();
@@ -19783,6 +20050,490 @@
     window.closeJobDetailModal = closeJobDetailModal;
 
     // ============================================================================
+    // MODUL POP-UP INFORMASI (OILMAN & WASHINGMAN) + DATA MASTER ADMIN
+    // ============================================================================
+    const SCHEDULE_INFO_STORAGE_KEY = 'SE_SCHEDULE_INFO_NOTES';
+    const DEFAULT_SCHEDULE_INFO_NOTES = {
+      oilman: {
+        role_key: 'oilman',
+        title: 'Informasi',
+        content: [
+          'INFO JADWAL SCHEDULE UNIT TRACK BIG DIGGER',
+          '',
+          '🔹 UNIT OB BIG DIGGER',
+          '• Shift 1: 12:00–13:00 (Restime) | 16:00–16:12 (Sholat Ashar)',
+          '• Shift 2: 20:00–20:12 (Sholat Isya) | 00:00–01:00 (Restime)',
+          '',
+          '🔹 UNIT COAL BIG DIGGER',
+          '• Shift 1: 06:25–06:44 (Bareng WT Coal) | 12:00–13:00 (Restime) | 16:00–16:12 (Sholat Ashar)',
+          '• Shift 2: 20:00–20:12 (Sholat Isya) | 00:00–01:00 (Restime)',
+          '',
+          '🔹 UNIT DRILLING',
+          '• Shift 1: 06:00–07:00 | 16:00–16:12 (Sholat Ashar)'
+        ].join('\n'),
+        is_active: true,
+        updated_by: null,
+        updated_at: null
+      },
+      washingman: {
+        role_key: 'washingman',
+        title: 'Informasi',
+        content: [
+          'INFO JADWAL SCHEDULE WASHING UNIT COAL',
+          '',
+          '🔹 SHIFT 1',
+          '• 06.25–06.44 : Utamakan unit 2000, 1250, 800',
+          '• 08.00–09.00 : Sisa unit coal yang belum dicuci saat HSCS',
+          '• 11.55–12.10 : Pencucian opportunity',
+          '• 12.55–14.00 : Pencucian kedua',
+          '• 16.00–16.12 : Spare waktu (sisa pencucian kedua)',
+          '',
+          '🔹 SHIFT 2',
+          '• 18.25–18.44 : Utamakan unit 2000, 1250, 800',
+          '• 20.00–21.00 : Sisa unit coal yang belum dicuci saat HSCS',
+          '• 01.00–02.00 : Pencucian kedua'
+        ].join('\n'),
+        is_active: true,
+        updated_by: null,
+        updated_at: null
+      }
+    };
+
+    function _cloneDefaultScheduleInfoNotes() {
+      return {
+        oilman: { ...DEFAULT_SCHEDULE_INFO_NOTES.oilman },
+        washingman: { ...DEFAULT_SCHEDULE_INFO_NOTES.washingman }
+      };
+    }
+
+    function _normalizeLegacyScheduleInfoContent(title, content) {
+      const cleanTitle = String(title || '').trim();
+      const cleanContent = String(content || '').trim();
+      if (!cleanContent) return cleanTitle;
+      if (!cleanTitle || cleanTitle.toLowerCase() === 'informasi') return cleanContent;
+      if (cleanContent.toLowerCase().includes(cleanTitle.toLowerCase())) return cleanContent;
+      return `${cleanTitle}\n\n${cleanContent}`;
+    }
+
+    function getScheduleInfoNotesStore() {
+      if (!state.scheduleInfoNotes) {
+        const base = _cloneDefaultScheduleInfoNotes();
+        try {
+          const raw = (typeof safeStorage !== 'undefined') ? safeStorage.getItem(SCHEDULE_INFO_STORAGE_KEY) : null;
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') {
+              ['oilman', 'washingman'].forEach(rk => {
+                if (parsed[rk] && typeof parsed[rk] === 'object') {
+                  const mergedContent = (parsed[rk].content !== undefined && parsed[rk].content !== null)
+                    ? _normalizeLegacyScheduleInfoContent(parsed[rk].title, parsed[rk].content)
+                    : base[rk].content;
+                  base[rk] = {
+                    ...base[rk],
+                    ...parsed[rk],
+                    role_key: rk,
+                    title: 'Informasi',
+                    content: mergedContent,
+                    is_active: parsed[rk].is_active !== undefined ? Boolean(parsed[rk].is_active) : true
+                  };
+                }
+              });
+            }
+          }
+        } catch (e) { }
+        state.scheduleInfoNotes = base;
+      }
+      return state.scheduleInfoNotes;
+    }
+
+    function persistScheduleInfoNotesToLocal() {
+      try {
+        if (typeof safeStorage !== 'undefined' && state.scheduleInfoNotes) {
+          safeStorage.setItem(SCHEDULE_INFO_STORAGE_KEY, JSON.stringify(state.scheduleInfoNotes));
+        }
+      } catch (e) { }
+    }
+
+    function resolveScheduleInfoRoleKey(user) {
+      const r = String(user?.role || '').toLowerCase().trim();
+      if (r === 'oilman' || r === 'mp_lt') return 'oilman';
+      if (r === 'washingman' || r === 'mp_wt') return 'washingman';
+      const j = String(user?.jabatan || '').toLowerCase();
+      if (j.includes('wash') || j.includes('cuci')) return 'washingman';
+      if (j.includes('oil') || j.includes('lube')) return 'oilman';
+      return null;
+    }
+
+    function _escapeSchedInfoHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatScheduleInfoContentHtml(rawContent) {
+      const lines = String(rawContent || '').replace(/\r\n/g, '\n').split('\n');
+      const trimmedAll = lines.join('').trim();
+      if (!trimmedAll) {
+        return '<p class="mp-sched-info-line text-[13px] text-slate-400">Belum ada informasi.</p>';
+      }
+
+      const htmlParts = [];
+      let prevWasBlank = false;
+      lines.forEach((rawLine, idx) => {
+        const trimmed = rawLine.trim();
+        if (!trimmed) {
+          if (htmlParts.length > 0 && !prevWasBlank) {
+            htmlParts.push('<div class="h-3"></div>');
+            prevWasBlank = true;
+          }
+          return;
+        }
+        prevWasBlank = false;
+
+        const isSectionHeading = /^🔹|^🔸|^📌|^▶|^▪/.test(trimmed) ||
+          (idx === 0 && trimmed === trimmed.toUpperCase() && /[A-Z]/.test(trimmed) && trimmed.length <= 80 && !/^[•\-*]/.test(trimmed));
+
+        if (isSectionHeading) {
+          const cleanHeading = trimmed.replace(/^[🔹🔸📌▶▪]+\s*/, '').trim();
+          htmlParts.push(
+            `<p class="mp-sched-info-heading text-[13px] font-semibold text-slate-800 leading-snug mb-1">${_escapeSchedInfoHtml(cleanHeading)}</p>`
+          );
+          return;
+        }
+
+        const isBullet = /^[•\-*]\s*/.test(trimmed);
+        if (isBullet) {
+          const cleanItem = trimmed.replace(/^[•\-*]\s*/, '').trim();
+          htmlParts.push(
+            `<div class="mp-sched-info-line flex items-start gap-2 text-[13px] text-slate-500 leading-[1.6] mb-0.5"><span class="select-none text-slate-400">•</span><span class="flex-1 break-words">${_escapeSchedInfoHtml(cleanItem)}</span></div>`
+          );
+          return;
+        }
+
+        htmlParts.push(
+          `<p class="mp-sched-info-line text-[13px] text-slate-500 leading-[1.6] mb-1 break-words">${_escapeSchedInfoHtml(trimmed)}</p>`
+        );
+      });
+
+      return htmlParts.join('');
+    }
+
+    function renderMpScheduleInfoModalContent(roleKey, overrideData = null) {
+      const store = getScheduleInfoNotesStore();
+      const targetRole = (roleKey === 'washingman') ? 'washingman' : 'oilman';
+      const note = overrideData || store[targetRole] || DEFAULT_SCHEDULE_INFO_NOTES[targetRole];
+      const isWash = (targetRole === 'washingman');
+
+      const modalEl = document.getElementById('modal-mp-schedule-info');
+      const titleEl = document.getElementById('mp-sched-info-title');
+      const bodyEl = document.getElementById('mp-sched-info-body');
+      const okBtn = document.getElementById('btn-mp-sched-info-understand');
+
+      if (modalEl) {
+        modalEl.dataset.activeRoleKey = targetRole;
+        modalEl.classList.toggle('theme-washingman', isWash);
+      }
+      if (titleEl) {
+        titleEl.textContent = 'Informasi';
+      }
+      if (bodyEl) {
+        bodyEl.innerHTML = formatScheduleInfoContentHtml(note.content || '');
+      }
+      if (okBtn) {
+        okBtn.className = isWash
+          ? 'w-full py-2.5 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-700 active:scale-[0.98] text-white font-semibold text-sm transition cursor-pointer'
+          : 'w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-semibold text-sm transition cursor-pointer';
+      }
+    }
+
+    function openMpScheduleInfoModal(roleKeyOverride = null, overrideData = null) {
+      const roleKey = roleKeyOverride || resolveScheduleInfoRoleKey(state.currentUser);
+      if (!roleKey) return;
+      renderMpScheduleInfoModalContent(roleKey, overrideData);
+      if (typeof triggerHaptic === 'function') triggerHaptic(8);
+      toggleModal('modal-mp-schedule-info', true);
+      // Jika dibuka normal oleh Oilman/Washingman (bukan pratinjau draft), cek update terbaru dari Supabase di background
+      if (!overrideData && state.supabaseClient && typeof loadScheduleInfoFromSupabase === 'function') {
+        loadScheduleInfoFromSupabase(false);
+      }
+    }
+    window.openMpScheduleInfoModal = openMpScheduleInfoModal;
+
+    function closeMpScheduleInfoModal() {
+      if (typeof triggerHaptic === 'function') triggerHaptic(8);
+      toggleModal('modal-mp-schedule-info', false);
+    }
+    window.closeMpScheduleInfoModal = closeMpScheduleInfoModal;
+
+    function updateMpScheduleInfoBookButtonTheme(user) {
+      const btn = document.getElementById('btn-mp-schedule-info-book');
+      if (!btn) return;
+      const roleKey = resolveScheduleInfoRoleKey(user || state.currentUser);
+      if (!roleKey) {
+        btn.classList.add('hidden');
+        btn.classList.remove('flex');
+        return;
+      }
+      btn.classList.remove('hidden');
+      btn.classList.add('flex');
+      if (roleKey === 'washingman') {
+        btn.className = 'absolute top-3.5 left-3.5 z-20 w-9 h-9 rounded-full bg-cyan-600/95 hover:bg-cyan-700 text-white flex items-center justify-center cursor-pointer shadow-md transition active:scale-95 border-2 border-white/80';
+        btn.title = 'Informasi Washingman';
+      } else {
+        btn.className = 'absolute top-3.5 left-3.5 z-20 w-9 h-9 rounded-full bg-emerald-600/95 hover:bg-emerald-700 text-white flex items-center justify-center cursor-pointer shadow-md transition active:scale-95 border-2 border-white/80';
+        btn.title = 'Informasi Oilman';
+      }
+    }
+
+    function maybeAutoShowMpScheduleInfoModal(user) {
+      const targetUser = user || state.currentUser;
+      updateMpScheduleInfoBookButtonTheme(targetUser);
+      const roleKey = resolveScheduleInfoRoleKey(targetUser);
+      if (!roleKey) return;
+
+      const sessionKey = `${String(targetUser?.nrp || targetUser?.nama || roleKey)}_${roleKey}`;
+      if (window._mpScheduleInfoShownForSessionKey === sessionKey) return;
+
+      const store = getScheduleInfoNotesStore();
+      const note = store[roleKey] || DEFAULT_SCHEDULE_INFO_NOTES[roleKey];
+      if (note && note.is_active === false) return;
+
+      window._mpScheduleInfoShownForSessionKey = sessionKey;
+
+      const triggerOpen = () => {
+        if (!state.currentUser || resolveScheduleInfoRoleKey(state.currentUser) !== roleKey) return;
+        const latestNote = getScheduleInfoNotesStore()[roleKey] || DEFAULT_SCHEDULE_INFO_NOTES[roleKey];
+        if (latestNote && latestNote.is_active === false) return;
+        openMpScheduleInfoModal(roleKey);
+      };
+
+      // Tunggu splash screen selesai jika aplikasi baru saja dibuka agar pop-up tampil mulus
+      const splashEl = document.getElementById('app-splash-screen');
+      const isSplashVisible = splashEl && splashEl.style.display !== 'none' && !splashEl.classList.contains('hidden');
+      if (!isSplashVisible) {
+        setTimeout(triggerOpen, 320);
+        return;
+      }
+
+      let waitedMs = 0;
+      const pollSplash = setInterval(() => {
+        waitedMs += 200;
+        const sp = document.getElementById('app-splash-screen');
+        const stillShown = sp && sp.style.display !== 'none' && !sp.classList.contains('hidden');
+        if (!stillShown || waitedMs >= 3600) {
+          clearInterval(pollSplash);
+          setTimeout(triggerOpen, 180);
+        }
+      }, 200);
+    }
+    window.maybeAutoShowMpScheduleInfoModal = maybeAutoShowMpScheduleInfoModal;
+
+    function renderMasterScheduleInfoEditor() {
+      const store = getScheduleInfoNotesStore();
+      ['oilman', 'washingman'].forEach(rk => {
+        const note = store[rk] || DEFAULT_SCHEDULE_INFO_NOTES[rk];
+        const contentInp = document.getElementById(`master-sched-info-${rk}-content`);
+        const activeChk = document.getElementById(`master-sched-info-${rk}-active`);
+
+        if (contentInp) contentInp.value = note.content || '';
+        if (activeChk) activeChk.checked = (note.is_active !== false);
+      });
+    }
+    window.renderMasterScheduleInfoEditor = renderMasterScheduleInfoEditor;
+
+    function previewScheduleInfoDraft(roleKey) {
+      const rk = (roleKey === 'washingman') ? 'washingman' : 'oilman';
+      const contentVal = (document.getElementById(`master-sched-info-${rk}-content`)?.value || '').trim();
+      openMpScheduleInfoModal(rk, {
+        role_key: rk,
+        title: 'Informasi',
+        content: contentVal
+      });
+    }
+    window.previewScheduleInfoDraft = previewScheduleInfoDraft;
+
+    function resetScheduleInfoDraftToDefault(roleKey) {
+      const rk = (roleKey === 'washingman') ? 'washingman' : 'oilman';
+      const def = DEFAULT_SCHEDULE_INFO_NOTES[rk];
+      const contentInp = document.getElementById(`master-sched-info-${rk}-content`);
+      const activeChk = document.getElementById(`master-sched-info-${rk}-active`);
+      if (contentInp) contentInp.value = def.content;
+      if (activeChk) activeChk.checked = true;
+      showToast(`Isi ${rk === 'oilman' ? 'Oilman' : 'Washingman'} dikembalikan ke default. Klik Simpan untuk menerapkan.`, 'info');
+    }
+    window.resetScheduleInfoDraftToDefault = resetScheduleInfoDraftToDefault;
+
+    function _applyScheduleInfoRows(rows) {
+      if (!Array.isArray(rows) || rows.length === 0) return false;
+      const store = getScheduleInfoNotesStore();
+      let changed = false;
+      rows.forEach(row => {
+        if (!row || !row.role_key) return;
+        const rk = String(row.role_key).toLowerCase().trim();
+        if (rk !== 'oilman' && rk !== 'washingman') return;
+        const mergedContent = (row.content !== undefined && row.content !== null)
+          ? _normalizeLegacyScheduleInfoContent(row.title, row.content)
+          : DEFAULT_SCHEDULE_INFO_NOTES[rk].content;
+        store[rk] = {
+          role_key: rk,
+          title: 'Informasi',
+          content: mergedContent,
+          is_active: row.is_active !== undefined ? Boolean(row.is_active) : true,
+          updated_by: row.updated_by || null,
+          updated_at: row.updated_at || null
+        };
+        changed = true;
+      });
+      if (changed) {
+        persistScheduleInfoNotesToLocal();
+        // Jika modal pop-up sedang terbuka untuk role terkait, langsung perbarui tampilannya
+        const modalEl = document.getElementById('modal-mp-schedule-info');
+        if (modalEl && !modalEl.classList.contains('hidden') && modalEl.style.display !== 'none') {
+          const activeRoleKey = modalEl.dataset.activeRoleKey;
+          if (activeRoleKey === 'oilman' || activeRoleKey === 'washingman') {
+            renderMpScheduleInfoModalContent(activeRoleKey);
+          }
+        }
+        // Jika Admin sedang membuka editor Data Master -> Info Jadwal, sinkronkan form
+        if (state.activeTab === 'master-data' && state.masterActiveSection === 'schedule-info') {
+          renderMasterScheduleInfoEditor();
+        }
+      }
+      return changed;
+    }
+
+    async function loadScheduleInfoFromSupabase(showFeedback = false) {
+      getScheduleInfoNotesStore();
+      if (!state.supabaseClient) {
+        return false;
+      }
+      const now = Date.now();
+      if (!showFeedback && window._lastScheduleInfoFetchAt && (now - window._lastScheduleInfoFetchAt) < 15000) {
+        return true;
+      }
+      window._lastScheduleInfoFetchAt = now;
+
+      try {
+        const { data, error } = await state.supabaseClient
+          .from('schedule_info_notes')
+          .select('role_key, title, content, is_active, updated_by, updated_at');
+        if (error) {
+          if (error.code === '42P01' || error.code === 'PGRST205') {
+            console.warn('[ScheduleInfo] Tabel schedule_info_notes belum dibuat di Supabase, memakai default lokal.');
+          } else {
+            console.warn('[ScheduleInfo] Gagal memuat dari Supabase:', error.message);
+          }
+          return false;
+        }
+        if (Array.isArray(data) && data.length > 0) {
+          _applyScheduleInfoRows(data);
+        } else if (state.activeTab === 'master-data' && state.masterActiveSection === 'schedule-info') {
+          renderMasterScheduleInfoEditor();
+        }
+        return true;
+      } catch (err) {
+        console.warn('[ScheduleInfo] Exception fetch:', err);
+        return false;
+      }
+    }
+    window.loadScheduleInfoFromSupabase = loadScheduleInfoFromSupabase;
+
+    async function saveScheduleInfoNote(roleKey) {
+      if (state.currentUser?.role !== 'admin') {
+        showToast('Akses ditolak: Hanya Admin yang dapat mengubah Informasi!', 'error');
+        return;
+      }
+      const rk = (roleKey === 'washingman') ? 'washingman' : 'oilman';
+      const contentInp = document.getElementById(`master-sched-info-${rk}-content`);
+      const activeChk = document.getElementById(`master-sched-info-${rk}-active`);
+      const saveBtn = document.getElementById(`btn-save-sched-info-${rk}`);
+
+      const contentVal = String(contentInp?.value || '').trim();
+      const isActiveVal = activeChk ? Boolean(activeChk.checked) : true;
+
+      if (!contentVal) {
+        showToast('Isi informasi tidak boleh kosong!', 'warning');
+        if (contentInp) contentInp.focus();
+        return;
+      }
+
+      const origHtml = saveBtn ? saveBtn.innerHTML : '';
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg><span>Menyimpan...</span>';
+      }
+
+      const nowIso = new Date().toISOString();
+      const editorName = state.currentUser?.nama || state.currentUser?.nrp || 'Admin';
+      const payload = {
+        role_key: rk,
+        title: 'Informasi',
+        content: contentVal,
+        is_active: isActiveVal,
+        updated_by: editorName,
+        updated_at: nowIso
+      };
+
+      try {
+        let supaErr = null;
+        if (state.supabaseClient) {
+          const { data, error } = await state.supabaseClient
+            .from('schedule_info_notes')
+            .upsert(payload, { onConflict: 'role_key' })
+            .select('role_key, title, content, is_active, updated_by, updated_at')
+            .maybeSingle();
+          if (error) {
+            supaErr = error;
+          } else if (data) {
+            payload.updated_at = data.updated_at || nowIso;
+          }
+        }
+
+        const store = getScheduleInfoNotesStore();
+        store[rk] = { ...payload };
+        persistScheduleInfoNotesToLocal();
+        renderMasterScheduleInfoEditor();
+
+        try {
+          if (typeof realtimeBroadcastBus !== 'undefined' && realtimeBroadcastBus) {
+            realtimeBroadcastBus.postMessage({ type: 'SCHEDULE_INFO_UPDATED', row: payload });
+          }
+        } catch (eBc) { }
+
+        const roleLabel = (rk === 'oilman') ? 'Oilman' : 'Washingman';
+        if (supaErr) {
+          if (supaErr.code === '42P01' || supaErr.code === 'PGRST205') {
+            showToast(`Tersimpan lokal, namun tabel schedule_info_notes belum dibuat di Supabase!`, 'warning');
+          } else {
+            showToast(`Tersimpan lokal, gagal sinkron cloud: ${supaErr.message || 'Error'}`, 'warning');
+          }
+        } else {
+          showToast(`Informasi ${roleLabel} berhasil disimpan!`, 'success');
+        }
+      } catch (err) {
+        console.error('[saveScheduleInfoNote Error]', err);
+        showToast('Gagal menyimpan informasi: ' + (err?.message || 'Error'), 'error');
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = origHtml;
+        }
+      }
+    }
+    window.saveScheduleInfoNote = saveScheduleInfoNote;
+
+    function handleRealtimeScheduleInfoChange(payload) {
+      const row = payload?.new;
+      if (row && row.role_key) {
+        _applyScheduleInfoRows([row]);
+      }
+    }
+    window.handleRealtimeScheduleInfoChange = handleRealtimeScheduleInfoChange;
+
+    // ============================================================================
     // UNIFIED FILTER "TERAPKAN" SYSTEM & MOBILE RIGHT-TO-LEFT SLIDE FILTER DRAWER
     // ============================================================================
     window._pendingFilterGroups = window._pendingFilterGroups || new Set();
@@ -20777,6 +21528,197 @@
       return isCoalUnit(obj);
     }
     window.isUnitCoal = isUnitCoal;
+
+    // ============================================================================
+    // DETEKSI OPPORTUNITY RIWAYAT SELESAI (SCH LT & SCH WT - UNTUK PILL "OPP" & SEARCH)
+    // Catatan: Opportunity di Dashboard tetap khusus SCH WT (tidak berubah).
+    // ============================================================================
+    function isDrillingUnit(j) {
+      if (!j) return false;
+      const noUnit = String(j.noLambung || j.unit || j.no_lambung || '').trim().toUpperCase();
+      const cleanNo = noUnit.replace(/[\s\-_]/g, '');
+      const mUnit = (typeof findMasterUnitRecord === 'function' && noUnit) ? findMasterUnitRecord(noUnit) : null;
+      const typeUnit = String(j.typeUnit || j.type || j.type_unit || '').trim().toUpperCase();
+      const masterType = String(mUnit?.type || mUnit?.type_model || '').trim().toUpperCase();
+      const fullType = `${typeUnit} ${masterType}`.toUpperCase();
+
+      if (/(DRIL|D\s*245|D245|DM\s*45|DM45|PV\s*271|PV271|FURUKAWA|SANDVIK)/i.test(fullType)) return true;
+      if (/^DM\d+/i.test(cleanNo) || /^DR\d+/i.test(cleanNo) || /^D245/i.test(cleanNo) || /^D24\d/i.test(cleanNo)) return true;
+      return false;
+    }
+    window.isDrillingUnit = isDrillingUnit;
+
+    function _parseOppTimeToMinutes(tStr) {
+      if (!tStr) return null;
+      const s = String(tStr).trim().replace('.', ':');
+      const m = s.match(/^(\d{1,2}):(\d{2})/);
+      if (!m) return null;
+      const h = parseInt(m[1], 10);
+      const min = parseInt(m[2], 10);
+      if (isNaN(h) || isNaN(min) || h < 0 || h > 23 || min < 0 || min > 59) return null;
+      return h * 60 + min;
+    }
+
+    function _doesIntervalOverlapNormalWindow(sMin, eMin, wStart, wEnd) {
+      if (sMin <= eMin) {
+        return sMin <= wEnd && eMin >= wStart;
+      }
+      // Job melintasi tengah malam: pecah menjadi [sMin, 1440] dan [0, eMin]
+      return (sMin <= wEnd && 1440 >= wStart) || (0 <= wEnd && eMin >= wStart);
+    }
+
+    function _isTimeOverlapOppWindow(sMin, eMin, wStart, wEnd) {
+      if (wStart <= wEnd) {
+        return _doesIntervalOverlapNormalWindow(sMin, eMin, wStart, wEnd);
+      }
+      // Jendela melintasi tengah malam (misal 23:55 s/d 01:10 -> [1435, 1440] U [0, 70])
+      return _doesIntervalOverlapNormalWindow(sMin, eMin, wStart, 1440) ||
+        _doesIntervalOverlapNormalWindow(sMin, eMin, 0, wEnd);
+    }
+
+    function _extractRiwayatExecTimes(j) {
+      if (!j) return { start: '', end: '' };
+      let start = String(j.jamStart || j.jam_start || j.start || '').trim();
+      let end = String(j.jamEnd || j.jam_end || j.finish || j.end || '').trim();
+      if ((!start || start === '-' || !end || end === '-') && j.realisasi) {
+        const match = String(j.realisasi).trim().match(/(\d{1,2}[:.]\d{2})\s*(?:s\/?d|-)\s*(\d{1,2}[:.]\d{2})/i);
+        if (match) {
+          if (!start || start === '-') start = match[1].replace('.', ':');
+          if (!end || end === '-') end = match[2].replace('.', ':');
+        }
+      }
+      return { start, end };
+    }
+
+    function evaluateRiwayatOpportunity(j) {
+      if (!j) return { isOpp: false };
+
+      const cat = String(j.cat || '').toLowerCase().trim();
+      const idStr = String(j.id || j.job_id || j.noId || j.no_id || '').toUpperCase().trim();
+      const cluster = String(j.cluster || '').toUpperCase().trim();
+      const lokasi = String(j.lokasi || '').toUpperCase().trim();
+      const jenis = String(j.jenis_pekerjaan || j.typeJob || j.job_type || '').toUpperCase().trim();
+
+      // 1. Wajib Job Schedule (BUKAN Unscheduled / Job Request / Order Lapangan)
+      const isUnsch = (typeof isJobAnOrderRequest === 'function' && isJobAnOrderRequest(j)) ||
+        idStr.startsWith('WT-REQ') || idStr.startsWith('LT-REQ') ||
+        idStr.includes('-REQ-') || idStr.includes('-DIR-') ||
+        idStr.startsWith('UNS') || idStr.startsWith('ORD') ||
+        cat === 'unscheduled' || cat === 'request';
+      if (isUnsch) return { isOpp: false };
+
+      // 2. Wajib berstatus selesai dikerjakan (ACH / ACHIEVED / DONE)
+      const st = String(j.status_final || j.status || '').toLowerCase().trim();
+      if (!['ach', 'achieved', 'done'].includes(st)) return { isOpp: false };
+
+      // 3. Wajib memiliki Jam Realisasi aktual yang valid
+      const { start: tStart, end: tFinish } = _extractRiwayatExecTimes(j);
+      if (!tStart || tStart === '-' || !tFinish || tFinish === '-') return { isOpp: false };
+      const sMin = _parseOppTimeToMinutes(tStart);
+      const eMin = _parseOppTimeToMinutes(tFinish);
+      if (sMin === null || eMin === null) return { isOpp: false };
+
+      // 4. Bedakan SCH Water Truck (WT) vs SCH Lubetruck (LT)
+      const isExplicitLt = /^(LT-|PLT-|LTJ)/i.test(idStr) ||
+        ['small', 'digger', 'aircleaner', 'air_cleaner', 'topup', 'topup_oil', 'top up oil'].includes(cat);
+      const armadaUpper = String(j.armada || j.armada_unit || j.wtUnit || j.ltUnit || '').toUpperCase().trim();
+      const isWtJob = !isExplicitLt && (
+        (typeof isJobWaterTruck === 'function' && isJobWaterTruck(j)) ||
+        ['coal', 'rom', 'non_coal', 'wsc', 'wnc'].includes(cat) ||
+        idStr.startsWith('WT-') ||
+        armadaUpper.startsWith('WT')
+      );
+
+      // 5A. ATURAN OPPORTUNITY SCH WT (Washing Coal: Shift 1 11:55–13:10 | Shift 2 23:55–01:10)
+      if (isWtJob) {
+        if (cat === 'non_coal' || cat === 'wnc' || idStr.includes('-WNC-') || jenis.includes('NON COAL') || jenis.includes('NON-COAL')) {
+          return { isOpp: false };
+        }
+        if (cat === 'rom' || cluster === 'ROM' || cluster.includes('ROM') || lokasi.includes('ROM') || idStr.includes('-ROM-') || idStr.includes('ROM') || jenis.includes('ROM')) {
+          return { isOpp: false };
+        }
+        const isCoalWt = (cat === 'coal' || cat === 'wsc' || idStr.includes('-WSC-') || idStr.startsWith('WT-WSC') || jenis.includes('WASHING COAL') || jenis === 'WSC');
+        if (!isCoalWt) return { isOpp: false };
+
+        if (_isTimeOverlapOppWindow(sMin, eMin, 11 * 60 + 55, 13 * 60 + 10)) {
+          return { isOpp: true, scope: 'WT', group: 'WT Washing Coal', tooltip: 'Opportunity WT Coal (Shift 1: 11:55–13:10)' };
+        }
+        if (_isTimeOverlapOppWindow(sMin, eMin, 23 * 60 + 55, 1 * 60 + 10)) {
+          return { isOpp: true, scope: 'WT', group: 'WT Washing Coal', tooltip: 'Opportunity WT Coal (Shift 2: 23:55–01:10)' };
+        }
+        return { isOpp: false };
+      }
+
+      // 5B. ATURAN OPPORTUNITY SCH LT (Semua SCH LT: Small Track, Big Digger, Air Cleaner, Top Up Oil)
+      // Urutan klasifikasi: 1) UNIT DRILLING -> 2) UNIT COAL BIG DIGGER -> 3) UNIT OB BIG DIGGER & SMALL TRACK
+      if (isDrillingUnit(j)) {
+        // UNIT DRILLING — Shift 1: 06:00–07:00 | 16:00–16:12 (Sholat Ashar)
+        const drillWindows = [
+          { s: 6 * 60, e: 7 * 60, label: 'Shift 1: 06:00–07:00' },
+          { s: 16 * 60, e: 16 * 60 + 12, label: 'Shift 1: 16:00–16:12 (Sholat Ashar)' }
+        ];
+        const hit = drillWindows.find(w => _isTimeOverlapOppWindow(sMin, eMin, w.s, w.e));
+        return hit
+          ? { isOpp: true, scope: 'LT', group: 'LT Unit Drilling', tooltip: `Opportunity LT Drilling (${hit.label})` }
+          : { isOpp: false };
+      }
+
+      const isBig = (typeof isBigDiggerUnit === 'function') ? isBigDiggerUnit(j) : (cat === 'digger');
+      const isCoal = (typeof isCoalUnit === 'function') ? isCoalUnit(j) : false;
+
+      if (isBig && isCoal) {
+        // UNIT COAL BIG DIGGER
+        // Shift 1: 06:25–06:44 (Bareng WT Coal) | 12:00–13:00 (Restime) | 16:00–16:12 (Sholat Ashar)
+        // Shift 2: 20:00–20:12 (Sholat Isya) | 00:00–01:00 (Restime)
+        const coalBigWindows = [
+          { s: 6 * 60 + 25, e: 6 * 60 + 44, label: 'Shift 1: 06:25–06:44 (Bareng WT Coal)' },
+          { s: 12 * 60, e: 13 * 60, label: 'Shift 1: 12:00–13:00 (Restime)' },
+          { s: 16 * 60, e: 16 * 60 + 12, label: 'Shift 1: 16:00–16:12 (Sholat Ashar)' },
+          { s: 20 * 60, e: 20 * 60 + 12, label: 'Shift 2: 20:00–20:12 (Sholat Isya)' },
+          { s: 0, e: 60, label: 'Shift 2: 00:00–01:00 (Restime)' }
+        ];
+        const hit = coalBigWindows.find(w => _isTimeOverlapOppWindow(sMin, eMin, w.s, w.e));
+        return hit
+          ? { isOpp: true, scope: 'LT', group: 'LT Coal Big Digger', tooltip: `Opportunity LT Coal Big Digger (${hit.label})` }
+          : { isOpp: false };
+      }
+
+      // UNIT OB BIG DIGGER & SMALL TRACK
+      // Shift 1: 12:00–13:00 (Restime) | 16:00–16:12 (Sholat Ashar)
+      // Shift 2: 20:00–20:12 (Sholat Isya) | 00:00–01:00 (Restime)
+      const obAndSmallWindows = [
+        { s: 12 * 60, e: 13 * 60, label: 'Shift 1: 12:00–13:00 (Restime)' },
+        { s: 16 * 60, e: 16 * 60 + 12, label: 'Shift 1: 16:00–16:12 (Sholat Ashar)' },
+        { s: 20 * 60, e: 20 * 60 + 12, label: 'Shift 2: 20:00–20:12 (Sholat Isya)' },
+        { s: 0, e: 60, label: 'Shift 2: 00:00–01:00 (Restime)' }
+      ];
+      const hitObSmall = obAndSmallWindows.find(w => _isTimeOverlapOppWindow(sMin, eMin, w.s, w.e));
+      if (hitObSmall) {
+        const grpLabel = isBig ? 'LT OB Big Digger' : 'LT Small Track';
+        return { isOpp: true, scope: 'LT', group: grpLabel, tooltip: `Opportunity ${grpLabel} (${hitObSmall.label})` };
+      }
+
+      return { isOpp: false };
+    }
+    window.evaluateRiwayatOpportunity = evaluateRiwayatOpportunity;
+
+    function isRiwayatOpportunityJob(j) {
+      return Boolean(evaluateRiwayatOpportunity(j)?.isOpp);
+    }
+    window.isRiwayatOpportunityJob = isRiwayatOpportunityJob;
+
+    function matchesRiwayatOpportunitySearch(j, searchVal) {
+      const q = String(searchVal || '').toLowerCase().trim();
+      if (!q) return false;
+      const isOppQuery = (q === 'opp' || q === 'opportunity' || q === 'opp lt' || q === 'opp wt' || q === 'opportunity lt' || q === 'opportunity wt');
+      if (!isOppQuery) return false;
+      const info = evaluateRiwayatOpportunity(j);
+      if (!info || !info.isOpp) return false;
+      if (q.endsWith(' lt')) return info.scope === 'LT';
+      if (q.endsWith(' wt')) return info.scope === 'WT';
+      return true;
+    }
+    window.matchesRiwayatOpportunitySearch = matchesRiwayatOpportunitySearch;
 
     // Helper deteksi unit Air Cleaner Coal PC2000, PC1200 / PC1250, dan PC800 / PC850
     function isAirCleanerUnitCoalPc2000_1200_800(job) {
@@ -38257,6 +39199,7 @@ Keterangan : ${keterangan}`;
       if (searchVal) {
         const normQ = (typeof normalizeJobSearchQuery === 'function') ? normalizeJobSearchQuery(searchVal) : searchVal;
         filtered = filtered.filter(j =>
+          (typeof matchesRiwayatOpportunitySearch === 'function' && matchesRiwayatOpportunitySearch(j, searchVal)) ||
           (typeof matchesJobNoIdSearch === 'function' && matchesJobNoIdSearch(j, searchVal)) ||
           (typeof getJobNoId === 'function' && getJobNoId(j).toLowerCase().includes(normQ)) ||
           (typeof getJobSchLabel === 'function' && getJobSchLabel(j).toLowerCase().includes(searchVal)) ||
@@ -38601,6 +39544,14 @@ Keterangan : ${keterangan}`;
         }
 
         const isSelected = state.isCompSelectMode && state.selectedCompJobIds && state.selectedCompJobIds.has(String(job.id));
+        const oppInfo = (typeof evaluateRiwayatOpportunity === 'function') ? evaluateRiwayatOpportunity(job) : { isOpp: false };
+        const oppTooltipEsc = oppInfo.isOpp ? String(oppInfo.tooltip || 'Opportunity').replace(/"/g, '&quot;') : '';
+        const oppPillDesktopHtml = oppInfo.isOpp
+          ? `<span class="opp-riwayat-pill inline-flex items-center px-1.5 py-[1px] rounded-full bg-blue-600 text-white font-bold text-[7.5px] leading-tight tracking-wide uppercase shrink-0" title="${oppTooltipEsc}">OPP</span>`
+          : '';
+        const oppPillMobileHtml = oppInfo.isOpp
+          ? `<span class="opp-riwayat-pill inline-flex items-center px-1 py-[0.5px] rounded-full bg-blue-600 text-white font-bold text-[6.5px] leading-tight tracking-wide uppercase shrink-0" title="${oppTooltipEsc}">OPP</span>`
+          : '';
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/80 transition align-middle ' + (isSelected ? 'bg-rose-50/70 border-l-4 border-l-rose-500' : '');
         tr.innerHTML = `
@@ -38654,7 +39605,10 @@ Keterangan : ${keterangan}`;
 
           <!-- KOLOM REALISASI MODE HP (SETELAH CLUSTER & LOKASI) -->
           <td class="md:hidden py-2 px-1 text-left align-middle text-slate-700 break-words">
-            <div class="font-medium text-slate-800 text-[8.5px] leading-tight text-left">${realisasiDateDisplay}</div>
+            <div class="flex items-center gap-1 flex-wrap leading-tight text-left">
+              <span class="font-medium text-slate-800 text-[8.5px]">${realisasiDateDisplay}</span>
+              ${oppPillMobileHtml}
+            </div>
             <div class="text-slate-500 text-[8px] font-mono mt-0.5 leading-tight text-left">
               ${(job.jamStart && job.jamEnd) ? `${job.jamStart} - ${job.jamEnd}` : (job.jamStart || '-')}
             </div>
@@ -38688,7 +39642,10 @@ Keterangan : ${keterangan}`;
 
           <!-- KOLOM 9: REALISASI (RATA KIRI TENGAH) -->
           <td class="hidden md:table-cell py-2 px-1.5 text-left align-middle text-slate-700 break-words">
-            <div class="font-medium text-emerald-700 text-[8.5px] leading-tight text-left">${realisasiDateDisplay}</div>
+            <div class="flex items-center gap-1.5 flex-wrap leading-tight text-left">
+              <span class="font-medium text-emerald-700 text-[8.5px]">${realisasiDateDisplay}</span>
+              ${oppPillDesktopHtml}
+            </div>
             <div class="text-slate-500 text-[8px] font-mono mt-0.5 leading-tight text-left">
               ${(job.jamStart && job.jamEnd) ? `${job.jamStart} s/d ${job.jamEnd}` : (job.jamStart ? `Start: ${job.jamStart}` : '-')}
             </div>
@@ -51070,6 +52027,7 @@ Keterangan : ${keterangan}`;
         .on('postgres_changes', { event: '*', schema: 'public', table: 'air_cleaner_monitoring' }, handleRealtimeAirCleanerChange)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'air_cleaner_replacements' }, (payload) => handleRealtimeAirCleanerReplacementChange(payload))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'washing_checklists' }, (payload) => handleRealtimeWashingChecklistChange(payload))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'schedule_info_notes' }, (payload) => handleRealtimeScheduleInfoChange(payload))
         // Listener Postgres Changes Realtime (Zero-Refetch 0 KB Extra Egress) gabungan event '*' per tabel aktif LT & WT
         .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs_lt' }, (payload) => handleRealtimeJobChange(payload))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs_wt' }, (payload) => handleRealtimeJobChange(payload))
@@ -51471,6 +52429,8 @@ Keterangan : ${keterangan}`;
           // Muat master data (Armada & Populasi Unit pakai Fingerprint Check; skip tabel user/kontak penuh untuk role lapangan)
           const masterLoadTasks = [];
           masterLoadTasks.push(typeof syncSupabaseMasterData === 'function' ? syncSupabaseMasterData(false, { skipHeavyMaster: isFieldOp }) : Promise.resolve());
+          // Muat informasi pop-up jadwal schedule (2 baris ringan untuk Oilman & Washingman + editor Admin)
+          masterLoadTasks.push(typeof loadScheduleInfoFromSupabase === 'function' ? loadScheduleInfoFromSupabase(false) : Promise.resolve());
 
           // Tarik roster ringan window ±3 hari (1 request, cache lokal utuh) agar auto-fill Personil Schedule selalu terisi tanpa download 6.540 baris
           const rosterBootTask = (typeof loadRosterFromSupabase === 'function'
@@ -51558,6 +52518,12 @@ Keterangan : ${keterangan}`;
         realtimeBroadcastBus = new BroadcastChannel('se_realtime_sync_bus');
         realtimeBroadcastBus.onmessage = (event) => {
           const data = event.data;
+          if (data && data.type === 'SCHEDULE_INFO_UPDATED' && data.row) {
+            if (typeof _applyScheduleInfoRows === 'function') {
+              _applyScheduleInfoRows([data.row]);
+            }
+            return;
+          }
           if (data && data.type === 'DATA_MUTATED') {
             console.log('[BroadcastChannel Bus] Menerima sinyal pembaruan data instan:', data.source);
             if (data.lambung && (data.cluster || data.lokasi)) {
@@ -57110,6 +58076,7 @@ Keterangan : ${keterangan}`;
       if (searchVal) {
         const normQ = (typeof normalizeJobSearchQuery === 'function') ? normalizeJobSearchQuery(searchVal) : searchVal;
         filtered = filtered.filter(j =>
+          (typeof matchesRiwayatOpportunitySearch === 'function' && matchesRiwayatOpportunitySearch(j, searchVal)) ||
           (typeof matchesJobNoIdSearch === 'function' && matchesJobNoIdSearch(j, searchVal)) ||
           (typeof getJobNoId === 'function' && getJobNoId(j).toLowerCase().includes(normQ)) ||
           (typeof getJobSchLabel === 'function' && getJobSchLabel(j).toLowerCase().includes(searchVal)) ||
