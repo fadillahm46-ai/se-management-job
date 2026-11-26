@@ -13048,7 +13048,7 @@
 
   <div id="modal-confirm-bulk-delete-selected-jobs"
     class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl text-center">
       <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-2xs">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -13059,11 +13059,47 @@
       <div>
         <h3 class="text-sm font-black text-slate-900">Hapus Jadwal Terpilih?</h3>
         <p class="text-xs text-slate-500 mt-1 leading-relaxed" id="bulk-sched-delete-desc">
-          Apakah Anda yakin ingin menghapus jadwal yang dipilih dari antrean jadwal dan database?
+          Pilih cakupan penghapusan untuk jadwal yang dipilih.
         </p>
       </div>
-      <div class="flex items-center space-x-2 pt-2">
-        <button type="button" onclick="executeBulkDeleteSelectedJobs()"
+
+      <!-- Pilihan Cakupan Hapus Khusus Job Terpilih -->
+      <div class="space-y-2 text-left text-xs">
+        <label
+          class="flex items-start p-3 rounded-2xl border-2 border-slate-200 hover:border-emerald-500 bg-slate-50/60 cursor-pointer transition">
+          <input type="radio" name="bulk-selected-delete-scope" id="bulk-selected-scope-date" value="date" checked
+            class="mt-0.5 text-emerald-600 focus:ring-emerald-500 mr-2.5 shrink-0 cursor-pointer">
+          <div class="min-w-0">
+            <div class="font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
+              <span>Hapus di tanggal ini saja</span>
+              <span id="bulk-selected-delete-date-label"
+                class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10.5px] font-mono font-bold">-</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">
+              Hanya menghapus job yang dipilih pada tanggal ini.
+            </p>
+          </div>
+        </label>
+
+        <label
+          class="flex items-start p-3 rounded-2xl border-2 border-slate-200 hover:border-rose-500 bg-slate-50/60 cursor-pointer transition">
+          <input type="radio" name="bulk-selected-delete-scope" id="bulk-selected-scope-month" value="month"
+            class="mt-0.5 text-rose-600 focus:ring-rose-500 mr-2.5 shrink-0 cursor-pointer">
+          <div class="min-w-0">
+            <div class="font-bold text-rose-900 flex items-center gap-1.5 flex-wrap">
+              <span>Dari tanggal ini s/d akhir bulan</span>
+              <span id="bulk-selected-delete-month-label"
+                class="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 text-[10.5px] font-mono font-bold">-</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">
+              Hanya menghapus job yang dipilih mulai tanggal ini sampai akhir bulan. Unit lain tetap aman.
+            </p>
+          </div>
+        </label>
+      </div>
+
+      <div class="flex items-center space-x-2 pt-1">
+        <button type="button" id="btn-confirm-bulk-delete-selected-jobs" onclick="executeBulkDeleteSelectedJobs()"
           class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition cursor-pointer">
           Ya, Hapus Jadwal
         </button>
@@ -56777,16 +56813,87 @@ Keterangan : ${keterangan}`;
     window.updateSchedBulkActionBar = updateSchedBulkActionBar;
 
     let pendingBulkDeleteSchedType = 'LT';
+    function _getSelectedSchedAnchorDateAndEndOfMonth(type = 'LT', selectedJobs = []) {
+      const isWt = (type === 'WT');
+      const filterDate = isWt
+        ? (document.getElementById('wt-filter-date')?.value || state.watertruckState?.filterDate || '')
+        : (document.getElementById('lt-filter-date')?.value || state.lubetruckState?.filterDate || '');
+      const firstSelectedDate = (Array.isArray(selectedJobs) && selectedJobs.length > 0 && selectedJobs[0]?.tanggal)
+        ? String(selectedJobs[0].tanggal).split('T')[0]
+        : '';
+      const rawAnchor = filterDate || firstSelectedDate || ((typeof getEffectiveTodayString === 'function') ? getEffectiveTodayString() : new Date().toISOString().split('T')[0]);
+      const anchorDate = (typeof normalizeDateStr === 'function') ? normalizeDateStr(rawAnchor) : String(rawAnchor).split('T')[0];
+
+      const monthKey = anchorDate.slice(0, 7);
+      const [yearNum, monthNum] = monthKey.split('-').map(Number);
+      const lastDay = (yearNum && monthNum) ? new Date(yearNum, monthNum, 0).getDate() : 31;
+      const endOfMonthStr = `${monthKey}-${String(lastDay).padStart(2, '0')}`;
+      return { anchorDate, monthKey, endOfMonthStr };
+    }
+
+    function _buildSelectedJobMatchSignature(job, isWt) {
+      const noLambung = String(job.noLambung || job.no_lambung || '').trim().toUpperCase();
+      const cat = String(job.cat || '').trim().toLowerCase();
+      const shiftNum = parseInt(job.shift || job.shift_rencana || 1, 10) || 1;
+      const isDailyCategory = ['digger', 'aircleaner', 'air_cleaner', 'topup', 'topup_oil', 'non_coal', 'noncoal'].includes(cat);
+      const usesShift = !isDailyCategory;
+      const usesRound = isWt && (cat === 'coal' || cat === 'rom');
+      const roundNum = usesRound
+        ? ((typeof getJobWashingRound === 'function') ? getJobWashingRound(job) : (parseInt(job.washingRound || job.washing_round || (String(job.id || '').toUpperCase().includes('-W2') ? 2 : 1), 10) || 1))
+        : 0;
+      return {
+        noLambung,
+        cat,
+        usesShift,
+        shift: usesShift ? shiftNum : null,
+        usesRound,
+        round: usesRound ? roundNum : null,
+        key: `${noLambung}|${cat}|${usesShift ? shiftNum : '*'}|${usesRound ? roundNum : '*'}`
+      };
+    }
+
+    function _doesJobMatchSelectedSignatures(job, sigMap, isWt) {
+      if (!job || !sigMap || sigMap.size === 0) return false;
+      const sig = _buildSelectedJobMatchSignature(job, isWt);
+      return sigMap.has(sig.key);
+    }
+
     function promptBulkDeleteSelectedJobs(type = 'LT') {
       if (state.selectedSchedJobIds.size === 0) {
         showToast('Pilih setidaknya satu jadwal untuk dihapus!', 'warning');
         return;
       }
       pendingBulkDeleteSchedType = type;
+      const isWt = (type === 'WT');
+      const targetArray = isWt ? (state.watertruckState?.jobs || []) : (state.lubetruckState?.jobs || []);
+      const selectedIdSet = new Set(Array.from(state.selectedSchedJobIds).map(id => String(id)));
+      const selectedJobs = targetArray.filter(j => j && selectedIdSet.has(String(j.id)));
+
+      const { anchorDate, endOfMonthStr } = _getSelectedSchedAnchorDateAndEndOfMonth(type, selectedJobs);
+      const formatD = (dStr) => {
+        if (!dStr) return '-';
+        const p = String(dStr).split('-');
+        return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : dStr;
+      };
+
+      const uniqueUnits = Array.from(new Set(selectedJobs.map(j => String(j.noLambung || j.no_lambung || '').trim().toUpperCase()).filter(Boolean)));
+      const unitPreview = uniqueUnits.length > 0 && uniqueUnits.length <= 3
+        ? ` (${uniqueUnits.join(', ')})`
+        : '';
+
       const descEl = document.getElementById('bulk-sched-delete-desc');
       if (descEl) {
-        descEl.textContent = `Apakah Anda yakin ingin menghapus ${state.selectedSchedJobIds.size} jadwal yang dipilih dari antrean jadwal dan database?`;
+        descEl.textContent = `Pilih cakupan penghapusan untuk ${state.selectedSchedJobIds.size} jadwal terpilih${unitPreview}.`;
       }
+      const dateLbl = document.getElementById('bulk-selected-delete-date-label');
+      const monthLbl = document.getElementById('bulk-selected-delete-month-label');
+      if (dateLbl) dateLbl.textContent = formatD(anchorDate);
+      if (monthLbl) monthLbl.textContent = `${formatD(anchorDate)} s/d ${formatD(endOfMonthStr)}`;
+
+      // Selalu reset pilihan ke "Hapus di tanggal ini saja" sebagai default aman
+      const radioDate = document.getElementById('bulk-selected-scope-date');
+      if (radioDate) radioDate.checked = true;
+
       toggleModal('modal-confirm-bulk-delete-selected-jobs', true);
     }
     window.promptBulkDeleteSelectedJobs = promptBulkDeleteSelectedJobs;
@@ -56795,56 +56902,166 @@ Keterangan : ${keterangan}`;
       const type = pendingBulkDeleteSchedType;
       const isWt = (type === 'WT');
       const targetArray = isWt ? (state.watertruckState?.jobs || []) : (state.lubetruckState?.jobs || []);
-      const deleteIds = Array.from(state.selectedSchedJobIds);
+      const selectedIds = Array.from(state.selectedSchedJobIds).map(id => String(id));
 
-      if (deleteIds.length === 0) {
+      if (selectedIds.length === 0) {
         toggleModal('modal-confirm-bulk-delete-selected-jobs', false);
         return;
       }
 
-      const deleteSet = new Set(deleteIds);
-      const toKeep = targetArray.filter(j => !deleteSet.has(j.id));
+      const scopeEl = document.querySelector('input[name="bulk-selected-delete-scope"]:checked');
+      const scope = scopeEl ? scopeEl.value : 'date';
 
-      // Update state in-memory murni (tanpa residu cache lokal)
-      if (isWt) {
-        state.watertruckState.jobs = toKeep;
-      } else {
-        state.lubetruckState.jobs = toKeep;
+      const confirmBtn = document.getElementById('btn-confirm-bulk-delete-selected-jobs');
+      const origBtnText = confirmBtn ? confirmBtn.textContent : 'Ya, Hapus Jadwal';
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Menghapus...';
       }
 
-      // Bersihkan dari cache RAM & LocalStorage agar saat F5 tidak kembali
-      if (window.globalDataCache?.jobs) {
-        deleteIds.forEach(id => {
-          window.globalDataCache.jobs.delete(String(id));
-        });
-      }
-      safeSaveTrimmedJobsToStorage();
+      try {
+        const selectedIdSet = new Set(selectedIds);
+        const selectedJobs = targetArray.filter(j => j && selectedIdSet.has(String(j.id)));
+        const { anchorDate, monthKey, endOfMonthStr } = _getSelectedSchedAnchorDateAndEndOfMonth(type, selectedJobs);
 
-      // Sinkronisasi hapus ke Supabase langsung ke tabel fisik
-      if (state.supabaseClient) {
-        const targetTable = isWt ? 'jobs_wt' : 'jobs_lt';
-        try {
-          for (let i = 0; i < deleteIds.length; i += 50) {
-            const chunk = deleteIds.slice(i, i + 50);
-            await Promise.allSettled([
-              state.supabaseClient.from(targetTable).delete().in('id', chunk),
-              state.supabaseClient.from('jobs_lt').delete().in('id', chunk),
-              state.supabaseClient.from('jobs_wt').delete().in('id', chunk)
-            ]);
+        const sigMap = new Map();
+        const selectedUnitsSet = new Set();
+        const selectedCatsSet = new Set();
+        selectedJobs.forEach(j => {
+          const sig = _buildSelectedJobMatchSignature(j, isWt);
+          if (sig.noLambung) {
+            sigMap.set(sig.key, sig);
+            selectedUnitsSet.add(sig.noLambung);
           }
-          console.log(`[Supabase Delete Selected] ${deleteIds.length} jadwal berhasil dihapus.`);
-        } catch (e) {
-          console.warn('[Supabase Delete Selected Error]', e);
+          if (sig.cat) selectedCatsSet.add(sig.cat);
+        });
+
+        const deleteIdSet = new Set(selectedIds);
+        let toKeep = [];
+
+        if (scope === 'month' && sigMap.size > 0) {
+          targetArray.forEach(j => {
+            if (!j) return;
+            const jId = String(j.id);
+            if (selectedIdSet.has(jId)) {
+              deleteIdSet.add(jId);
+              return;
+            }
+            const rawJDate = String(j.tanggal || '').split('T')[0];
+            const jDate = (typeof normalizeDateStr === 'function' && rawJDate) ? normalizeDateStr(rawJDate) : rawJDate;
+            const inRange = Boolean(jDate && jDate.slice(0, 7) === monthKey && jDate >= anchorDate && jDate <= endOfMonthStr);
+            const jStatus = String(j.status || '').toLowerCase().trim();
+            const isAlreadyFinished = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach'].includes(jStatus);
+            if (inRange && !isAlreadyFinished && _doesJobMatchSelectedSignatures(j, sigMap, isWt)) {
+              deleteIdSet.add(jId);
+              return;
+            }
+            toKeep.push(j);
+          });
+        } else {
+          toKeep = targetArray.filter(j => !j || !selectedIdSet.has(String(j.id)));
         }
-      }
 
-      toggleModal('modal-confirm-bulk-delete-selected-jobs', false);
-      showToast(`Berhasil menghapus ${deleteIds.length} jadwal terpilih!`, 'success');
+        // Update state in-memory murni (tanpa residu cache lokal)
+        if (isWt) {
+          state.watertruckState.jobs = toKeep;
+        } else {
+          state.lubetruckState.jobs = toKeep;
+        }
 
-      if (isWt) {
-        cancelWtScheduleSelectMode();
-      } else {
-        cancelLtScheduleSelectMode();
+        // Sinkronisasi hapus ke Supabase langsung ke tabel fisik
+        if (state.supabaseClient) {
+          const targetTable = isWt ? 'jobs_wt' : 'jobs_lt';
+          try {
+            // Jika opsi "Dari tanggal ini s/d akhir bulan", cari juga ID jadwal mendatang di Supabase yang mungkin belum dimuat ke RAM lokal
+            if (scope === 'month' && selectedUnitsSet.size > 0) {
+              const selectCols = isWt
+                ? 'id, cat, tanggal, shift, washing_round, no_lambung, status'
+                : 'id, cat, tanggal, shift, no_lambung, status';
+              const unitList = Array.from(selectedUnitsSet);
+              for (let u = 0; u < unitList.length; u += 40) {
+                const unitChunk = unitList.slice(u, u + 40);
+                let q = state.supabaseClient
+                  .from(targetTable)
+                  .select(selectCols)
+                  .gte('tanggal', anchorDate)
+                  .lte('tanggal', endOfMonthStr)
+                  .in('no_lambung', unitChunk);
+                if (selectedCatsSet.size > 0) {
+                  q = q.in('cat', Array.from(selectedCatsSet));
+                }
+                const { data: cloudRows, error: cloudErr } = await q;
+                if (!cloudErr && Array.isArray(cloudRows)) {
+                  cloudRows.forEach(row => {
+                    if (!row || !row.id) return;
+                    const rId = String(row.id);
+                    if (selectedIdSet.has(rId)) {
+                      deleteIdSet.add(rId);
+                      return;
+                    }
+                    const rStatus = String(row.status || '').toLowerCase().trim();
+                    const isRowFinished = ['ach', 'achieved', 'done', 'service', 'bd', 'breakdown', 'non_ach', 'non-ach'].includes(rStatus);
+                    if (!isRowFinished && _doesJobMatchSelectedSignatures(row, sigMap, isWt)) {
+                      deleteIdSet.add(rId);
+                    }
+                  });
+                }
+              }
+            }
+
+            const finalDeleteIds = Array.from(deleteIdSet);
+            // Bersihkan dari cache RAM & LocalStorage agar saat F5 tidak kembali
+            if (window.globalDataCache?.jobs) {
+              finalDeleteIds.forEach(id => {
+                window.globalDataCache.jobs.delete(String(id));
+              });
+            }
+            safeSaveTrimmedJobsToStorage();
+
+            for (let i = 0; i < finalDeleteIds.length; i += 50) {
+              const chunk = finalDeleteIds.slice(i, i + 50);
+              await Promise.allSettled([
+                state.supabaseClient.from(targetTable).delete().in('id', chunk),
+                state.supabaseClient.from('jobs_lt').delete().in('id', chunk),
+                state.supabaseClient.from('jobs_wt').delete().in('id', chunk)
+              ]);
+            }
+            console.log(`[Supabase Delete Selected (${scope})] ${finalDeleteIds.length} jadwal berhasil dihapus.`);
+          } catch (e) {
+            console.warn('[Supabase Delete Selected Error]', e);
+          }
+        } else {
+          if (window.globalDataCache?.jobs) {
+            deleteIdSet.forEach(id => {
+              window.globalDataCache.jobs.delete(String(id));
+            });
+          }
+          safeSaveTrimmedJobsToStorage();
+        }
+
+        const totalDeleted = deleteIdSet.size;
+        const formatD = (dStr) => {
+          if (!dStr) return '-';
+          const p = String(dStr).split('-');
+          return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : dStr;
+        };
+        const scopeText = (scope === 'month')
+          ? `tanggal ${formatD(anchorDate)} s/d ${formatD(endOfMonthStr)}`
+          : `tanggal ${formatD(anchorDate)}`;
+
+        toggleModal('modal-confirm-bulk-delete-selected-jobs', false);
+        showToast(`Berhasil menghapus ${totalDeleted} jadwal terpilih (${scopeText})!`, 'success');
+
+        if (isWt) {
+          cancelWtScheduleSelectMode();
+        } else {
+          cancelLtScheduleSelectMode();
+        }
+      } finally {
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = origBtnText;
+        }
       }
     }
     window.executeBulkDeleteSelectedJobs = executeBulkDeleteSelectedJobs;
