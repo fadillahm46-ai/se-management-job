@@ -10991,7 +10991,7 @@
         </div>
       </div>
 
-      <label
+      <label id="apply-yesterday-auto-month-label"
         class="flex items-start space-x-2.5 p-3 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-left cursor-pointer hover:bg-emerald-50 transition">
         <input type="checkbox" id="apply-yesterday-auto-month" checked
           class="mt-0.5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer">
@@ -23102,65 +23102,13 @@
             break;
           }
 
-          case 'AIR_CLEANER_COAL_5DAYS': {
-            // Sesuai aturan baru pengguna:
-            // Unit Coal PC2000, PC1200 / PC1250, dan PC800 / PC850:
-            // Awalnya per 3 hari diubah menjadi per 5 hari sekali.
-            // Dibuat mulai dari baseDayNum dan berulang tepat setiap 5 hari sekali sampai akhir bulan.
-            const dCurrent = new Date(year, month - 1, day);
-            const [bYear, bMonth, bDay] = baseDate.slice(0, 10).split('-').map(Number);
-            const dBase = new Date(bYear, bMonth - 1, bDay);
-            const diffDays = Math.round((dCurrent.getTime() - dBase.getTime()) / (1000 * 60 * 60 * 24));
-
-            if (diffDays >= 0 && diffDays % 5 === 0) {
-              shouldInclude = true;
-            }
-            break;
-          }
-
+          case 'AIR_CLEANER_COAL_5DAYS':
           case 'AIR_CLEANER_COAL_BIG_DIGGER':
           case 'AIR_CLEANER_COAL_SMALL_TRACK':
-          case 'AIR_CLEANER_COAL': {
-            // Pengaman ganda: Jika unit terdeteksi PC2000, PC1200 / PC1250, atau PC800 / PC850
-            if (typeof isAirCleanerUnitCoalPc2000_1200_800 === 'function' && isAirCleanerUnitCoalPc2000_1200_800(baseJob)) {
-              const dCurrent = new Date(year, month - 1, day);
-              const [bYear, bMonth, bDay] = baseDate.slice(0, 10).split('-').map(Number);
-              const dBase = new Date(bYear, bMonth - 1, bDay);
-              const diffDays = Math.round((dCurrent.getTime() - dBase.getTime()) / (1000 * 60 * 60 * 24));
-              if (diffDays >= 0 && diffDays % 5 === 0) {
-                shouldInclude = true;
-              }
-              break;
-            }
-
-            // Unit Coal lainnya jika ada (misal PC3000 / Small Track Coal):
-            // Menggunakan sistem Interval 2 Hari (3x seminggu).
-            // Misal didaftarkan Senin (1), maka Rabu (3) dan Jumat (5) muncul kembali.
-            // Hari SABTU (6) LIBUR unit coal (tidak dijadwalkan).
-            if (dayOfWeek === 6) {
-              shouldInclude = false; // Sabtu Libur
-            } else {
-              const isPatternOdd = (baseDayOfWeek === 1 || baseDayOfWeek === 3 || baseDayOfWeek === 5);
-              if (isPatternOdd) {
-                // Pola Senin (1) - Rabu (3) - Jumat (5)
-                shouldInclude = (dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5);
-              } else {
-                // Pola Minggu (0) - Selasa (2) - Kamis (4)
-                shouldInclude = (dayOfWeek === 0 || dayOfWeek === 2 || dayOfWeek === 4);
-              }
-            }
-            break;
-          }
-
+          case 'AIR_CLEANER_COAL':
           case 'AIR_CLEANER_NON_COAL': {
-            // Sesuai instruksi pengguna:
-            // Unit Non-Coal (termasuk PC500 Non-Coal, D85, dsb.):
-            // Otomatis terduplikasi pada hari yang sama setiap minggunya (dayOfWeek === baseDayOfWeek).
-            // Ketika didaftarkan lagi di hari lain dalam minggu yang sama (misal 3 hari lagi),
-            // sistem TETAP memasukkan jadwal baru tersebut dan menduplikasikannya ke hari yang sama di minggu depan.
-            if (dayOfWeek === baseDayOfWeek) {
-              shouldInclude = true;
-            }
+            // Sesuai instruksi admin: SCH Air Cleaner diisi manual per tanggal (tanpa auto-generate 1 bulan), seperti Top Up Oil
+            shouldInclude = (dateStr === baseDate);
             break;
           }
 
@@ -25100,6 +25048,13 @@
         `).join('');
       }
 
+      const autoMonthWrap = document.getElementById('apply-yesterday-auto-month-label');
+      const autoMonthChk = document.getElementById('apply-yesterday-auto-month');
+      const normPendingCat = String(targetCat || '').toLowerCase().trim();
+      const hideAutoMonth = ['topup', 'topup_oil', 'top up oil', 'aircleaner', 'air_cleaner', 'air cleaner'].includes(normPendingCat);
+      if (autoMonthWrap) autoMonthWrap.classList.toggle('hidden', hideAutoMonth);
+      if (autoMonthChk) autoMonthChk.checked = !hideAutoMonth;
+
       toggleModal('modal-apply-yesterday-schedule', true);
     }
     window.promptApplyYesterdaySchedule = promptApplyYesterdaySchedule;
@@ -25117,7 +25072,9 @@
 
       const { targetCat, targetType, selectedDate, sourceJobs } = pending;
       const isWt = (targetType === 'WT');
-      const autoMonth = (targetCat !== 'topup') && (document.getElementById('apply-yesterday-auto-month')?.checked !== false);
+      const normTargetCat = String(targetCat || '').toLowerCase().trim();
+      const isManualOnlyCat = ['topup', 'topup_oil', 'top up oil', 'aircleaner', 'air_cleaner', 'air cleaner'].includes(normTargetCat);
+      const autoMonth = !isManualOnlyCat && (document.getElementById('apply-yesterday-auto-month')?.checked !== false);
       const targetMonthKey = selectedDate.slice(0, 7);
 
       const confirmBtn = document.getElementById('btn-apply-yesterday-confirm');
@@ -35812,12 +35769,15 @@ Keterangan : ${keterangan}`;
         });
       }
 
-      // Khusus Hak Akses Admin Saja: Siklus & Auto-Generate 1 Bulan (Kecuali Top Up Oil)
+      // Khusus Hak Akses Admin Saja: Siklus & Auto-Generate 1 Bulan (Kecuali Top Up Oil & Air Cleaner -> manual per tanggal)
       const isAdmin = (state.currentUser?.role === 'admin');
       const adminControls = document.getElementById('add-job-admin-controls');
       const monthContainer = document.getElementById('add-job-generate-month-container');
       const chkMonth = document.getElementById('add-job-generate-month');
-      const isTopUp = (currentActiveCat === 'topup' || currentActiveCat === 'top up oil');
+      const normActiveCat = String(currentActiveCat || '').toLowerCase().trim();
+      const isTopUp = (normActiveCat === 'topup' || normActiveCat === 'top up oil' || normActiveCat === 'topup_oil');
+      const isAirCleaner = (normActiveCat === 'aircleaner' || normActiveCat === 'air_cleaner' || normActiveCat === 'air cleaner');
+      const isManualSingleDate = isTopUp || isAirCleaner;
 
       if (adminControls) {
         if (isAdmin) {
@@ -35828,7 +35788,7 @@ Keterangan : ${keterangan}`;
       }
 
       if (monthContainer) {
-        if (isAdmin && !isTopUp) {
+        if (isAdmin && !isManualSingleDate) {
           monthContainer.classList.remove('hidden');
           if (chkMonth) chkMonth.checked = true;
         } else {
@@ -36753,14 +36713,17 @@ Keterangan : ${keterangan}`;
         }
       }
 
-      // Atur visibilitas Auto-Generate 1 Bulan: hilangkan untuk Top Up Oil sesuai instruksi admin
+      // Atur visibilitas Auto-Generate 1 Bulan: hilangkan untuk Top Up Oil & Air Cleaner (pengisian manual per tanggal)
       const monthContainer = document.getElementById('add-job-generate-month-container');
       const chkMonth = document.getElementById('add-job-generate-month');
       const isAdmin = (state.currentUser?.role === 'admin');
-      const isTopUp = false; // Top Up Oil kini menerapkan interval 7 hari dan dapat di-generate 1 bulan
+      const normCatVal = String(val || '').toLowerCase().trim();
+      const isTopUp = (normCatVal === 'topup' || normCatVal === 'top up oil' || normCatVal === 'topup_oil');
+      const isAirCleaner = (normCatVal === 'aircleaner' || normCatVal === 'air_cleaner' || normCatVal === 'air cleaner');
+      const isManualSingleDate = isTopUp || isAirCleaner;
 
       if (monthContainer) {
-        if (isAdmin && !isTopUp) {
+        if (isAdmin && !isManualSingleDate) {
           monthContainer.classList.remove('hidden');
           if (chkMonth) chkMonth.checked = true;
         } else {
@@ -37038,8 +37001,10 @@ Keterangan : ${keterangan}`;
       const typeUnit = document.getElementById('add-job-type')?.value || getUnitTypeFromMaster(noLambung, 'Unit');
       const washingRound = parseInt(document.getElementById('add-job-washing-round')?.value || '1', 10);
       const isAdmin = (state.currentUser?.role === 'admin');
-      const isTopUp = (cat === 'topup' || cat === 'top up oil' || cat === 'topup_oil');
-      const shouldGenerateMonth = isAdmin && (document.getElementById('add-job-generate-month')?.checked !== false);
+      const normCatForGen = String(cat || '').toLowerCase().trim();
+      const isTopUp = (normCatForGen === 'topup' || normCatForGen === 'top up oil' || normCatForGen === 'topup_oil');
+      const isAirCleaner = (normCatForGen === 'aircleaner' || normCatForGen === 'air_cleaner' || normCatForGen === 'air cleaner');
+      const shouldGenerateMonth = isAdmin && !isTopUp && !isAirCleaner && (document.getElementById('add-job-generate-month')?.checked !== false);
       const selectedPattern = document.getElementById('add-job-pattern')?.value || 'AUTO';
 
       if (!noLambung || !lokasi) {
